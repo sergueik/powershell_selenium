@@ -1,0 +1,42 @@
+ipv4.setIP("10.20.30.5", "255.255.255.200");
+System.out.println(ipv4.getIP());
+System.out.println(ipv4.getNetmask());
+System.out.println(ipv4.getCIDR());
+
+
+IPv4 ipv4 = new IPv4("10.1.17.0/20");
+System.out.println(ipv4.getIP());
+System.out.println(ipv4.getNetmask());
+System.out.println(ipv4.getCIDR());
+
+
+List<String> availableIPs = ipv4.getAvailableIPs(); 
+int counter=0;
+
+for (String ip : availableIPs) { System.out.print(ip);
+    System.out.print(" "); counter++; if((counter%10)==0)
+    System.out.print("n"); 
+}
+
+IPv4 ipv4 = new IPv4("12.12.12.0/16");
+
+IPv4 ipv4Child = new IPv4("12.12.12.0/17");
+IPv4 ipv4 = new IPv4("192.168.20.0/16");
+System.out.println(ipv4.getIP());
+System.out.println(ipv4.getNetmask());
+
+System.out.println(ipv4.getCIDR());
+System.out.println("======= MATCHES =======");
+System.out.println(ipv4.getBinary(ipv4.baseIPnumeric));
+System.out.println(ipv4.getBinary(ipv4.netmaskNumeric));
+
+System.out.println(ipv4.contains(ipv4Child));
+
+System.out.println(ipv4.getBinary(ipv4.baseIPnumeric));
+System.out.println(ipv4.getBinary(ipv4.netmaskNumeric));
+
+System.out.println(ipv4Child.getBinary(ipv4Child.baseIPnumeric));
+
+System.out.println(ipv4Child.getBinary(ipv4Child.netmaskNumeric));
+
+System.out.println(ipv4.contains(ipv4Child));
