@@ -1,0 +1,33 @@
+{
+  "capabilities": [
+    {
+      "browserName": "chrome",
+      "version": "",
+      "platform": "WINDOWS",
+      "maxInstances": 1
+    },
+    {
+      "browserName": "internet explorer",
+      "version": "",
+      "platform": "WINDOWS",
+      "maxInstances": 1
+    },
+    {
+      "browserName": "firefox",
+      "version": "",
+      "platform": "WINDOWS",
+      "maxInstances": 1
+    }
+  ],
+  "configuration": {
+    "role": "node",
+    "maxSession": 1,
+    "nodeTimeout": 12000,
+    "nodePolling": 2000,
+    "registerCycle": 1000,
+    "cleanUpCycle": 2000,
+    "timeout": 30000,
+    "loggingPrefs" : webdriver.logging.Level.ALL,
+    "register": true
+  }
+}

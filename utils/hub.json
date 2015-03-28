@@ -1,0 +1,17 @@
+// https://code.google.com/p/selenium/source/browse/java/server/src/org/openqa/grid/common/defaults/DefaultHub.json
+{
+  "host": null,
+  "port": 4444,
+  "newSessionWaitTimeout": -1,
+  "servlets" : [],
+  "prioritizer": null,
+  "capabilityMatcher": "org.openqa.grid.internal.utils.DefaultCapabilityMatcher",
+  "throwOnCapabilityNotPresent": true,
+  "nodePolling": 5000,
+
+  "cleanUpCycle": 5000,
+  "timeout": 300000,
+  "browserTimeout": 0,
+  "maxSession": 5,
+  "jettyMaxThreads":-1
+}

@@ -1,0 +1,26 @@
+{
+"capabilities":
+      [
+        {
+          "browserName": "firefox",
+          "maxInstances": 5
+        },
+      ],
+
+   "configuration":
+        {
+        "nodeTimeout":120,
+        "port":5555,
+        "hubPort":4444,
+        "nodePolling":2000,
+        "registerCycle":10000,
+        "register":true,
+        "cleanUpCycle":2000,
+        "timeout":30000,
+        "maxSession":5,
+        "role": "node",
+        "hubHost": "127.0.0.1", 
+        "loggingPrefs" : webdriver.logging.Level.ALL
+        }
+}
+
