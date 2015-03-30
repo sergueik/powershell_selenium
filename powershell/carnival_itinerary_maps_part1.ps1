@@ -20,7 +20,8 @@
 param(
   # in the current environment phantomejs is not installed 
   [string]$browser = 'chrome',
-  [int]$version,
+  [string]$dest = 'Europe',
+  [string]$port = 'Trieste',
   [switch]$pause
 
 )
@@ -33,12 +34,12 @@ function extract_match {
     [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
 
   )
-  write-Debug ('Extracting from {0}' -f $source )
-  $local:results = { }
+  Write-Debug ('Extracting from {0}' -f $source)
+  $local:results = {}
   $local:results = $source | where { $_ -match $capturing_match_expression } |
   ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
   Write-Debug 'extract_match:'
-  write-Debug $local:results
+  Write-Debug $local:results
   $result_ref.Value = $local:results.Media
 }
 
@@ -171,20 +172,35 @@ $destinations = @{
   'Alaska' = 'A';
   'Bahamas' = 'BH';
   'Bermuda' = 'BM';
+  'Canada/New England' = 'NN';
+  'Caribbean' = 'C';
+  'Cruise To Nowhere' = 'CN';
   'Europe' = 'E';
   'Hawaii' = 'H'
   'Mexico' = 'M'
-  'Canada/New England' = 'NN'; 
   'Transatlantic' = 'ET'
-  'Caribbean' = 'C';
 }
 $ports = @{
   'Miami, FL' = 'MIA';
-  'Jacksonville, FL' = 'JAX';
-  'Fort Lauderdale, FL' = 'FLL';
+  'New York, NY' = 'NYC';
   'Seattle, WA' = 'SEA';
   'Los Angeles, CA' = 'LAX';
+  'Fort Lauderdale, FL' = 'FLL';
+  'Jacksonville, FL' = 'JAX';
+  'Honolulu, HI' = 'HNL';
+  'Galveston, TX' = 'GAL';
+  'Athenes' = 'ATH';
+  'Baltimore, MD' = 'BWI';
+  'Barbados' = 'BDS';
   'Barcelona, Spain' = 'BCN';
+  'Charleston, SC' = 'CHS';
+  'New Orleans, LA' = 'MSY';
+  'Norfolk, VA' = 'ORF';
+  'Port Canaveral (Orlando), FL' = 'PCV';
+  'San Juan, Puerto Rico' = 'SJU';
+  'Tampa, FL' = 'TPA';
+  'Trieste' = 'TRS';
+  'Vancouver, BC, Canada' = 'YVR';
 }
 
 
@@ -356,38 +372,32 @@ function count_cruises {
 
 }
 
-
 # TODO :finish parameters
 $fullstop = (($PSBoundParameters['pause']) -ne $null)
 
 select_criteria -choice 'numGuests' -Value '"2"' -label 'TRAVELERS'
-select_criteria -choice 'dest' -label 'Sail To' -Option 'Mexico' -choice_value_ref ([ref]$destinations)
-select_criteria -choice 'port' -label 'Sail from' -Option 'Los Angeles, CA' -choice_value_ref ([ref]$ports)
+write-output ('Selecting Destination {0}' -f $dest )
 
-# select_criteria -choice 'dest' -label 'Sail To' -Option 'Bahamas' -choice_value_ref ([ref]$destinations)
-# select_criteria -choice 'port' -label 'Sail from' -Option 'Fort Lauderdale, FL' -choice_value_ref ([ref]$ports)
-
-# select_criteria -choice 'dest' -label 'Sail To' -Option 'Europe' -choice_value_ref ([ref]$destinations)
-# select_criteria -choice 'port' -label 'Sail from' -Option 'Barcelona, Spain' -choice_value_ref ([ref]$ports)
+select_criteria -choice 'dest' -label 'Sail To' -Option $dest -choice_value_ref ([ref]$destinations)
+write-output ('Selecting Port {0}' -f $port )
+select_criteria -choice 'port' -label 'Sail from' -Option $port -choice_value_ref ([ref]$ports)
 
 # find first avail
 select_first_option -choice 'dat' -label 'Date'
 search_cruises
-Start-Sleep -Milliseconds 10000
+Start-Sleep -Milliseconds 500
 $cruises_count_text = $null
 count_cruises -result_ref ([ref]$cruises_count_text)
-write-output $cruises_count_text
+Write-Output $cruises_count_text
 $result = 1
 extract_match -Source $cruises_count_text -capturing_match_expression '\b(?<media>\d+)\b' -label 'media' -result_ref ([ref]$result)
-Write-Output ('Found # itinearies: {0}' -f $result)
-[NUnit.Framework.Assert]::IsTrue(($result -match '\d+'))
 
-$select_choice = Get-Random -minimum 1 -maximum $result
-write-output ("Will try {0}th" -f $select_choice)
+[NUnit.Framework.Assert]::IsTrue(($result -match '\d+'))
+Write-Output ('Found # itinearies: {0}' -f $result)
 
 $element5 = $null
 $css_selector1 = 'div[class*=search-result] a.itin-select'
-Write-Output $css_selector1
+
 try {
   [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
 } catch [exception]{
@@ -395,6 +405,14 @@ try {
 }
 $elements1 = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector1))
 $learn_more_cnt = 0
+
+$report_format = @"
+text = {0}
+url  = {1}
+cnt  = {2}
+"@
+
+write-output ('Found actually: {0} elements' -f ($elements1.Count ))
 $elements1 | ForEach-Object {
   $element3 = $_
 
@@ -403,120 +421,17 @@ $elements1 | ForEach-Object {
 
       if (-not ($element3.Text -match 'LEARN MORE')) {
         # $element3
-        
-        Write-Output ("Found:{3}text={0}{3}url={1}{3}cnt={2}{3}" -f $element3.Text,$element3.GetAttribute('href'),$learn_more_cnt, "`r`n")
+
+        Write-Output ($report_format -f $element3.Text,$element3.GetAttribute('href'),$learn_more_cnt)
         [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
         $actions.MoveToElement([OpenQA.Selenium.IWebElement]$element3).Build().Perform()
         [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element3,'color: yellow; border: 4px solid yellow;')
         Start-Sleep -Milliseconds 100
         [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element3,'')
-      }
 
-      if ($element3.Text -match 'LEARN MORE') {
-        Write-Output ('Found: {0} count = {1}' -f $element3.Text,$learn_more_cnt)
-       $learn_more_cnt = $learn_more_cnt + 1
-
-  if($learn_more_cnt -eq $select_choice) { 
-    write-output 'Selecting this itinerary'
-
-        Write-Output ('Saving  XPATH for {0} = "{1}" ' -f $element3.Text,$result)
-        Write-Output ('Clicking on ' + $element3.Text)
-        [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-        $actions2.MoveToElement([OpenQA.Selenium.IWebElement]$element3).Click().Build().Perform()
-        Start-Sleep -Milliseconds 3000
-        [NUnit.Framework.StringAssert]::Contains('http://www.carnival.com/itinerary/',$selenium.url,{})
-        Write-Output ("Redirected to url: `n`t'{0}'" -f $selenium.url )
-
-        custom_pause -fullstop $fullstop
-
-        # Click on Book Now
-
-        $book_now_css_selector = 'li[class = action-col] a[class *=btn-red]'
-
-        try {
-          [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($book_now_css_selector)))
-        } catch [exception]{
-          Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
-        }
-
-        $book_now_buttons = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($book_now_css_selector))
-        $book_now_element = $null
-
-        foreach ($element8 in $book_now_buttons) {
-          if (!$book_now_element) {
-            if ($element8.Text -match 'BOOK NOW') {
-              Write-Output ('Selecting {0}' -f $element8.Text)
-              $book_now_element = $element8
-            }
-          }
-        }
-        $element8 = $null
-        [OpenQA.Selenium.Interactions.Actions]$actions4 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-
-        [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$book_now_element,'color: yellow; border: 4px solid yellow;')
-        Start-Sleep 3
-        [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$book_now_element,'')
-
-        $actions4.MoveToElement([OpenQA.Selenium.IWebElement]$book_now_element).Build().Perform()
-
-        Start-Sleep -Millisecond 1000
-        Write-Output ('Click : "{0}"' -f $book_now_element.Text)
-        $book_now_element.Click()
-        Start-Sleep -Milliseconds 1000
-        try {
-          [NUnit.Framework.StringAssert]::Contains('http://www.carnival.com/BookingEngine/Stateroom',$selenium.url,{})
-        } catch [exception]{
-          write-output ("Unexpected redirect:`r`t{0}`rtAborting." -f $selenium.url )
-          cleanup ([ref]$selenium)
-          return
-        }
-        # Write-Output $selenium.url
-        $view_itin_css_selector = 'span.viewitin'
-
-        try {
-          [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($view_itin_css_selector)))
-          #          Write-Output 'Found ...'
-        } catch [exception]{
-          Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
-        }
-
-        $view_itin_button = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($view_itin_css_selector))
-        Write-Output ('Clicked {0} ' -f $view_itin_button.Text)
-        $view_itin_button.Click()
-        Start-Sleep -Milliseconds 2000
-
-        Write-Output 'trying page source'
-        $page_source = (($selenium.PageSource) -join '')
-
-        if ($page_source -match '/~/media/Images/Itineraries/Maps') {
-
-           $result = $null
-           extract_match -Source $page_source -capturing_match_expression '(?<media>/~/media/Images/Itineraries/Maps[^\"]+)' -label 'media' -result_ref ([ref]$result)
-           Write-Output ('Found media images: {0}' -f $result)
-        } else  { 
-           Write-Output ('No media images found')
-        }
-
-        $close_itin_css_selector = 'a[id = fancybox-close]'
-
-        try {
-          [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($close_itin_css_selector)))
-        } catch [exception]{
-          Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
-        }
-        $close_itin_button = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($close_itin_css_selector))
-
-        $close_itin_button.Click()
-        # cannot LEARN_MORE in a loop 
-
-        Start-Sleep -Milliseconds 100
-
-        cleanup ([ref]$selenium)
-        exit 0
-
+        $learn_more_cnt = $learn_more_cnt + 1
       }
     }
-  }
   }
 
 }
