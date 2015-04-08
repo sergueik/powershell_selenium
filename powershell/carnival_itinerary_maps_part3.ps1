@@ -18,9 +18,10 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 param(
-  [string]$browser = 'chrome',
+  [string]$browser = 'firefox',
   [string]$dest = 'Caribbean',
-  [string]$port = 'Tampa, FL',
+  [string]$port = 'Miami, FL',
+  [switch]$follow,
   [switch]$pause
 )
 
@@ -83,6 +84,34 @@ function cleanup
     Write-Debug (($_.Exception.Message) -split "`n")[0]
 
   }
+}
+
+function print_itinerary_link_info {
+  param(
+    [int]$position,
+    [string]$destination,
+    [string]$port,
+    [string]$description,
+    [string]$url,
+    [string]$log_filename
+  )
+
+  Write-Output ('{0}|{1}|{2}|{3}|{4}' -f `
+       $position,`
+       $destination,`
+       $port,`
+       $description,`
+       $url) | Out-File $log_filename -Append
+
+}
+
+
+function extract_itinerary_description {
+  param([string]$text)
+
+  $description = ($element1.Text -split "`r`n")[0]
+  $port_ship = ($element1.Text -split "`r`n")[1]
+
 }
 
 $shared_assemblies = @(
@@ -423,15 +452,16 @@ $css_selector3 = 'a[class *= "itin-select" ]'
 
 
 $itins_to_find = $itins_found
-$itins_found   = 1 
+$itins_found = 1
 
-Write-Output ('{0}|{1}|{2}|{3}|{4}' -f `
-       $itins_found,`
-       $dest,`
-       $port, `
-       $description,`
-       $element3.GetAttribute('href')) | Out-File ('{0}\{1}' -f $script_directory,'results.csv') -Append
 
+print_itinerary_link_info `
+   -position $itins_found `
+   -Destination $dest `
+   -Port $port `
+   -Description $description `
+   -url $element3.GetAttribute('href') `
+   -log_filename ('{0}\{1}' -f $script_directory,'results.csv')
 
 
 while ($itins_found -lt $itins_to_find) {
@@ -441,26 +471,7 @@ while ($itins_found -lt $itins_to_find) {
 
   [OpenQA.Selenium.IWebElement]$element2 = $element1.FindElement([OpenQA.Selenium.By]::XPath($xpath2))
 
-  $adjust_vscroll = $element2.LocationOnScreenOnceScrolledIntoView.Y
-  if ($adjust_vscroll -eq 1) {
-    $adjust_vscroll = 10
-  }
-  if ($adjust_vscroll -gt 0) {
-    [void]([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript(('scroll(0, {0})' -f $adjust_vscroll),$null)
-    Write-Debug ('Scroll {0} px' -f $adjust_vscroll)
-    Start-Sleep -Millisecond 500
-  }
-
-  $actions.MoveToElement([OpenQA.Selenium.IWebElement]$element2).Build().Perform()
-
-
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element2,'border: 2px solid red;')
-  Start-Sleep -Millisecond 500
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element2,'')
-
-
   $itins_found = $itins_found + 1
-
 
   $description = ($element2.Text -split "`r`n")[0]
   $port_ship = ($element2.Text -split "`r`n")[1]
@@ -472,34 +483,124 @@ while ($itins_found -lt $itins_to_find) {
   $css_selector3 = 'a[class *= "itin-select" ]'
   [OpenQA.Selenium.IWebElement]$element3 = $element2.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector3))
 
-  Write-Output ('{0}|{1}|{2}|{3}|{4}' -f `
-       $itins_found,`
-       $dest,`
-       $port, `
-       $description,`
-       $element3.GetAttribute('href')) | Out-File ('{0}\{1}' -f $script_directory,'results.csv') -Append
+  $adjust_vscroll = $element3.LocationOnScreenOnceScrolledIntoView.Y
+  if ($adjust_vscroll -eq 1) {
+    $adjust_vscroll = 10
+  }
+  if ($adjust_vscroll -gt 0) {
+    [void]([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript(('scroll(0, {0})' -f $adjust_vscroll),$null)
+    Write-Debug ('Scroll {0} px' -f $adjust_vscroll)
+    Start-Sleep -Millisecond 500
+  }
 
-  # print_itinerary_link_info 
-  # iterator 
+  $actions.MoveToElement([OpenQA.Selenium.IWebElement]$element3).Build().Perform()
+  Start-Sleep -Millisecond 1000
+
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element3,'border: 2px solid red;')
+  Start-Sleep -Millisecond 1000
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element3,'')
+  $url = $element3.GetAttribute('href')
+  print_itinerary_link_info `
+     -position $itins_found `
+     -Destination $dest `
+     -Port $port `
+     -Description $description `
+     -url $element3.GetAttribute('href') `
+     -log_filename ('{0}\{1}' -f $script_directory,'results.csv')
+  if (($PSBoundParameters['follow']) -ne $null) { 
+  $expect_url = 'http://www.carnival.com/itinerary/7-day-eastern-caribbean-cruise/miami/glory/7-days/cem/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA'
+  $expect_url = 'http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/victory/4-days/kwp/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA'
+  # TODO: mask datFrom ... datTo ...
+  $expect_url = $expect_url -replace '\?','\?'
+
+  if ($url -match $expect_url)
+  {
+    Write-Output 'need to pick XPATH'
+    [string]$script = @"
+function getPathTo(element) {
+    if (element.id!=='')
+        return '*[@id="'+element.id+'"]';
+    if (element===document.body)
+        return element.tagName;
+
+    var ix= 0;
+    var siblings= element.parentNode.childNodes;
+    for (var i= 0; i<siblings.length; i++) {
+        var sibling= siblings[i];
+        if (sibling===element)
+            return getPathTo(element.parentNode)+'/'+element.tagName+'['+(ix+1)+']';
+        if (sibling.nodeType===1 && sibling.tagName===element.tagName)
+            ix++;
+    }
+}
+return getPathTo(arguments[0]);
+"@
+
+    # Exception calling "ExecuteScript" with "3" argument(s): "element is null
+    $result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($script,$element3,'')).ToString()
+
+    Write-Output ('Saving  XPATH for {0} = "{1}" ' -f $element3.Text,$result)
+    $xpath4 = ('//{0}' -f $result)
+    [OpenQA.Selenium.IWebElement]$element4 = $selenium.FindElement([OpenQA.Selenium.By]::XPath($xpath4))
+
+    $actions.MoveToElement([OpenQA.Selenium.IWebElement]$element4).Click().Build().Perform()
+    Start-Sleep -Millisecond 2000
+
+    # Click on Book Now
+
+    $book_now_css_selector = 'li[class = action-col] a[class *=btn-red]'
+
+    try {
+      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($book_now_css_selector)))
+    } catch [exception]{
+      Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+    }
+
+    $book_now_buttons = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($book_now_css_selector))
+    $book_now_element = $null
+
+    foreach ($element8 in $book_now_buttons) {
+      if (!$book_now_element) {
+        if ($element8.Text -match 'BOOK NOW') {
+          Write-Output ('Selecting {0}' -f $element8.Text)
+          $book_now_element = $element8
+        }
+      }
+    }
+    $element8 = $null
+    [OpenQA.Selenium.Interactions.Actions]$actions4 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+
+    [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$book_now_element,'color: yellow; border: 4px solid yellow;')
+    Start-Sleep -Millisecond 500
+    [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$book_now_element,'')
+
+    $actions4.MoveToElement([OpenQA.Selenium.IWebElement]$book_now_element).Build().Perform()
+
+    Start-Sleep -Millisecond 1000
+    Write-Output ('Click : "{0}"' -f $book_now_element.Text)
+    $book_now_element.Click()
+    Start-Sleep -Milliseconds 2000
+    # TODO: navigate through 'Book Now'
+    Write-Output $selenium.url
+
+    try {
+      [NUnit.Framework.StringAssert]::Contains('http://www.carnival.com/BookingEngine/Stateroom',$selenium.url,{})
+    } catch [exception]{
+      Write-Output ("Unexpected redirect:`r`t{0}`rtAborting." -f $selenium.url)
+      cleanup ([ref]$selenium)
+      return
+    }
+
+    cleanup ([ref]$selenium)
+    return
+    #  exit iterator
+  }
+  }
   $actions = $null
+  # next iterator 
   $element1 = $element2
 }
-<#
-function print_itinerary_link_info {
-  param ()
 
-
-
-}
-#>
-
-function extract_itinerary_description {
-  param([string]$text)
-
-  $description = ($element1.Text -split "`r`n")[0]
-  $port_ship = ($element1.Text -split "`r`n")[1]
-
-}
 custom_pause -fullstop $fullstop
 # At the end of the run - do not close Browser / Selenium when executing from Powershell ISE
 if (-not ($host.Name -match 'ISE')) {
@@ -513,62 +614,5 @@ Num    Destination    Port    Description    Url
 1	Caribbean	Miami, FL	Carnival Live Presents Smokey Robinson - 4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/ecstasy/4-days/dab/?evsel=SYR&numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
 2	Caribbean	Miami, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/ecstasy/4-days/kc3/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
 3	Caribbean	Miami, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/victory/4-days/kwp/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-4	Caribbean	Miami, FL	5 Day Eastern Caribbean	http://www.carnival.com/itinerary/5-day-eastern-caribbean-cruise/miami/victory/5-days/ec0/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-5	Caribbean	Miami, FL	5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/miami/victory/5-days/wcn/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-1	Canada/New England	New York, NY	4 Day Canada/New England	http://www.carnival.com/itinerary/4-day-canada-new-england-cruise/new-york/splendor/4-days/cac/?numGuests=2&destination=canada-new-england&dest=NN&datFrom=062015&datTo=062015&embkCode=NYC
-1	Europe	Barcelona, Spain	10 Day Europe	http://www.carnival.com/itinerary/10-day-europe-cruise/barcelona/vista/10-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN
-2	Europe	Barcelona, Spain	10 Day Europe	http://www.carnival.com/itinerary/10-day-europe-cruise/athens/vista/10-days/mea/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN
-3	Europe	Barcelona, Spain	13 Day Europe	http://www.carnival.com/itinerary/13-day-europe-cruise/trieste/vista/13-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN
-1	Alaska	Seattle, WA	8 Day Glacier Bay	http://www.carnival.com/itinerary/8-day-glacier-bay-cruise/vancouver/legend/8-days/glb/?numGuests=2&destination=alaska&dest=A&datFrom=052015&datTo=052015&embkCode=SEA
-2	Alaska	Seattle, WA	7 Day Glacier Bay	http://www.carnival.com/itinerary/7-day-glacier-bay-cruise/seattle/legend/7-days/glm/?numGuests=2&destination=alaska&dest=A&datFrom=052015&datTo=052015&embkCode=SEA
-1	Hawaii	Los Angeles, CA	Carnival Journeys - 15 Day Hawaii	http://www.carnival.com/itinerary/15-day-hawaii-cruise/los-angeles/miracle/15-days/jh0/?evsel=J&numGuests=2&destination=hawaii&dest=H&datFrom=102015&datTo=102015&embkCode=LAX
-1	Bahamas	Miami, FL	4 Day Bahamas	http://www.carnival.com/itinerary/4-day-bahamas-cruise/miami/ecstasy/4-days/ba4/?numGuests=2&destination=bahamas&dest=BH&datFrom=042015&datTo=042015&embkCode=MIA
-2	Bahamas	Miami, FL	3 Day Bahamas	http://www.carnival.com/itinerary/3-day-bahamas-cruise/miami/ecstasy/3-days/bad/?numGuests=2&destination=bahamas&dest=BH&datFrom=042015&datTo=042015&embkCode=MIA
-1	Mexico	Los Angeles, CA	3 Day Baja Mexico	http://www.carnival.com/itinerary/3-day-baja-mexico-cruise/los-angeles/imagination/3-days/laf/?numGuests=2&destination=mexico&dest=M&datFrom=042015&datTo=042015&embkCode=LAX
-2	Mexico	Los Angeles, CA	4 Day Baja Mexico	http://www.carnival.com/itinerary/4-day-baja-mexico-cruise/los-angeles/imagination/4-days/lai/?numGuests=2&destination=mexico&dest=M&datFrom=042015&datTo=042015&embkCode=LAX
-3	Mexico	Los Angeles, CA	4 Day Baja Mexico	http://www.carnival.com/itinerary/4-day-baja-mexico-cruise/los-angeles/inspiration/4-days/lai/?numGuests=2&destination=mexico&dest=M&datFrom=042015&datTo=042015&embkCode=LAX
-4	Mexico	Los Angeles, CA	4 Day Baja Mexico	http://www.carnival.com/itinerary/4-day-baja-mexico-cruise/los-angeles/imagination/4-days/lah/?numGuests=2&destination=mexico&dest=M&datFrom=042015&datTo=042015&embkCode=LAX
-5	Mexico	Los Angeles, CA	4 Day Baja Mexico	http://www.carnival.com/itinerary/4-day-baja-mexico-cruise/los-angeles/inspiration/4-days/lah/?numGuests=2&destination=mexico&dest=M&datFrom=042015&datTo=042015&embkCode=LAX
-1	Bahamas	Fort Lauderdale, FL	4 Day Bahamas	http://www.carnival.com/itinerary/4-day-bahamas-cruise/ft-lauderdale/conquest/4-days/ba0/?numGuests=2&destination=bahamas&dest=BH&datFrom=062016&datTo=062016&embkCode=FLL
-1	Caribbean	Fort Lauderdale, FL	6 Day Western Caribbean	http://www.carnival.com/itinerary/6-day-western-caribbean-cruise/ft-lauderdale/conquest/6-days/wc6/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=FLL
-2	Caribbean	Fort Lauderdale, FL	6 Day Western Caribbean	http://www.carnival.com/itinerary/6-day-western-caribbean-cruise/ft-lauderdale/conquest/6-days/wca/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=FLL
-3	Caribbean	Fort Lauderdale, FL	8 Day Southern Caribbean	http://www.carnival.com/itinerary/8-day-southern-caribbean-cruise/ft-lauderdale/conquest/8-days/cse/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=FLL
-1	Bahamas	Jacksonville, FL	4 Day Bahamas	http://www.carnival.com/itinerary/4-day-bahamas-cruise/jacksonville/fascination/4-days/bae/?numGuests=2&destination=bahamas&dest=BH&datFrom=042015&datTo=042015&embkCode=JAX
-2	Bahamas	Jacksonville, FL	5 Day Bahamas	http://www.carnival.com/itinerary/5-day-bahamas-cruise/jacksonville/fascination/5-days/baw/?numGuests=2&destination=bahamas&dest=BH&datFrom=042015&datTo=042015&embkCode=JAX
-3	Bahamas	Jacksonville, FL	5 Day Bahamas	http://www.carnival.com/itinerary/5-day-bahamas-cruise/jacksonville/fascination/5-days/bav/?numGuests=2&destination=bahamas&dest=BH&datFrom=042015&datTo=042015&embkCode=JAX
-4	Bahamas	Jacksonville, FL	5 Day Bahamas	http://www.carnival.com/itinerary/5-day-bahamas-cruise/jacksonville/fascination/5-days/baz/?numGuests=2&destination=bahamas&dest=BH&datFrom=042015&datTo=042015&embkCode=JAX
-1	Caribbean	Jacksonville, FL	6 Day Eastern Caribbean	http://www.carnival.com/itinerary/6-day-eastern-caribbean-cruise/jacksonville/fascination/6-days/ec0/?numGuests=2&destination=caribbean&dest=C&datFrom=042016&datTo=042016&embkCode=JAX
-2	Caribbean	Jacksonville, FL	Carnival Journeys - 10 Day Southern Caribbean	http://www.carnival.com/itinerary/10-day-southern-caribbean-cruise/san-juan/elation/10-days/js1/?evsel=J&numGuests=2&destination=caribbean&dest=C&datFrom=042016&datTo=042016&embkCode=JAX
-1	Bahamas	Norfolk, VA	5 Day Bahamas	http://www.carnival.com/itinerary/5-day-bahamas-cruise/norfolk/splendor/5-days/ba2/?numGuests=2&destination=bahamas&dest=BH&datFrom=052015&datTo=052015&embkCode=ORF
-1	Caribbean	San Juan, Puerto Rico	7 Day Southern Caribbean	http://www.carnival.com/itinerary/7-day-southern-caribbean-cruise/san-juan/liberty/7-days/scy/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=SJU
-1	Caribbean	Tampa, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/tampa/paradise/4-days/kwh/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=TPA
-2	Caribbean	Tampa, FL	5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/tampa/paradise/5-days/kwt/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=TPA
-3	Caribbean	Tampa, FL	Carnival Live Presents Smokey Robinson - 5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/tampa/paradise/5-days/dab/?evsel=SYR&numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=TPA
-1	Europe	Trieste	13 Day Europe	http://www.carnival.com/itinerary/13-day-europe-cruise/trieste/vista/13-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=TRS
-1	Hawaii	Vancouver, BC, Canada	10 Day Hawaii	http://www.carnival.com/itinerary/10-day-hawaii-cruise/vancouver/legend/10-days/hw0/?numGuests=2&destination=hawaii&dest=H&datFrom=092015&datTo=092015&embkCode=YVR
-1	Bermuda	Norfolk, VA	7 Day Bermuda	http://www.carnival.com/itinerary/7-day-bermuda-cruise/norfolk/splendor/7-days/br0/?numGuests=2&destination=bermuda&dest=BM&datFrom=102015&datTo=102015&embkCode=ORF
-1	Cruise To Nowhere	Norfolk, VA	2 Day Cruise To Nowhere	http://www.carnival.com/itinerary/2-day-cruise-to-nowhere-cruise/norfolk/splendor/2-days/ct8/?numGuests=2&destination=cruise-to-nowhere&dest=CN&datFrom=052015&datTo=052015&embkCode=ORF
-1	Caribbean	Tampa, FL	5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/tampa/paradise/5-days/kwt/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=TPA
-1	Caribbean	Tampa, FL	Carnival Live Presents Smokey Robinson - 5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/tampa/paradise/5-days/dab/?evsel=SYR&numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=TPA
-1	Caribbean	Tampa, FL	Carnival Live Presents Smokey Robinson - 5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/tampa/paradise/5-days/dab/?evsel=SYR&numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=TPA
-1	Caribbean	Tampa, FL	3 Day Bahamas	http://www.carnival.com/itinerary/3-day-bahamas-cruise/miami/ecstasy/3-days/bad/?numGuests=2&destination=all-destinations&dest=any&datFrom=042015&datTo=042017
-1	Caribbean	Tampa, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/ecstasy/4-days/kc3/?numGuests=2&destination=all-destinations&dest=any&datFrom=042015&datTo=042017
-1	Caribbean	Tampa, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/ecstasy/4-days/wcb/?numGuests=2&destination=all-destinations&dest=any&datFrom=042015&datTo=042017
-1	Caribbean	Miami, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/ecstasy/4-days/kc3/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-1	Caribbean	Miami, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/victory/4-days/kwp/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-1	Caribbean	Miami, FL	5 Day Eastern Caribbean	http://www.carnival.com/itinerary/5-day-eastern-caribbean-cruise/miami/victory/5-days/ec0/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-1	Caribbean	Miami, FL	5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/miami/victory/5-days/wcn/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-1	Caribbean	Miami, FL	6 Day Western Caribbean	http://www.carnival.com/itinerary/6-day-western-caribbean-cruise/miami/splendor/6-days/wch/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-1	Caribbean	Miami, FL	5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/miami/victory/5-days/wcp/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-1	Caribbean	Miami, FL	Carnival Live Presents Smokey Robinson - 6 Day Western Caribbean	http://www.carnival.com/itinerary/6-day-western-caribbean-cruise/miami/breeze/6-days/daf/?evsel=SYR&numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-1	Caribbean	Miami, FL	7 Day Eastern Caribbean	http://www.carnival.com/itinerary/7-day-eastern-caribbean-cruise/miami/glory/7-days/cem/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-1	Caribbean	Miami, FL	7 Day Western Caribbean	http://www.carnival.com/itinerary/7-day-western-caribbean-cruise/miami/glory/7-days/cw6/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-1	Caribbean	Miami, FL	8 Day Eastern Caribbean	http://www.carnival.com/itinerary/8-day-eastern-caribbean-cruise/miami/breeze/8-days/ecr/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-1	Caribbean	Miami, FL	8 Day Eastern Caribbean	http://www.carnival.com/itinerary/8-day-eastern-caribbean-cruise/miami/breeze/8-days/ecr/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
-1	Europe	Barcelona, Spain	10 Day Europe	http://www.carnival.com/itinerary/10-day-europe-cruise/barcelona/vista/10-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN
-1	Europe	Barcelona, Spain	13 Day Europe	http://www.carnival.com/itinerary/13-day-europe-cruise/trieste/vista/13-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN
-1	Caribbean	Jacksonville, FL	Carnival Journeys - 10 Day Southern Caribbean	http://www.carnival.com/itinerary/10-day-southern-caribbean-cruise/san-juan/elation/10-days/js1/?evsel=J&numGuests=2&destination=caribbean&dest=C&datFrom=042016&datTo=042016&embkCode=JAX
-1	Caribbean	Galveston, TX	5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/galveston/triumph/5-days/glq/?numGuests=2&destination=all-destinations&dest=any&datFrom=042015&datTo=042015&embkCode=GAL
-1	Caribbean	Galveston, TX	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/galveston/triumph/4-days/gl1/?numGuests=2&destination=all-destinations&dest=any&datFrom=042015&datTo=042015&embkCode=GAL
 1	Caribbean	Galveston, TX	7 Day Eastern Caribbean	http://www.carnival.com/itinerary/7-day-eastern-caribbean-cruise/galveston/magic/7-days/ec2/?numGuests=2&destination=all-destinations&dest=any&datFrom=042015&datTo=042015&embkCode=GAL
 #>
