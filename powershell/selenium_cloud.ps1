@@ -26,6 +26,7 @@
 
 param (
 [string] $filename = 'screenshot',
+[string]$browser = 'chrome',
 [string] $hub_host = '127.0.0.1',
 [string] $hub_port = '4444'
 
@@ -43,6 +44,22 @@ if ((($hub_host -eq $null) -or ($hub_host -eq ''))) {
   $(throw "Please specify a HUB to run.")
   exit 1
 }
+
+
+# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
+function Get-ScriptDirectory
+{
+  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
+  if ($Invocation.PSScriptRoot) {
+    $Invocation.PSScriptRoot
+  }
+  elseif ($Invocation.MyCommand.Path) {
+    Split-Path $Invocation.MyCommand.Path
+  } else {
+    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
+  }
+}
+
 
 
 function cleanup
@@ -132,7 +149,7 @@ $shared_assemblies = @(
   'nunit.framework.dll'
 )
 
-$env:SCREENSHOT_PATH = 'C:\developer\sergueik\powershell_ui_samples'
+$env:SCREENSHOT_PATH = Get-ScriptDirectory
 
 $screenshot_path = $env:SCREENSHOT_PATH
 
@@ -168,53 +185,41 @@ $phantomjs_executable_folder = 'C:\tools\phantomjs'
   return -2 
   }
 
-  $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::phantomjs()
+  Write-Host "Running on ${browser}"
+  if ($browser -match 'firefox') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
+
+  }
+  elseif ($browser -match 'chrome') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
+  }
+  elseif ($browser -match 'ie') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
+    if ($version -ne $null -and $version -ne 0) {
+      $capability.SetCapability("version",$version.ToString());
+    }
+
+  }
+  elseif ($browser -match 'safari') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
+  }
+  elseif ($browser -match 'phantom') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::phantomjs()
+  }
+  else {
+    throw "unknown browser choice:${browser}"
+  }
+  
   $uri = [System.Uri](('http://{0}:{1}/wd/hub' -f $hub_host,$hub_port))
 
   $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
 
 # http://selenium.googlecode.com/git/docs/api/dotnet/index.html
-[void]$selenium.Manage().Timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds(10))
-[string]$base_url = $selenium.Url = 'http://www.wikipedia.org';
+[void]$selenium.Manage().Timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds(3))
+[string]$base_url = $selenium.Url = 'https://www.whatismybrowser.com';
 $selenium.Navigate().GoToUrl(('{0}/' -f $base_url))
 
-
-[OpenQA.Selenium.Remote.RemoteWebElement]$queryBox = $selenium.FindElement([OpenQA.Selenium.By]::Id('searchInput'))
-$queryBox.Clear()
-$queryBox.SendKeys('Selenium')
-$queryBox.SendKeys([OpenQA.Selenium.Keys]::ArrowDown)
-$queryBox.Submit()
-<#
-Execute javascript using
-OpenQA.Selenium.IJavaScriptExecutor
-and not
-OpenQA.Selenium.PhantomJS.PhantomJSDriver
-#>
-  $element0 = $selenium.FindElement([OpenQA.Selenium.By]::LinkText('Selenium (software)'))
-
-  try {
-
-    [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element0,'color: #CC6600; border: 4px solid #CC3300;')
-    Write-Output ('Optionally Highlighting element: {0}' -f $element0.Text)
-    Start-Sleep 3
-    [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element0,'')
-    Start-Sleep 3
-  } catch [exception]{
-
-    Write-Debug ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0]) 
-
-}
-$selenium.FindElement([OpenQA.Selenium.By]::LinkText('Selenium (software)')).Click()
-
-$title = $selenium.Title
-
-
-
-assert -Script { ($title.IndexOf('Selenium (software)') -gt -1) } -Message $title
-assert -Script { ($selenium.SessionId -eq $null) } -Message 'non null session id'
-
 # Take screenshot identifying the browser
-# $selenium.Navigate().GoToUrl("https://www.whatismybrowser.com/")
 [OpenQA.Selenium.Screenshot]$screenshot = $selenium.GetScreenshot()
 $screenshot.SaveAsFile([System.IO.Path]::Combine( $screenshot_path, ('{0}.{1}' -f $filename,  'png' ) ) , [System.Drawing.Imaging.ImageFormat]::Png )
 
