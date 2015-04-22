@@ -22,7 +22,7 @@
 
 param(
   [string]$hub_host = '127.0.0.1',
-  [string]$browser,
+  [string]$browser = 'chrome',
   [switch]$grid,
   [switch]$pause,
   [string]$username_text = '',
@@ -31,6 +31,43 @@ param(
   [string]$password_text = ''
 
 )
+function custom_pause {
+
+  param([bool]$fullstop)
+  # Do not close Browser / Selenium when run from Powershell ISE
+
+  if ($fullstop) {
+    try {
+      Write-Output 'pause'
+      [void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    } catch [exception]{}
+  } else {
+    Start-Sleep -Millisecond 1000
+  }
+
+}
+
+function extract_match {
+
+  param(
+    [string]$source,
+    [string]$capturing_match_expression,
+    [string]$label,
+    [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
+
+  )
+  Write-Debug ('Extracting from {0}' -f $source)
+  $local:results = {}
+  $local:results = $source | where { $_ -match $capturing_match_expression } |
+  ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
+  if ($local:results -ne $null){
+    Write-Debug 'extract_match:'
+    Write-Debug $local:results
+  }
+  $result_ref.Value = $local:results.Media
+}
+
+
 
 function set_timeouts {
   param(
@@ -123,7 +160,7 @@ $verificationErrors = New-Object System.Text.StringBuilder
 $hub_port = '4444'
 $uri = [System.Uri](('http://{0}:{1}/wd/hub' -f $hub_host,$hub_port))
 
-
+<#
 try {
   $connection = (New-Object Net.Sockets.TcpClient)
   $connection.Connect($hub_host,[int]$hub_port)
@@ -140,33 +177,56 @@ try {
   Start-Sleep -Millisecond 5000
 }
 
+#>
 
-
-Write-Debug "Running on ${browser}"
-if ($browser -match 'firefox') {
-  $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
-
-}
-elseif ($browser -match 'chrome') {
-  $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
-}
-elseif ($browser -match 'ie') {
-  $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
-  if ($version -ne $null -and $version -ne 0) {
-    $capability.SetCapability("version",$version.ToString());
+if ($browser -ne $null -and $browser -ne '') {
+  try {
+    $connection = (New-Object Net.Sockets.TcpClient)
+    $connection.Connect("127.0.0.1",4444)
+    $connection.Close()
+  } catch {
+    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\hub.cmd"
+    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\node.cmd"
+    Start-Sleep -Seconds 10
   }
+  Write-Host "Running on ${browser}"
+  if ($browser -match 'firefox') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
 
+  }
+  elseif ($browser -match 'chrome') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
+  }
+  elseif ($browser -match 'ie') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
+    if ($version -ne $null -and $version -ne 0) {
+      $capability.SetCapability("version",$version.ToString());
+    }
+
+  }
+  elseif ($browser -match 'safari') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
+  }
+  else {
+    throw "unknown browser choice:${browser}"
+  }
+  $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
+  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
+} else {
+  Write-Host 'Running on phantomjs'
+  $phantomjs_executable_folder = "C:\tools\phantomjs"
+  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
+  $selenium.Capabilities.SetCapability("ssl-protocol","any")
+  $selenium.Capabilities.SetCapability("ignore-ssl-errors",$true)
+  $selenium.Capabilities.SetCapability("takesScreenshot",$true)
+  $selenium.Capabilities.SetCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
+  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
+  $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
 }
-elseif ($browser -match 'safari') {
-  $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
-}
-else {
-  throw "unknown browser choice:${browser}"
-}
-$selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
 
 
 $DebugPreference = 'Continue'
+Start-Sleep 10
 $base_url = 'http://octopus.carnival.com:81/app#/'
 
 $selenium.Navigate().GoToUrl($base_url)
@@ -224,14 +284,13 @@ find_page_element_by_css_selector ([ref]$selenium) ([ref]$button) 'button[type=s
 
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$button).Click().Build().Perform()
+$element = $null 
+find_page_element_by_css_selector ([ref]$selenium) ([ref]$element) 'div[ng-show="$root.isAuthenticated"] ul.nav'
 
-# assert
-Start-Sleep 10
+$fullstop = (($PSBoundParameters['pause']) -ne $null)
+$result = $null 
+extract_match -Source ($element.Text -join '') -capturing_match_expression '\b(?<links>(?:Dashboard|Environments|Projects|Library|Tasks))\b' -label 'links' -result_ref ([ref]$result)
+[NUnit.Framework.Assert]::IsTrue(($result -ne $null), 'Expect to see menu: Dashboard|Environments|Projects|Library|Tasks' )
 # Cleanup
 cleanup ([ref]$selenium)
 
-
-<#
-Exception calling "FindElement" with "1" argument(s): "Session
-[08a0a650-d83a-4eef-ad83-90551fbb6148] was terminated due to TIMEOUT"
-#>
