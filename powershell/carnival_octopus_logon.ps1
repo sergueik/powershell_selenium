@@ -241,6 +241,7 @@ if ($PSBoundParameters['pause']) {
   Start-Sleep -Millisecond 1000
 }
 
+
 function find_page_element_by_css_selector {
 
   param(
@@ -284,13 +285,24 @@ find_page_element_by_css_selector ([ref]$selenium) ([ref]$button) 'button[type=s
 
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$button).Click().Build().Perform()
-$element = $null 
-find_page_element_by_css_selector ([ref]$selenium) ([ref]$element) 'div[ng-show="$root.isAuthenticated"] ul.nav'
 
-$fullstop = (($PSBoundParameters['pause']) -ne $null)
-$result = $null 
-extract_match -Source ($element.Text -join '') -capturing_match_expression '\b(?<links>(?:Dashboard|Environments|Projects|Library|Tasks))\b' -label 'links' -result_ref ([ref]$result)
-[NUnit.Framework.Assert]::IsTrue(($result -ne $null), 'Expect to see menu: Dashboard|Environments|Projects|Library|Tasks' )
-# Cleanup
+$css_selector = 'div[ng-show="$root.isAuthenticated"] ul.nav'
+$wait_seconds = 3
+[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+$wait.PollingInterval = 50
+
+try {
+    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
+  }
+  $nav_links = @()
+  $elements = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
+  $elements 
+  $elements  | foreach-object {$nav_links += $_.Text } 
+
+
+ extract_match -Source ($nav_links -join '') -capturing_match_expression '\b(?<links>(?:Dashboard|Environments|Projects|Library|Tasks))\b' -label 'links' -result_ref ([ref]$result)
+ [NUnit.Framework.Assert]::IsTrue(($result -ne $null), 'Expect to see menu: Dashboard|Environments|Projects|Library|Tasks' )
 cleanup ([ref]$selenium)
 
