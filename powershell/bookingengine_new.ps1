@@ -18,12 +18,39 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 param(
-  # in the current environment phantomejs is not installed
   [string]$browser = 'firefox',
   [int]$version,
+  # Start from the place  SI leaves.
+  # NOTE: The GET of the itinerary URL does not work: Book Now is missing and Select Dates is non functional.
+  # [string]$base_url = 'http://www.carnival.com/itinerary/13-day-europe-cruise/trieste/vista/13-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN', 
+  # [string]$title = '4 Day Bahamas',
+  # [string]$port = 'Jacksonville, FL',
+  # [string]$dest= 'Bahamas',
   [switch]$pause
 
 )
+
+
+function amend_itinerary_dates{ 
+
+param (
+    [System.Management.Automation.PSReference]$url_ref = ([ref]$null),
+    [int]$months_increment  = 2
+) 
+$local:url = $url_ref.Value 
+$local:url
+[NUnit.Framework.Assert]::IsTrue((($local:url -ne $null) -and ($local:url -ne '')))
+
+$local:Date = Get-Date
+
+$local:Date  = $local:Date.AddMonths( $months_increment )
+$local:date_str =  $local:Date.ToString('MMyyyy')
+$local:url = $local:url -replace 'datFrom=\d{4,4}', ('datFrom={0}' -f $local:date_str)
+$local:url = $local:url -replace 'datTo=\d{4,4}', ('datTo={0}' -f $local:date_str )
+$url_ref.Value  = $local:url 
+$local:url
+}
+
 function extract_match {
 
   param(
@@ -267,7 +294,7 @@ if ($browser -ne $null -and $browser -ne '') {
 }
 
 $base_url = 'http://www.carnival.com'
-$base_url = 'http://www3.uatcarnival.com/'
+# $base_url = 'http://www3.uatcarnival.com/'
 
 $selenium.Navigate().GoToUrl($base_url + '/')
 
@@ -595,7 +622,7 @@ return getPathTo(arguments[0]);
 
           if ($element4.Text -match 'Book Now') {
             $element6 = $element4
-            Write-Output ('Found: {0} count = {1}' -f $element4.Text,($learn_more_cnt2 + 1))
+            Write-Output ('[1] Found: {0} count = {1}' -f $element4.Text,($learn_more_cnt2 + 1))
             $local:actions2.MoveToElement([OpenQA.Selenium.IWebElement]$element4).Build().Perform()
 
             [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element4,'color: yellow; border: 4px solid yellow;')
@@ -605,7 +632,7 @@ return getPathTo(arguments[0]);
 
             $result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($script,$element4,'')).ToString()
 
-            Write-Output ('Saving  XPATH for {0} = "{1}" ' -f $element4.Text,$result)
+            Write-Output ('[2] Saving  XPATH for {0} = "{1}" ' -f $element4.Text,$result)
 
           }
 
@@ -628,7 +655,7 @@ return getPathTo(arguments[0]);
     $elements2 = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($local:book_now_css_selector))
     if ($element4.Text -match 'Book Now') {
       $element6 = $element4
-      Write-Output ('Found: {0}' -f $element4.Text)
+      Write-Output ('[3] Found: {0}' -f $element4.Text)
 
       $local:actions2.MoveToElement([OpenQA.Selenium.IWebElement]$element4).Build().Perform()
       [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element4,'color: yellow; border: 4px solid yellow;')
@@ -637,7 +664,7 @@ return getPathTo(arguments[0]);
 
       $result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($script,$element4,'')).ToString()
 
-      Write-Output ('Saving  XPATH for {0} = "{1}" ' -f $element4.Text,$result)
+      Write-Output ('[4] Saving  XPATH for {0} = "{1}" ' -f $element4.Text,$result)
     }
   }
   if ($result -ne $null -and $result -ne '') {
@@ -781,7 +808,7 @@ return getPathTo(arguments[0]);
 }
 
 #---
-
+write-host 'selct a random sailing.'
 select_one_seailing -pick_random_sailing $true
 
 Start-Sleep -Milliseconds 3000
@@ -792,7 +819,7 @@ Start-Sleep -Milliseconds 3000
 be2_button_process -data_tag_page_suffix ":number of rooms"
 be2_button_process -data_tag_page_suffix ':number of travelers'
 be2_button_process -data_tag_page_suffix ':check for deals'
-Start-Sleep -Seconds 10
+Start-Sleep -Seconds 120
 be2_button_process -data_tag_page_suffix ':stateroom category selection'
 <#
 Exception : Unable to locate element: {"method":"css selector","selector":"a[da
@@ -866,4 +893,3 @@ We're
 <span class="accent"> almost done </span>
 </h2>
 #>
-
