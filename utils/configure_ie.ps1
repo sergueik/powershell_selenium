@@ -1,3 +1,25 @@
+#Copyright (c) 2014,2015 Serguei Kouzmine
+#
+#Permission is hereby granted, free of charge, to any person obtaining a copy
+#of this software and associated documentation files (the "Software"), to deal
+#in the Software without restriction, including without limitation the rights
+#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#copies of the Software, and to permit persons to whom the Software is
+#furnished to do so, subject to the following conditions:
+#
+#The above copyright notice and this permission notice shall be included in
+#all copies or substantial portions of the Software.
+#
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#THE SOFTWARE.
+# $DebugPreference = 'Continue'
+
+
 param(
   [switch]$all # for degrade6_ie.ps1
 )
@@ -81,14 +103,6 @@ if ($setting -ne $null) {
 }
 popd
 
- 
-# Step 4  degrade4_ie.ps1  
-Write-Host -ForegroundColor 'green' @"
-This s cript is a stub. The
-"Protected Mode is Turned Off - Don't show this message again" - semi-alert banner dialog.
-is now done in 'degrade6_ie.ps1' 
-"@
- 
 # Step 5 degrade5_ie.ps1  
 Write-Host -ForegroundColor 'green' @"
 This call enables "Delete browsing History on exit" - checkbox
@@ -237,6 +251,14 @@ Write-Host -ForegroundColor 'green' @"
 This call turns off "Popup Blocker".
 "@
 
+<#
+
+With IE 8  this does not exist in the registry
+This call turns off "Popup Blocker".
+cd : Cannot find path 'HKCU:\Software\Microsoft\Internet Explorer\New Windows'
+because it does not exist.
+At C:\scripts\configure1_ie.ps1:246 char:1
+#>
 $hive = 'HKCU:'
 $path = '/Software/Microsoft/Internet Explorer/New Windows'
 $name = 'PopupMgr'

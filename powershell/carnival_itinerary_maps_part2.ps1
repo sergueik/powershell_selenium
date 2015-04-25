@@ -18,9 +18,9 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 param(
-  # in the current environment phantomejs is not installed 
-  [string]$browser = 'firefox',
+  [string]$browser = 'chrome',
   [int]$version,
+  [int]$sailing_num = 0,
   [switch]$pause
 
 )
@@ -72,134 +72,85 @@ function Get-ScriptDirectory
     $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
   }
 }
-# http://www.codeproject.com/Tips/816113/Console-Monitor
-Add-Type -TypeDefinition @"
-using System;
-using System.Drawing;
-using System.IO;
-using System.Windows.Forms;
-using System.Drawing.Imaging;
-public class WindowHelper
-{
-    private Bitmap _bmp;
-    private Graphics _graphics;
-    private int _count = 0;
-    private Font _font;
 
-    private string _timeStamp;
-    private string _browser;
-    private string _srcImagePath;
+$sailings = @(
+  @{
+    'text' = '4 Day Europe';
+    'url' = 'http://www.carnival.com/BookingEngine/Stateroom/Stateroom2/?embkCode=TRS&itinCode=MEB&durDays=13&shipCode=VS&subRegionCode=E&sailDate=05012016&sailingID=70762&numGuests=2&showDbl=False&isOver55=N&isPastGuest=N&stateCode=&isMilitary=N&evsel=&be_version=1';
+  },
 
-    private string _dstImagePath;
+  @{
+    'text' = '4 Day Western Caribbean';
+    'url' = 'http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/ecstasy/4-days/kc3/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA';
+  },
+  @{
+    'text' = 'Carnival Live Presents Smokey Robinson - 4 Day Western Caribbean';
+    'url' = 'http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/ecstasy/4-days/dab/?evsel=SYR&numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA';
+  },
+  @{
 
-    public string DstImagePath
-    {
-        get { return _dstImagePath; }
-        set { _dstImagePath = value; }
-    }
+    'text' = '4 Day Western Caribbean';
+    'url' = 'http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/victory/4-days/kwp/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA';
+  },
+  @{
 
-    public string TimeStamp
-    {
-        get { return _timeStamp; }
-        set { _timeStamp = value; }
-    }
+    'text' = '5 Day Eastern Caribbean';
+    'url' = 'http://www.carnival.com/itinerary/5-day-eastern-caribbean-cruise/miami/victory/5-days/ec0/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA';
+  },
+  @{
 
-    public string SrcImagePath
-    {
-        get { return _srcImagePath; }
-        set { _srcImagePath = value; }
-    }
+    'text' = '5 Day Western Caribbean';
+    'url' = 'http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/miami/victory/5-days/wcn/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA';
+  },
+  @{
 
-    public string Browser
-    {
-        get { return _browser; }
-        set { _browser = value; }
-    }
-    public int Count
-    {
-        get { return _count; }
-        set { _count = value; }
-    }
-    public void Screenshot(bool Stamp = false)
-    {
-        _bmp = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
-        _graphics = Graphics.FromImage(_bmp);
-        _graphics.CopyFromScreen(0, 0, 0, 0, _bmp.Size);
-        if (Stamp)
-        {
-            StampScreenshot();
-        }
-        else
-        {
-            _bmp.Save(_dstImagePath, ImageFormat.Jpeg);
-        }
-        Dispose();
-    }
+    'text' = '4 Day Canada/New England';
+    'url' = 'http://www.carnival.com/itinerary/4-day-canada-new-england-cruise/new-york/splendor/4-days/cac/?numGuests=2&destination=canada-new-england&dest=NN&datFrom=062015&datTo=062015&embkCode=NYC';
+  },
+  @{
 
-    public void StampScreenshot()
-    {
-        string firstText = _timeStamp;
-        string secondText = _browser;
+    'text' = '10 Day Europe';
+    'url' = 'http://www.carnival.com/itinerary/10-day-europe-cruise/barcelona/vista/10-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN';
+  },
+  @{
 
-        PointF firstLocation = new PointF(10f, 10f);
-        PointF secondLocation = new PointF(10f, 55f);
-        if (_bmp == null)
-        {
-            createFromFile();
-        }
-        _graphics = Graphics.FromImage(_bmp);
-        _font = new Font("Arial", 40);
-        _graphics.DrawString(firstText, _font, Brushes.Black, firstLocation);
-        _graphics.DrawString(secondText, _font, Brushes.Blue, secondLocation);
-        _bmp.Save(_dstImagePath, ImageFormat.Jpeg);
-        Dispose();
+    'text' = '10 Day Europe';
+    'url' = 'http://www.carnival.com/itinerary/10-day-europe-cruise/athens/vista/10-days/mea/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN';
+  },
+  @{
 
-    }
-    public WindowHelper()
-    {
-    }
+    'text' = '13 Day Europe';
+    'url' = 'http://www.carnival.com/itinerary/13-day-europe-cruise/trieste/vista/13-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN';
+  },
+  @{
 
-    public void Dispose()
-    {
-        _font.Dispose();
-        _bmp.Dispose();
-        _graphics.Dispose();
 
-    }
+    'text' = '8 Day Glacier Bay';
+    'url' = 'http://www.carnival.com/itinerary/8-day-glacier-bay-cruise/vancouver/legend/8-days/glb/?numGuests=2&destination=alaska&dest=A&datFrom=052015&datTo=052015&embkCode=SEA';
+  },
+  @{
 
-    private void createFromFile()
-    {
-        try
-        {
-            _bmp = new Bitmap(_srcImagePath);
-        }
-        catch (Exception e)
-        {
-            throw e;
-        }
-        if (_bmp == null)
-        {
-            throw new Exception("failed to load image");
-        }
-    }
-}
+    'text' = '7 Day Glacier Bay';
+    'url' = 'http://www.carnival.com/itinerary/7-day-glacier-bay-cruise/seattle/legend/7-days/glm/?numGuests=2&destination=alaska&dest=A&datFrom=052015&datTo=052015&embkCode=SEA';
+  }
+)
 
-"@ -ReferencedAssemblies 'System.Windows.Forms.dll','System.Drawing.dll','System.Data.dll'
+
 
 function find_page_element_by_css_selector {
 
   param(
     [System.Management.Automation.PSReference]$selenium_driver_ref,
     [System.Management.Automation.PSReference]$element_ref,
-    [string] $css_selector,
+    [string]$css_selector,
     [int]$wait_seconds = 10
 
   )
 
-   if ($css_selector -eq '' -or $css_selector -eq $null ) {
-  return 
-}
-  $local:element = $null 
+  if ($css_selector -eq '' -or $css_selector -eq $null) {
+    return
+  }
+  $local:element = $null
   [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
   $wait.PollingInterval = 50
@@ -207,11 +158,11 @@ function find_page_element_by_css_selector {
   try {
     [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
   } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0], $css_selector )
+    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
   }
 
   $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-  $element_ref.Value =  $local:element
+  $element_ref.Value = $local:element
 
 }
 
@@ -220,15 +171,15 @@ function find_page_element_by_xpath {
   param(
     [System.Management.Automation.PSReference]$selenium_driver_ref,
     [System.Management.Automation.PSReference]$element_ref,
-    [string] $xpath,
+    [string]$xpath,
     [int]$wait_seconds = 10
 
   )
 
-   if ($xpath -eq '' -or $xpath -eq $null ) {
-  return 
-}
-  $local:element = $null 
+  if ($xpath -eq '' -or $xpath -eq $null) {
+    return
+  }
+  $local:element = $null
   [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
   $wait.PollingInterval = 50
@@ -236,11 +187,11 @@ function find_page_element_by_xpath {
   try {
     [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
   } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0], $css_selector )
+    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
   }
 
   $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::XPath($xpath))
-  $element_ref.Value =  $local:element
+  $element_ref.Value = $local:element
 
 }
 
@@ -301,7 +252,7 @@ if ($browser -ne $null -and $browser -ne '') {
   elseif ($browser -match 'ie') {
     $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
     if ($version -ne $null -and $version -ne 0) {
-      $capability.SetCapability("version",$version.ToString());
+      $capability.SetCapability('version',$version.ToString());
     }
 
   }
@@ -309,7 +260,7 @@ if ($browser -ne $null -and $browser -ne '') {
     $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
   }
   else {
-    throw "unknown browser choice:${browser}"
+    throw "unknown browser choice: ${browser}"
   }
   $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
   $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
@@ -325,8 +276,11 @@ if ($browser -ne $null -and $browser -ne '') {
   $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
 }
 
+write-output $sailings[$sailing_num]['text']
 $base_url = 'http://www.carnival.com/BookingEngine/Stateroom/Stateroom2/?embkCode=LAX&itinCode=LAF&durDays=3&shipCode=IM&subRegionCode=MB&sailDate=05072015&sailingID=69542&numGuests=2&showDbl=False&isOver55=N&isPastGuest=N&stateCode=&isMilitary=N&evsel=&be_version=1
 '
+$base_url = $sailings[$sailing_num]['url']
+
 
 $selenium.Navigate().GoToUrl($base_url + '/')
 
@@ -334,6 +288,51 @@ $selenium.Navigate().GoToUrl($base_url + '/')
 # protect from blank page
 
 $selenium.Manage().Window.Maximize()
+
+
+        # Click on Book Now
+
+        $book_now_css_selector = 'li[class = action-col] a[class *=btn-red]'
+
+        try {
+          [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($book_now_css_selector)))
+        } catch [exception]{
+          Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+        }
+
+        $book_now_buttons = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($book_now_css_selector))
+        $book_now_element = $null
+
+        foreach ($element8 in $book_now_buttons) {
+          if (!$book_now_element) {
+            if ($element8.Text -match 'BOOK NOW') {
+              Write-Output ('Selecting {0}' -f $element8.Text)
+              $book_now_element = $element8
+            }
+          }
+        }
+        $element8 = $null
+        [OpenQA.Selenium.Interactions.Actions]$actions4 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+
+        [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$book_now_element,'color: yellow; border: 4px solid yellow;')
+        Start-Sleep 3
+        [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$book_now_element,'')
+
+        $actions4.MoveToElement([OpenQA.Selenium.IWebElement]$book_now_element).Build().Perform()
+
+        Start-Sleep -Millisecond 1000
+        Write-Output ('Click : "{0}"' -f $book_now_element.Text)
+        $book_now_element.Click()
+        Start-Sleep -Milliseconds 1000
+        try {
+          [NUnit.Framework.StringAssert]::Contains('http://www.carnival.com/BookingEngine/Stateroom',$selenium.url,{})
+        } catch [exception]{
+          write-output ("Unexpected redirect:`r`t{0}`rtAborting." -f $selenium.url )
+          cleanup ([ref]$selenium)
+          return
+        }
+
+
 
 # Write-Output $selenium.url
 
@@ -368,7 +367,7 @@ $view_itin_button.Click()
 Start-Sleep -Milliseconds 2000
 
 [string]$xpath = "//iframe[@id='fancybox-frame']"
-[Object]$top_frame = $null
+[object]$top_frame = $null
 find_page_element_by_xpath ([ref]$selenium) ([ref]$top_frame) $xpath
 $current_frame = $selenium.SwitchTo().Frame($top_frame)
 
@@ -391,7 +390,7 @@ if ($found_presentation) {
   $map_button = $current_frame.FindElement([OpenQA.Selenium.By]::CssSelector($map_css_selector))
 
   if ($map_button.Displayed) {
-   write-output 'This itinerary has a map'
+    Write-Output 'This itinerary has a map'
     $map_button.Click()
     Start-Sleep -Millisecond 1000
   }
@@ -412,50 +411,25 @@ if ($found_inner_pages_itinerary) {
   $inner_pages_itinerary_button = $current_frame.FindElement([OpenQA.Selenium.By]::CssSelector($inner_pages_itinerary_css_selector))
 
 
- 
 
-        Write-Output 'trying iframe source'
-        $page_source = (( $inner_pages_itinerary_button.GetAttribute("innerHTML")) -join '')
 
-        if ($page_source -match '/~/media/Images/Itineraries/Maps') {
+  Write-Output 'trying iframe source'
+  $page_source = (($inner_pages_itinerary_button.GetAttribute("innerHTML")) -join '')
 
-           $result = $null
-           extract_match -Source $page_source -capturing_match_expression '(?<media>/~/media/Images/Itineraries/Maps[^\"]+)' -label 'media' -result_ref ([ref]$result)
-           Write-Output ('Found media images: {0}' -f $result)
-        } else  { 
-           Write-Output ('No media images found')
-        }
+  if ($page_source -match '/~/media/Images/Itineraries/Maps') {
+
+    $result = $null
+    extract_match -Source $page_source -capturing_match_expression '(?<media>/~/media/Images/Itineraries/Maps[^\"]+)' -label 'media' -result_ref ([ref]$result)
+    Write-Output ('Found media images: {0}' -f $result)
+  } else {
+    Write-Output ('No media images found')
+  }
 
   Start-Sleep -Millisecond 1000
 }
 # take and stamp screenshot
 [void]$selenium.SwitchTo().DefaultContent()
 
-<#
-try {
-  [OpenQA.Selenium.Screenshot]$screenshot = $selenium.GetScreenshot()
-  $guid = [guid]::NewGuid()
-  $image_name = ($guid.ToString())
-  [string]$image_path = ('{0}\{1}\{2}.{3}' -f (Get-ScriptDirectory),'temp',$image_name,'.jpg')
-
-  [string]$stamped_image_path = ('{0}\{1}\{2}-stamped.{3}' -f (Get-ScriptDirectory),'temp',$image_name,'.jpg')
-  $screenshot.SaveAsFile($image_path,[System.Drawing.Imaging.ImageFormat]::Jpeg)
-
-
-  $owner = New-Object WindowHelper
-  $owner.count = $iteration
-  $owner.Browser = $browser
-  $owner.SrcImagePath = $image_path
-  $owner.TimeStamp = Get-Date
-  $owner.DstImagePath = $stamped_image_path
-  [boolean]$stamp = $false
-
-  $owner.StampScreenshot()
-
-} catch [exception]{
-  Write-Output $_.Exception.Message
-}
-#>
 # TODO :finish parameters
 $fullstop = (($PSBoundParameters['pause']) -ne $null)
 
@@ -465,4 +439,3 @@ if (-not ($host.Name -match 'ISE')) {
   # Cleanup
   cleanup ([ref]$selenium)
 }
-
