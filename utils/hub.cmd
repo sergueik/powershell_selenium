@@ -16,9 +16,10 @@ set MAVEN_OPTS=-Xms256m -Xmx512m
 PATH=%JAVA_HOME%\bin;%PATH%;%GROOVY_HOME%\bin;%M2%
 
 PATH=%PATH%;c:\Program Files\Mozilla Firefox
-
+set HUB_CONFIG=hub.json
 set LOGFILE=hub.log
-type NuL  > %LOGFILE%
+
+type NUL > %LOGFILE%
 
 
 REM 
@@ -45,7 +46,7 @@ org.openqa.grid.selenium.GridLauncher ^
 -trustAllSSLCertificates true ^
 -maxSession 20 ^
 -newSessionWaitTimeout 600000 ^
-
+-hubConfig %HUB_CONFIG% ^
 
 REM Keep the Blank line above intact
 goto :EOF
