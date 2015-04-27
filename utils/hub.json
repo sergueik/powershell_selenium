@@ -1,4 +1,3 @@
-// https://code.google.com/p/selenium/source/browse/java/server/src/org/openqa/grid/common/defaults/DefaultHub.json
 {
   "host": null,
   "port": 4444,
