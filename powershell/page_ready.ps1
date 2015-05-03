@@ -125,8 +125,11 @@ namespace WaitForExtensions
         public static void Wait2(/* this // no longer is an extension method  */ IWebDriver driver)
         {
             var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(driver, TimeSpan.FromSeconds(30.00));
+            wait.PollingInterval = TimeSpan.FromSeconds(0.50);
             wait.Until(dummy =>
             {
+                string result = ((IJavaScriptExecutor)driver).ExecuteScript("return document.readyState").ToString();
+                Console.Error.WriteLine(String.Format("result = {0}", result));
                 Console.WriteLine(String.Format("cnt = {0}", cnt));
                 cnt++;
                 return (cnt >= 3);
@@ -140,71 +143,76 @@ namespace WaitForExtensions
 # http://briarbird.com/archives/worst-websites-worth-a-visit/
 $base_url = 'http://arngren.net/'
 
-$base_url = 'http://www.google.com/'
+# $base_url = 'http://www.google.com/'
 $selenium.Navigate().GoToUrl($base_url)
 
-[WaitForExtensions.DocumentReadyState]::Wait2($selenium)
+ [WaitForExtensions.DocumentReadyState]::Wait2($selenium)
 
 [NUnit.Framework.Assert]::AreEqual($verificationErrors.Length,0)
+
 $global:selenium = [OpenQA.Selenium.Remote.RemoteWebDriver]($selenium)
+<#
+$result = Invoke-Command -ScriptBlock {
+  param([OpenQA.Selenium.Remote.RemoteWebDriver]$dummy)
+  # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
+  [string]$script = 'return document.readyState'
+  # document.readyState = "interactive"
+  # document.readyState = "complete"
+  $result = ([OpenQA.Selenium.IJavaScriptExecutor]$global:selenium).ExecuteScript($script,$null,'')
+  # write-Debug ('document.readyState = "{0}" ' -f $result )
+  # return [bool]( $result -match 'complete' )
+  [OpenQA.Selenium.IWebElement]$element = $global:selenium.FindElement([OpenQA.Selenium.By]::Id("hplogo"))
+  # write-host 'sss3'
+  return $element
+}
+$result.GetType()
+$cnt = 0
+$result | ForEach-Object {
+
+  $element = $_
+  if ($element.GetType().ToString() -match 'RemoteWebElement') {
+    Write-Output ('cnt = {0}' -f $cnt)
+    $element
+
+  }
+  $cnt++
+}
+#>
+<#
 try {
-
-  $result = Invoke-Command -ScriptBlock {
-    param([OpenQA.Selenium.Remote.RemoteWebDriver]$dummy)
-    # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-    # $global:selenium.GetType() | Format-List
-    [string]$script = 'return document.readyState'
-    # document.readyState = "interactive"
-    # document.readyState = "complete"
-    $result = ([OpenQA.Selenium.IJavaScriptExecutor]$global:selenium).ExecuteScript($script,$null,'')
-    # write-Debug ('document.readyState = "{0}" ' -f $result )
-    # return [bool]( $result -match 'complete' )
-    [OpenQA.Selenium.IWebElement]$element = $global:selenium.FindElement([OpenQA.Selenium.By]::Id("hplogo"))
-    # write-host 'sss3'
-    return $element
-  }
-  $result.GetType()
-  $cnt = 0
-  $result | ForEach-Object {
-
-    $element = $_
-    if ($element.GetType().ToString() -match 'RemoteWebElement') {
-      Write-Output ('cnt = {0}' -f $cnt)
-      $element
-
-    }
-    $cnt++
-  }
-
+# $debugpreference=continue
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
-  $wait.PollingInterval = 100
-  [OpenQA.Selenium.IWebElement]$status = $wait.Until([OpenQA.Selenium.IWebElement]((Invoke-Command -ScriptBlock {
-          param([OpenQA.Selenium.Remote.RemoteWebDriver]$dummy)
-          # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-          $global:selenium.GetType() | Format-List
-          [string]$script = 'return document.readyState'
-          # document.readyState = "interactive"
-          # document.readyState = "complete"
-          $result = ([OpenQA.Selenium.IJavaScriptExecutor]$global:selenium).ExecuteScript($script,$null,'')
-          Write-Debug ('document.readyState = "{0}" ' -f $result)
-          # return [bool]( $result -match 'complete' )
-          [OpenQA.Selenium.IWebElement]$element = $global:selenium.FindElement([OpenQA.Selenium.By]::Id("hplogo"))
-          return $element
-        })[5]))
-
+  $wait.PollingInterval = 50
+$status = $false
+  write-debug $status
+  [OpenQA.Selenium.IWebElement]$status = $wait.Until((Invoke-Command -ScriptBlock {
+        param([OpenQA.Selenium.IWebDriver]$dummy)
+        [OpenQA.Selenium.IWebElement]$element = $global:selenium.FindElement([OpenQA.Selenium.By]::Id("hplogo"))
+        return $element
+      }))
+  
+} catch [exception]{
+  Write-Output ("Exception (ignored):`r`n{0}" -f $_.Exception.Message)
+  # TODO: scriptblock is being called but the signature is still wrong:
+  # Cannot find an overload for "Until" and the argument count: "1".
+write-debug $status
+}
+#>
+# $debugpreference=silentlycontinue
+try {
+#  $debugpreference=continue
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
-  $wait.PollingInterval = 100
-  [bool]$status = $wait.Until([bool]((Invoke-Command -ScriptBlock {
-          param([OpenQA.Selenium.Remote.RemoteWebDriver]$dummy)
-          # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-          $global:selenium.GetType() | Format-List
-          [string]$script = 'return document.readyState'
-          # document.readyState = "interactive"
-          # document.readyState = "complete"
-          $result = ([OpenQA.Selenium.IJavaScriptExecutor]$global:selenium).ExecuteScript($script,$null,'')
-          Write-Debug ('document.readyState = "{0}" ' -f $result)
-          return [bool]($result -match 'complete')
-        })[5]))
+  $wait.PollingInterval = 50
+  [bool]$status = $wait.Until((Invoke-Command -ScriptBlock {
+        param([OpenQA.Selenium.IWebDriver]$dummy)
+        # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
+        [string]$script = 'return document.readyState'
+        # document.readyState = "interactive"
+        # document.readyState = "complete"
+        $result = ([OpenQA.Selenium.IJavaScriptExecutor]$global:selenium).ExecuteScript($script,$null,'')
+        Write-Debug ('document.readyState = "{0}" ' -f $result)
+        return [bool]($result -match 'complete')
+      }))
 
 
 } catch [exception]{
@@ -212,7 +220,7 @@ try {
   # TODO: scriptblock is being called but the signature is still wrong:
   # Cannot find an overload for "Until" and the argument count: "1".
 }
-
+#$debugpreference=silentlycontinue
 <#
 TODO:
 TitleIs()
