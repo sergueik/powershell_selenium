@@ -162,6 +162,35 @@ function redirect_workaround {
 }
 
 
+function compute_media_dimensions {
+
+  # TODO: md5 hash 
+  param(
+    $base_url = 'http://www.carnival.com',
+    $web_host = 'www.carnival.com',
+    $img_src
+  )
+
+  $img_url = ('{0}/{1}' -f $base_url,$img_src)
+  $media_size = 0
+  <#
+    $warmup_response_time = [System.Math]::Round((Measure-Command {
+          try {
+            $media_size = redirect_workaround -web_host $web_host -app_url $app_url
+            # (New-Object net.webclient).DownloadString($_)
+          } catch [exception]{
+            Write-Output ("Exception `n{0}" -f (($_.Exception.Message) -split "`n")[0])
+          }
+        }
+      ).totalmilliseconds)
+    # Write-Output ("Opening page: {0} took {1} ms" -f $app_url,$warmup_response_time)
+#>
+  $media_size = redirect_workaround -web_host $web_host -app_url $img_url
+  return $media_size
+
+}
+
+
 
 function cleanup
 {
@@ -264,8 +293,7 @@ $window_size = $selenium.Manage().Window.Size
 $base_url = 'http://www.carnival.com/shore-excursions/party/my-jamaican-home-for-the-day-425123'
 $selenium.Navigate().GoToUrl($base_url)
 # set_timeouts ([ref]$selenium)
-$selenium.Navigate().Refresh()
-
+# $selenium.Navigate().Refresh()
 
 
 $css_selector = 'div.carousel-wrapper div.owl-item div.item'
@@ -297,64 +325,48 @@ foreach ($item in $carousel_items)
 
   if (-not $item_img.Displayed) {
 
-  } else {
-    highlight ([ref]$selenium) ([ref]$item_img)
-    $item_img.Click()
+    $arrow_next_selector = 'div[class*=nav-right][class*=carousel-nav] div[class*=arrow-next]'
+    $arrow_next_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($arrow_next_selector))
+    [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+    [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$arrow_next_element).Build().Perform()
     Start-Sleep -Milliseconds 100
-    $image_preview_selector = 'div[class *=modal] div[style^=background-image]'
-    $image_preview_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($image_preview_selector))
-    $image_preview_result = $null
-    # write-output $image_preview_element.GetAttribute('style')
-    extract_match -Source $image_preview_element.GetAttribute('style') -capturing_match_expression 'url\(\"(?<media>.+)\"\)' -label 'media' -result_ref ([ref]$image_preview_result)
-    Write-Output ('Image  path: {0}' -f $image_preview_result)
-
-    $close_selector = 'div[class *=modal] a[class*=close]'
-    $close_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($close_selector))
-    $close_element.Click()
-    Start-Sleep -Milliseconds 100
+    [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$arrow_next_element).click().Build().Perform()
+    <#
+      $actions2.clickAndHold($arrow_next_element)
+      $actions2.release()
+    #>
+    $item_img = $item.FindElement([OpenQA.Selenium.By]::CssSelector($css_img_selector))
+    Start-Sleep -Milliseconds 200
+    # Assert $item_img.Displayed
 
   }
+  highlight ([ref]$selenium) ([ref]$item_img)
+  $item_img.click()
+  Start-Sleep -Milliseconds 100
+  $image_preview_selector = 'div[class *=modal] div[style^=background-image]'
+  $image_preview_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($image_preview_selector))
+  $image_preview_src = $null
+  # write-output $image_preview_element.GetAttribute('style')
+  extract_match -Source $image_preview_element.GetAttribute('style') -capturing_match_expression 'url\(\"(?<media>.+)\"\)' -label 'media' -result_ref ([ref]$image_preview_src)
+  Write-Output ('Preview Image: {0}' -f $image_preview_src)
+  $media_size = compute_media_dimensions -img_src $image_preview_src
+  Write-Host ('Media size : {0}' -f $media_size)
 
-  $img_src = $item_img.GetAttribute("data-main-img-src")
+  $close_selector = 'div[class *=modal] a[class*=close]'
+  $close_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($close_selector))
+  $close_element.click()
+  Start-Sleep -Milliseconds 100
+
+
+  $carousel_img_src = $item_img.GetAttribute("data-main-img-src")
   $photopreview_cnt = $item_img.GetAttribute("photopreview")
-  <#
-    write-output  '--------'
-    $img_src | format-list 
-    write-output  '--------'
-  #>
   Write-Output ('Screen Location: {0}' -f $item.LocationOnScreenOnceScrolledIntoView.X)
   Write-Output ('Count = {0}' -f $photopreview_cnt)
-  Write-Output ('Image  path: {0}' -f $img_src)
-  if ($photopreview_cnt -ne $sample_cnt) {
-
-    $found = $true
-
-    # [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-    $base_url = 'http://www.carnival.com'
-    $img_url = ('{0}/{1}' -f $base_url,$img_src)
-    # Write-Output ('App URL: {0}' -f $img_url)
-    $web_host = 'www.carnival.com'
-    $media_size = 0
-    <#
-    $warmup_response_time = [System.Math]::Round((Measure-Command {
-          try {
-            $media_size = redirect_workaround -web_host $web_host -app_url $app_url
-            # (New-Object net.webclient).DownloadString($_)
-          } catch [exception]{
-            Write-Output ("Exception `n{0}" -f (($_.Exception.Message) -split "`n")[0])
-          }
-        }
-      ).totalmilliseconds)
-    # Write-Output ("Opening page: {0} took {1} ms" -f $app_url,$warmup_response_time)
-#>
-    $media_size = redirect_workaround -web_host $web_host -app_url $img_url
-
-    Write-Host ('Media size : {0}' -f $media_size)
-
-  }
+  Write-Output ('Carousel Image: {0}' -f $carousel_img_src)
+  $media_size = compute_media_dimensions -img_src $carousel_img_src
+  Write-Host ('Media size : {0}' -f $media_size)
   $index++
 }
-
 
 Start-Sleep -Milliseconds 1000
 # Cleanup
