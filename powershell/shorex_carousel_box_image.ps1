@@ -40,6 +40,45 @@ function Get-ScriptDirectory
   }
 }
 
+function highlight {
+
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [System.Management.Automation.PSReference]$element_ref,
+    [int]$delay = 300
+  )
+
+  # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'color: yellow; border: 4px solid yellow;')
+  Start-Sleep -Millisecond $delay
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
+
+
+}
+
+
+function extract_match {
+
+  param(
+    [string]$source,
+    [string]$capturing_match_expression,
+    [string]$label,
+    [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
+
+  )
+
+  if ($DebugPreference -eq 'Continue') {
+    Write-Debug ('Extracting from {0}' -f $source)
+  }
+
+  $local:results = {}
+  $local:results = $source | where { $_ -match $capturing_match_expression } |
+  ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
+  $result_ref.Value = $local:results.Media
+}
+
+
+
 function set_timeouts {
   param(
     [System.Management.Automation.PSReference]$selenium_ref,
@@ -115,7 +154,7 @@ function redirect_workaround {
 
       $result = (Invoke-WebRequest -Uri $location -ErrorAction 'Stop')
     }
-  } catch [Exception]{}
+  } catch [exception]{}
 
 
   return $result.Content.length
@@ -131,8 +170,8 @@ function cleanup
   )
   try {
     $selenium_ref.Value.Quit()
-  } catch [Exception]{
-      Write-Output (($_.Exception.Message) -split "`n")[0]
+  } catch [exception]{
+    Write-Output (($_.Exception.Message) -split "`n")[0]
 
     # Ignore errors if unable to close the browser
   }
@@ -164,8 +203,8 @@ if ($PSBoundParameters["browser"]) {
     $connection = (New-Object Net.Sockets.TcpClient)
     $connection.Connect("127.0.0.1",4444)
     $connection.Close()
-  } catch [Exception] {
-    Write-Output ('Exception: {0}' -f ( ($_.Exception.Message) -split "`n")[0] )
+  } catch [exception]{
+    Write-Output ('Exception: {0}' -f (($_.Exception.Message) -split "`n")[0])
     Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
     Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
     Start-Sleep -Seconds 10
@@ -240,7 +279,7 @@ try {
 }
 
 [OpenQA.Selenium.IWebElement[]]$carousel_items = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
-write-output ('Iterating over {0} items' -f $carousel_items.Count )
+Write-Output ('Iterating over {0} items' -f $carousel_items.Count)
 
 $index = 0
 $max_count = 100
@@ -251,10 +290,31 @@ foreach ($item in $carousel_items)
   if ($index -gt $max_count) {
     continue
   }
-  write-output 'Getting the media URL'
+  Write-Output 'Getting the media URL'
   $css_img_selector = 'img'
 
-  $item_img = $item.FindElements([OpenQA.Selenium.By]::CssSelector($css_img_selector))
+  $item_img = $item.FindElement([OpenQA.Selenium.By]::CssSelector($css_img_selector))
+
+  if (-not $item_img.Displayed) {
+
+  } else {
+    highlight ([ref]$selenium) ([ref]$item_img)
+    $item_img.Click()
+    Start-Sleep -Milliseconds 100
+    $image_preview_selector = 'div[class *=modal] div[style^=background-image]'
+    $image_preview_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($image_preview_selector))
+    $image_preview_result = $null
+    # write-output $image_preview_element.GetAttribute('style')
+    extract_match -Source $image_preview_element.GetAttribute('style') -capturing_match_expression 'url\(\"(?<media>.+)\"\)' -label 'media' -result_ref ([ref]$image_preview_result)
+    Write-Output ('Image  path: {0}' -f $image_preview_result)
+
+    $close_selector = 'div[class *=modal] a[class*=close]'
+    $close_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($close_selector))
+    $close_element.Click()
+    Start-Sleep -Milliseconds 100
+
+  }
+
   $img_src = $item_img.GetAttribute("data-main-img-src")
   $photopreview_cnt = $item_img.GetAttribute("photopreview")
   <#
@@ -271,10 +331,11 @@ foreach ($item in $carousel_items)
 
     # [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
     $base_url = 'http://www.carnival.com'
-    $app_url = ('{0}/{1}' -f $base_url,$img_src)
-    Write-Output ('App URL: {0}' -f $app_url)
+    $img_url = ('{0}/{1}' -f $base_url,$img_src)
+    # Write-Output ('App URL: {0}' -f $img_url)
     $web_host = 'www.carnival.com'
     $media_size = 0
+    <#
     $warmup_response_time = [System.Math]::Round((Measure-Command {
           try {
             $media_size = redirect_workaround -web_host $web_host -app_url $app_url
@@ -285,14 +346,10 @@ foreach ($item in $carousel_items)
         }
       ).totalmilliseconds)
     # Write-Output ("Opening page: {0} took {1} ms" -f $app_url,$warmup_response_time)
-    $media_size = redirect_workaround -web_host $web_host -app_url $app_url
+#>
+    $media_size = redirect_workaround -web_host $web_host -app_url $img_url
 
     Write-Host ('Media size : {0}' -f $media_size)
-
-    <#
-       $item.Click()
-       Start-Sleep -Milliseconds 1000
-     #>
 
   }
   $index++
