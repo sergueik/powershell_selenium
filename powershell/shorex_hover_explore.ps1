@@ -1,22 +1,3 @@
-#Copyright (c) 2015 Serguei Kouzmine
-#
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-#
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-#
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-#THE SOFTWARE.
 param(
   # in the current environment phantomejs is not installed 
   [string]$browser = 'chrome',
@@ -512,22 +493,84 @@ find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element3) $data_
 $actions3.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Click().Build().Perform()
 $value_element3 = $null
 $actions3 = $null
+
+# get al destinations 
+
+$value_element4a = $null
+$destination_container_css_selector = 'div#destinations' 
+
+find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element4a) $destination_container_css_selector
+
+$value_element4a
+$shoreex_destinations_modal_raw_xmldata  =  ('<?xml version="1.0"?><dummy>{0}</dummy>' -f  ( $value_element4a.GetAttribute('innerHTML') -join ''))
+highlight ([ref]$selenium) ([ref]$value_element4a)
+write-output ("`XML:`r`n{0}" -f $shoreex_destinations_modal_raw_xmldata )
+
+#  http://www.powershellmagazine.com/2014/06/30/pstip-using-xpath-in-powershell-part-4/
+$s1 = [xml]$shoreex_destinations_modal_raw_xmldata
+
+$cnt = 0
+
+$data = @( @{
+    'code' = $null;
+    'url' = $null;
+    'description' = $null;
+
+  })
+
+$attribute = 'ca-home-modal-list-destination' 
+
+$xpath_links = '//div[@id="destinationModal"]//ul//li//a'
+$xpath_links = ("//div[contains(@class,'{0}')]//ul//li//a"  -f $attribute )
+Select-Xml -Xml $s1 -XPath $xpath_links  | ForEach-Object {
+  $node = $_;
+  $o = $node.Node;  
+  if ($cnt -eq 0) {
+    $cnt = 1
+     Write-Output ($o | Get-Member | Format-List)
+  }
+  
+  $data += @{
+    'code' = $o.'data-val';
+    'url' = $o.href;
+    'description' = $o.'#text';
+  }
+
+write-output $o.'data-val'
+write-output $o.href
+write-output $o.'#text'
+
+}
+
+# $data 
+# return
+$data | ForEach-Object {  $row = $_
+
 # TODO Assert
 
 $value_element4 = $null
-$destination_data_val = 'PVR'
-$destination_name = 'Puerto Vallarta'
+
+$destination_data_val = $row['code']
+if ( -not $destination_data_val )   { return   }
+write-output ('will find "{0}"'  -f $destination_data_val  )
+
+$destination_data_val = $row['code']
+$destination_name = $row['description']
 $destination_css_selector = ('div#destinations a[data-val="{0}"]' -f $destination_data_val)
 
 find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element4) $destination_css_selector
 Write-Output ('Destinaton: {0}' -f ($value_element4.GetAttribute('innerHTML') -join ''))
 Write-Output ('Link: {0}' -f $value_element4.GetAttribute('href'))
 highlight ([ref]$selenium) ([ref]$value_element4)
-[OpenQA.Selenium.Interactions.Actions]$actions4 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-$actions4.MoveToElement([OpenQA.Selenium.IWebElement]$value_element4).Click().Build().Perform()
+# start-sleep -millisecond 30
+# [OpenQA.Selenium.Interactions.Actions]$actions4 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+# $actions4.MoveToElement([OpenQA.Selenium.IWebElement]$value_element4).Click().Build().Perform()
 $value_element4 = $null
-$actions4 = $null
+# $actions4 = $null
+
+}
 # continued in shorex_browse_destination.ps1
+
 
 custom_pause -fullstop $fullstop
 # At the end of the run - do not close Browser / Selenium when executing from Powershell ISE
