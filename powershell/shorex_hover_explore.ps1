@@ -501,6 +501,33 @@ find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element2) $css_s
 [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 $actions2.MoveToElement([OpenQA.Selenium.IWebElement]$value_element2).Click().Build().Perform()
 $value_element2 = $null
+$actions2 = $null
+$value_element3 = $null
+$data_target = 'destinationModal'
+$data_target_css_selector = ('button[class*="ca-primary-button"][data-target="#{0}"]' -f $data_target)
+
+find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element3) $data_target_css_selector
+
+[OpenQA.Selenium.Interactions.Actions]$actions3 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+$actions3.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Click().Build().Perform()
+$value_element3 = $null
+$actions3 = $null
+# TODO Assert
+
+$value_element4 = $null
+$destination_data_val = 'PVR'
+$destination_name = 'Puerto Vallarta'
+$destination_css_selector = ('div#destinations a[data-val="{0}"]' -f $destination_data_val)
+
+find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element4) $destination_css_selector
+Write-Output ('Destinaton: {0}' -f ($value_element4.GetAttribute('innerHTML') -join ''))
+Write-Output ('Link: {0}' -f $value_element4.GetAttribute('href'))
+highlight ([ref]$selenium) ([ref]$value_element4)
+[OpenQA.Selenium.Interactions.Actions]$actions4 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+$actions4.MoveToElement([OpenQA.Selenium.IWebElement]$value_element4).Click().Build().Perform()
+$value_element4 = $null
+$actions4 = $null
+# continued in shorex_browse_destination.ps1
 
 custom_pause -fullstop $fullstop
 # At the end of the run - do not close Browser / Selenium when executing from Powershell ISE
