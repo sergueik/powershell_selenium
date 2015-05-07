@@ -57,6 +57,57 @@ function create_table {
 }
 
 
+# http://www.devart.com/dotconnect/sqlite/docs/parameters.html
+function udate_database {
+  param(
+    [string]$database = "$script_directory\logs.db",
+    [string]$query = @"
+UPDATE [destinations] SET URL = @url, STATUS = :status WHERE CODE = @code
+-- can use @  or :   
+"@,
+    [psobject]$data
+  )
+
+  $connectionStr = "Data Source = $database"
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connectionStr)
+  $connection.Open()
+  Write-Output $query
+  $command = $connection.CreateCommand()
+  $command.CommandText = $query
+
+  $code = New-Object System.Data.SQLite.SQLiteParameter
+  $caption = New-Object System.Data.SQLite.SQLiteParameter
+  $url = New-Object System.Data.SQLite.SQLiteParameter
+  $status = New-Object System.Data.SQLite.SQLiteParameter
+
+  $parameter_1 = New-Object System.Data.SQLite.SQLiteParameter
+  $parameter_1 | get-member
+  $command.Parameters.Add($parameter_1)
+  $parameter_1.Value = "xzzz"
+  $parameter_1.ParameterName= "@code"
+
+  $parameter_2 = New-Object System.Data.SQLite.SQLiteParameter
+  $parameter_2 | get-member
+  $command.Parameters.Add($parameter_2)
+  $parameter_2.Value = "new url"
+  $parameter_2.ParameterName= "@url"
+
+  $parameter_3 = New-Object System.Data.SQLite.SQLiteParameter
+  $parameter_3 | get-member
+  $command.Parameters.Add($parameter_3)
+  $parameter_3.Value = 0
+  $parameter_3.ParameterName= "status"
+
+  $rows_inserted = $command.ExecuteNonQuery()
+  <#
+   Syntax errors manifest themsels via 
+   Exception calling "ExecuteNonQuery" with "0" argument(s): "SQL logic error or missing database" 
+  #>
+  Write-Output $rows_inserted
+  $command.Dispose()
+}
+
+
 function query_database {
   param(
     [string]$query = 'SELECT * FROM logs'
