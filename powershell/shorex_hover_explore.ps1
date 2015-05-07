@@ -22,10 +22,89 @@ param(
   [string]$browser = 'chrome',
   [int]$version,
   [switch]$many,
-  [string]$destination = 'Ensenada'
+  [string]$destination = 'Ensenada',
   [switch]$pause
 )
+#--
+function init_database {
+  param([string]$database = 'log.db'
+  )
 
+  [System.Data.SQLite.SQLiteConnection]::CreateFile($database)
+  [int]$version = 3
+  $connection = New-Object System.Data.SQLite.SQLiteConnection (('Data Source={0};Version={1};' -f $database,$version))
+  $connection.Open()
+  $command = $connection.CreateCommand()
+  # $command.getType() | format-list
+  $connection.Close()
+}
+
+function create_table {
+  param([string]$database = 'destinations.db',
+
+    # http://www.sqlite.org/datatype3.html
+    [string]$sdl_query = @"
+   CREATE TABLE destinations
+      (CODE       CHAR(16) PRIMARY KEY     NOT NULL,
+         URL      CHAR(1024),
+         CAPTION   CHAR(256),
+         STATUS    INTEGER   NOT NULL
+      );
+
+"@
+  )
+  [int]$version = 3
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ('Data Source={0};Version={1};' -f $database,$version)
+  $connection.Open()
+  Write-Output $sdl_query
+  [System.Data.SQLite.SQLiteCommand]$sql_command = New-Object System.Data.SQLite.SQLiteCommand ($sdl_query,$connection)
+  $sql_command.ExecuteNonQuery()
+  $connection.Close()
+
+
+}
+
+function insert_database {
+  param(
+    [string]$database = "$script_directory\logs.db",
+    [string]$query = @"
+INSERT INTO [destinations] (CODE, CAPTION, URL, STATUS )  VALUES(?, ?, ?, ?)
+"@,
+    [psobject]$data
+  )
+
+
+  $connectionStr = "Data Source = $database"
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connectionStr)
+  $connection.Open()
+  Write-Output $query
+  $command = $connection.CreateCommand()
+  $command.CommandText = $query
+
+  $code = New-Object System.Data.SQLite.SQLiteParameter
+  $caption = New-Object System.Data.SQLite.SQLiteParameter
+  $url = New-Object System.Data.SQLite.SQLiteParameter
+  $status = New-Object System.Data.SQLite.SQLiteParameter
+
+
+  $command.Parameters.Add($code)
+  $command.Parameters.Add($caption)
+  $command.Parameters.Add($url)
+  $command.Parameters.Add($status)
+
+  $code.Value = $data.code
+  $caption.Value = $data.caption
+  $url.Value = $data.url
+  $status.Value = $data.status
+  $rows_inserted = $command.ExecuteNonQuery()
+  Write-Output $rows_inserted
+  $command.Dispose()
+}
+
+
+
+
+#--
 function extract_match {
   param(
     [string]$source,
@@ -149,6 +228,7 @@ function find_page_element_by_xpath {
 $shared_assemblies = @(
   'WebDriver.dll',
   'WebDriver.Support.dll',
+  'System.Data.SQLite.dll',
   'nunit.framework.dll'
 )
 
@@ -184,7 +264,7 @@ if ($browser -ne $null -and $browser -ne '') {
   elseif ($browser -match 'ie') {
     $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
     if ($version -ne $null -and $version -ne 0) {
-      $capability.SetCapability('version', $version.ToString());
+      $capability.SetCapability('version',$version.ToString());
     }
   }
   elseif ($browser -match 'safari') {
@@ -210,9 +290,15 @@ if ($browser -ne $null -and $browser -ne '') {
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
 # Actual action .
+$script_directory = Get-ScriptDirectory
+init_database -database "$script_directory\destinations.db"
+# full path  has to be provided
+create_table -database "$script_directory\destinations.db"
+
+
 $base_url = 'http://www.carnival.com/'
 
-$selenium.Navigate().GoToUrl($base_url )
+$selenium.Navigate().GoToUrl($base_url)
 
 [void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(100))
 # protect from blank page
@@ -274,14 +360,14 @@ $actions3 = $null
 # get al destinations 
 
 $value_element4a = $null
-$destination_container_css_selector = 'div#destinations' 
+$destination_container_css_selector = 'div#destinations'
 
 find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element4a) $destination_container_css_selector
 
 $value_element4a
-$shoreex_destinations_modal_raw_xmldata  =  ('<?xml version="1.0"?><dummy>{0}</dummy>' -f  ( $value_element4a.GetAttribute('innerHTML') -join ''))
+$shoreex_destinations_modal_raw_xmldata = ('<?xml version="1.0"?><dummy>{0}</dummy>' -f ($value_element4a.GetAttribute('innerHTML') -join ''))
 highlight ([ref]$selenium) ([ref]$value_element4a)
-write-output ("`XML:`r`n{0}" -f $shoreex_destinations_modal_raw_xmldata )
+Write-Output ("`XML:`r`n{0}" -f $shoreex_destinations_modal_raw_xmldata)
 
 #  http://www.powershellmagazine.com/2014/06/30/pstip-using-xpath-in-powershell-part-4/
 $s1 = [xml]$shoreex_destinations_modal_raw_xmldata
@@ -294,17 +380,19 @@ $data = @( @{
     'description' = $null;
   })
 
-$attribute = 'ca-home-modal-list-destination' 
+$attribute = 'ca-home-modal-list-destination'
 
 $xpath_links = '//div[@id="destinationModal"]//ul//li//a'
-$xpath_links = ("//div[contains(@class,'{0}')]//ul//li//a"  -f $attribute )
-Select-Xml -Xml $s1 -XPath $xpath_links  | ForEach-Object {
+$xpath_links = ("//div[contains(@class,'{0}')]//ul//li//a" -f $attribute)
+
+# https://www.simple-talk.com/sysadmin/powershell/powershell-data-basics-xml/
+Select-Xml -Xml $s1 -XPath $xpath_links | ForEach-Object {
   $node = $_;
-  $o = $node.Node;  
+  $o = $node.Node;
   if ($cnt -eq 0) {
     $cnt = 1
-     Write-Output ($o | Get-Member | Format-List)
-  }  
+    Write-Output ($o | Get-Member | Format-List)
+  }
   $data += @{
     'code' = $o.'data-val';
     'url' = $o.href;
@@ -322,44 +410,65 @@ Bahamas
 Alaska
 Mexico
 "@
-$skip_destinations_regex  = '(' + ($skip_destinations -replace "`r`n" , '|')+ ')'
-0..($data.Count - 1 )  | ForEach-Object {  
-$cnt =$_ 
-$row = $data[$cnt]
+$skip_destinations_regex = '(' + ($skip_destinations -replace "`r`n",'|') + ')'
+0..($data.Count - 1) | ForEach-Object {
+  $cnt = $_
+  $row = $data[$cnt]
 
-$value_element4 = $null
+  $value_element4 = $null
 
-$destination_data_val = $row['code']
-$destination_name = $row['description']
+  $destination_data_val = $row['code']
+  $destination_name = $row['description']
 
-if ( -not $destination_data_val )   { return   }
-if (-not ($destination_name -match $skip_destinations_regex)) { 
+  if (-not $destination_data_val) { return }
+  if (-not ($destination_name -match $skip_destinations_regex)) {
 
-write-output ('will find "{0}"'  -f $destination_data_val  )
+    Write-Output ('will find "{0}"' -f $destination_data_val)
 
-$destination_css_selector = ('div#destinations a[data-val="{0}"]' -f $destination_data_val)
+    $destination_css_selector = ('div#destinations a[data-val="{0}"]' -f $destination_data_val)
 
-find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element4) $destination_css_selector
-Write-Output ('Destinaton: {0}' -f ($value_element4.GetAttribute('innerHTML') -join ''))
-$data[$cnt]['url']  = $value_element4.GetAttribute('href')
-Write-Output ('Link: {0}' -f $value_element4.GetAttribute('href'))
-highlight ([ref]$selenium) ([ref]$value_element4) -delay 30
-# TODO Assert url
+    find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element4) $destination_css_selector
+    Write-Output ('Destinaton: {0}' -f ($value_element4.GetAttribute('innerHTML') -join ''))
+    $data[$cnt]['url'] = $value_element4.GetAttribute('href')
+    Write-Output ('Link: {0}' -f $value_element4.GetAttribute('href'))
+    highlight ([ref]$selenium) ([ref]$value_element4) -Delay 30
+    # TODO Assert url
 
-$value_element4 = $null
+    $value_element4 = $null
+  }
 }
+
+0..($data.Count - 1) | ForEach-Object {
+  $cnt = $_
+  $row = $data[$cnt]
+  $base_url = $data[$cnt]['url']
+  $array = New-Object System.Collections.ArrayList
+  $o = New-Object PSObject
+  $o | Add-Member Noteproperty 'code' $row['code']
+  $o | Add-Member Noteproperty 'url' $base_url
+  $o | Add-Member Noteproperty 'caption' $row['description']
+  $o | Add-Member Noteproperty 'status' 0
+  $o | Format-List
+  insert_database -data $o -database "$script_directory\destinations.db"
+  $array.Add($o)
+  $o = $null
 }
-if (($PSBoundParameters['many'].IsPresent)) { 
-0..($data.Count - 1 )  | ForEach-Object {  
-$cnt =$_ 
-$row = $data[$cnt]
-$base_url = $data[$cnt]['url']
-if ( -not $base_url   ) {  return } 
-$selenium.Navigate().GoToUrl($base_url)
-# TODO assert page ready!
-}
-} else { 
-# continue to shorex_browse_destination.ps1
+
+
+
+if (($PSBoundParameters['many'].IsPresent)) {
+  0..($data.Count - 1) | ForEach-Object {
+    $cnt = $_
+    $row = $data[$cnt]
+    $base_url = $data[$cnt]['url']
+
+    if (-not $base_url) { return }
+    $selenium.Navigate().GoToUrl($base_url)
+
+    # TODO assert page ready!
+  }
+} else {
+  # continue to shorex_browse_destination.ps1
 }
 custom_pause -fullstop $fullstop
 
