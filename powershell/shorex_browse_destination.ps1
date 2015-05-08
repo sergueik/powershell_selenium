@@ -1,37 +1,147 @@
-#Copyright (c) 2015 Serguei Kouzmine
-#
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-#
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-#
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-#THE SOFTWARE.
+# QT based SQLite browser see
+# https://github.com/sqlitebrowser/sqlitebrowser/releases
 param(
-  # in the current environment phantomejs is not installed 
   [string]$browser = 'chrome',
-  [int]$version,
+  [int]$version,# unused
+  [string]$destination = 'Curacao',
   [switch]$pause
 
 )
-function extract_match {
 
+function insert_database2 {
+  param(
+    [string]$database = "$script_directory\logs.db",
+    [string]$query = @"
+INSERT INTO [excursions] (CODE, CAPTION, URL, DEST_CODE, STATUS )  VALUES(?, ?, ?, ?, ?)
+"@,
+    [psobject]$data
+  )
+
+
+  $connectionStr = "Data Source = $database"
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connectionStr)
+  $connection.Open()
+  Write-Output $query
+  $command = $connection.CreateCommand()
+  $command.CommandText = $query
+
+  $code = New-Object System.Data.SQLite.SQLiteParameter
+  $caption = New-Object System.Data.SQLite.SQLiteParameter
+  $url = New-Object System.Data.SQLite.SQLiteParameter
+  $status = New-Object System.Data.SQLite.SQLiteParameter
+  $dest_code = New-Object System.Data.SQLite.SQLiteParameter
+
+
+  $command.Parameters.Add($code)
+  $command.Parameters.Add($caption)
+  $command.Parameters.Add($url)
+  $command.Parameters.Add($dest_code)
+  $command.Parameters.Add($status)
+
+  $code.Value = $data.code
+  $caption.Value = $data.caption
+  $url.Value = $data.url
+  $dest_code.Value = $data.dest_code
+  $status.Value = $data.status
+  $rows_inserted = $command.ExecuteNonQuery()
+  Write-Output $rows_inserted
+  $command.Dispose()
+}
+
+
+
+function query_database_basic {
+  param(
+    [string]$query = 'SELECT CAPTION, URL, CODE FROM destinations',
+    [string]$database = "$script_directory\shore_ex.db"
+  )
+  $connectionStr = "Data Source = $database"
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connectionStr)
+  $connection.Open()
+  $datatSet = New-Object System.Data.DataSet
+
+  $dataAdapter = New-Object System.Data.SQLite.SQLiteDataAdapter ($query,$connection)
+  [void]$dataAdapter.Fill($datatSet)
+  $connection.Close()
+  return $datatSet.Tables[0].Rows
+}
+
+
+function query_database {
+  param(
+    [string]$query = 'SELECT URL, CAPTION, CODE  FROM destinations WHERE CAPTION = ?',
+    [string]$database = "$script_directory\shore_ex.db",
+    [string]$destination = 'Ensenada',
+    [System.Management.Automation.PSReference]$result_ref = ([ref]$null),
+    [object]$fields = @(),
+    [bool]$debug
+  )
+  try {
+    $fields | Get-Member
+  } catch [exception]{}
+
+
+  $connectionStr = "Data Source = $database"
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connectionStr)
+  [void]$connection.Open()
+  $command = $connection.CreateCommand()
+  $command.CommandText = $query
+
+  $local:result = @()
+  $caption = New-Object System.Data.SQLite.SQLiteParameter
+  [void]$command.Parameters.Add($caption)
+  $caption.Value = $destination
+
+  [System.Data.SQLite.SQLiteDataReader]$sql_reader = $command.ExecuteReader()
+  <#     Exception calling "Fill" with "1" argument(s): "unknown error Insufficient parameters supplied to the command"
+   #>
+
+  try
+  {
+    Write-Debug 'Reading'
+    while ($sql_reader.Read())
+    {
+      Write-Debug ($sql_reader.GetString(0))
+      Write-Debug ($sql_reader.GetString(1))
+
+      if ($fields.count -gt 0) {
+        Write-Debug 'ordilnal'
+        Write-Debug $fields.count
+        $iterator = 0..($fields.count - 1)
+        <#
+         ForEach-Object : Cannot convert 'System.Object[]' to the type 'System.String' required by parameter 'Message'. Specified method is not supported.
+        #>
+        $iterator | ForEach-Object {
+          $cnt = $_
+          $field = $fields[$cnt]
+          $debug_msg = ('ordilnal({0} = {1}',$field,$sql_reader.GetOrdinal($field))
+          Write-Debug $debug_msg
+          $local:result += $sql_reader.GetOrdinal($field)
+
+        }
+      } else {
+        Write-Debug 'field'
+        $local:result += $sql_reader.GetString(0)
+      }
+
+    }
+  }
+  finally
+  {
+    $sql_reader.Close()
+    $connection.Close()
+  }
+  $result_ref.Value = $local:result
+
+}
+
+
+function extract_match {
   param(
     [string]$source,
     [string]$capturing_match_expression,
     [string]$label,
     [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
-
   )
   Write-Debug ('Extracting from {0}' -f $source)
   $local:results = {}
@@ -42,28 +152,55 @@ function extract_match {
   $result_ref.Value = $local:results.Media
 }
 
-function highlight {
+function create_table {
+  param([string]$database = 'shore_ex.db',
 
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [int]$delay = 300
+    # http://www.sqlite.org/datatype3.html
+    [string]$create_table_query = @"
+   CREATE TABLE destinations
+      (CODE       CHAR(16) PRIMARY KEY     NOT NULL,
+         URL      CHAR(1024),
+         CAPTION   CHAR(256),
+         STATUS    INTEGER   NOT NULL
+      );
+
+"@
   )
-
-  # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'color: yellow; border: 4px solid yellow;')
-  Start-Sleep -Millisecond $delay
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
+  [int]$version = 3
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ('Data Source={0};Version={1};' -f $database,$version)
+  $connection.Open()
+  Write-Output $create_table_query
+  [System.Data.SQLite.SQLiteCommand]$sql_command = New-Object System.Data.SQLite.SQLiteCommand ($create_table_query,$connection)
+  try {
+    $sql_command.ExecuteNonQuery()
+} catch [Exception] {
+<#
+Currently ignoring 
+Exception calling "ExecuteNonQuery" with "0" argument(s): "SQL logic error or missing database table excursions already exists"
+#>
+}
+  $connection.Close()
 
 
 }
 
 
-function custom_pause {
+function highlight {
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [System.Management.Automation.PSReference]$element_ref,
+    [int]$delay = 300
+  )
+  # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'color: yellow; border: 4px solid yellow;')
+  Start-Sleep -Millisecond $delay
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
+}
 
+
+function custom_pause {
   param([bool]$fullstop)
   # Do not close Browser / Selenium when run from Powershell ISE
-
   if ($fullstop) {
     try {
       Write-Output 'pause'
@@ -72,7 +209,6 @@ function custom_pause {
   } else {
     Start-Sleep -Millisecond 1000
   }
-
 }
 
 # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
@@ -103,23 +239,37 @@ function cleanup
   }
 }
 
-$shared_assemblies = @(
-  'WebDriver.dll',
-  'WebDriver.Support.dll',
-  'nunit.framework.dll'
-)
-
 function find_page_element_by_css_selector {
-
   param(
     [System.Management.Automation.PSReference]$selenium_driver_ref,
     [System.Management.Automation.PSReference]$element_ref,
     [string]$css_selector,
     [int]$wait_seconds = 10
-
   )
-
   if ($css_selector -eq '' -or $css_selector -eq $null) {
+    return
+  }
+  $local:element = $null
+  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
+  $wait.PollingInterval = 50
+  try {
+    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
+  }
+  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+  $element_ref.Value = $local:element
+}
+
+function find_page_element_by_xpath {
+  param(
+    [System.Management.Automation.PSReference]$selenium_driver_ref,
+    [System.Management.Automation.PSReference]$element_ref,
+    [string]$xpath,
+    [int]$wait_seconds = 10
+  )
+  if ($xpath -eq '' -or $xpath -eq $null) {
     return
   }
   $local:element = $null
@@ -128,14 +278,24 @@ function find_page_element_by_css_selector {
   $wait.PollingInterval = 50
 
   try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
   } catch [exception]{
     Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
   }
 
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::XPath($xpath))
   $element_ref.Value = $local:element
 }
+
+
+
+# Setup 
+$shared_assemblies = @(
+  'WebDriver.dll',
+  'WebDriver.Support.dll',
+  'System.Data.SQLite.dll',
+  'nunit.framework.dll'
+)
 
 $shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
 
@@ -145,11 +305,8 @@ if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -n
 
 pushd $shared_assemblies_path
 
-
 $shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
 popd
-
-$verificationErrors = New-Object System.Text.StringBuilder
 
 if ($browser -ne $null -and $browser -ne '') {
   try {
@@ -172,9 +329,8 @@ if ($browser -ne $null -and $browser -ne '') {
   elseif ($browser -match 'ie') {
     $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
     if ($version -ne $null -and $version -ne 0) {
-      $capability.SetCapability("version",$version.ToString());
+      $capability.SetCapability('version',$version.ToString());
     }
-
   }
   elseif ($browser -match 'safari') {
     $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
@@ -186,225 +342,59 @@ if ($browser -ne $null -and $browser -ne '') {
   $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
 } else {
   Write-Host 'Running on phantomjs'
-  $phantomjs_executable_folder = "C:\tools\phantomjs"
+  $phantomjs_executable_folder = 'C:\tools\phantomjs'
   $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability("ssl-protocol","any")
-  $selenium.Capabilities.SetCapability("ignore-ssl-errors",$true)
-  $selenium.Capabilities.SetCapability("takesScreenshot",$true)
-  $selenium.Capabilities.SetCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
+  $selenium.Capabilities.SetCapability('ssl-protocol','any')
+  $selenium.Capabilities.SetCapability('ignore-ssl-errors',$true)
+  $selenium.Capabilities.SetCapability('takesScreenshot',$true)
+  $selenium.Capabilities.SetCapability('userAgent','Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34')
   $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
+  $options.AddAdditionalCapability('phantomjs.executable.path',$phantomjs_executable_folder)
 }
 
-
-
-
-function select_first_option {
-  param([string]$choice = $null,
-    [string]$label = $null
-  )
-
-  $select_name = $choice
-
-  $select_css_selector = ('a[data-param={0}]' -f $select_name)
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
-  $wait.PollingInterval = 150
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($select_css_selector)))
-  } catch [exception]{
-    Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
-  }
-  $wait = $null
-  $select_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($select_css_selector))
-  Start-Sleep -Milliseconds 500
-
-  [NUnit.Framework.Assert]::IsTrue(($select_element.Text -match $label))
-
-  Write-Output ('Clicking on ' + $select_element.Text)
-
-  $select_element.Click()
-  $select_element = $null
-  Start-Sleep -Milliseconds 500
-
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
-  $wait.PollingInterval = 150
-
-  # TODO the css_selector needs refactoring
-
-  $select_value_css_selector = ('div[class=option][data-param={0}] div.scrollable-content div.viewport div.overview ul li a' -f $select_name)
-  $value_element = $null
-  Write-Output ('Selecting CSS: "{0}"' -f $select_value_css_selector)
-  try {
-    [OpenQA.Selenium.Remote.RemoteWebElement]$value_element = $wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($select_value_css_selector)))
-    Write-Output 'Found...'
-    Write-Output ('Selected value: {0} / attribute "{1}"' -f $value_element.Text,$value_element.GetAttribute('data-id'))
-  } catch [exception]{
-    Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
-  }
-  $wait = $null
-
-  Start-Sleep -Milliseconds 500
-  [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-  $actions2.MoveToElement([OpenQA.Selenium.IWebElement]$value_element).Click().Build().Perform()
-  $value_element = $null
-
-  $actions2 = $null
-  Start-Sleep -Milliseconds 500
-
-
-
-}
-function select_criteria {
-
-  param([string]$choice = $null,
-    [string]$label = $null,
-    [string]$option = $null,
-    [System.Management.Automation.PSReference]$choice_value_ref = ([ref]$null),
-    [string]$value = $null # note formatting
-
-  )
-
-  $select_name = $choice
-
-  if ($value) {
-    $selecting_value = $value
-  } else {
-    Write-Output ('"{0}"' -f $option)
-    $selecting_value = $choice_value_ref.Value[$option]
-    Write-Output $selecting_value
-  }
-  $select_css_selector = ('a[data-param={0}]' -f $select_name)
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
-  $wait.PollingInterval = 150
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($select_css_selector)))
-  } catch [exception]{
-    Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
-  }
-  $wait = $null
-  $select_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($select_css_selector))
-  Start-Sleep -Milliseconds 500
-  [NUnit.Framework.Assert]::IsTrue(($select_element.Text -match $label))
-
-  Write-Output ('Clicking on ' + $select_element.Text)
-  $select_element.Click()
-  Start-Sleep -Milliseconds 500
-  $select_element = $null
-
-
-
-  $select_value_css_selector = ('div[class=option][data-param={0}] a[data-id={1}]' -f $select_name,$selecting_value)
-  Write-Output ('Selecting CSS: "{0}"' -f $select_value_css_selector)
-
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
-
-  $wait.PollingInterval = 150
-
-  $value_element = $null
-  try {
-    [OpenQA.Selenium.Remote.RemoteWebElement]$value_element = $wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($select_value_css_selector)))
-    Write-Output 'Found value_element...'
-    $value_element
-    Write-Output ('Selected value: {0} / attribute "{1}"' -f $value_element.Text,$value_element.GetAttribute('data-id'))
-
-  } catch [exception]{
-    Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
-  }
-
-  $wait = $null
-  Start-Sleep -Milliseconds 500
-  [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-  $actions2.MoveToElement([OpenQA.Selenium.IWebElement]$value_element).Click().Build().Perform()
-  Start-Sleep -Milliseconds 500
-  $wait = $null
-  $actions2 = $null
-  $value_element = $null
-
-}
-
-function search_cruises {
-  $css_selector1 = 'div.actions > a.search'
-  try {
-    [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
-  } catch [exception]{
-    Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
-  }
-
-  $element1 = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
-  [NUnit.Framework.Assert]::IsTrue(($element1.Text -match 'SEARCH'))
-  Write-Output ('Clicking on ' + $element1.Text)
-  $element1.Click()
-  $element1 = $null
-
-
-}
-function count_cruises {
-  param(
-    [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
-  )
-
-  $css_selector1 = "li[class*=num-found] strong"
-
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
-  $wait.PollingInterval = 500
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector1)))
-  } catch [exception]{
-    Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
-  }
-
-  try {
-    [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
-  } catch [exception]{
-    Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
-  }
-
-  $element1 = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
-  Write-Output ('Found ' + $element1.Text)
-  $result_ref.Value = $element1.Text
-
-}
-
-
-function find_page_element_by_xpath {
-
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$xpath,
-    [int]$wait_seconds = 10
-
-  )
-
-  if ($xpath -eq '' -or $xpath -eq $null) {
-    return
-  }
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::XPath($xpath))
-  $element_ref.Value = $local:element
-
-}
-
-
-# TODO :finish parameters
-$fullstop = (($PSBoundParameters['pause']) -ne $null)
+[bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
 # Actual action .
+$script_directory = Get-ScriptDirectory
+
+create_table -database "$script_directory\shore_ex.db" -create_table_query @"
+   CREATE TABLE excursions
+      (CODE       CHAR(16) PRIMARY KEY     NOT NULL,
+         URL      CHAR(1024),
+         CAPTION   CHAR(256),
+         DEST_CODE   CHAR(256),
+         STATUS    INTEGER   NOT NULL
+      );
+
+"@
+# cleanup ([ref]$selenium)
+# return
 
 
+$result = @()
 
+# NOTE: need to be careful when passing  -fields @()
+query_database -Destination $destination -database "$script_directory\shore_ex.db" -result_ref ([ref]$result) -fields @()
+if ($DebugPreference -eq 'Continue') {
+  Write-Output 'Result:'
+  $result | Format-List
+}
 
-$base_url = 'http://www.carnival.com/shore-excursions/puerto-vallarta-mexico'
+$base_url = $result[0]
+Write-Output ('base_url: "{0}"' -f $base_url)
+<#
+# NOTE: need to be careful when passing  -fields @()
+query_database -Destination $destination -database "$script_directory\shore_ex.db" -result_ref ([ref]$result) -fields @( 'URL','CODE')
+if ($DebugPreference -eq 'Continue') {
+  Write-Output 'Result:'
+  $result | Format-List
+}
+
+$base_url = $result['URL']
+Write-Output ('base_url: "{0}"' -f $base_url)
+cleanup ([ref]$selenium)
+return
+#>
 $selenium.Navigate().GoToUrl($base_url)
 
 [void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(100))
@@ -414,8 +404,6 @@ $wait.PollingInterval = 150
 [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName('logo')))
 
 Write-Output ('Started with {0}' -f $selenium.Title)
-
-
 $selenium.Manage().Window.Maximize()
 
 $shoreex_box_css_selector = 'div[class*="ca-guest-visitor-right-image-box"]'
@@ -431,14 +419,21 @@ try {
 }
 
 $shoreex_boxes = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($shoreex_box_css_selector))
-$cnt = 0 
+$cnt = 0
+
+$data = @( @{
+    'code' = $null;
+    'url' = $null;
+    'caption' = $null;
+    'dest_code' = $null;
+  })
+
+
 foreach ($value_element5 in $shoreex_boxes) {
   if ($false) {
     Write-Output $value_element5.Text
     Write-Output ("innerHTML:`r`n{0}" -f ($value_element5.GetAttribute('innerHTML') -join ''))
   }
-  # 
-  # TODO - update to match - child element border ? 
   highlight ([ref]$selenium) ([ref]$value_element5)
 
   [OpenQA.Selenium.Interactions.Actions]$actions5 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
@@ -446,18 +441,54 @@ foreach ($value_element5 in $shoreex_boxes) {
 
   $shoreex_link_css_selector = 'p[class="ca-guest-visitor-product-title"] a[href^="/shore-excursions"]'
   $value_element6 = $value_element5.FindElement([OpenQA.Selenium.By]::CssSelector($shoreex_link_css_selector))
-#  write-output $value_element6.GetAttribute('href')
-#  Write-Output $value_element6.Text
-  Write-Output ('Title: {0}' -f $value_element6.Text)
-  Write-Output ('Link: {0}' -f $value_element6.GetAttribute('href'))
 
+
+  # Extract stuff: 
+  # http://www.carnival.com/shore-excursions/st-kitts-wi/catamaran-fan-ta-sea-and-nevis-beach-break-431043
+
+  $url = $value_element6.GetAttribute('href')
+  # separately take away the path and the short name  from the URL
+  $code =  ($url -replace '^.+/.+\-', '' )
+  $caption =  $value_element6.Text
+  $dest_code = 'N/A' 
+  Write-Output ('Title: {0}' -f $caption )
+  Write-Output ('Code: {0}' -f $code )
+  Write-Output ('Destination: {0}' -f $dest_code )
+  Write-Output ('Link: {0}' -f  $url)
+
+  $data += @{
+    'code' = $code;
+    'url' = $url;
+    'caption' = $caption;
+    'dest_code' = $dest_code;
+  }
   $value_element6 = $null
   $value_element5 = $null
   $actions5 = $null
 }
 
+
+0..($data.Count - 1) | ForEach-Object {
+  $cnt = $_
+  $row = $data[$cnt]
+  $base_url = $data[$cnt]['url']
+  $array = New-Object System.Collections.ArrayList
+  $o = New-Object PSObject
+  $o | Add-Member Noteproperty 'code' $row['code']
+  $o | Add-Member Noteproperty 'url' $row['url']
+  $o | Add-Member Noteproperty 'caption' $row['caption']
+  $o | Add-Member Noteproperty 'dest_code' $row['dest_code']
+  $o | Add-Member Noteproperty 'status' 0
+  $o | Format-List
+  insert_database2 -data $o -database "$script_directory\shore_ex.db"
+  $array.Add($o)
+  $o = $null
+}
+
+# continue to shorex_carousel_box_image.ps1
+
 custom_pause -fullstop $fullstop
-# At the end of the run - do not close Browser / Selenium when executing from Powershell ISE
+
 if (-not ($host.Name -match 'ISE')) {
   # Cleanup
   cleanup ([ref]$selenium)
