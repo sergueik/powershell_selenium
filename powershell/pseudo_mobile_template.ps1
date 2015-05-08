@@ -20,6 +20,8 @@
 
 # http://yizeng.me/2013/08/10/set-user-agent-using-selenium-webdriver-c-and-ruby/#chrome-c-sharp
 # http://seleniumeasy.com/selenium-tutorials/set-browser-width-and-height-in-selenium-webdriver
+# TODO: switch to RemoteDriver
+# https://metacpan.org/pod/Selenium::Remote::Driver::UserAgent
 param(
   [string]$browser,
   [int]$version,
