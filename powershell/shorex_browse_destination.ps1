@@ -1,26 +1,6 @@
-#Copyright (c) 2015 Serguei Kouzmine
-#
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-#
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-#
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN ACTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-#THE SOFTWARE.
-
 param(
   [string]$browser = 'chrome',
-  [int]$version,
+  [int]$version,# unused
   [string]$destination = 'Curacao',
   [switch]$pause
 
@@ -28,7 +8,7 @@ param(
 
 function query_database_basic {
   param(
-    [string]$query = 'SELECT CAPTION, URL FROM destinations',
+    [string]$query = 'SELECT CAPTION, URL, CODE FROM destinations',
     [string]$database = "$script_directory\shore_ex.db"
   )
   $connectionStr = "Data Source = $database"
@@ -45,11 +25,17 @@ function query_database_basic {
 
 function query_database {
   param(
-    [string]$query = 'SELECT URL, CAPTION FROM destinations WHERE CAPTION = ?',
+    [string]$query = 'SELECT URL, CAPTION, CODE  FROM destinations WHERE CAPTION = ?',
     [string]$database = "$script_directory\shore_ex.db",
     [string]$destination = 'Ensenada',
+    [System.Management.Automation.PSReference]$result_ref = ([ref]$null),
+    [object]$fields = @(),
     [bool]$debug
   )
+  try {
+    $fields | Get-Member
+  } catch [exception]{}
+
 
   $connectionStr = "Data Source = $database"
   $connection = New-Object System.Data.SQLite.SQLiteConnection ($connectionStr)
@@ -71,10 +57,26 @@ function query_database {
     Write-Debug 'Reading'
     while ($sql_reader.Read())
     {
-
       Write-Debug ($sql_reader.GetString(0))
       Write-Debug ($sql_reader.GetString(1))
-      $local:result += $sql_reader.GetString(0)
+
+      if ($fields.count -gt 0) {
+        Write-Debug 'ordilnal'
+        Write-Debug $fields.count
+        $iterator = 0..($fields.count - 1)
+        $iterator | ForEach-Object {
+          $cnt = $_
+          $field = $fields[$cnt]
+          $debug_msg = ('ordilnal({0} = {1}',$field,$sql_reader.GetOrdinal($field))
+          Write-Debug $debug_msg
+          $local:result += $sql_reader.GetOrdinal($field)
+
+        }
+      } else {
+        Write-Debug 'field'
+        $local:result += $sql_reader.GetString(0)
+      }
+
     }
   }
   finally
@@ -82,8 +84,8 @@ function query_database {
     $sql_reader.Close()
     $connection.Close()
   }
+  $result_ref.Value = $local:result
 
-  return $local:result
 }
 
 
@@ -274,8 +276,28 @@ if ($browser -ne $null -and $browser -ne '') {
 
 # Actual action .
 $script_directory = Get-ScriptDirectory
+$result = @()
 
-$base_url = query_database -Destination $destination -database "$script_directory\shore_ex.db"
+# NOTE: need to be careful when passing  -fields @()
+query_database -Destination $destination -database "$script_directory\shore_ex.db" -result_ref ([ref]$result) -fields @()
+if ($DebugPreference -eq 'Continue') {
+  Write-Output 'Result:'
+  $result | Format-List
+}
+
+$base_url = $result[0]
+Write-Output ('base_url: "{0}"' -f $base_url)
+# NOTE: need to be careful when passing  -fields @()
+query_database -Destination $destination -database "$script_directory\shore_ex.db" -result_ref ([ref]$result) -fields @( 'URL','CODE')
+if ($DebugPreference -eq 'Continue') {
+  Write-Output 'Result:'
+  $result | Format-List
+}
+
+$base_url = $result['URL']
+Write-Output ('base_url: "{0}"' -f $base_url)
+cleanup ([ref]$selenium)
+return
 
 $selenium.Navigate().GoToUrl($base_url)
 
