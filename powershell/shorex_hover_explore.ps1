@@ -25,7 +25,8 @@ param(
   [string]$destination = 'Ensenada',
   [switch]$pause
 )
-#--
+
+
 function init_database {
   param([string]$database = 'log.db'
   )
@@ -101,10 +102,6 @@ INSERT INTO [destinations] (CODE, CAPTION, URL, STATUS )  VALUES(?, ?, ?, ?)
   $command.Dispose()
 }
 
-
-
-
-#--
 function extract_match {
   param(
     [string]$source,

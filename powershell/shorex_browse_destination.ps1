@@ -15,17 +15,77 @@
 #FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 #AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#OUT OF OR IN ACTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
 param(
   [string]$browser = 'chrome',
   [int]$version,
-  [string]$destination  = 'Ensenada',
-  [string] $base_url = 'http://www.carnival.com/shore-excursions/ensenada-mexico', #'http://www.carnival.com/shore-excursions/puerto-vallarta-mexico'
+  [string]$destination = 'Curacao',
   [switch]$pause
 
 )
+
+function query_database_basic {
+  param(
+    [string]$query = 'SELECT CAPTION, URL FROM destinations',
+    [string]$database = "$script_directory\shore_ex.db"
+  )
+  $connectionStr = "Data Source = $database"
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connectionStr)
+  $connection.Open()
+  $datatSet = New-Object System.Data.DataSet
+
+  $dataAdapter = New-Object System.Data.SQLite.SQLiteDataAdapter ($query,$connection)
+  [void]$dataAdapter.Fill($datatSet)
+  $connection.Close()
+  return $datatSet.Tables[0].Rows
+}
+
+
+function query_database {
+  param(
+    [string]$query = 'SELECT URL, CAPTION FROM destinations WHERE CAPTION = ?',
+    [string]$database = "$script_directory\shore_ex.db",
+    [string]$destination = 'Ensenada',
+    [bool]$debug
+  )
+
+  $connectionStr = "Data Source = $database"
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connectionStr)
+  [void]$connection.Open()
+  $command = $connection.CreateCommand()
+  $command.CommandText = $query
+
+  $local:result = @()
+  $caption = New-Object System.Data.SQLite.SQLiteParameter
+  [void]$command.Parameters.Add($caption)
+  $caption.Value = $destination
+
+  [System.Data.SQLite.SQLiteDataReader]$sql_reader = $command.ExecuteReader()
+  <#     Exception calling "Fill" with "1" argument(s): "unknown error Insufficient parameters supplied to the command"
+   #>
+
+  try
+  {
+    Write-Debug 'Reading'
+    while ($sql_reader.Read())
+    {
+
+      Write-Debug ($sql_reader.GetString(0))
+      Write-Debug ($sql_reader.GetString(1))
+      $local:result += $sql_reader.GetString(0)
+    }
+  }
+  finally
+  {
+    $sql_reader.Close()
+    $connection.Close()
+  }
+
+  return $local:result
+}
+
 
 function extract_match {
   param(
@@ -151,6 +211,7 @@ function find_page_element_by_xpath {
 $shared_assemblies = @(
   'WebDriver.dll',
   'WebDriver.Support.dll',
+  'System.Data.SQLite.dll',
   'nunit.framework.dll'
 )
 
@@ -186,7 +247,7 @@ if ($browser -ne $null -and $browser -ne '') {
   elseif ($browser -match 'ie') {
     $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
     if ($version -ne $null -and $version -ne 0) {
-      $capability.SetCapability('version', $version.ToString());
+      $capability.SetCapability('version',$version.ToString());
     }
   }
   elseif ($browser -match 'safari') {
@@ -212,6 +273,9 @@ if ($browser -ne $null -and $browser -ne '') {
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
 # Actual action .
+$script_directory = Get-ScriptDirectory
+
+$base_url = query_database -Destination $destination -database "$script_directory\shore_ex.db"
 
 $selenium.Navigate().GoToUrl($base_url)
 
@@ -237,7 +301,7 @@ try {
 }
 
 $shoreex_boxes = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($shoreex_box_css_selector))
-$cnt = 0 
+$cnt = 0
 foreach ($value_element5 in $shoreex_boxes) {
   if ($false) {
     Write-Output $value_element5.Text
