@@ -1,4 +1,4 @@
-#Copyright (c) 2014 Serguei Kouzmine
+#Copyright (c) 2014,2015 Serguei Kouzmine
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
 #in the Software without restriction, including without limitation the rights
@@ -89,9 +89,11 @@ $selenium.Navigate().GoToUrl($base_url)
 # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
 [OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::Id('hplogo'))
 [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,'color: yellow; border: 4px solid yellow;')
-Start-Sleep 3
-[OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,'')
-
+Start-Sleep 1
+# http://stackoverflow.com/questions/8517173/change-image-opacity-using-javascript
+[OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style','opacity:0.3; -moz-opacity:0.3; filter:alpha(opacity=30); color: yellow; border: 4px solid yellow;');",$element,'')
+Start-Sleep 1
+[OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', '');",$element)
 
 # Cleanup
 cleanup ([ref]$selenium)
