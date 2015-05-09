@@ -28,7 +28,7 @@ param(
 
 
 function init_database {
-  param([string]$database = 'log.db'
+  param([string]$database = 'shore_ex.db'
   )
 
   [System.Data.SQLite.SQLiteConnection]::CreateFile($database)
@@ -41,13 +41,13 @@ function init_database {
 }
 
 function create_table {
-  param([string]$database = 'destinations.db',
+  param([string]$database = 'shore_ex.db',
 
     # http://www.sqlite.org/datatype3.html
     [string]$sdl_query = @"
-   CREATE TABLE destinations
-      (CODE       CHAR(16) PRIMARY KEY     NOT NULL,
-         URL      CHAR(1024),
+   CREATE TABLE IF NOT EXISTS [destinations]
+      (CODE        CHAR(16) PRIMARY KEY     NOT NULL,
+         URL       CHAR(1024),
          CAPTION   CHAR(256),
          STATUS    INTEGER   NOT NULL
       );
@@ -67,7 +67,7 @@ function create_table {
 
 function insert_database {
   param(
-    [string]$database = "$script_directory\logs.db",
+    [string]$database = "$script_directory\shore_ex.db",
     [string]$query = @"
 INSERT INTO [destinations] (CODE, CAPTION, URL, STATUS )  VALUES(?, ?, ?, ?)
 "@,

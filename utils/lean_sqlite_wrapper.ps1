@@ -36,7 +36,7 @@ function create_table {
 
     # http://www.sqlite.org/datatype3.html
     [string]$create_table_query = @"
-   CREATE TABLE destinations
+   CREATE TABLE IF NOT EXISTS [destinations]
       (CODE       CHAR(16) PRIMARY KEY     NOT NULL,
          URL      CHAR(1024),
          CAPTION   CHAR(256),

@@ -157,7 +157,7 @@ function create_table {
 
     # http://www.sqlite.org/datatype3.html
     [string]$create_table_query = @"
-   CREATE TABLE destinations
+   CREATE TABLE IF NOT EXISTS [destinations]
       (CODE       CHAR(16) PRIMARY KEY     NOT NULL,
          URL      CHAR(1024),
          CAPTION   CHAR(256),
@@ -358,7 +358,7 @@ if ($browser -ne $null -and $browser -ne '') {
 $script_directory = Get-ScriptDirectory
 
 create_table -database "$script_directory\shore_ex.db" -create_table_query @"
-   CREATE TABLE excursions
+   CREATE TABLE IF NOT EXISTS [excursions]
       (CODE       CHAR(16) PRIMARY KEY     NOT NULL,
          URL      CHAR(1024),
          CAPTION   CHAR(256),
