@@ -28,12 +28,13 @@ param(
 
 
 function init_database {
-  param([string]$database = 'shore_ex.db'
+  param(
+    [string]$database = "$(Get-ScriptDirectory)\shore_ex.db"
   )
 
   [System.Data.SQLite.SQLiteConnection]::CreateFile($database)
-  [int]$version = 3
-  $connection = New-Object System.Data.SQLite.SQLiteConnection (('Data Source={0};Version={1};' -f $database,$version))
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version )
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
   $connection.Open()
   $command = $connection.CreateCommand()
   # $command.getType() | format-list
@@ -41,44 +42,42 @@ function init_database {
 }
 
 function create_table {
-  param([string]$database = 'shore_ex.db',
-
-    # http://www.sqlite.org/datatype3.html
-    [string]$sdl_query = @"
+  param(
+    [string]$database = "$(Get-ScriptDirectory)\shore_ex.db",
+    [string]$create_table_query = @"
    CREATE TABLE IF NOT EXISTS [destinations]
-      (CODE        CHAR(16) PRIMARY KEY     NOT NULL,
+      (
+         CODE      CHAR(16) PRIMARY KEY     NOT NULL,
          URL       CHAR(1024),
          CAPTION   CHAR(256),
          STATUS    INTEGER   NOT NULL
       );
-
-"@
+"@ # http://www.sqlite.org/datatype3.html
   )
   [int]$version = 3
-  $connection = New-Object System.Data.SQLite.SQLiteConnection ('Data Source={0};Version={1};' -f $database,$version)
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version )
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
   $connection.Open()
-  Write-Output $sdl_query
-  [System.Data.SQLite.SQLiteCommand]$sql_command = New-Object System.Data.SQLite.SQLiteCommand ($sdl_query,$connection)
+  Write-Debug $create_table_query
+  [System.Data.SQLite.SQLiteCommand]$sql_command = New-Object System.Data.SQLite.SQLiteCommand ($create_table_query,$connection)
   $sql_command.ExecuteNonQuery()
   $connection.Close()
-
-
 }
 
 function insert_database {
   param(
-    [string]$database = "$script_directory\shore_ex.db",
+    [string]$database = "$(Get-ScriptDirectory)\shore_ex.db",
     [string]$query = @"
 INSERT INTO [destinations] (CODE, CAPTION, URL, STATUS )  VALUES(?, ?, ?, ?)
 "@,
     [psobject]$data
   )
 
-
-  $connectionStr = "Data Source = $database"
-  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connectionStr)
+  [int]$version = 3
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version )
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
   $connection.Open()
-  Write-Output $query
+  Write-Debug $query
   $command = $connection.CreateCommand()
   $command.CommandText = $query
 
