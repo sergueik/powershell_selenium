@@ -96,6 +96,7 @@ function query_database_basic {
 }
 
 
+
 function query_database {
   param(
     [string]$database = "$(Get-ScriptDirectory)\shore_ex.db",
@@ -127,31 +128,29 @@ function query_database {
   $caption.Value = $destination
 
   [System.Data.SQLite.SQLiteDataReader]$sql_reader = $command.ExecuteReader()
+  # http://www.devart.com/dotconnect/sqlite/docs/Devart.Data.SQLite~Devart.Data.SQLite.SQLiteDataReader_members.html 
   try
   {
     Write-Debug 'Reading'
     while ($sql_reader.Read())
     {
-      # Write-Debug ($sql_reader.GetString(0))
-      # Write-Debug ($sql_reader.GetString(1))
       if ($fields.count -gt 0) {
         $local:result = @{}
-        # # Write-Debug 'Ordinal'
-        $iterator = 0..($fields.count - 1)
-        $iterator | ForEach-Object {
-          $cnt = $_
-          $field = $fields[$cnt]
-          # TODO: GetOrdinal does not work
-          # $local:result += $sql_reader.GetOrdinal($field)
-          # $data = $sql_reader.GetOrdinal($field)
-          # $debug_msg = ('Ordinal({0}) = {1}' -f $field, $data)
-          # Write-Debug $debug_msg
-          $local:result[$field] = $sql_reader[$field]
+        Write-Debug 'Ordinal'
+        $fields | ForEach-Object {
+          $field = $_
+          $local:result[$field] = $sql_reader.GetString($sql_reader.GetOrdinal($field))
+          # $local:result[$field] = $sql_reader[$field]
         }
       } else {
-        # Write-Debug 'Field'
+        Write-Debug 'Field'
+        $iterator = 0..($sql_reader.FieldCount - 1)
         $local:result = @()
-        $local:result += $sql_reader.GetString(0)
+        $iterator | ForEach-Object {
+          $cnt = $_
+
+          $local:result += $sql_reader.GetString($cnt)
+        }
       }
 
     }
@@ -279,8 +278,9 @@ $script_directory = Get-ScriptDirectory
 [string]$database = "$(Get-ScriptDirectory)\shore_ex.db"
 
 $DebugPreference = 'Continue'
+$result = @()
 # NOTE: need to be careful when passing  -fields @()
-
+$destination = 'Curacao'
 query_database -Destination $destination -result_ref ([ref]$result)
 if ($DebugPreference -eq 'Continue') {
   Write-Output 'Result:'
@@ -289,8 +289,8 @@ if ($DebugPreference -eq 'Continue') {
 
 $base_url = $result[0]
 Write-Output ('base_url: "{0}"' -f $base_url)
-
-$fields = @( 'URL', 'CAPTION')
+$fields = @( 'URL','CAPTION')
+$result = @{}
 query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields)
 if ($DebugPreference -eq 'Continue') {
   Write-Output 'Result:'
@@ -300,8 +300,7 @@ if ($DebugPreference -eq 'Continue') {
 $base_url = $result['URL']
 Write-Output ('base_url: "{0}"' -f $base_url)
 
-# TODO: 
-query_database_basic -database $database
+# query_database_basic -database $database
 
 
 return

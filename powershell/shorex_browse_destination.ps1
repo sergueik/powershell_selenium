@@ -136,31 +136,29 @@ function query_database {
   $caption.Value = $destination
 
   [System.Data.SQLite.SQLiteDataReader]$sql_reader = $command.ExecuteReader()
+  # http://www.devart.com/dotconnect/sqlite/docs/Devart.Data.SQLite~Devart.Data.SQLite.SQLiteDataReader_members.html 
   try
   {
     Write-Debug 'Reading'
     while ($sql_reader.Read())
     {
-      # Write-Debug ($sql_reader.GetString(0))
-      # Write-Debug ($sql_reader.GetString(1))
       if ($fields.count -gt 0) {
         $local:result = @{}
-        # # Write-Debug 'Ordinal'
-        $iterator = 0..($fields.count - 1)
-        $iterator | ForEach-Object {
-          $cnt = $_
-          $field = $fields[$cnt]
-          # TODO: GetOrdinal does not work
-          # $local:result += $sql_reader.GetOrdinal($field)
-          # $data = $sql_reader.GetOrdinal($field)
-          # $debug_msg = ('Ordinal({0}) = {1}' -f $field, $data)
-          # Write-Debug $debug_msg
-          $local:result[$field] = $sql_reader[$field]
+        Write-Debug 'Ordinal'
+        $fields | ForEach-Object {
+          $field = $_
+          $local:result[$field] = $sql_reader.GetString($sql_reader.GetOrdinal($field))
+          # $local:result[$field] = $sql_reader[$field]
         }
       } else {
-        # Write-Debug 'Field'
+        Write-Debug 'Field'
+        $iterator = 0..($sql_reader.FieldCount - 1) 
         $local:result = @()
-        $local:result += $sql_reader.GetString(0)
+        $iterator | ForEach-Object {
+          $cnt = $_
+
+              $local:result += $sql_reader.GetString($cnt)
+        }
       }
 
     }
@@ -464,7 +462,7 @@ foreach ($value_element5 in $shoreex_boxes) {
   # separately take away the path and the short name  from the URL
   $code =  ($url -replace '^.+/.+\-', '' )
   $caption =  $value_element6.Text
-  $dest_code = 'N/A' 
+  # $dest_code =  
   Write-Output ('Title: {0}' -f $caption )
   Write-Output ('Code: {0}' -f $code )
   Write-Output ('Destination: {0}' -f $dest_code )
