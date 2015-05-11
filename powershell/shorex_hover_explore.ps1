@@ -19,7 +19,7 @@
 #THE SOFTWARE.
 
 param(
-  [string]$browser = 'chrome',
+  [string]$browser = '',
   [int]$version,
   [switch]$many,
   [string]$destination = 'Ensenada',
@@ -31,9 +31,9 @@ function init_database {
   param(
     [string]$database = "$(Get-ScriptDirectory)\shore_ex.db"
   )
-
+  [int]$version = 3
   [System.Data.SQLite.SQLiteConnection]::CreateFile($database)
-  $connection_string = ('Data Source={0};Version={1};' -f $database,$version )
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
   $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
   $connection.Open()
   $command = $connection.CreateCommand()
@@ -55,7 +55,7 @@ function create_table {
 "@ # http://www.sqlite.org/datatype3.html
   )
   [int]$version = 3
-  $connection_string = ('Data Source={0};Version={1};' -f $database,$version )
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
   $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
   $connection.Open()
   Write-Debug $create_table_query
@@ -74,7 +74,7 @@ INSERT INTO [destinations] (CODE, CAPTION, URL, STATUS )  VALUES(?, ?, ?, ?)
   )
 
   [int]$version = 3
-  $connection_string = ('Data Source={0};Version={1};' -f $database,$version )
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
   $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
   $connection.Open()
   Write-Debug $query
@@ -87,19 +87,42 @@ INSERT INTO [destinations] (CODE, CAPTION, URL, STATUS )  VALUES(?, ?, ?, ?)
   $status = New-Object System.Data.SQLite.SQLiteParameter
 
 
-  $command.Parameters.Add($code)
-  $command.Parameters.Add($caption)
-  $command.Parameters.Add($url)
-  $command.Parameters.Add($status)
+  [void]$command.Parameters.Add($code)
+  [void]$command.Parameters.Add($caption)
+  [void]$command.Parameters.Add($url)
+  [void]$command.Parameters.Add($status)
 
   $code.Value = $data.code
   $caption.Value = $data.caption
   $url.Value = $data.url
   $status.Value = $data.status
+  Write-Debug $code.Value
+  Write-Debug $caption.Value
+  Write-Debug $url.Value
+  Write-Debug $status.Value
   $rows_inserted = $command.ExecuteNonQuery()
-  Write-Output $rows_inserted
+  # Write-Debug $rows_inserted
   $command.Dispose()
 }
+
+function query_database_basic {
+  param(
+    [string]$database = "$(Get-ScriptDirectory)\shore_ex.db",
+    [string]$query = 'SELECT CAPTION, URL, CODE FROM [destinations]'
+  )
+
+  [int]$version = 3
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
+  $connection.Open()
+  $datatSet = New-Object System.Data.DataSet
+
+  $dataAdapter = New-Object System.Data.SQLite.SQLiteDataAdapter ($query,$connection)
+  [void]$dataAdapter.Fill($datatSet)
+  $connection.Close()
+  return $datatSet.Tables[0].Rows
+}
+
 
 function extract_match {
   param(
@@ -181,6 +204,7 @@ function find_page_element_by_css_selector {
   if ($css_selector -eq '' -or $css_selector -eq $null) {
     return
   }
+  $local:status = $false
   $local:element = $null
   [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
@@ -188,12 +212,14 @@ function find_page_element_by_css_selector {
 
   try {
     [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+    $local:status = $true
   } catch [exception]{
     Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
   }
-
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-  $element_ref.Value = $local:element
+  if ($local:status) {
+    $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+    $element_ref.Value = $local:element
+  }
 }
 
 function find_page_element_by_xpath {
@@ -239,6 +265,7 @@ pushd $shared_assemblies_path
 $shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
 popd
 
+$headless = $false
 if ($browser -ne $null -and $browser -ne '') {
   try {
     $connection = (New-Object Net.Sockets.TcpClient)
@@ -272,6 +299,7 @@ if ($browser -ne $null -and $browser -ne '') {
   $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
   $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
 } else {
+  $headless = $true
   Write-Host 'Running on phantomjs'
   $phantomjs_executable_folder = 'C:\tools\phantomjs'
   $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
@@ -287,9 +315,9 @@ if ($browser -ne $null -and $browser -ne '') {
 
 # Actual action .
 $script_directory = Get-ScriptDirectory
-init_database -database "$script_directory\destinations.db"
+init_database -database "$script_directory\shore_ex.db"
 # full path  has to be provided
-create_table -database "$script_directory\destinations.db"
+create_table -database "$script_directory\shore_ex.db"
 
 
 $base_url = 'http://www.carnival.com/'
@@ -347,12 +375,12 @@ $data_target = 'destinationModal'
 $data_target_css_selector = ('button[class*="ca-primary-button"][data-target="#{0}"]' -f $data_target)
 
 find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element3) $data_target_css_selector
-
-[OpenQA.Selenium.Interactions.Actions]$actions3 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-$actions3.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Click().Build().Perform()
-$value_element3 = $null
-$actions3 = $null
-
+if ($value_element3 -ne $null) {
+  [OpenQA.Selenium.Interactions.Actions]$actions3 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+  $actions3.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Click().Build().Perform()
+  $value_element3 = $null
+  $actions3 = $null
+}
 # get al destinations 
 
 $value_element4a = $null
@@ -417,46 +445,47 @@ $skip_destinations_regex = '(' + ($skip_destinations -replace "`r`n",'|') + ')'
   $destination_name = $row['description']
 
   if (-not $destination_data_val) { return }
-  if (-not ($destination_name -match $skip_destinations_regex)) {
+  if ($destination_name -match $skip_destinations_regex) { return }
+  if ($headless) {
+    $row | Format-List
+    return }
+  Write-Output ('will find "{0}"' -f $destination_data_val)
 
-    Write-Output ('will find "{0}"' -f $destination_data_val)
+  $destination_css_selector = ('div#destinations a[data-val="{0}"]' -f $destination_data_val)
 
-    $destination_css_selector = ('div#destinations a[data-val="{0}"]' -f $destination_data_val)
+  find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element4) $destination_css_selector
+  Write-Output ('Destinaton: {0}' -f ($value_element4.GetAttribute('innerHTML') -join ''))
+  $data[$cnt]['url'] = $value_element4.GetAttribute('href')
+  Write-Output ('Link: {0}' -f $value_element4.GetAttribute('href'))
+  highlight ([ref]$selenium) ([ref]$value_element4) -Delay 30
+  # TODO Assert url
 
-    find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element4) $destination_css_selector
-    Write-Output ('Destinaton: {0}' -f ($value_element4.GetAttribute('innerHTML') -join ''))
-    $data[$cnt]['url'] = $value_element4.GetAttribute('href')
-    Write-Output ('Link: {0}' -f $value_element4.GetAttribute('href'))
-    highlight ([ref]$selenium) ([ref]$value_element4) -Delay 30
-    # TODO Assert url
+  $value_element4 = $null
 
-    $value_element4 = $null
-  }
 }
 
 0..($data.Count - 1) | ForEach-Object {
   $cnt = $_
   $row = $data[$cnt]
   $base_url = $data[$cnt]['url']
-  $array = New-Object System.Collections.ArrayList
   $o = New-Object PSObject
   $o | Add-Member Noteproperty 'code' $row['code']
   $o | Add-Member Noteproperty 'url' $base_url
   $o | Add-Member Noteproperty 'caption' $row['description']
   $o | Add-Member Noteproperty 'status' 0
-  $o | Format-List
-  insert_database -data $o -database "$script_directory\destinations.db"
-  $array.Add($o)
+  insert_database -data $o -database "$script_directory\shore_ex.db"
   $o = $null
 }
 
 
 
 if (($PSBoundParameters['many'].IsPresent)) {
-  0..($data.Count - 1) | ForEach-Object {
-    $cnt = $_
-    $row = $data[$cnt]
-    $base_url = $data[$cnt]['url']
+
+  $result = query_database_basic
+
+  $result | ForEach-Object {
+    $row = $_
+    $base_url = $row['url']
 
     if (-not $base_url) { return }
     $selenium.Navigate().GoToUrl($base_url)
