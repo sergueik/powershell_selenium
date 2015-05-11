@@ -18,13 +18,13 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-
-# QT based SQLite browser see
-# https://github.com/sqlitebrowser/sqlitebrowser/releases
 param(
-  [string]$browser = 'chrome',
+  [string]$browser = '',
   [int]$version,# unused
   [string]$destination = 'Curacao',
+  [switch]$all,
+  [int]$maxitems = 1000,
+  [switch]$savedata,
   [switch]$pause
 
 )
@@ -55,7 +55,7 @@ INSERT INTO [excursions] (CODE, CAPTION, URL, DEST_CODE, STATUS )  VALUES(?, ?, 
 
 
   [int]$version = 3
-  $connection_string = ('Data Source={0};Version={1};' -f $database,$version )
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
   $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
   $connection.Open()
   Write-Output $query
@@ -85,7 +85,6 @@ INSERT INTO [excursions] (CODE, CAPTION, URL, DEST_CODE, STATUS )  VALUES(?, ?, 
   $command.Dispose()
 }
 
-
 function query_database_basic {
   param(
     [string]$database = "$(Get-ScriptDirectory)\shore_ex.db",
@@ -103,6 +102,8 @@ function query_database_basic {
   $connection.Close()
   return $datatSet.Tables[0].Rows
 }
+
+
 
 
 function query_database {
@@ -152,12 +153,12 @@ function query_database {
         }
       } else {
         Write-Debug 'Field'
-        $iterator = 0..($sql_reader.FieldCount - 1) 
+        $iterator = 0..($sql_reader.FieldCount - 1)
         $local:result = @()
         $iterator | ForEach-Object {
           $cnt = $_
 
-              $local:result += $sql_reader.GetString($cnt)
+          $local:result += $sql_reader.GetString($cnt)
         }
       }
 
@@ -209,12 +210,12 @@ function create_table {
   [System.Data.SQLite.SQLiteCommand]$sql_command = New-Object System.Data.SQLite.SQLiteCommand ($create_table_query,$connection)
   try {
     $sql_command.ExecuteNonQuery()
-} catch [Exception] {
-<#
+  } catch [exception]{
+    <#
 Currently ignoring 
 Exception calling "ExecuteNonQuery" with "0" argument(s): "SQL logic error or missing database table excursions already exists"
 #>
-}
+  }
   $connection.Close()
 
 
@@ -309,8 +310,6 @@ function find_page_element_by_xpath {
   $element_ref.Value = $local:element
 }
 
-
-
 # Setup 
 $shared_assemblies = @(
   'WebDriver.dll',
@@ -389,114 +388,136 @@ create_table -database "$script_directory\shore_ex.db" -create_table_query @"
       );
 
 "@
-# cleanup ([ref]$selenium)
-# return
 
 
-$result = @()
+$destinations = @()
 
-$fields = @( 'URL', 'CODE')
-query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields)
-if ($DebugPreference -eq 'Continue') {
-  Write-Output 'Result:'
-  $result | Format-List
-}
+if (($PSBoundParameters['all'].IsPresent)) {
+  $cnt  = 0
+  $result = query_database_basic
 
-$base_url = $result['URL']
-$dest_code = $result['CODE']
-Write-Output ('base_url: "{0}"' -f $base_url)
-
-
-$selenium.Navigate().GoToUrl($base_url)
-
-[void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(100))
-# protect from blank page
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
-$wait.PollingInterval = 150
-[void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName('logo')))
-
-Write-Output ('Started with {0}' -f $selenium.Title)
-$selenium.Manage().Window.Maximize()
-
-$shoreex_box_css_selector = 'div[class*="ca-guest-visitor-right-image-box"]'
-
-$wait_seconds = 10
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait5 = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
-$wait5.PollingInterval = 50
-
-try {
-  [void]$wait5.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($shoreex_box_css_selector)))
-} catch [exception]{
-  Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-}
-
-$shoreex_boxes = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($shoreex_box_css_selector))
-$cnt = 0
-
-$data = @( @{
-    'code' = $null;
-    'url' = $null;
-    'caption' = $null;
-    'dest_code' = $null;
-  })
-
-
-foreach ($value_element5 in $shoreex_boxes) {
-  if ($false) {
-    Write-Output $value_element5.Text
-    Write-Output ("innerHTML:`r`n{0}" -f ($value_element5.GetAttribute('innerHTML') -join ''))
+  $result | ForEach-Object {
+    $row = $_
+    $destination = $row['CAPTION']
+    $destinations += $destination
   }
-  highlight ([ref]$selenium) ([ref]$value_element5)
-
-  [OpenQA.Selenium.Interactions.Actions]$actions5 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-  $actions5.MoveToElement([OpenQA.Selenium.IWebElement]$value_element5).Build().Perform()
-
-  $shoreex_link_css_selector = 'p[class="ca-guest-visitor-product-title"] a[href^="/shore-excursions"]'
-  $value_element6 = $value_element5.FindElement([OpenQA.Selenium.By]::CssSelector($shoreex_link_css_selector))
+} else {
+  $destinations += $destination
+}
 
 
-  # Extract stuff: 
-  # http://www.carnival.com/shore-excursions/st-kitts-wi/catamaran-fan-ta-sea-and-nevis-beach-break-431043
+$destinations | ForEach-Object {
 
-  $url = $value_element6.GetAttribute('href')
-  # separately take away the path and the short name  from the URL
-  $code =  ($url -replace '^.+/.+\-', '' )
-  $caption =  $value_element6.Text
-  # $dest_code =  
-  Write-Output ('Title: {0}' -f $caption )
-  Write-Output ('Code: {0}' -f $code )
-  Write-Output ('Destination: {0}' -f $dest_code )
-  Write-Output ('Link: {0}' -f  $url)
+  $cnt ++ 
+  $destination = $_
 
-  $data += @{
-    'code' = $code;
-    'url' = $url;
-    'caption' = $caption;
-    'dest_code' = $dest_code;
+  $result = @()
+
+  $fields = @( 'URL','CODE')
+  if ($cnt -gt $maxitems ) { return } 
+  query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields)
+  if ($DebugPreference -eq 'Continue') {
+    Write-Output 'Result:'
+    $result | Format-List
   }
-  $value_element6 = $null
-  $value_element5 = $null
-  $actions5 = $null
+
+  $base_url = $result['URL']
+  $dest_code = $result['CODE']
+  Write-Output ('base_url: "{0}"' -f $base_url)
+
+
+  $selenium.Navigate().GoToUrl($base_url)
+
+  [void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(100))
+  # protect from blank page
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
+  $wait.PollingInterval = 150
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName('logo')))
+
+  Write-Output ('Started with {0}' -f $selenium.Title)
+  $selenium.Manage().Window.Maximize()
+
+  $shoreex_box_css_selector = 'div[class*="ca-guest-visitor-right-image-box"]'
+
+  $wait_seconds = 10
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait5 = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+  $wait5.PollingInterval = 50
+
+  try {
+    [void]$wait5.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($shoreex_box_css_selector)))
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
+  }
+
+  $shoreex_boxes = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($shoreex_box_css_selector))
+  $cnt = 0
+
+  $data = @( @{
+      'code' = $null;
+      'url' = $null;
+      'caption' = $null;
+      'dest_code' = $null;
+    })
+
+
+  foreach ($value_element5 in $shoreex_boxes) {
+    if ($false) {
+      Write-Output $value_element5.Text
+      Write-Output ("innerHTML:`r`n{0}" -f ($value_element5.GetAttribute('innerHTML') -join ''))
+    }
+    highlight ([ref]$selenium) ([ref]$value_element5)
+
+    [OpenQA.Selenium.Interactions.Actions]$actions5 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+    $actions5.MoveToElement([OpenQA.Selenium.IWebElement]$value_element5).Build().Perform()
+
+    $shoreex_link_css_selector = 'p[class="ca-guest-visitor-product-title"] a[href^="/shore-excursions"]'
+    $value_element6 = $value_element5.FindElement([OpenQA.Selenium.By]::CssSelector($shoreex_link_css_selector))
+
+
+    # Extract stuff: 
+    # http://www.carnival.com/shore-excursions/st-kitts-wi/catamaran-fan-ta-sea-and-nevis-beach-break-431043
+
+    $url = $value_element6.GetAttribute('href')
+    # separately take away the path and the short name  from the URL
+    $code = ($url -replace '^.+/.+\-','')
+    $caption = $value_element6.Text
+    # $dest_code =  
+    Write-Output ('Title: {0}' -f $caption)
+    Write-Output ('Code: {0}' -f $code)
+    Write-Output ('Destination: {0}' -f $dest_code)
+    Write-Output ('Link: {0}' -f $url)
+
+    $data += @{
+      'code' = $code;
+      'url' = $url;
+      'caption' = $caption;
+      'dest_code' = $dest_code;
+    }
+    $value_element6 = $null
+    $value_element5 = $null
+    $actions5 = $null
+  }
+
+
+  0..($data.count - 1) | ForEach-Object {
+    $cnt = $_
+    $row = $data[$cnt]
+    $base_url = $data[$cnt]['url']
+    $o = New-Object PSObject
+    $o | Add-Member Noteproperty 'code' $row['code']
+    $o | Add-Member Noteproperty 'url' $row['url']
+    $o | Add-Member Noteproperty 'caption' $row['caption']
+    $o | Add-Member Noteproperty 'dest_code' $row['dest_code']
+    $o | Add-Member Noteproperty 'status' 0
+    $o | Format-List
+
+    if (($PSBoundParameters['savedata'].IsPresent)) {
+      insert_database2 -data $o -database "$script_directory\shore_ex.db"
+    }
+    $o = $null
+  }
+
 }
-
-
-0..($data.Count - 1) | ForEach-Object {
-  $cnt = $_
-  $row = $data[$cnt]
-  $base_url = $data[$cnt]['url']
-  $array = New-Object System.Collections.ArrayList
-  $o = New-Object PSObject
-  $o | Add-Member Noteproperty 'code' $row['code']
-  $o | Add-Member Noteproperty 'url' $row['url']
-  $o | Add-Member Noteproperty 'caption' $row['caption']
-  $o | Add-Member Noteproperty 'dest_code' $row['dest_code']
-  $o | Add-Member Noteproperty 'status' 0
-  $o | Format-List
-#  insert_database2 -data $o -database "$script_directory\shore_ex.db"
-  $array.Add($o)
-  $o = $null
-}
-
 # continue to shorex_carousel_box_image.ps1
 
 custom_pause -fullstop $fullstop
