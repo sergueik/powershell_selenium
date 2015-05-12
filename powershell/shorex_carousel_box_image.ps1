@@ -19,7 +19,7 @@
 #THE SOFTWARE.
 
 param(
-  [switch]$browser,
+  [string]$browser,
   [switch]$mobile,# currently unused
   [string]$destination = 'Curacao',
   [switch]$all,
@@ -463,11 +463,11 @@ if ($PSBoundParameters["mobile"].IsPresent) {
 }
 $window_position = $selenium.Manage().Window.Position
 $window_size = $selenium.Manage().Window.Size
+write-debug $destination
 
 $fields = @( 'CODE','CAPTION')
-$destination = 'Freeport'
+
 $result = @{}
-#  query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields) -query 'SELECT CODE FROM [destinations] where CAPTION = ? '
 query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields) -Query 'SELECT CAPTION,CODE FROM [destinations] where CAPTION = ? '
 
 if ($DebugPreference -eq 'Continue') {
@@ -477,8 +477,6 @@ if ($DebugPreference -eq 'Continue') {
 
 $destination = $result['CODE']
 $fields = @( 'URL')
-# the query_databas funtion returns a single row
-
 query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields) -Query 'SELECT URL FROM [excursions] where DEST_CODE = ? '
 
 if ($DebugPreference -eq 'Continue') {
