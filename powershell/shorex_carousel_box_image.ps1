@@ -18,14 +18,17 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-
-# http://seleniumeasy.com/selenium-tutorials/set-browser-width-and-height-in-selenium-webdriver
 param(
   [switch]$browser,
   [switch]$mobile,# currently unused
+  [string]$destination = 'Curacao',
+  [switch]$all,
+  [int]$maxitems = 1000,
+  [switch]$savedata,
   [switch]$pause
 
 )
+
 # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
 function Get-ScriptDirectory
 {
@@ -40,8 +43,140 @@ function Get-ScriptDirectory
   }
 }
 
-function highlight {
+function insert_database3 {
+  param(
+    [string]$database = "$(Get-ScriptDirectory)\shore_ex.db",
+    [string]$query = @"
+INSERT INTO [media] (URL, CAPTION, CODE, SIZE, STATUS )  VALUES(?, ?, ?, ?, ?)
+"@,
+    [psobject]$data
+  )
 
+
+  [int]$version = 3
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
+  $connection.Open()
+  Write-Output $query
+  $command = $connection.CreateCommand()
+  $command.CommandText = $query
+
+  $url = New-Object System.Data.SQLite.SQLiteParameter
+  $caption = New-Object System.Data.SQLite.SQLiteParameter
+  $code = New-Object System.Data.SQLite.SQLiteParameter
+  $size = New-Object System.Data.SQLite.SQLiteParameter
+  $status = New-Object System.Data.SQLite.SQLiteParameter
+
+  $command.Parameters.Add($url)
+  $command.Parameters.Add($caption)
+  $command.Parameters.Add($code)
+  $command.Parameters.Add($size)
+  $command.Parameters.Add($status)
+
+
+  $url.Value = $data.url
+  $code.Value = $data.code
+  $caption.Value = $data.caption
+
+  $size.Value = $data.size.ToString()
+  $status.Value = $data.status
+  $rows_inserted = $command.ExecuteNonQuery()
+  Write-Output $rows_inserted
+  $command.Dispose()
+}
+
+
+function query_database_basic {
+  param(
+    [string]$database = "$(Get-ScriptDirectory)\shore_ex.db",
+    [string]$query = 'SELECT CAPTION, URL, CODE FROM [destinations]'
+  )
+
+  [int]$version = 3
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
+  $connection.Open()
+  $datatSet = New-Object System.Data.DataSet
+
+  $dataAdapter = New-Object System.Data.SQLite.SQLiteDataAdapter ($query,$connection)
+  [void]$dataAdapter.Fill($datatSet)
+  $connection.Close()
+  return $datatSet.Tables[0].Rows
+}
+
+
+
+
+function query_database {
+  param(
+    [string]$database = "$(Get-ScriptDirectory)\shore_ex.db",
+    [string]$query = 'SELECT URL, CAPTION, CODE  FROM destinations WHERE CAPTION = ?',
+    # TODO - field names !
+    [string]$destination = 'Ensenada',
+    [System.Management.Automation.PSReference]$result_ref = ([ref]$null),
+    [System.Management.Automation.PSReference]$fields_ref = ([ref]@()),
+    [bool]$debug
+  )
+
+  [object]$fields = @()
+  if ($fields_ref -ne $null) {
+    try {
+      $fields_ref.Value | ForEach-Object {
+        $fields += $_
+      }
+    } catch [exception]{}
+  }
+
+  [int]$version = 3
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
+  Write-Debug $connection_string
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
+  [void]$connection.Open()
+  $command = $connection.CreateCommand()
+  $command.CommandText = $query
+  Write-Debug $query
+  $caption = New-Object System.Data.SQLite.SQLiteParameter
+  [void]$command.Parameters.Add($caption)
+  $caption.Value = $destination
+  Write-Debug $destination
+  [System.Data.SQLite.SQLiteDataReader]$sql_reader = $command.ExecuteReader()
+  # http://www.devart.com/dotconnect/sqlite/docs/Devart.Data.SQLite~Devart.Data.SQLite.SQLiteDataReader_members.html 
+  try
+  {
+    Write-Debug 'Reading'
+    while ($sql_reader.Read())
+    {
+      if ($fields.count -gt 0) {
+        $local:result = @{}
+        Write-Debug 'Ordinal'
+        $fields | ForEach-Object {
+          $field = $_
+          $local:result[$field] = $sql_reader.GetString($sql_reader.GetOrdinal($field))
+          # $local:result[$field] = $sql_reader[$field]
+        }
+      } else {
+        Write-Debug 'Field'
+        $iterator = 0..($sql_reader.FieldCount - 1)
+        $local:result = @()
+        $iterator | ForEach-Object {
+          $cnt = $_
+
+          $local:result += $sql_reader.GetString($cnt)
+        }
+      }
+
+    }
+  }
+  finally
+  {
+    $sql_reader.Close()
+    $connection.Close()
+  }
+  $result_ref.Value = $local:result
+
+}
+
+function highlight {
   param(
     [System.Management.Automation.PSReference]$selenium_ref,
     [System.Management.Automation.PSReference]$element_ref,
@@ -56,9 +191,7 @@ function highlight {
 
 }
 
-
 function extract_match {
-
   param(
     [string]$source,
     [string]$capturing_match_expression,
@@ -87,9 +220,9 @@ function set_timeouts {
     [int]$script = 3000
   )
 
-  [void]($selenium_ref.Value.Manage().Timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))
-  [void]($selenium_ref.Value.Manage().Timeouts().SetPageLoadTimeout([System.TimeSpan]::FromSeconds($pageload)))
-  [void]($selenium_ref.Value.Manage().Timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script)))
+  [void]($selenium_ref.Value.Manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))
+  [void]($selenium_ref.Value.Manage().timeouts().SetPageLoadTimeout([System.TimeSpan]::FromSeconds($pageload)))
+  [void]($selenium_ref.Value.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script)))
 
 }
 
@@ -271,7 +404,7 @@ if ($PSBoundParameters["browser"]) {
   $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
   $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
 }
-[void]$selenium.Manage().Timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(3000))
+[void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(3000))
 
 if ($PSBoundParameters["mobile"].IsPresent) {
   if ($host.Version.Major -le 2) {
@@ -286,88 +419,125 @@ if ($PSBoundParameters["mobile"].IsPresent) {
 $window_position = $selenium.Manage().Window.Position
 $window_size = $selenium.Manage().Window.Size
 
+$fields = @( 'CODE','CAPTION')
+$destination = 'Freeport'
 
+#  query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields) -query 'SELECT CODE FROM [destinations] where CAPTION = ? '
+query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields) -Query 'SELECT CAPTION,CODE FROM [destinations] where CAPTION = ? '
 
-
-
-$base_url = 'http://www.carnival.com/shore-excursions/party/my-jamaican-home-for-the-day-425123'
-$selenium.Navigate().GoToUrl($base_url)
-# set_timeouts ([ref]$selenium)
-# $selenium.Navigate().Refresh()
-
-
-$css_selector = 'div.carousel-wrapper div.owl-item div.item'
-Write-Output ('Locating via CSS SELECTOR: "{0}"' -f $css_selector)
-
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
-$wait.PollingInterval = 100
-try {
-  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
-} catch [exception]{
+if ($DebugPreference -eq 'Continue') {
+  Write-Output 'Result:'
+  $result | Format-List
 }
 
-[OpenQA.Selenium.IWebElement[]]$carousel_items = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
-Write-Output ('Iterating over {0} items' -f $carousel_items.Count)
+$destination = $result['CODE']
+$fields = @( 'URL')
+# the query_databas funtion returns a single row
 
-$index = 0
-$max_count = 100
-$sample_cnt = 99
-[bool]$found = $false
-foreach ($item in $carousel_items)
-{
-  if ($index -gt $max_count) {
-    continue
+query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields) -Query 'SELECT URL FROM [excursions] where DEST_CODE = ? '
+
+if ($DebugPreference -eq 'Continue') {
+  Write-Output 'Result(s):'
+  $result | Format-List
+}
+$base_urls = @()
+$result = query_database_basic -Query ('SELECT URL FROM [excursions] where DEST_CODE = ? ' -replace '\?',("'{0}'" -f $destination))
+
+
+if ($DebugPreference -eq 'Continue') {
+  Write-Output 'Result(s):'
+  $result | Format-List
+
+}
+if ($DebugPreference -eq 'Continue') {
+  Write-Output 'Result(s):'
+  $result |  ForEach-Object {
+    $base_url =  $_['URL']    
+    $base_url
   }
-  Write-Output 'Getting the media URL'
-  $css_img_selector = 'img'
+}
 
-  $item_img = $item.FindElement([OpenQA.Selenium.By]::CssSelector($css_img_selector))
 
-  if (-not $item_img.Displayed) {
+$base_urls = $result
 
-    $arrow_next_selector = 'div[class*=nav-right][class*=carousel-nav] div[class*=arrow-next]'
-    $arrow_next_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($arrow_next_selector))
-    [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-    [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$arrow_next_element).Build().Perform()
-    Start-Sleep -Milliseconds 100
-    [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$arrow_next_element).click().Build().Perform()
-    <#
+if ($true) {
+  $base_urls | ForEach-Object {
+    $base_url =  $_['URL'] 
+    $selenium.Navigate().GoToUrl($base_url)
+
+    $css_selector = 'div.carousel-wrapper div.owl-item div.item'
+    Write-Output ('Locating via CSS SELECTOR: "{0}"' -f $css_selector)
+
+    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
+    $wait.PollingInterval = 100
+    try {
+      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+    } catch [exception]{
+    }
+
+    [OpenQA.Selenium.IWebElement[]]$carousel_items = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
+    Write-Output ('Iterating over {0} items' -f $carousel_items.count)
+
+    $index = 0
+    $max_count = 100
+    $sample_cnt = 99
+    [bool]$found = $false
+    foreach ($item in $carousel_items)
+    {
+      if ($index -gt $max_count) {
+        continue
+      }
+      Write-Output 'Getting the media URL'
+      $css_img_selector = 'img'
+
+      $item_img = $item.FindElement([OpenQA.Selenium.By]::CssSelector($css_img_selector))
+
+      if (-not $item_img.Displayed) {
+
+        $arrow_next_selector = 'div[class*=nav-right][class*=carousel-nav] div[class*=arrow-next]'
+        $arrow_next_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($arrow_next_selector))
+        [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+        [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$arrow_next_element).Build().Perform()
+        Start-Sleep -Milliseconds 100
+        [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$arrow_next_element).click().Build().Perform()
+        <#
       $actions2.clickAndHold($arrow_next_element)
       $actions2.release()
     #>
-    $item_img = $item.FindElement([OpenQA.Selenium.By]::CssSelector($css_img_selector))
-    Start-Sleep -Milliseconds 200
-    # Assert $item_img.Displayed
+        $item_img = $item.FindElement([OpenQA.Selenium.By]::CssSelector($css_img_selector))
+        Start-Sleep -Milliseconds 200
+        # Assert $item_img.Displayed
 
+      }
+      highlight ([ref]$selenium) ([ref]$item_img)
+      $item_img.click()
+      Start-Sleep -Milliseconds 100
+      $image_preview_selector = 'div[class *=modal] div[style^=background-image]'
+      $image_preview_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($image_preview_selector))
+      $image_preview_src = $null
+      # write-output $image_preview_element.GetAttribute('style')
+      extract_match -Source $image_preview_element.GetAttribute('style') -capturing_match_expression 'url\(\"(?<media>.+)\"\)' -label 'media' -result_ref ([ref]$image_preview_src)
+      Write-Output ('Preview Image: {0}' -f $image_preview_src)
+      $media_size = compute_media_dimensions -img_src $image_preview_src
+      Write-Host ('Media size : {0}' -f $media_size)
+
+      $close_selector = 'div[class *=modal] a[class*=close]'
+      $close_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($close_selector))
+      $close_element.click()
+      Start-Sleep -Milliseconds 100
+
+
+      $carousel_img_src = $item_img.GetAttribute("data-main-img-src")
+      $photopreview_cnt = $item_img.GetAttribute("photopreview")
+      Write-Output ('Screen Location: {0}' -f $item.LocationOnScreenOnceScrolledIntoView.X)
+      Write-Output ('Count = {0}' -f $photopreview_cnt)
+      Write-Output ('Carousel Image: {0}' -f $carousel_img_src)
+      $media_size = compute_media_dimensions -img_src $carousel_img_src
+      Write-Host ('Media size : {0}' -f $media_size)
+      $index++
+    }
   }
-  highlight ([ref]$selenium) ([ref]$item_img)
-  $item_img.click()
-  Start-Sleep -Milliseconds 100
-  $image_preview_selector = 'div[class *=modal] div[style^=background-image]'
-  $image_preview_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($image_preview_selector))
-  $image_preview_src = $null
-  # write-output $image_preview_element.GetAttribute('style')
-  extract_match -Source $image_preview_element.GetAttribute('style') -capturing_match_expression 'url\(\"(?<media>.+)\"\)' -label 'media' -result_ref ([ref]$image_preview_src)
-  Write-Output ('Preview Image: {0}' -f $image_preview_src)
-  $media_size = compute_media_dimensions -img_src $image_preview_src
-  Write-Host ('Media size : {0}' -f $media_size)
-
-  $close_selector = 'div[class *=modal] a[class*=close]'
-  $close_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($close_selector))
-  $close_element.click()
-  Start-Sleep -Milliseconds 100
-
-
-  $carousel_img_src = $item_img.GetAttribute("data-main-img-src")
-  $photopreview_cnt = $item_img.GetAttribute("photopreview")
-  Write-Output ('Screen Location: {0}' -f $item.LocationOnScreenOnceScrolledIntoView.X)
-  Write-Output ('Count = {0}' -f $photopreview_cnt)
-  Write-Output ('Carousel Image: {0}' -f $carousel_img_src)
-  $media_size = compute_media_dimensions -img_src $carousel_img_src
-  Write-Host ('Media size : {0}' -f $media_size)
-  $index++
 }
-
 Start-Sleep -Milliseconds 1000
 # Cleanup
 cleanup ([ref]$selenium)
