@@ -43,19 +43,58 @@ function Get-ScriptDirectory
   }
 }
 
+function create_table3 {
+param(
+    [string]$database = "$(Get-ScriptDirectory)\shore_ex.db",
+
+    # http://www.sqlite.org/datatype3.html
+    [string]$create_table_query = @"
+   CREATE TABLE IF NOT EXISTS [media]
+      (
+         URL       CHAR(1024) PRIMARY KEY     NOT NULL,
+         CAPTION   CHAR(256),
+         CODE      CHAR(16),
+         SIZE      INTEGER   NOT NULL,
+         CNT       INTEGER   NOT NULL,
+         STATUS    INTEGER   NOT NULL
+      );
+
+"@
+  )
+write-debug $database
+  [int]$version = 3
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ('Data Source={0};Version={1};' -f $database,$version)
+  $connection.Open()
+  Write-Output $create_table_query
+  [System.Data.SQLite.SQLiteCommand]$sql_command = New-Object System.Data.SQLite.SQLiteCommand ($create_table_query,$connection)
+  try {
+    $sql_command.ExecuteNonQuery()
+  } catch [exception]{
+    <#
+Currently ignoring 
+Exception calling "ExecuteNonQuery" with "0" argument(s): "SQL logic error or missing database table excursions already exists"
+#>
+  }
+  $connection.Close()
+
+
+}
+
 function insert_database3 {
   param(
     [string]$database = "$(Get-ScriptDirectory)\shore_ex.db",
     [string]$query = @"
-INSERT INTO [media] (URL, CAPTION, CODE, SIZE, STATUS )  VALUES(?, ?, ?, ?, ?)
+INSERT INTO [media] (URL, CAPTION, CODE, SIZE, CNT, STATUS )  VALUES(?, ?, ?, ?, ?, ?)
 "@,
     [psobject]$data
   )
 
 
   [int]$version = 3
+  write-debug $database
   $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
   $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
+  # Exception calling "Open" with "0" argument(s): "unable to open database file"
   $connection.Open()
   Write-Output $query
   $command = $connection.CreateCommand()
@@ -65,25 +104,29 @@ INSERT INTO [media] (URL, CAPTION, CODE, SIZE, STATUS )  VALUES(?, ?, ?, ?, ?)
   $caption = New-Object System.Data.SQLite.SQLiteParameter
   $code = New-Object System.Data.SQLite.SQLiteParameter
   $size = New-Object System.Data.SQLite.SQLiteParameter
+  $cnt = New-Object System.Data.SQLite.SQLiteParameter
   $status = New-Object System.Data.SQLite.SQLiteParameter
 
   $command.Parameters.Add($url)
   $command.Parameters.Add($caption)
   $command.Parameters.Add($code)
   $command.Parameters.Add($size)
+  $command.Parameters.Add($cnt)
   $command.Parameters.Add($status)
 
 
   $url.Value = $data.url
-  $code.Value = $data.code
   $caption.Value = $data.caption
-
-  $size.Value = $data.size.ToString()
+  $code.Value = $data.code
+  $size.Value = $data.size
+  $cnt.Value = $data.cnt
   $status.Value = $data.status
   $rows_inserted = $command.ExecuteNonQuery()
+  # Exception calling "ExecuteNonQuery" with "0" argument(s): "Database is not open"
   Write-Output $rows_inserted
   $command.Dispose()
 }
+
 
 
 function query_database_basic {
@@ -342,6 +385,8 @@ function cleanup
 $shared_assemblies = @(
   'WebDriver.dll',
   'WebDriver.Support.dll',
+  'System.Data.SQLite.dll',
+
   'nunit.framework.dll'
 )
 
@@ -421,7 +466,7 @@ $window_size = $selenium.Manage().Window.Size
 
 $fields = @( 'CODE','CAPTION')
 $destination = 'Freeport'
-
+$result = @{}
 #  query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields) -query 'SELECT CODE FROM [destinations] where CAPTION = ? '
 query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields) -Query 'SELECT CAPTION,CODE FROM [destinations] where CAPTION = ? '
 
@@ -441,7 +486,7 @@ if ($DebugPreference -eq 'Continue') {
   $result | Format-List
 }
 $base_urls = @()
-$result = query_database_basic -Query ('SELECT URL FROM [excursions] where DEST_CODE = ? ' -replace '\?',("'{0}'" -f $destination))
+$result = query_database_basic -Query ('SELECT URL,CAPTION, DEST_CODE FROM [excursions] where DEST_CODE = ? ' -replace '\?',("'{0}'" -f $destination))
 
 
 if ($DebugPreference -eq 'Continue') {
@@ -459,10 +504,37 @@ if ($DebugPreference -eq 'Continue') {
 
 
 $base_urls = $result
+create_table3  
+
+<# Do a sample insert 
+
+$code    =  'FPO'
+$url =  '/~/media/Images/PreSales/Excursions/Ports_A-F/FPO/416003/Pictures/freeport-kayak-and-nature-experience-freeport-the-bahamas-11.ashx'
+$caption = 'Freeport Kayak & Nature Experience'
+$size    = 164143
+$cnt   = 10
+$status  = 0
+
+    $o = New-Object PSObject
+ 
+    $o | Add-Member Noteproperty 'code' $code
+    $o | Add-Member Noteproperty 'url' $url
+    $o | Add-Member Noteproperty 'caption' $caption
+    $o | Add-Member Noteproperty 'size' $size
+    $o | Add-Member Noteproperty 'cnt' $cnt 
+    $o | Add-Member Noteproperty 'status' 0
+    $o | Format-List
+
+
+    insert_database3 -data $o 
+#>
 
 if ($true) {
   $base_urls | ForEach-Object {
-    $base_url =  $_['URL'] 
+    $row = $_
+    $base_url =  $row['URL'] 
+    $caption =  $row['CAPTION']
+    $code = $row['DEST_CODE']
     $selenium.Navigate().GoToUrl($base_url)
 
     $css_selector = 'div.carousel-wrapper div.owl-item div.item'
@@ -534,6 +606,24 @@ if ($true) {
       Write-Output ('Carousel Image: {0}' -f $carousel_img_src)
       $media_size = compute_media_dimensions -img_src $carousel_img_src
       Write-Host ('Media size : {0}' -f $media_size)
+
+
+    $o = New-Object PSObject
+ 
+    $o | Add-Member Noteproperty 'code' $code
+    $o | Add-Member Noteproperty 'url' $carousel_img_src
+    $o | Add-Member Noteproperty 'caption' $caption
+    $o | Add-Member Noteproperty 'size' $media_size
+    $o | Add-Member Noteproperty 'cnt' $photopreview_cnt
+    $o | Add-Member Noteproperty 'status' 0
+    $o | Format-List
+
+    if (($PSBoundParameters['savedata'].IsPresent)) {
+      insert_database3 -data $o 
+    }
+    $o = $null
+
+
       $index++
     }
   }
