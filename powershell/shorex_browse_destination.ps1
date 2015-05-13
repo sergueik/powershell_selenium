@@ -81,7 +81,6 @@ INSERT INTO [excursions] (CODE, CAPTION, URL, DEST_CODE, STATUS )  VALUES(?, ?, 
   $dest_code.Value = $data.dest_code
   $status.Value = $data.status
   $rows_inserted = $command.ExecuteNonQuery()
-  Write-Output $rows_inserted
   $command.Dispose()
 }
 

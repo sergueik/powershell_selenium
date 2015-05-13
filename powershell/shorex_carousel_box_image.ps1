@@ -123,7 +123,6 @@ INSERT INTO [media] (URL, CAPTION, CODE, SIZE, CNT, STATUS )  VALUES(?, ?, ?, ?,
   $status.Value = $data.status
   $rows_inserted = $command.ExecuteNonQuery()
   # Exception calling "ExecuteNonQuery" with "0" argument(s): "Database is not open"
-  Write-Output $rows_inserted
   $command.Dispose()
 }
 
