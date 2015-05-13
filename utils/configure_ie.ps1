@@ -276,3 +276,38 @@ if ($setting -ne $null) {
   }
 }
 popd
+
+
+Write-Host -ForegroundColor 'green' @"
+This call Enalbes full SSL / TLS  support.
+"@
+
+$hive  = 'HKCU:'
+$path  ='/Software/Microsoft/Windows/CurrentVersion/Internet Settings'
+$name  = 'SecureProtocols'
+$value = '2728'
+
+pushd $hive
+cd $path
+$setting = Get-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -ErrorAction 'SilentlyContinue'
+
+  if ($setting -ne $null) {
+    write-output $setting.SecureProtocols 
+
+    Set-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value
+  } else {
+    New-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value -PropertyType DWORD
+  }
+
+popd
+
+<#
+ 
+all: 2728
+Use TLS 1.0 128
+Use TLS 1.1 512
+Use TLS 1.2 2048
+Use SSL 2.0 8
+Use SSL 3.0 32 
+ 
+#>
