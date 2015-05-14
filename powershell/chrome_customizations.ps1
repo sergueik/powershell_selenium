@@ -1,4 +1,4 @@
-#Copyright (c) 2015 Serguei Kouzmine
+#Copyright (c) 2014 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -21,18 +21,16 @@
 param(
   [string]$browser
 )
-
-
 function cleanup
 {
   param(
-    [System.Management.Automation.PSReference]$selenium_ref
+  [System.Management.Automation.PSReference]$selenium_ref 
   )
   try {
     $selenium_ref.Value.Quit()
   } catch [exception]{
-    # Ignore errors if unable to close the browser
-    Write-Output (($_.Exception.Message) -split "`n")[0]
+  # Ignore errors if unable to close the browser
+  Write-Output (($_.Exception.Message) -split "`n")[0]
 
   }
 }
@@ -54,6 +52,7 @@ function Get-ScriptDirectory
 $shared_assemblies = @(
   'WebDriver.dll',
   'WebDriver.Support.dll',
+  'Selenium.WebDriverBackedSelenium.dll',
   'nunit.core.dll',
   'nunit.framework.dll'
 )
@@ -70,15 +69,15 @@ popd
 $verificationErrors = New-Object System.Text.StringBuilder
 $base_url = 'http://www.carnival.com/'
 
-try {
-  $connection = (New-Object Net.Sockets.TcpClient)
-  $connection.Connect("127.0.0.1",4444)
-  $connection.Close()
-} catch {
-  Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
-  Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
-  Start-Sleep -Seconds 10
-}
+  try {
+    $connection = (New-Object Net.Sockets.TcpClient)
+    $connection.Connect("127.0.0.1",4444)
+    $connection.Close()
+  } catch {
+    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
+    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
+    Start-Sleep -Seconds 10
+  }
 
 
 # Oveview of extensions 
@@ -94,20 +93,20 @@ try {
 # origin:
 # http://stackoverflow.com/questions/20401264/how-to-access-network-panel-on-google-chrome-developer-toools-with-selenium
 
-[OpenQA.Selenium.Chrome.ChromeOptions]$options = New-Object OpenQA.Selenium.Chrome.ChromeOptions
+[OpenQA.Selenium.Chrome.ChromeOptions]$options = new-object OpenQA.Selenium.Chrome.ChromeOptions
 
-$options.addArguments('start-maximized')
-# no-op option - re-enforcing the default setting
-$options.addArguments(('user-data-dir={0}' -f ("${env:LOCALAPPDATA}\Google\Chrome\User Data" -replace '\\','/')))
-# if you like to specify another profile parent directory:
-# $options.addArguments('user-data-dir=c:/TEMP'); 
+    $options.addArguments('start-maximized')
+   # no-op option - re-enforcing the default setting
+   $options.addArguments(('user-data-dir={0}' -f ("${env:LOCALAPPDATA}\Google\Chrome\User Data" -replace '\\' , '/' )))
+   # if you like to specify another profile parent directory:
+   # $options.addArguments('user-data-dir=c:/TEMP'); 
 
-$options.addArguments('--profile-directory=Default')
+    $options.addArguments('--profile-directory=Default')
 
-[OpenQA.Selenium.Remote.DesiredCapabilities]$capabilities = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
-$capabilities.setCapability([OpenQA.Selenium.Chrome.ChromeOptions]::Capability,$options)
+    [OpenQA.Selenium.Remote.DesiredCapabilities]$capabilities = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
+    $capabilities.setCapability([OpenQA.Selenium.Chrome.ChromeOptions]::Capability, $options)
 
-$selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver ($options)
+    $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver ($options)
 
 
 Add-Type @"
@@ -123,10 +122,12 @@ namespace WaitForExtensions
     public static class DocumentReadyState
     {
         static int cnt = 0;
+        static string expected_state = "interactive";
         public static void Wait(/* this // no longer is an extension method  */ IWebDriver driver)
         {
             var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(driver, TimeSpan.FromSeconds(30.00));
-            wait.Until(dummy => ((IJavaScriptExecutor)driver).ExecuteScript("return document.readyState").Equals("complete"));
+            wait.PollingInterval = TimeSpan.FromSeconds(0.50);
+            wait.Until(dummy => ((IJavaScriptExecutor)driver).ExecuteScript("return document.readyState").Equals(expected_state));
         }
 
         public static void Wait2(/* this // no longer is an extension method  */ IWebDriver driver)
@@ -139,7 +140,7 @@ namespace WaitForExtensions
                 Console.Error.WriteLine(String.Format("result = {0}", result));
                 Console.WriteLine(String.Format("cnt = {0}", cnt));
                 cnt++;
-                return (cnt >= 3);
+                return (result.Equals(expected_state));
             });
         }
     }
@@ -174,12 +175,12 @@ return network;
 # https://code.google.com/p/selenium/source/browse/java/client/src/org/openqa/selenium/remote/HttpCommandExecutor.java?r=3f4622ced689d2670851b74dac0c556bcae2d0fe
 
 $result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script);
-$result | ForEach-Object {
-  $element_result = $_
-  # $element_result | format-list
-  Write-Output $element_result.name
-  Write-Output $element_result.duration
-}
+$result | foreach-object { 
+$element_result  = $_ 
+# $element_result | format-list
+write-output $element_result.name
+write-output $element_result.duration
+} 
 
 
 # Cleanup
