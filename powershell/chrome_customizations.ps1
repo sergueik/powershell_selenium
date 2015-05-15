@@ -1,4 +1,4 @@
-#Copyright (c) 2014 Serguei Kouzmine
+#Copyright (c) 2015 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -181,10 +181,12 @@ $element_result  = $_
 write-output $element_result.name
 write-output $element_result.duration
 } 
-
+# How to build a waterfall gantt chart .
+# http://blog.trasatti.it/2012/11/measuring-site-performance-with-javascript-on-mobile.html
+# http://stackoverflow.com/questions/240333/how-do-you-measure-page-load-speed
+# http://checkvincode.ru/p.php?t=Measure+Web+Page+Load+Time
 
 # Cleanup
 
 cleanup ([ref]$selenium)
-
 
