@@ -163,3 +163,16 @@ start-sleep -millisecond 500
 # Cleanup
 cleanup ([ref]$selenium)
 
+<#
+# http://docs.telerik.com/fiddler/Configure-Fiddler/Tasks/ConfigureDotNETApp
+# http://stackoverflow.com/questions/12772332/c-sharp-fiddlercore-api-to-capture-data
+# http://weblog.west-wind.com/posts/2014/Jul/29/Using-FiddlerCore-to-capture-HTTP-Requests-with-NET
+https://github.com/RickStrahl/WestWindWebSurge/blob/master/WebSurge/FiddlerCapture.cs
+FiddlerCoreStartupFlags.RegisterAsSystemProxy
+or
+[Fiddler.CONFIG]::bRegisterAsSystemProxy ?
+
+# http://fiddler.wikidot.com/fiddlercore-demo
+# http://fiddler.wikidot.com/fiddlercore-demo2
+
+#>
