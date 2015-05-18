@@ -1,12 +1,11 @@
 using System;
 using Fiddler;
-// http://fiddler.wikidot.com/fiddlercore-
+
 namespace WebTester
 {
-
-    class Program
+    public class Monitor
     {
-        static void Main(string[] args)
+        public Monitor()
         {
             #region AttachEventListeners
             //
@@ -43,36 +42,53 @@ namespace WebTester
 
             FiddlerApplication.AfterSessionComplete += delegate(Session oS) { Console.WriteLine("Finished session:\t" + oS.fullUrl); };
 
-            // Tell the system console to handle CTRL+C by calling our method that
-            // gracefully shuts down the FiddlerCore.
-            Console.CancelKeyPress += new ConsoleCancelEventHandler(Console_CancelKeyPress);
             #endregion AttachEventListeners
+        }
 
+        public void Start()
+        {
             Console.WriteLine("Starting FiddlerCore...");
-
             // For the purposes of this demo, we'll forbid connections to HTTPS 
             // sites that use invalid certificates
             CONFIG.IgnoreServerCertErrors = false;
-
             // Because we've chosen to decrypt HTTPS traffic, makecert.exe must
             // be present in the Application folder.
             FiddlerApplication.Startup(8877, true, true);
             Console.WriteLine("Hit CTRL+C to end session.");
-
             // Wait Forever for the user to hit CTRL+C.  
             // BUG BUG: Doesn't properly handle shutdown of Windows, etc.
+        }
+
+        public void Stop()
+        {
+            // TODO: raise event
+            Console.WriteLine("Shutting down...");
+            FiddlerApplication.Shutdown();
+            System.Threading.Thread.Sleep(1);
+        }
+        public static Monitor m;
+        public static void Main(string[] args)
+        {
+            m = new Monitor();
+            #region AttachEventListeners
+            // Tell the system console to handle CTRL+C by calling our method that
+            // gracefully shuts down the FiddlerCore.
+            Console.CancelKeyPress += new ConsoleCancelEventHandler(Console_CancelKeyPress);
+            #endregion AttachEventListeners
+            m.Start();
             Object forever = new Object();
             lock (forever)
             {
                 System.Threading.Monitor.Wait(forever);
             }
+         
         }
 
         static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
-            Console.WriteLine("Shutting down...");
-            FiddlerApplication.Shutdown();
-            System.Threading.Thread.Sleep(750);
+            Console.WriteLine("Stop...");
+            m.Stop();
+            System.Threading.Thread.Sleep(1);
         }
     }
 }
