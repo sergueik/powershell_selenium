@@ -1,6 +1,6 @@
 using System;
 using Fiddler;
-
+// http://fiddler.wikidot.com/fiddlercore-
 namespace WebTester
 {
 
