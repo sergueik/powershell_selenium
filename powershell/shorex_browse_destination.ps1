@@ -26,7 +26,6 @@ param(
   [int]$maxitems = 1000,
   [switch]$savedata,
   [switch]$pause
-
 )
 
 # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
@@ -392,7 +391,7 @@ create_table -database "$script_directory\shore_ex.db" -create_table_query @"
 $destinations = @()
 
 if (($PSBoundParameters['all'].IsPresent)) {
-  $cnt  = 0
+  $cnt = 0
   $result = query_database_basic
 
   $result | ForEach-Object {
@@ -404,25 +403,10 @@ if (($PSBoundParameters['all'].IsPresent)) {
   $destinations += $destination
 }
 
+$base_urls = @()
 
-$destinations | ForEach-Object {
-
-  $cnt ++ 
-  $destination = $_
-
-  $result = @()
-
-  $fields = @( 'URL','CODE')
-  if ($cnt -gt $maxitems ) { return } 
-  query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields)
-  if ($DebugPreference -eq 'Continue') {
-    Write-Output 'Result:'
-    $result | Format-List
-  }
-
-  $base_url = $result['URL']
-  $dest_code = $result['CODE']
-  Write-Output ('base_url: "{0}"' -f $base_url)
+function collect_excursions {
+  param([string]$base_url)
 
 
   $selenium.Navigate().GoToUrl($base_url)
@@ -517,6 +501,31 @@ $destinations | ForEach-Object {
   }
 
 }
+$destinations | ForEach-Object {
+
+  $cnt++
+  $destination = $_
+
+  $result = @()
+
+  $fields = @( 'URL','CODE')
+  if ($cnt -gt $maxitems) { return }
+  query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields)
+  if ($DebugPreference -eq 'Continue') {
+    Write-Output 'Result:'
+    $result | Format-List
+  }
+
+  $base_url = $result['URL']
+  $dest_code = $result['CODE']
+  $base_urls += $base_url
+}
+
+$base_urls | ForEach-Object {
+  $base_url = $_
+  collect_excursions -base_url $base_url
+}
+
 # continue to shorex_carousel_box_image.ps1
 
 custom_pause -fullstop $fullstop

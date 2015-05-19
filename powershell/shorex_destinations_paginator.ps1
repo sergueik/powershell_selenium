@@ -18,23 +18,11 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-# http://www.carnival.com/shore-excursions/honolulu-hi
-# destinations_paginator.ps1 
-
-# update  the number of items per page
-# move th n'th page
-# assert the results display
-
 param(
   [string]$browser = '',
-  [int]$version,# unused
-  [string]$destination = 'Curacao',
+  [int]$version,
   [string]$base_url = 'http://www.carnival.com/shore-excursions/costa-maya-mexico',# 3 PAGES 
   # 'http://www.carnival.com/shore-excursions/honolulu-hi', 2 PAGES 
-
-  [switch]$all,
-  [int]$maxitems = 1000,
-  [switch]$savedata,
   [switch]$pause
 
 )
@@ -161,7 +149,9 @@ function find_page_element_by_xpath {
 function paginate_destinations
 {
   param(
-    [string]$action = $null
+    [string]$action = $null,
+    [bool]$last = $false,
+    [System.Management.Automation.PSReference]$result_ref
   )
 
 
@@ -170,15 +160,18 @@ function paginate_destinations
   }
 
   if ($action -eq 'count') {
-
-    $pagination_result_css_selector = 'p[class*="ca-guest-visitor-pagination-result"][ng-show]'
-    #                                                                                ^^^^^^^^^^ 
-    <#
-    <div class="ca-guest-visitor-pagination-container">
-    <hr class="ca-divider ca-guest-visitor-divider">
-    <p class="ca-guest-visitor-pagination-result ng-hide" ng-hide="vm.searchResultsLoaded">1 - 12 of 26 results</p>
-    <p class="ca-guest-visitor-pagination-result ng-binding" ng-show="vm.searchResultsLoaded">13 - 24 of 26 results</p>
-    #>
+    if ($last) {
+      $pagination_result_css_selector = 'p[class*="ca-guest-visitor-pagination-result"][ng-show]'
+      #                                                                                ^^^^^^^^^^ 
+     <#
+     <div class="ca-guest-visitor-pagination-container">
+     <hr class="ca-divider ca-guest-visitor-divider">
+     <p class="ca-guest-visitor-pagination-result ng-hide" ng-hide="vm.searchResultsLoaded">1 - 12 of 26 results</p>
+     <p class="ca-guest-visitor-pagination-result ng-binding" ng-show="vm.searchResultsLoaded">13 - 24 of 26 results</p>
+     #>
+    } else {
+      $pagination_result_css_selector = 'p[class*="ca-guest-visitor-pagination-result"]'
+    }
 
     $wait_seconds = 10
     [OpenQA.Selenium.Support.UI.WebDriverWait]$wait5 = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
@@ -199,24 +192,24 @@ function paginate_destinations
     [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
     [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$pagination_result_paragraph).Build().Perform()
 
-    highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$pagination_result_paragraph) -delay 1500
-    Write-Host ( '{0} -> {1}' -f $pagination_result_css_selector, $pagination_result ) 
+    # highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$pagination_result_paragraph) -Delay 1500
+    Write-Debug ('{0} -> {1}' -f $pagination_result_css_selector,$pagination_result)
 
-    $pagination_result_paragraph
-    custom_pause -fullstop $fullstop
-   if ( $pagination_result -match '\S' ) {
-    $first_item = $null
-    extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'first_item' -result_ref ([ref]$first_item)
+    # custom_pause -fullstop $fullstop
+    if ($pagination_result -match '\S') {
+      $first_item = $null
+      extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'first_item' -result_ref ([ref]$first_item)
 
-    $last_item = $null
-    extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'last_item' -result_ref ([ref]$last_item)
+      $last_item = $null
+      extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'last_item' -result_ref ([ref]$last_item)
 
 
-    $count_items = $null
-    extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'count_items' -result_ref ([ref]$count_items)
+      $count_items = $null
+      extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'count_items' -result_ref ([ref]$count_items)
+      $local:result = @{ 'first_item' = $first_item; 'last_item' = $last_item; 'count_items' = $count_items; }
+      $result_ref.Value = $local:result
 
-    Write-Output (@{ 'first_item' = $first_item; 'last_item' = $last_item; 'count_items' = $count_items; } | Format-List)
-}
+    }
   }
   if ($action -eq 'forward') {
     Write-Debug 'forward'
@@ -236,7 +229,7 @@ function paginate_destinations
     # $pagination_forward_link
     [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
     [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$pagination_forward_link).Build().Perform()
-    highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$pagination_forward_link)
+    # highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$pagination_forward_link)
     [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$pagination_forward_link).click().Build().Perform()
     # TODO page.ready
     custom_pause -fullstop $fullstop
@@ -330,15 +323,18 @@ if ($base_url -eq '') {
 
   Write-Output ('Started with {0}' -f $selenium.Title)
   # $selenium.Manage().Window.Maximize()
+  $result = @{
+    'first_item' = $null; 'last_item' = $null; 'count_items' = $null; }
+  paginate_destinations -Action 'count' -result_ref ([ref]$result)
+  $result | Format-List
 
-  paginate_destinations -Action 'count'
+  while ($result.count_items -gt $result.last_item) {
+    paginate_destinations -Action 'forward'
+    paginate_destinations -Action 'count' -result_ref ([ref]$result) -Last $true
+    $result | Format-List
 
-  paginate_destinations -Action 'forward'
-  paginate_destinations -action 'count'
-  paginate_destinations -Action 'forward'
-  # TODO: bug 
-  paginate_destinations -action 'count'
-  
+  }
+
 }
 
 
