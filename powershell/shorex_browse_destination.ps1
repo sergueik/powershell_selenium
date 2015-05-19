@@ -27,7 +27,6 @@ param(
   [switch]$savedata,
   [switch]$pause
 )
-
 # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
 function Get-ScriptDirectory
 {
@@ -308,6 +307,100 @@ function find_page_element_by_xpath {
   $element_ref.Value = $local:element
 }
 
+function paginate_destinations
+{
+  param(
+    [string]$action = $null,
+    [bool]$last = $false,
+    [System.Management.Automation.PSReference]$result_ref
+  )
+
+
+  if (-not $action) {
+    return
+  }
+
+  if ($action -eq 'count') {
+    if ($last) {
+      $pagination_result_css_selector = 'p[class*="ca-guest-visitor-pagination-result"][ng-show]'
+      #                                                                                ^^^^^^^^^^ 
+     <#
+     <div class="ca-guest-visitor-pagination-container">
+     <hr class="ca-divider ca-guest-visitor-divider">
+     <p class="ca-guest-visitor-pagination-result ng-hide" ng-hide="vm.searchResultsLoaded">1 - 12 of 26 results</p>
+     <p class="ca-guest-visitor-pagination-result ng-binding" ng-show="vm.searchResultsLoaded">13 - 24 of 26 results</p>
+     #>
+    } else {
+      $pagination_result_css_selector = 'p[class*="ca-guest-visitor-pagination-result"]'
+    }
+
+    $wait_seconds = 10
+    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait5 = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+    $wait5.PollingInterval = 50
+
+    try {
+      [void]$wait5.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($pagination_result_css_selector)))
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$pagination_result_css_selector)
+    }
+    $wait_seconds = $null
+
+    $pagination_result_paragraph = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($pagination_result_css_selector))
+
+    $capturing_match_expression = '(?<first_item>\d+)\s+\-\s+(?<last_item>\d+)\s+of\s+(?<count_items>\d+)\s+results'
+    $pagination_result = (' {0}' -f $pagination_result_paragraph.Text)
+
+    [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+    [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$pagination_result_paragraph).Build().Perform()
+
+    highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$pagination_result_paragraph) -Delay 1500
+    Write-Debug ('{0} -> {1}' -f $pagination_result_css_selector,$pagination_result)
+
+    custom_pause -fullstop $fullstop
+    if ($pagination_result -match '\S') {
+      $first_item = $null
+      extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'first_item' -result_ref ([ref]$first_item)
+
+      $last_item = $null
+      extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'last_item' -result_ref ([ref]$last_item)
+
+
+      $count_items = $null
+      extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'count_items' -result_ref ([ref]$count_items)
+      $local:result = @{ 'first_item' = $first_item; 'last_item' = $last_item; 'count_items' = $count_items; }
+      $result_ref.Value = $local:result
+
+    }
+  }
+  if ($action -eq 'forward') {
+    Write-Debug 'forward'
+    $pagination_forward_css_selector = 'a[class*="ca-pagination-next"]'
+
+    $wait_seconds = 10
+    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait5 = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+    $wait5.PollingInterval = 50
+
+    try {
+      [void]$wait5.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($pagination_forward_css_selector)))
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$pagination_forward_css_selector)
+    }
+
+    $pagination_forward_link = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($pagination_forward_css_selector))
+    # $pagination_forward_link
+    [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+    [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$pagination_forward_link).Build().Perform()
+    highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$pagination_forward_link)
+    [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$pagination_forward_link).click().Build().Perform()
+    # TODO page.ready
+    custom_pause -fullstop $fullstop
+
+  }
+
+}
+
+
+
 # Setup 
 $shared_assemblies = @(
   'WebDriver.dll',
@@ -391,7 +484,7 @@ create_table -database "$script_directory\shore_ex.db" -create_table_query @"
 $destinations = @()
 
 if (($PSBoundParameters['all'].IsPresent)) {
-  $cnt = 0
+  $cnt  = 0
   $result = query_database_basic
 
   $result | ForEach-Object {
@@ -405,10 +498,12 @@ if (($PSBoundParameters['all'].IsPresent)) {
 
 $base_urls = @()
 
-function collect_excursions {
-  param([string]$base_url)
 
+function collect_excursions { 
+param ([string]$base_url,
+[bool]$savedata)
 
+<#
   $selenium.Navigate().GoToUrl($base_url)
 
   [void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(100))
@@ -419,7 +514,7 @@ function collect_excursions {
 
   Write-Output ('Started with {0}' -f $selenium.Title)
   $selenium.Manage().Window.Maximize()
-
+#>
   $shoreex_box_css_selector = 'div[class*="ca-guest-visitor-right-image-box"]'
 
   $wait_seconds = 10
@@ -494,22 +589,22 @@ function collect_excursions {
     $o | Add-Member Noteproperty 'status' 0
     $o | Format-List
 
-    if (($PSBoundParameters['savedata'].IsPresent)) {
+    if ($savedata) {
       insert_database2 -data $o -database "$script_directory\shore_ex.db"
     }
     $o = $null
   }
-
+ 
 }
 $destinations | ForEach-Object {
 
-  $cnt++
+  $cnt ++ 
   $destination = $_
 
   $result = @()
 
   $fields = @( 'URL','CODE')
-  if ($cnt -gt $maxitems) { return }
+  if ($cnt -gt $maxitems ) { return } 
   query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields)
   if ($DebugPreference -eq 'Continue') {
     Write-Output 'Result:'
@@ -520,10 +615,36 @@ $destinations | ForEach-Object {
   $dest_code = $result['CODE']
   $base_urls += $base_url
 }
+  [bool]$savedata = ($PSBoundParameters['savedata'].IsPresent)
 
 $base_urls | ForEach-Object {
   $base_url = $_
-  collect_excursions -base_url $base_url
+  $selenium.Navigate().GoToUrl($base_url)
+  [void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(100))
+  # protect from blank page
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
+  $wait.PollingInterval = 150
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName('logo')))
+
+  Write-Output ('Started with {0}' -f $selenium.Title)
+  $selenium.Manage().Window.Maximize()
+
+  $result = @{
+    'first_item' = $null; 'last_item' = $null; 'count_items' = $null; }
+  paginate_destinations -Action 'count' -result_ref ([ref]$result)
+  $result | Format-List
+
+  collect_excursions -base_url $base_url -savedata $savedata
+  while ($result.count_items -gt $result.last_item) {
+    paginate_destinations -Action 'forward'
+    paginate_destinations -Action 'count' -result_ref ([ref]$result) -Last $true
+    $result | Format-List
+    collect_excursions -base_url $base_url -savedata $savedata
+
+  }
+
+
+
 }
 
 # continue to shorex_carousel_box_image.ps1
