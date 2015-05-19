@@ -170,7 +170,15 @@ function paginate_destinations
   }
 
   if ($action -eq 'count') {
-    $pagination_result_css_selector = 'p[class*="ca-guest-visitor-pagination-result"]'
+
+    $pagination_result_css_selector = 'p[class*="ca-guest-visitor-pagination-result"][ng-show]'
+    #                                                                                ^^^^^^^^^^ 
+    <#
+    <div class="ca-guest-visitor-pagination-container">
+    <hr class="ca-divider ca-guest-visitor-divider">
+    <p class="ca-guest-visitor-pagination-result ng-hide" ng-hide="vm.searchResultsLoaded">1 - 12 of 26 results</p>
+    <p class="ca-guest-visitor-pagination-result ng-binding" ng-show="vm.searchResultsLoaded">13 - 24 of 26 results</p>
+    #>
 
     $wait_seconds = 10
     [OpenQA.Selenium.Support.UI.WebDriverWait]$wait5 = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
@@ -181,6 +189,7 @@ function paginate_destinations
     } catch [exception]{
       Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$pagination_result_css_selector)
     }
+    $wait_seconds = $null
 
     $pagination_result_paragraph = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($pagination_result_css_selector))
 
@@ -190,12 +199,12 @@ function paginate_destinations
     [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
     [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$pagination_result_paragraph).Build().Perform()
 
-    highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$pagination_result_paragraph)
-    Write-Debug $pagination_result
+    highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$pagination_result_paragraph) -delay 1500
+    Write-Host ( '{0} -> {1}' -f $pagination_result_css_selector, $pagination_result ) 
 
-
+    $pagination_result_paragraph
     custom_pause -fullstop $fullstop
-
+   if ( $pagination_result -match '\S' ) {
     $first_item = $null
     extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'first_item' -result_ref ([ref]$first_item)
 
@@ -207,7 +216,7 @@ function paginate_destinations
     extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'count_items' -result_ref ([ref]$count_items)
 
     Write-Output (@{ 'first_item' = $first_item; 'last_item' = $last_item; 'count_items' = $count_items; } | Format-List)
-
+}
   }
   if ($action -eq 'forward') {
     Write-Debug 'forward'
@@ -325,9 +334,11 @@ if ($base_url -eq '') {
   paginate_destinations -Action 'count'
 
   paginate_destinations -Action 'forward'
+  paginate_destinations -action 'count'
   paginate_destinations -Action 'forward'
   # TODO: bug 
-  #   paginate_destinations -action 'count'
+  paginate_destinations -action 'count'
+  
 }
 
 
