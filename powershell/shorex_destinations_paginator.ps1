@@ -29,7 +29,9 @@ param(
   [string]$browser = '',
   [int]$version,# unused
   [string]$destination = 'Curacao',
-  [string]$base_url = 'http://www.carnival.com/shore-excursions/honolulu-hi',# 
+  [string]$base_url = 'http://www.carnival.com/shore-excursions/costa-maya-mexico',# 3 PAGES 
+  # 'http://www.carnival.com/shore-excursions/honolulu-hi', 2 PAGES 
+
   [switch]$all,
   [int]$maxitems = 1000,
   [switch]$savedata,
@@ -156,6 +158,85 @@ function find_page_element_by_xpath {
   $element_ref.Value = $local:element
 }
 
+function paginate_destinations
+{
+  param(
+    [string]$action = $null
+  )
+
+
+  if (-not $action) {
+    return
+  }
+
+  if ($action -eq 'count') {
+    $pagination_result_css_selector = 'p[class*="ca-guest-visitor-pagination-result"]'
+
+    $wait_seconds = 10
+    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait5 = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+    $wait5.PollingInterval = 50
+
+    try {
+      [void]$wait5.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($pagination_result_css_selector)))
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$pagination_result_css_selector)
+    }
+
+    $pagination_result_paragraph = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($pagination_result_css_selector))
+
+    $capturing_match_expression = '(?<first_item>\d+)\s+\-\s+(?<last_item>\d+)\s+of\s+(?<count_items>\d+)\s+results'
+    $pagination_result = (' {0}' -f $pagination_result_paragraph.Text)
+
+    [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+    [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$pagination_result_paragraph).Build().Perform()
+
+    highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$pagination_result_paragraph)
+    Write-Debug $pagination_result
+
+
+    custom_pause -fullstop $fullstop
+
+    $first_item = $null
+    extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'first_item' -result_ref ([ref]$first_item)
+
+    $last_item = $null
+    extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'last_item' -result_ref ([ref]$last_item)
+
+
+    $count_items = $null
+    extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'count_items' -result_ref ([ref]$count_items)
+
+    Write-Output (@{ 'first_item' = $first_item; 'last_item' = $last_item; 'count_items' = $count_items; } | Format-List)
+
+  }
+  if ($action -eq 'forward') {
+    Write-Debug 'forward'
+    $pagination_forward_css_selector = 'a[class*="ca-pagination-next"]'
+
+    $wait_seconds = 10
+    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait5 = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+    $wait5.PollingInterval = 50
+
+    try {
+      [void]$wait5.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($pagination_forward_css_selector)))
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$pagination_forward_css_selector)
+    }
+
+    $pagination_forward_link = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($pagination_forward_css_selector))
+    # $pagination_forward_link
+    [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+    [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$pagination_forward_link).Build().Perform()
+    highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$pagination_forward_link)
+    [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$pagination_forward_link).click().Build().Perform()
+    # TODO page.ready
+    custom_pause -fullstop $fullstop
+
+  }
+
+}
+
+
 # Setup 
 $shared_assemblies = @(
   'WebDriver.dll',
@@ -228,21 +309,10 @@ if ($base_url -eq '') {
   # $destinations iterator is in
   # shorex_browse_destination.ps1
 } else {
-  paginate_destinations -base_url $base_url
-}
-
-
-function paginate_destinations
-{
-  param
-  ([string]$base_url)
-
-
   Write-Output ('base_url: "{0}"' -f $base_url)
 
 
   $selenium.Navigate().GoToUrl($base_url)
-
   [void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(100))
   # protect from blank page
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
@@ -250,52 +320,19 @@ function paginate_destinations
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName('logo')))
 
   Write-Output ('Started with {0}' -f $selenium.Title)
-  $selenium.Manage().Window.Maximize()
+  # $selenium.Manage().Window.Maximize()
 
-  $pagination_result_css_selector = 'p[class*="ca-guest-visitor-pagination-result"]'
+  paginate_destinations -Action 'count'
 
-  $wait_seconds = 10
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait5 = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait5.PollingInterval = 50
-
-  try {
-    [void]$wait5.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($pagination_result_css_selector)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$pagination_result_css_selector)
-  }
-
-  $pagination_result_paragraph = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($pagination_result_css_selector))
-  $cnt = 0
-  # quirks 
-
-
-  $capturing_match_expression  = '(?<first_item>\d+)\s+\-\s+(?<last_item>\d+)\s+of\s+(?<count_items>\d+)\s+results'
-  #   write-output $pagination_result_paragraph.Text
-  $pagination_result =  (' {0}' -f  $pagination_result_paragraph.Text)
-  $first_item = $null
-  extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'first_item' -result_ref ([ref]$first_item)
-
-  $last_item = $null
-  extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'last_item' -result_ref ([ref]$last_item)
-
-
-  $count_items = $null
-  extract_match -Source $pagination_result -capturing_match_expression $capturing_match_expression -label 'count_items' -result_ref ([ref]$count_items)
-
-   # TODO : fix the bug with  the first_item
-   $first_item = $null
-   $first_capturing_match_expression  = '\b(?<first_item>\d+)\b'
-   extract_match -Source $pagination_result -capturing_match_expression $first_capturing_match_expression  -label 'first_item' -result_ref ([ref]$first_item)
-
-  Write-Output (@{ 'first_item' = $first_item; 'last_item' = $last_item; 'count_items' = $count_items; } | Format-List)
-
-
-
-
+  paginate_destinations -Action 'forward'
+  paginate_destinations -Action 'forward'
+  # TODO: bug 
+  #   paginate_destinations -action 'count'
 }
 
 
 custom_pause -fullstop $fullstop
+
 
 if (-not ($host.Name -match 'ISE')) {
   # Cleanup
