@@ -24,13 +24,13 @@ param(
 function cleanup
 {
   param(
-  [System.Management.Automation.PSReference]$selenium_ref 
+    [System.Management.Automation.PSReference]$selenium_ref
   )
   try {
     $selenium_ref.Value.Quit()
   } catch [exception]{
-  # Ignore errors if unable to close the browser
-  Write-Output (($_.Exception.Message) -split "`n")[0]
+    # Ignore errors if unable to close the browser
+    Write-Output (($_.Exception.Message) -split "`n")[0]
 
   }
 }
@@ -187,6 +187,11 @@ namespace AutomatedTester.PagePerf
 
 #>
 
+# https://msdn.microsoft.com/en-us/library/system.datetime.tolocaltime(v=vs.110).aspx
+$BaseUTCED = [math]::Floor([decimal](Get-Date (Get-Date).ToUniversalTime() -UFormat "%s"))
+# convert to millisecond 
+$BaseUTCED *= 1000
+
 
 $script = @"
 var performance = window.performance ||  window.webkitPerformance ||   window.mozPerformance ||  window.msPerformance || {};
@@ -201,8 +206,22 @@ return timings;
 # https://code.google.com/p/selenium/source/browse/java/client/src/org/openqa/selenium/remote/HttpCommandExecutor.java?r=3f4622ced689d2670851b74dac0c556bcae2d0fe
 
 $result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script);
-$result
 
+#  Convert the results from milliseconds since 1/1/1970
+
+
+$navigation_ostart_offset_epoch = $result['navigationStart']
+
+
+[string[]]($result.Keys) | ForEach-Object {
+  if ($result[$_] -gt 0) {
+    # This will not be correct.
+    # $result[$_] = ( $result[$_] - $BaseUTCED) * 0.001
+    $result[$_] = ($result[$_] - $navigation_ostart_offset_epoch) * 0.001
+  }
+}
+
+$result
 
 # Cleanup
 
