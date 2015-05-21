@@ -18,9 +18,10 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 param(
-  [string]$browser = 'firefox',
+  [string]$browser = $null,
   [string]$dest = 'Caribbean',
   [string]$port = 'Miami, FL',
+  [switch]$all,
   [switch]$follow,
   [switch]$pause
 )
@@ -235,7 +236,6 @@ $ports = @{
 
 
 
-
 function select_first_option {
   param([string]$choice = $null,
     [string]$label = $null
@@ -288,6 +288,68 @@ function select_first_option {
   $actions2 = $null
   Start-Sleep -Milliseconds 500
 }
+
+
+function select_speficic_option {
+
+  param([string]$choice = $null,
+    [string]$label = $null,
+    [int]$position = 0
+  )
+
+  $select_name = $choice
+
+  $select_css_selector = ('a[data-param={0}]' -f $select_name)
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
+  $wait.PollingInterval = 150
+  try {
+    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($select_css_selector)))
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+  }
+  $wait = $null
+  $select_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($select_css_selector))
+  Start-Sleep -Milliseconds 500
+
+  [NUnit.Framework.Assert]::IsTrue(($select_element.Text -match $label))
+
+  Write-Debug ('Clicking on ' + $select_element.Text)
+
+  $select_element.Click()
+  $select_element = $null
+  Start-Sleep -Milliseconds 500
+
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
+  $wait.PollingInterval = 150
+
+  # TODO the css_selector needs refactoring
+
+  $select_value_css_selector = ('div[class=option][data-param={0}] div.scrollable-content div.viewport div.overview ul li a' -f $select_name)
+  $value_element = $null
+  Write-Debug ('Selecting CSS: "{0}"' -f $select_value_css_selector)
+  try {
+    [OpenQA.Selenium.Remote.RemoteWebElement]$value_element = $wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($select_value_css_selector)))
+    Write-Debug 'Found...'
+    Write-Debug ('Selected value: {0} / attribute "{1}"' -f $value_element.Text,$value_element.GetAttribute('data-id'))
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+  }
+
+  [OpenQA.Selenium.Remote.RemoteWebElement[]]$value_elements = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($select_value_css_selector))
+  if ($position -ge $value_elements.count) { $position = $value_elements.count - 1 }
+  [OpenQA.Selenium.Remote.RemoteWebElement]$value_element = $value_elements[$position]
+  $wait = $null
+
+  Start-Sleep -Milliseconds 500
+  [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+  [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$value_element).Click().Build().Perform()
+  $value_element = $null
+
+  $actions2 = $null
+  Start-Sleep -Milliseconds 500
+}
+
+
 
 
 function select_criteria {
@@ -401,17 +463,18 @@ function count_cruises {
 }
 
 # TODO :finish parameters
-$fullstop = (($PSBoundParameters['pause']) -ne $null)
-
+[bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
+[bool]$all = [bool]$PSBoundParameters['all'].IsPresent
 select_criteria -choice 'numGuests' -Value '"2"' -label 'TRAVELERS'
 #Write-Debug ('Selecting Destination {0}' -f $dest )
 #
-select_criteria -choice 'dest' -label 'Sail To' -Option $dest -choice_value_ref ([ref]$destinations)
-#Write-Debug ('Selecting Port {0}' -f $port )
-select_criteria -choice 'port' -label 'Sail from' -Option $port -choice_value_ref ([ref]$ports)
-
+if (-not $all) {
+  select_criteria -choice 'dest' -label 'Sail To' -Option $dest -choice_value_ref ([ref]$destinations)
+  #Write-Debug ('Selecting Port {0}' -f $port )
+  select_criteria -choice 'port' -label 'Sail from' -Option $port -choice_value_ref ([ref]$ports)
+}
 # find first avail
-select_first_option -choice 'dat' -label 'Date'
+select_speficic_option -choice 'dat' -label 'Date' -position 3
 search_cruises
 Start-Sleep -Milliseconds 1500
 $cruises_count_text = $null
@@ -507,16 +570,16 @@ while ($itins_found -lt $itins_to_find) {
      -Description $description `
      -url $element3.GetAttribute('href') `
      -log_filename ('{0}\{1}' -f $script_directory,'results.csv')
-  if (($PSBoundParameters['follow']) -ne $null) { 
-  $expect_url = 'http://www.carnival.com/itinerary/7-day-eastern-caribbean-cruise/miami/glory/7-days/cem/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA'
-  $expect_url = 'http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/victory/4-days/kwp/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA'
-  # TODO: mask datFrom ... datTo ...
-  $expect_url = $expect_url -replace '\?','\?'
+  if (($PSBoundParameters['follow']) -ne $null) {
+    $expect_url = 'http://www.carnival.com/itinerary/7-day-eastern-caribbean-cruise/miami/glory/7-days/cem/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA'
+    $expect_url = 'http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/victory/4-days/kwp/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA'
+    # TODO: mask datFrom ... datTo ...
+    $expect_url = $expect_url -replace '\?','\?'
 
-  if ($url -match $expect_url)
-  {
-    Write-Output 'need to pick XPATH'
-    [string]$script = @"
+    if ($url -match $expect_url)
+    {
+      Write-Output 'need to pick XPATH'
+      [string]$script = @"
 function getPathTo(element) {
     if (element.id!=='')
         return '*[@id="'+element.id+'"]';
@@ -536,65 +599,65 @@ function getPathTo(element) {
 return getPathTo(arguments[0]);
 "@
 
-    # Exception calling "ExecuteScript" with "3" argument(s): "element is null
-    $result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($script,$element3,'')).ToString()
+      # Exception calling "ExecuteScript" with "3" argument(s): "element is null
+      $result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($script,$element3,'')).ToString()
 
-    Write-Output ('Saving  XPATH for {0} = "{1}" ' -f $element3.Text,$result)
-    $xpath4 = ('//{0}' -f $result)
-    [OpenQA.Selenium.IWebElement]$element4 = $selenium.FindElement([OpenQA.Selenium.By]::XPath($xpath4))
+      Write-Output ('Saving  XPATH for {0} = "{1}" ' -f $element3.Text,$result)
+      $xpath4 = ('//{0}' -f $result)
+      [OpenQA.Selenium.IWebElement]$element4 = $selenium.FindElement([OpenQA.Selenium.By]::XPath($xpath4))
 
-    $actions.MoveToElement([OpenQA.Selenium.IWebElement]$element4).Click().Build().Perform()
-    Start-Sleep -Millisecond 2000
+      $actions.MoveToElement([OpenQA.Selenium.IWebElement]$element4).Click().Build().Perform()
+      Start-Sleep -Millisecond 2000
 
-    # Click on Book Now
+      # Click on Book Now
 
-    $book_now_css_selector = 'li[class = action-col] a[class *=btn-red]'
+      $book_now_css_selector = 'li[class = action-col] a[class *=btn-red]'
 
-    try {
-      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($book_now_css_selector)))
-    } catch [exception]{
-      Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
-    }
+      try {
+        [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($book_now_css_selector)))
+      } catch [exception]{
+        Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+      }
 
-    $book_now_buttons = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($book_now_css_selector))
-    $book_now_element = $null
+      $book_now_buttons = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($book_now_css_selector))
+      $book_now_element = $null
 
-    foreach ($element8 in $book_now_buttons) {
-      if (!$book_now_element) {
-        if ($element8.Text -match 'BOOK NOW') {
-          Write-Output ('Selecting {0}' -f $element8.Text)
-          $book_now_element = $element8
+      foreach ($element8 in $book_now_buttons) {
+        if (!$book_now_element) {
+          if ($element8.Text -match 'BOOK NOW') {
+            Write-Output ('Selecting {0}' -f $element8.Text)
+            $book_now_element = $element8
+          }
         }
       }
-    }
-    $element8 = $null
-    [OpenQA.Selenium.Interactions.Actions]$actions4 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+      $element8 = $null
+      [OpenQA.Selenium.Interactions.Actions]$actions4 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
-    [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$book_now_element,'color: yellow; border: 4px solid yellow;')
-    Start-Sleep -Millisecond 500
-    [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$book_now_element,'')
+      [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$book_now_element,'color: yellow; border: 4px solid yellow;')
+      Start-Sleep -Millisecond 500
+      [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$book_now_element,'')
 
-    $actions4.MoveToElement([OpenQA.Selenium.IWebElement]$book_now_element).Build().Perform()
+      $actions4.MoveToElement([OpenQA.Selenium.IWebElement]$book_now_element).Build().Perform()
 
-    Start-Sleep -Millisecond 1000
-    Write-Output ('Click : "{0}"' -f $book_now_element.Text)
-    $book_now_element.Click()
-    Start-Sleep -Milliseconds 2000
-    # TODO: navigate through 'Book Now'
-    Write-Output $selenium.url
+      Start-Sleep -Millisecond 1000
+      Write-Output ('Click : "{0}"' -f $book_now_element.Text)
+      $book_now_element.Click()
+      Start-Sleep -Milliseconds 2000
+      # TODO: navigate through 'Book Now'
+      Write-Output $selenium.url
 
-    try {
-      [NUnit.Framework.StringAssert]::Contains('http://www.carnival.com/BookingEngine/Stateroom',$selenium.url,{})
-    } catch [exception]{
-      Write-Output ("Unexpected redirect:`r`t{0}`rtAborting." -f $selenium.url)
+      try {
+        [NUnit.Framework.StringAssert]::Contains('http://www.carnival.com/BookingEngine/Stateroom',$selenium.url,{})
+      } catch [exception]{
+        Write-Output ("Unexpected redirect:`r`t{0}`rtAborting." -f $selenium.url)
+        cleanup ([ref]$selenium)
+        return
+      }
+
       cleanup ([ref]$selenium)
       return
+      #  exit iterator
     }
-
-    cleanup ([ref]$selenium)
-    return
-    #  exit iterator
-  }
   }
   $actions = $null
   # next iterator 
