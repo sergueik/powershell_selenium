@@ -247,6 +247,49 @@ $o = New-Object -TypeName 'WebTester.Monitor'
 # http://fiddler.wikidot.com/fiddlercore-api
 $o.Start()
 
+<#
+TODO: extract $req, $res.
+
+----------------------------------------
+POST /CMS/javascript/tealeaf/TealeafTarget.aspx HTTP/1.1
+Accept: */*
+X-TeaLeaf: ClientEvent
+Content-Type: text/xml
+X-TeaLeafType: PERFORMANCE; GUI;
+X-TeaLeafSubType: INIT; BEFOREUNLOAD
+X-TeaLeaf-Page-Url: /bookingengine/cruise-search/caribbean
+X-TeaLeaf-Screen-Res: 2
+X-TeaLeaf-Browser-Res: 2
+X-TeaLeaf-Page-Render: 2370
+X-TeaLeaf-Page-Img-Fail: 2
+X-TeaLeaf-Page-Cui-Events: 3
+X-TeaLeaf-Page-Cui-Bytes: 1241
+X-TeaLeaf-Page-Dwell: 13642
+Referer: ...
+Accept-Language: en-us
+Accept-Encoding: gzip, deflate
+User-Agent: Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0; KTXN B579989732A48120T2783790P5)
+Host: www.carnival.com
+Content-Length: 1241
+Connection: Keep-Alive
+Cache-Control: no-cache
+Cookie: ...
+----------------------------------------
+HTTP/1.1 200 OK
+Cache-Control: private
+Content-Type: text/html; charset=utf-8
+Server: Microsoft-IIS/7.0
+X-AspNet-Version: 4.0.30319
+X-Powered-By: ASP.NET
+Content-Length: 238
+Date: Tue, 19 May 2015 20:16:33 GMT
+Connection: keep-alive
+Set-Cookie: ...
+Set-Cookie: ...
+
+#>
+
+
 # TODO : $o.IsStarted()
 
 $headless = $false
