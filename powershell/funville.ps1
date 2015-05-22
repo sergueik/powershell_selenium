@@ -402,14 +402,21 @@ $value_element3 = $null
 find_page_element_by_css_selector -selenium_driver_ref ([ref]$selenium) -element_ref ([ref]$value_element3) -css_selector $forum_css_selector
 
 $raw_data = '<rawdata>{0}</rawdata>' -f ($value_element3.GetAttribute('innerHTML') -join '')
+# Pruning the known bad syntax elements:
+# Error: "Reference to undeclared entity 'nbsp'."
 $raw_data = $raw_data -replace '&nbsp;',''
-# Error: "Reference to undeclared entity 'nbsp'.
+# Error: "??"
+$raw_data = $raw_data -replace " \d+,?\?*\'*=\`"\`"",'' 
 $s1 = [xml]$raw_data
-# Write-Debug $raw_data
-$s1.rawdata.div.div.ul.li.div.h3.a | Format-List
-# $forum_title_css_locator = 'a[href="#tab-hof"] div.box-listblogs-content a.carnivalLink'
+$s1.'rawdata'.'div'.'div'.'ul'.'li'.'div'.'h3'.'a' | ForEach-Object {
+    Write-Output ($_.GetAttribute('title'))
+    Write-Output ($_.GetAttribute('href'))
+    $_ | get-member | out-null
+  }
+
 $forum_title_css_locator = 'div.box-listblogs-content a.carnivalLink'
 $forums = $value_element3.FindElements([OpenQA.Selenium.By]::CssSelector($forum_title_css_locator))
+
 if ($forums.Count -gt 1){
   0..($forums.Count - 1) | ForEach-Object {
     Write-Output $forums[$_].Text
@@ -418,13 +425,15 @@ if ($forums.Count -gt 1){
 
 }
 
-$value_element3 = $null
 
 <#
-$link_forums_xpath = '//a[@class="link-readcarnivalblog"]'
+$value_element3 = $null
 
+$link_forums_xpath = '//a[@class="link-readcarnivalblog"]'
 find_page_element_by_xpath -selenium_driver_ref ([ref]$selenium) -element_ref ([ref]$value_element3) -xpath $link_forums_xpath
 #>
+<#
+$value_element3 = $null
 
 $link_forums_css_selector = 'div[class="box-listblogs"] a[class="link-readcarnivalblog"]'
 
@@ -433,10 +442,12 @@ find_page_element_by_css_selector -selenium_driver_ref ([ref]$selenium) -element
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Build().Perform()
 $actions = $null
+
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$value_element3)
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Click().Build().Perform()
 $actions = $null
+#>
 custom_pause -fullstop $fullstop
 
 # At the end of the run - do not close Browser / Selenium when executing from Powershell ISE
