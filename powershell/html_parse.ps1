@@ -1,168 +1,10 @@
-﻿#Copyright (c) 2015 Serguei Kouzmine
-#
-#Permission is hereby granted, free of charge, to any person obtaining a copy
-#of this software and associated documentation files (the "Software"), to deal
-#in the Software without restriction, including without limitation the rights
-#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#copies of the Software, and to permit persons to whom the Software is
-#furnished to do so, subject to the following conditions:
-#
-#The above copyright notice and this permission notice shall be included in
-#all copies or substantial portions of the Software.
-#
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-#THE SOFTWARE.
 param(
-  # in the current environment phantomejs is not installed 
-  [string]$browser = 'chrome',
-  [string]$dest = 'Europe',
-  [string]$port = 'Trieste',
-  [switch]$pause
-
+  [switch]$hap_docebug
 )
-function extract_match {
-
-  param(
-    [string]$source,
-    [string]$capturing_match_expression,
-    [string]$label,
-    [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
-
-  )
-  Write-Debug ('Extracting from {0}' -f $source)
-  $local:results = {}
-  $local:results = $source | where { $_ -match $capturing_match_expression } |
-  ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
-  Write-Debug 'extract_match:'
-  Write-Debug $local:results
-  $result_ref.Value = $local:results.Media
-}
-
-function highlight {
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [int]$delay = 300
-  )
-  # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'color: yellow; border: 4px solid yellow;')
-  Start-Sleep -Millisecond $delay
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
-}
-
-function find_page_element_by_css_selector {
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$container_element_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$css_selector,
-    [int]$wait_seconds = 10
-  )
-  if ($css_selector -eq '' -or $css_selector -eq $null) {
-    return
-  }
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  if ($container_element_ref -ne $null) {
-    [OpenQA.Selenium.Remote.RemoteWebElement]$local:container_element = $container_element_ref.Value
-  }
-
-  <#
-
-Cannot convert the "OpenQA.Selenium.Remote.RemoteWebElement" value of type
-"OpenQA.Selenium.Remote.RemoteWebElement" to type
-"OpenQA.Selenium.Remote.RemoteWebDriver".
-#>
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-  $element_ref.Value = $local:element
-}
-
-function find_page_element_by_xpath {
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$xpath,
-    [int]$wait_seconds = 10
-  )
-  if ($xpath -eq '' -or $xpath -eq $null) {
-    return
-  }
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::XPath($xpath))
-  $element_ref.Value = $local:element
-}
-
-
-
-function custom_pause {
-
-  param([bool]$fullstop)
-  # Do not close Browser / Selenium when run from Powershell ISE
-
-  if ($fullstop) {
-    try {
-      Write-Output 'pause'
-      [void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-    } catch [exception]{}
-  } else {
-    Start-Sleep -Millisecond 1000
-  }
-
-}
-
-# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
-function Get-ScriptDirectory
-{
-  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-  if ($Invocation.PSScriptRoot) {
-    $Invocation.PSScriptRoot
-  }
-  elseif ($Invocation.MyCommand.Path) {
-    Split-Path $Invocation.MyCommand.Path
-  } else {
-    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
-  }
-}
-
-function cleanup
-{
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref
-  )
-  try {
-    $selenium_ref.Value.Quit()
-  } catch [exception]{
-    # Ignore errors if unable to close the browser
-    Write-Debug (($_.Exception.Message) -split "`n")[0]
-
-  }
-}
 
 $shared_assemblies = @(
-  'WebDriver.dll',
-  'WebDriver.Support.dll',
+  'HtmlAgilityPack.dll',
+  'CsQuery.dll', 
   'nunit.framework.dll'
 )
 
@@ -178,89 +20,8 @@ pushd $shared_assemblies_path
 $shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
 popd
 
-$verificationErrors = New-Object System.Text.StringBuilder
 
-if ($browser -ne $null -and $browser -ne '') {
-  try {
-    $connection = (New-Object Net.Sockets.TcpClient)
-    $connection.Connect("127.0.0.1",4444)
-    $connection.Close()
-  } catch {
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\hub.cmd"
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\node.cmd"
-    Start-Sleep -Seconds 10
-  }
-  Write-Host "Running on ${browser}"
-  if ($browser -match 'firefox') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
-
-  }
-  elseif ($browser -match 'chrome') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
-  }
-  elseif ($browser -match 'ie') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
-    if ($version -ne $null -and $version -ne 0) {
-      $capability.SetCapability("version",$version.ToString());
-    }
-
-  }
-  elseif ($browser -match 'safari') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
-  }
-  else {
-    throw "unknown browser choice:${browser}"
-  }
-  $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
-  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
-} else {
-  Write-Host 'Running on phantomjs'
-  $phantomjs_executable_folder = "C:\tools\phantomjs"
-  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability("ssl-protocol","any")
-  $selenium.Capabilities.SetCapability("ignore-ssl-errors",$true)
-  $selenium.Capabilities.SetCapability("takesScreenshot",$true)
-  $selenium.Capabilities.SetCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
-  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
-}
-[bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
-$base_url = 'http://www.carnival.com/Funville/'
-# 
-# html.js.borderradius.boxshadow.textshadow.csstransitions.js.no-touch.boxshadow.cssanimations.csstransitions
-
-$selenium.Navigate().GoToUrl($base_url + '/')
-Write-Debug ('Started with {0}' -f $selenium.Title)
-[void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(100))
-# protect from blank page
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
-
-$logo_css_selector = 'a[href="/Funville"]'
-$wait.PollingInterval = 150
-[void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementIsVisible([OpenQA.Selenium.By]::CssSelector($logo_css_selector)))
-
-
-
-$selenium.Manage().Window.Maximize()
-$forum_search_css_selector = 'ul.ui-tabs-nav'
-$value_element1 = $null
-find_page_element_by_css_selector -selenium_driver_ref ([ref]$selenium) -element_ref ([ref]$value_element1) -css_selector $forum_search_css_selector
-
-[OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-[void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element1).Build().Perform()
-$actions = $null
-highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$value_element1)
-
-$forum_tab_css_selector = 'a[href="#tab-hof"]'
-$value_element2 = $null
-find_page_element_by_css_selector -selenium_driver_ref ([ref]$selenium) -container_element_ref ([ref]$value_element1) -element_ref ([ref]$value_element2) -css_selector $forum_tab_css_selector
-[OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-[void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element2).Click().Build().Perform()
-$actions = $null
-highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$value_element2)
-
-$forums = @"
-
+$rawdata = @"
   <div class="box-listblogs">
     <div class="box-listblogs-scroll scroll-pane-3">
       <ul id="hof">
@@ -275,6 +36,12 @@ $forums = @"
 i miss you. <a href="http://www.carnival.com/Funville/forums/thread/1828215.aspx">...read more</a></p>
             </div>
             <p class="data"><span class="date">Sun, 17 May 2015</span> - <span>Comments (<span/>)</span></p>
+             <!-- 
+Half way to retirement and I like how things are going!
+Now I have to grapple with getting a countdown thingy so I can wallow in my excitement! <a href="http://www.carnival.com/Funville/forums/thread/1828666.aspx">...read more</a></p></div><p class="data"><span class="date">Mon, 18 May 2015</span> - <span>Comments (<span></span>)</span></p></div></li><li><div class="box-listblogs-content"><h3><a class="carnivalLink" href="http://www.carnival.com/Funville/forums/thread/1830802.aspx" title="Grammy Scott">Grammy Scott</a></h3><div class="desc"><p>Test <a href="http://www.carnival.com/Funville/forums/thread/1830802.aspx">...read more</a></p></div><p class="data"><span class="date">Fri, 22 May 2015</span> - <span>Comments (<span></span>)</span></p></div></li><li><div class="box-listblogs-content"><h3><a class="carnivalLink" href="http://www.carnival.com/Funville/forums/thread/1831112.aspx" title="Entertainment info?">Entertainment info?</a></h3><div class="desc"><p>I have seen people talk about what comedian will be on their cruise and such. I have looked and can't seem to figure out how to find out about any entertainment that will be on my particular cruise. If someone could point me in the right direction... <a href="http://www.carnival.com/Funville/forums/thread/1831112.aspx">...read more</a></p></div><p class="data"><span class="date">Fri, 22 May 2015</span> - <span>Comments (<span></span>)</span></p></div></li><li><div class="box-listblogs-content"><h3><a class="carnivalLink" href="http://www.carnival.com/Funville/forums/thread/1824843.aspx" title="Cruising on the Glory Jan. 23/16">Cruising on the Glory Jan. 23/16</a></h3><div class="desc"><p>Hello everyone! Be sure if your cruising on the Glory January 23/16' you look for our group.
+we are from Regina Saskatchewan. Home of the CFL saskatchewan Rough Riders and proud of them.
+There are so far, 11 of us on this cruise and some are crui <a href="http://www.carnival.com/Funville/forums/thread/1824843.aspx">...read more</a></p></div><p class="data"><span class="date">Sun, 10 May 2015</span> - <span>Comments (<span></span>)</span></p></div></li><li><div class="box-listblogs-content"><h3><a class="carnivalLink" href="http://www.carnival.com/Funville/forums/thread/1805458.aspx" title="Who" s="" going="" on="" june="" 2015??'="">Who's going on June 1, 2015??</a></h3><div class="desc"><p>My family is booked on the Triumph leaving from Galveston on June 1. Who else is going? <a href="http://www.carnival.com/Funville/forums/thread/1805458.aspx">...read more</a></p></div><p class="data"><span class="date">Sat, 28 Mar 2015</span> - <span>Comments (<span></span>)</span>
+--> 
           </div>
         </li>
         <li>
@@ -386,7 +153,7 @@ Fir <a href="http://www.carnival.com/Funville/forums/thread/1651730.aspx">...rea
             <div class="desc">
               <p>I received a offer to cruise at a discounted rate that said offer was good until today the 21st. Well they don't state that was eastern time and since I live in california9THREE HOURS AHEAD), I in good faith went to reserve my cruse and what a surpri <a href="http://www.carnival.com/Funville/forums/thread/1830842.aspx">...read more</a></p>
             </div>
-            <p class="data"><span class="date">Fri, 22 May 2015</span> - <span>Comments (<span/>)</span></p>
+            <p class="data">&nbsp;<span class="date">Fri, 22 May 2015</span> - <span>Comments (<span/>)</span></p>
           </div>
         </li>
       </ul>
@@ -395,63 +162,30 @@ Fir <a href="http://www.carnival.com/Funville/forums/thread/1651730.aspx">...rea
   <a class="link-readcarnivalblog" href="/Funville/forums">Go to The Forums</a>
 
 "@
-#  NOTE: The actual forums is not well-formed.
+# https://htmlagilitypack.codeplex.com/
 # 
-$forum_css_selector = 'div#tab-hof'
-$value_element3 = $null
-find_page_element_by_css_selector -selenium_driver_ref ([ref]$selenium) -element_ref ([ref]$value_element3) -css_selector $forum_css_selector
+[HtmlAgilityPack.HtmlDocument]$hap_doc = New-Object HtmlAgilityPack.HtmlDocument
+$hap_doc.LoadHtml($rawdata)
 
-$raw_data = '<rawdata>{0}</rawdata>' -f ($value_element3.GetAttribute('innerHTML') -join '')
-# Pruning the known bad syntax elements:
-# Error: "Reference to undeclared entity 'nbsp'."
-$raw_data = $raw_data -replace '&nbsp;',''
-# Error: "??"
-$raw_data = $raw_data -replace " \d+,?\?*\'*=\`"\`"",'' 
-$s1 = [xml]$raw_data
-$s1.'rawdata'.'div'.'div'.'ul'.'li'.'div'.'h3'.'a' | ForEach-Object {
-    Write-Output ($_.GetAttribute('title'))
-    Write-Output ($_.GetAttribute('href'))
-    $_ | get-member | out-null
-  }
-
-$forum_title_css_locator = 'div.box-listblogs-content a.carnivalLink'
-$forums = $value_element3.FindElements([OpenQA.Selenium.By]::CssSelector($forum_title_css_locator))
-
-if ($forums.Count -gt 1){
-  0..($forums.Count - 1) | ForEach-Object {
-    Write-Output $forums[$_].Text
-    Write-Output $forums[$_].GetAttribute('href')
-  }
-
+if ($hap_doc.ParseErrors -ne $null -and $hap_doc.ParseErrors.Count -gt 0)
+{
+  Write-Output 'Handle any parse errors as required'
 }
 
+$ns = $hap_doc.DocumentNode.SelectNodes('//a[@class="carnivalLink"]')
 
-<#
-$value_element3 = $null
+$ns | ForEach-Object {
 
-$link_forums_xpath = '//a[@class="link-readcarnivalblog"]'
-find_page_element_by_xpath -selenium_driver_ref ([ref]$selenium) -element_ref ([ref]$value_element3) -xpath $link_forums_xpath
-#>
-<#
-$value_element3 = $null
 
-$link_forums_css_selector = 'div[class="box-listblogs"] a[class="link-readcarnivalblog"]'
+  Write-Output ($_.Attributes["href"].Value)
+  Write-Output ($_.InnerText)
+}
+$cq_doc = new-object CsQuery.CQ($rawdata)
 
-find_page_element_by_css_selector -selenium_driver_ref ([ref]$selenium) -element_ref ([ref]$value_element3) -css_selector $link_forums_css_selector
+$ns = $cq_doc['a[class="carnivalLink"]']
+$ns | ForEach-Object {
 
-[OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-[void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Build().Perform()
-$actions = $null
 
-highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$value_element3)
-[OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-[void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Click().Build().Perform()
-$actions = $null
-#>
-custom_pause -fullstop $fullstop
-
-# At the end of the run - do not close Browser / Selenium when executing from Powershell ISE
-if (-not ($host.Name -match 'ISE')) {
-  # Cleanup
-  cleanup ([ref]$selenium)
+  Write-Output ($_.href)
+  Write-Output ($_.InnerText.Trim())
 }
