@@ -123,7 +123,7 @@ if ($browser -ne $null -and $browser -ne '') {
 
 # http://www.w3schools.com/xpath/xpath_axes.asp
 
-$base_url = "file:///C:/developer/sergueik/powershell_ui_samples/external/forms_test.html"
+$base_url = ('file:///{0}\{1}' -f (Get-ScriptDirectory), 'forms_test.html' ) -replace '\\', '/'
 $selenium.Navigate().GoToUrl($base_url)
 $selenium.Navigate().Refresh()
 
@@ -283,36 +283,32 @@ Write-Output ('{0} id = {1}' -f $element.TagName,$element.GetAttribute('id'))
 [OpenQA.Selenium.ILocatable]$loc = ([OpenQA.Selenium.ILocatable]$element)
 
 [string]$script = @"
-function getPathTo(element) {
-    if (element.id!=='')
-        return '*[@id="'+element.id+'"]';
-    if (element===document.body)
+function get_xpath_of(element) {
+    if (element.id !== '')
+        return '*[@id="' + element.id + '"]';
+    if (element === document.body)
         return element.tagName;
-
     var ix= 0;
     var siblings= element.parentNode.childNodes;
     for (var i= 0; i<siblings.length; i++) {
-        var sibling= siblings[i];
-        if (sibling===element)
-            return getPathTo(element.parentNode)+'/'+element.tagName+'['+(ix+1)+']';
-        if (sibling.nodeType===1 && sibling.tagName===element.tagName)
+        var sibling = siblings[i];
+        if (sibling === element)
+            return get_xpath_of(element.parentNode) + '/' + element.tagName + '[' + ( ix + 1 ) + ']';
+        if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
             ix++;
     }
 }
-return getPathTo(arguments[0]);
+return get_xpath_of(arguments[0]);
 "@
 $result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($script,$element,'')).ToString()
 
-
-
 Write-Output ('Javascript-generated XPath = "{0}"' -f $result)
-
-try {
 
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
   $wait.PollingInterval = 100
   $xpath = ('//{0}' -f $result)
 
+try {
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
 } catch [exception]{
   Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
@@ -327,6 +323,67 @@ $alert = $selenium.switchTo().alert()
 Write-Output ('Clicking on {0}' -f $alert.Text)
 $alert.accept()
 Start-Sleep 1
+# /*                if (regexp.test(el.id)) { */
+# locator # 6 css version
+[string]$get_css_selector_function = @"
+
+function get_css_selector_of(el) {
+    if (!(el instanceof Element))
+        return;
+    var path = [];
+    while (el.nodeType === Node.ELEMENT_NODE) {
+        var selector = el.nodeName.toLowerCase();
+        if (el.id) {
+            if (el.id.indexOf('-') > -1) {
+                selector += '[id = "' + el.id + '"]';
+            } else {
+                selector += '#' + el.id;
+            }
+            path.unshift(selector);
+            break;
+        } else {
+            var el_sib = el,
+                cnt = 1;
+            while (el_sib = el_sib.previousElementSibling) {
+                if (el_sib.nodeName.toLowerCase() == selector)
+                    cnt++;
+            }
+            if (cnt != 1)
+                selector += ':nth-of-type(' + cnt + ')';
+        }
+        path.unshift(selector);
+        el = el.parentNode;
+    }
+    return path.join(' > ');
+} // invoke 
+return get_css_selector_of(arguments[0]);
+"@
+
+$result_css = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_css_selector_function,$element,'')).ToString()
+
+
+Write-Output ('Javascript-generated CSS selector = "{0}"' -f $result_css)
+$css_selector = $result_css
+
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
+  $wait.PollingInterval = 100
+
+try {
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+} catch [exception]{
+  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
+}
+
+[OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+
+[OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+$actions.MoveToElement([OpenQA.Selenium.IWebElement]$element).Click().Build().Perform()
+Start-Sleep 1
+$alert = $selenium.switchTo().alert()
+Write-Output ('Clicking on {0}' -f $alert.Text)
+$alert.accept()
+Start-Sleep 1
+
 
 
 # locator # 7
@@ -345,26 +402,26 @@ try {
 Write-Output ('{0} id = {1}' -f $element.TagName,$element.GetAttribute('id'))
 [OpenQA.Selenium.ILocatable]$loc = ([OpenQA.Selenium.ILocatable]$element)
 
-[string]$script = @"
-function getPathTo(element) {
-    if (element.id!=='')
-        return 'id("'+element.id+'")';
-    if (element===document.body)
+[string]$get_xpath_script = @"
+function get_xpath_of(element) {
+    if (element.id !== '')
+        return 'id("' + element.id + '")';
+    if (element === document.body)
         return element.tagName;
 
-    var ix= 0;
-    var siblings= element.parentNode.childNodes;
-    for (var i= 0; i<siblings.length; i++) {
-        var sibling= siblings[i];
-        if (sibling===element)
-            return getPathTo(element.parentNode)+'/'+element.tagName+'['+(ix+1)+']';
-        if (sibling.nodeType===1 && sibling.tagName===element.tagName)
+    var ix = 0;
+    var siblings = element.parentNode.childNodes;
+    for (var i = 0; i < siblings.length; i++) {
+        var sibling = siblings[i];
+        if (sibling === element)
+            return get_xpath_of(element.parentNode) + '/' + element.tagName + '[' + (ix + 1) + ']';
+        if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
             ix++;
     }
 }
-return getPathTo(arguments[0]);
+return get_xpath_of(arguments[0]);
 "@
-$result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($script,$element,'')).ToString()
+$result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_xpath_script,$element,'')).ToString()
 
 Write-Output ('Javascript-generated XPath = "{0}"' -f $result)
 
