@@ -69,28 +69,86 @@ function be2_button_process {
 
       Write-Output ('Clicking: {0} => {1}' -f $local:button.Text,($local:button.GetAttribute('data-tag-page-suffix')))
 
-      [string]$script = @"
-function getPathTo(element) {
-    if (element.id!=='')
-        return '*[@id="'+element.id+'"]';
-    if (element===document.body)
+      [string]$get_xpath_script = @"
+function get_xpath_of(element) {
+    if (element.id !== '')
+        return '*[@id="' + element.id + '"]';
+    if (element === document.body)
         return element.tagName;
-
     var ix= 0;
     var siblings= element.parentNode.childNodes;
     for (var i= 0; i<siblings.length; i++) {
-        var sibling= siblings[i];
-        if (sibling===element)
-            return getPathTo(element.parentNode)+'/'+element.tagName+'['+(ix+1)+']';
-        if (sibling.nodeType===1 && sibling.tagName===element.tagName)
+        var sibling = siblings[i];
+        if (sibling === element)
+            return get_xpath_of(element.parentNode) + '/' + element.tagName + '[' + ( ix + 1 ) + ']';
+        if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
             ix++;
     }
 }
-return getPathTo(arguments[0]);
+return get_xpath_of(arguments[0]);
 "@
-      $local:xpath_selector1 = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($script,$local:button,'')).ToString()
+      $local:xpath_selector1 = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_xpath_script,$local:button,'')).ToString()
 
-      Write-Output ('Saving  XPATH for {0} = "{1}" ' -f $local:button.Text,$local:xpath_selector1)
+      Write-Output ('Javascript-generated [{0}]' -f $local:button.Text)
+      Write-Output ('XPath: "{0}"' -f $local:xpath_selector1)
+
+      [string]$get_css_selector_function = @"
+
+function get_css_selector_of(el) {
+        if (!(el instanceof Element))
+            return;
+        var path = [];
+        while (el.nodeType === Node.ELEMENT_NODE) {
+            var selector = el.nodeName.toLowerCase();
+            if (el.className) {
+                selector += '.' + el.className.replace(/\s+/g, '.');
+            }
+            else if (el.id) {
+                if (el.id.indexOf('-') > -1) {
+                    selector += '[id = "' + el.id + '"]';
+                } else {
+                    selector += '#' + el.id;
+                }
+                path.unshift(selector);
+                break;
+            } else {
+                var el_sib = el;
+                var  cnt = 1;
+                while (el_sib = el_sib.previousElementSibling) {
+                    if (el_sib.nodeName.toLowerCase() == selector) {
+                        cnt++;
+                     }
+                }
+                if (cnt != 1)
+                    selector += ':nth-of-type(' + cnt + ')';
+            }
+            path.unshift(selector);
+            el = el.parentNode;
+        }
+        return path.join(' > ');
+    }
+    // invoke
+return get_css_selector_of(arguments[0]);
+"@
+
+      $local:css_selector_generated = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_css_selector_function,$local:button,'')).ToString()
+
+      Write-Output ('Javascript-generated [{0}]' -f $local:button.Text)
+      Write-Output ('CSS selector: "{0}"' -f $local:css_selector_generated)
+
+      # try to find using the generated selector
+
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$local:wait2 = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
+  $local:wait2.PollingInterval = 150
+
+  try {
+    [void]$local:wait2.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($local:css_selector_generated)))
+
+  } catch [exception]{
+    Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+  }
+
+
 
       [OpenQA.Selenium.Interactions.Actions]$local:actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
