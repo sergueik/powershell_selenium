@@ -28,6 +28,142 @@ param(
   [switch]$pause
 )
 
+function be3_button_process {
+  param(
+    [string]$ng_show = $null,
+    [string]$button_text = 'Continue',
+    [string]$check_header = $null
+  )
+  $local:css_header_selector = 'div.scrollable div.content h1'
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$local:wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
+  Write-Output ('Wait for panel header: {0} ' -f $check_header)
+
+  $local:wait.PollingInterval = 150
+  [void]$local:wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementIsVisible([OpenQA.Selenium.By]::CssSelector($local:css_header_selector)))
+  $local:header = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($local:css_header_selector))
+  if ($check_header -ne $null) {
+    [NUnit.Framework.Assert]::IsTrue(($local:header.Text -match $check_header),('expected: {0} got:{1}' -f $check_header,$local:header.Text))
+    Write-Output ('Confirmed panel header: {0} ' -f $local:header.Text)
+  }
+
+  $local:click_button = $null
+
+  $local:css_selector1 = ('span[ng-show*="{0}"]' -f $ng_show)
+
+  $local:xpath_selector1 = ''
+  Write-Output $local:css_selector1
+  [bool]$local:found0 = $false
+
+  try {
+    [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($local:css_selector1))
+    $local:found0 = $true
+  } catch [exception]{
+    Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+  }
+  $local:buttons = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($local:css_selector1))
+  $local:button_count = 0
+  $local:buttons | ForEach-Object {
+    $local:button = $_
+    if (($button_text -ne '') -and ($local:button.Text -match '\S') -and ($local:button.Text -match $button_text)) {
+
+      Write-Output ('Clicking: {0} => {1}' -f $local:button.Text,($local:button.GetAttribute('data-tag-page-suffix')))
+
+      [string]$get_xpath_script = @"
+function get_xpath_of(element) {
+    if (element.id !== '')
+        return '*[@id="' + element.id + '"]';
+    if (element === document.body)
+        return element.tagName;
+    var ix= 0;
+    var siblings= element.parentNode.childNodes;
+    for (var i= 0; i<siblings.length; i++) {
+        var sibling = siblings[i];
+        if (sibling === element)
+            return get_xpath_of(element.parentNode) + '/' + element.tagName + '[' + ( ix + 1 ) + ']';
+        if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
+            ix++;
+    }
+}
+return get_xpath_of(arguments[0]);
+"@
+      $local:xpath_selector1 = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_xpath_script,$local:button,'')).ToString()
+
+      Write-Output ('Javascript-generated [{0}]' -f $local:button.Text)
+      Write-Output ('XPath: "{0}"' -f $local:xpath_selector1)
+
+      [string]$get_css_selector_function = @"
+
+function get_css_selector_of(el) {
+        if (!(el instanceof Element))
+            return;
+        var path = [];
+        while (el.nodeType === Node.ELEMENT_NODE) {
+            var selector = el.nodeName.toLowerCase();
+            if (el.className) {
+                selector += '.' + el.className.replace(/\s+/g, '.');
+            }
+            else if (el.id) {
+                if (el.id.indexOf('-') > -1) {
+                    selector += '[id = "' + el.id + '"]';
+                } else {
+                    selector += '#' + el.id;
+                }
+                path.unshift(selector);
+                break;
+            } else {
+                var el_sib = el;
+                var  cnt = 1;
+                while (el_sib = el_sib.previousElementSibling) {
+                    if (el_sib.nodeName.toLowerCase() == selector) {
+                        cnt++;
+                     }
+                }
+                if (cnt != 1)
+                    selector += ':nth-of-type(' + cnt + ')';
+            }
+            path.unshift(selector);
+            el = el.parentNode;
+        }
+        return path.join(' > ');
+    }
+    // invoke
+return get_css_selector_of(arguments[0]);
+"@
+
+      $local:css_selector_generated = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_css_selector_function,$local:button,'')).ToString()
+
+      Write-Output ('Javascript-generated [{0}]' -f $local:button.Text)
+      Write-Output ('CSS selector: "{0}"' -f $local:css_selector_generated)
+
+      # try to find using the generated selector
+
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$local:wait2 = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
+  $local:wait2.PollingInterval = 150
+
+  try {
+    [void]$local:wait2.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($local:css_selector_generated)))
+
+  } catch [exception]{
+    Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+  }
+
+
+
+      [OpenQA.Selenium.Interactions.Actions]$local:actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+
+      $local:actions.ClickAndHold([OpenQA.Selenium.IWebElement]$local:button).Build().Perform()
+
+      $local:actions.MoveToElement([OpenQA.Selenium.IWebElement]$local:button).Build().Perform()
+      [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$local:button,'color: green; border: 4px solid green;')
+      Start-Sleep -Milliseconds 150
+      [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$local:button,'')
+      $local:actions.Release([OpenQA.Selenium.IWebElement]$local:button).Build().Perform()
+    }
+  }
+
+
+}
+
 function be2_button_process {
   param(
     [string]$data_tag_page_suffix = $null,
@@ -285,7 +421,10 @@ function extract_match {
 
 function custom_pause {
 
-  param([bool]$fullstop)
+  param(
+    [bool]$fullstop,
+    [int]$delay = 1000
+  )
   # Do not close Browser / Selenium when run from Powershell ISE
 
   if ($fullstop) {
@@ -294,7 +433,7 @@ function custom_pause {
       [void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
     } catch [exception]{}
   } else {
-    Start-Sleep -Millisecond 1000
+    Start-Sleep -Millisecond $delay 
   }
 
 }
@@ -410,29 +549,46 @@ $fullstop = (($PSBoundParameters['pause']) -ne $null)
 # TODO: inspect ul.nav-list small.ng-binding Travelers,Rooms etc.
 
 be2_button_process -data_tag_page_suffix ':number of rooms' -check_header 'HOW MANY STATEROOMS DO YOU NEED'
-Start-Sleep -Millisecond 500
+custom_pause -fullstop $fullstop -delay 500
+# Start-Sleep -Millisecond 500
 
 be2_button_process -data_tag_page_suffix ':number of travelers' -check_header 'HOW MANY PEOPLE ARE CRUISING'
-Start-Sleep -Millisecond 500
+custom_pause -fullstop $fullstop -delay 500
+# Start-Sleep -Millisecond 500
 
 be2_button_process -data_tag_page_suffix ':check for deals' -check_header 'CHECK FOR AVAILABLE DISCOUNTS'
-Start-Sleep -Millisecond 3000
+custom_pause -fullstop $fullstop -delay 3000
+# Start-Sleep -Millisecond 3000
 
 be2_button_process_select -data_tag_page_suffix ':stateroom category selection' -button_text 'Select' -step_name 'Select room part 1' -check_header 'WHICH TYPE OF ROOM IS RIGHT FOR YOU'
-Start-Sleep -Millisecond 1000
+custom_pause -fullstop $fullstop -delay 1000
+# Start-Sleep -Millisecond 1000
 
 be2_button_process_select2 -data_tag_page_suffix ':stateroom type selection' -button_text 'Select' -step_name 'Select room part 2' -check_header $null
-Start-Sleep -Millisecond 1000
+# INTERIOR 
+# PORTHOLE
+custom_pause -fullstop $fullstop -delay 1000
+# Start-Sleep -Millisecond 1000
 
 be2_button_process_select -data_tag_page_suffix ':choose rate' -button_text 'Select' -check_header 'HERE ARE SOME GREAT DEALS FOR YOU'
-Start-Sleep -Millisecond 5000
+custom_pause -fullstop $fullstop -delay 1000
+# Start-Sleep -Millisecond 1000
 
-be2_button_process -data_tag_page_suffix ':choose location' -button_text '' -check_header 'Which Section Do You Prefer'
+# TODO: regexp BACK MIDDLE FRONT
+be2_button_process -data_tag_page_suffix ":choose location" -button_text 'Back' -check_header 'WHICH SECTION DO YOU PREFER'
+custom_pause -fullstop $fullstop -delay 4000
+
 
 be2_button_process_select -data_tag_page_suffix ':choose deck' -button_text 'Select' -check_header 'Which Deck Would You Like'
+custom_pause -fullstop $fullstop -delay 4000
+# Start-Sleep -Millisecond 4000
 
-be2_button_process -data_tag_page_suffix ':choose room' -check_header 'Time To Pick Your Room'
-custom_pause -fullstop $fullstop
+# <span ng-show="isCurrentCabinLastCabin">Continue</span>
+# need a different function  be3_button_process
+be3_button_process  -ng_show "isCurrentCabinLastCabin" -check_header 'Time To Pick Your Room'
+
+# be2_button_process -data_tag_page_suffix ':choose room' -check_header 'Time To Pick Your Room'
+custom_pause -fullstop $fullstop -delay 60000
 
 # At the end of the run - do not close Browser / Selenium when executing from Powershell ISE
 if (-not ($host.Name -match 'ISE')) {
