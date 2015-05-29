@@ -1,5 +1,6 @@
 
 using System;
+using System.Text.RegularExpressions;
 using Fiddler;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +31,7 @@ namespace WebTester
             // by default, we must handle notifying the user ourselves.
             FiddlerApplication.OnNotification += delegate(object sender, NotificationEventArgs e) { Console.WriteLine("** NotifyUser: " + e.NotifyString); };
             FiddlerApplication.Log.OnLogString += delegate(object sender, Fiddler.LogEventArgs e) { Console.WriteLine("** LogString: " + e.LogString); };
-            // TODO: Commit to the database
+            
 
             IgnoreResources = false;
             FiddlerApplication.BeforeRequest += (s) =>
@@ -42,7 +43,7 @@ namespace WebTester
                 // the response to the client as the response comes in.
                 s.bBufferResponse = true;
             };
-//https://github.com/jimevans/WebDriverProxyExamples/blob/master/lib/FiddlerCore4.XML
+            //https://github.com/jimevans/WebDriverProxyExamples/blob/master/lib/FiddlerCore4.XML
             FiddlerApplication.BeforeResponse += (s) =>
             {
                 Console.WriteLine("{0}:HTTP {1} for {2}", s.id, s.responseCode, s.fullUrl);
@@ -91,6 +92,9 @@ namespace WebTester
                         var dic = new Dictionary<string, object>();
 
                         dic["name"] = "ProductName";
+                        // dic["fullUrl"] = "";
+                        // dic["responseCode"] = "";
+                        // dic["refrer"] = "";
                         dic["datepurchase"] = new DateTime();
                         dic["qty"] = 123;
                         dic["price"] = 345;
@@ -147,25 +151,6 @@ namespace WebTester
                 }
             */
 
-            if (IgnoreResources)
-            {
-                string url = sess.fullUrl.ToLower();
-                /*
-                        var extensions = CaptureConfiguration.ExtensionFilterExclusions;
-                        foreach (var ext in extensions)
-                        {
-                            if (url.Contains(ext))
-                                return;
-                        }
-
-                        foreach (var urlFilter in filters)
-                        {
-                            if (url.Contains(urlFilter))
-                                return;
-                        }
-                */
-            }
-
             if (sess == null || sess.oRequest == null || sess.oRequest.headers == null)
                 return;
 
@@ -181,20 +166,22 @@ namespace WebTester
             int at = headers.IndexOf("\r\n");
             if (at < 0)
                 return;
+            extract_headers(headers.Substring(at + 1));
+            // TODO: Commit to the database
             headers = firstLine + "\r\n" + headers.Substring(at + 1);
 
             string output = headers + "\r\n" +
                             (!string.IsNullOrEmpty(reqBody) ? reqBody + "\r\n" : string.Empty) +
                              "\r\n\r\n";
-            Console.WriteLine(output);
+            // Console.Error.WriteLine(output);
 
         }
         public void Start()
         {
             Console.WriteLine("Starting FiddlerCore...");
-             TestConnection();
-             createTable();
-             insert();
+            TestConnection();
+            createTable();
+            insert();
             // For the purposes of this demo, we'll forbid connections to HTTPS 
             // sites that use invalid certificates
             CONFIG.IgnoreServerCertErrors = false;
@@ -202,25 +189,38 @@ namespace WebTester
             // be present in the Application folder.
             FiddlerApplication.Startup(8877, true, true);
             Console.WriteLine("Hit CTRL+C to end session.");
-            // Wait Forever for the user to hit CTRL+C.  
-            // BUG BUG: Doesn't properly handle shutdown of Windows, etc.
+            // Wait  for the user to hit CTRL+C.  
         }
 
-        public void Stop()
+        public void extract_headers(string raw_text)
         {
-            // TODO: raise event
+
+            string header_name_regexp = @"(?<header_name>[^ ]+):";
+            string header_value_regexp = @"(?<header_value>.+)\r\n";
+
+            MatchCollection myMatchCollection =
+              Regex.Matches(raw_text, header_name_regexp + header_value_regexp);
+
+            foreach (Match myMatch in myMatchCollection)
+            {
+                Console.WriteLine(String.Format("Header name = [{0}]", myMatch.Groups["header_name"]));
+                Console.WriteLine(String.Format("Data = [{0}]", myMatch.Groups["header_value"]));
+            }
+        }
+        
+        public void Stop()
+        {          
             Console.WriteLine("Shutdown.");
             FiddlerApplication.Shutdown();
             System.Threading.Thread.Sleep(1);
         }
+        
         public static Monitor m;
         // No longer necessary 
         public static void Main(string[] args)
         {
             m = new Monitor();
             #region AttachEventListeners
-            // Tell the system console to handle CTRL+C by calling our method that
-            // gracefully shuts down the FiddlerCore.
             Console.CancelKeyPress += new ConsoleCancelEventHandler(Console_CancelKeyPress);
             #endregion AttachEventListeners
             m.Start();
