@@ -1,3 +1,4 @@
+
 using System;
 using Fiddler;
 using System.Collections.Generic;
@@ -41,7 +42,7 @@ namespace WebTester
                 // the response to the client as the response comes in.
                 s.bBufferResponse = true;
             };
-
+//https://github.com/jimevans/WebDriverProxyExamples/blob/master/lib/FiddlerCore4.XML
             FiddlerApplication.BeforeResponse += (s) =>
             {
                 Console.WriteLine("{0}:HTTP {1} for {2}", s.id, s.responseCode, s.fullUrl);
@@ -191,9 +192,9 @@ namespace WebTester
         public void Start()
         {
             Console.WriteLine("Starting FiddlerCore...");
-            // TestConnection();
-            // createTable();
-            // insert();
+             TestConnection();
+             createTable();
+             insert();
             // For the purposes of this demo, we'll forbid connections to HTTPS 
             // sites that use invalid certificates
             CONFIG.IgnoreServerCertErrors = false;
