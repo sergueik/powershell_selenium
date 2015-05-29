@@ -5,27 +5,32 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
+using System.Data.SQLite;
+using System.IO;
 
 namespace WebTester
 {
     public class Monitor
     {
+        string tableName = "";
         bool IgnoreResources;
+        string dataFolderPath;
+        string database;
+        string dataSource;
         public Monitor()
         {
+            dataFolderPath = Directory.GetCurrentDirectory();
+            database = String.Format("{0}\\data.db", dataFolderPath);
+            dataSource = "data source=" + database;
+            tableName = "product";
             #region AttachEventListeners
-            //
-            // It is important to understand that FiddlerCore calls event handlers on the
-            // session-handling thread.  If you need to properly synchronize to the UI-thread
-            // (say, because you're adding the sessions to a list view) you must call .Invoke
-            // on a delegate on the window handle.
-            //
 
             // Simply echo notifications to the console.  Because CONFIG.QuietMode=true 
             // by default, we must handle notifying the user ourselves.
-            FiddlerApplication.OnNotification += delegate(object sender, NotificationEventArgs oNEA) { Console.WriteLine("** NotifyUser: " + oNEA.NotifyString); };
-            FiddlerApplication.Log.OnLogString += delegate(object sender, LogEventArgs oLEA) { Console.WriteLine("** LogString: " + oLEA.LogString); };
+            FiddlerApplication.OnNotification += delegate(object sender, NotificationEventArgs e) { Console.WriteLine("** NotifyUser: " + e.NotifyString); };
+            FiddlerApplication.Log.OnLogString += delegate(object sender, Fiddler.LogEventArgs e) { Console.WriteLine("** LogString: " + e.LogString); };
+            // TODO: Commit to the database
+
             IgnoreResources = false;
             FiddlerApplication.BeforeRequest += (s) =>
             {
@@ -45,12 +50,88 @@ namespace WebTester
                 // s.utilDecodeResponse(); 
             };
 
-
             FiddlerApplication.AfterSessionComplete += (s) => Console.WriteLine("Finished session:\t" + s.fullUrl);
             FiddlerApplication.AfterSessionComplete += FiddlerApplication_AfterSessionComplete;
             #endregion AttachEventListeners
         }
 
+        bool TestConnection()
+        {
+            Console.WriteLine(String.Format("Testing database connection {0}...", database));
+            try
+            {
+                using (SQLiteConnection conn = new SQLiteConnection(dataSource))
+                {
+                    conn.Open();
+                    conn.Close();
+                }
+                return true;
+            }
+
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex.ToString());
+                return false;
+            }
+        }
+
+        public bool insert()
+        {
+            try
+            {
+                using (SQLiteConnection conn = new SQLiteConnection(dataSource))
+                {
+                    using (SQLiteCommand cmd = new SQLiteCommand())
+                    {
+                        cmd.Connection = conn;
+                        conn.Open();
+                        SQLiteHelper sh = new SQLiteHelper(cmd);
+                        int count = sh.ExecuteScalar<int>(String.Format("select count(*) from {0};", tableName)) + 1;
+                        var dic = new Dictionary<string, object>();
+
+                        dic["name"] = "ProductName";
+                        dic["datepurchase"] = new DateTime();
+                        dic["qty"] = 123;
+                        dic["price"] = 345;
+                        sh.Insert(tableName, dic);
+                        conn.Close();
+                        return true;
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex.ToString());
+                return false;
+            }
+
+        }
+
+        public void createTable()
+        {
+            using (SQLiteConnection conn = new SQLiteConnection(dataSource))
+            {
+                using (SQLiteCommand cmd = new SQLiteCommand())
+                {
+                    cmd.Connection = conn;
+                    conn.Open();
+                    SQLiteHelper sh = new SQLiteHelper(cmd);
+                    sh.DropTable(tableName);
+
+                    SQLiteTable tb = new SQLiteTable(tableName);
+                    tb.Columns.Add(new SQLiteColumn("id", true));
+                    tb.Columns.Add(new SQLiteColumn("name"));
+                    tb.Columns.Add(new SQLiteColumn("datepurchase", ColType.DateTime));
+                    tb.Columns.Add(new SQLiteColumn("price", ColType.Decimal));
+
+                    tb.Columns.Add(new SQLiteColumn("qty", ColType.Integer));
+
+                    sh.CreateTable(tb);
+                    conn.Close();
+                }
+            }
+        }
 
         private void FiddlerApplication_AfterSessionComplete(Session sess)
         {
@@ -110,6 +191,9 @@ namespace WebTester
         public void Start()
         {
             Console.WriteLine("Starting FiddlerCore...");
+            // TestConnection();
+            // createTable();
+            // insert();
             // For the purposes of this demo, we'll forbid connections to HTTPS 
             // sites that use invalid certificates
             CONFIG.IgnoreServerCertErrors = false;
