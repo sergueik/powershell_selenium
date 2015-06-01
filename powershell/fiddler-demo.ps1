@@ -108,10 +108,9 @@ namespace WebTester
             // by default, we must handle notifying the user ourselves.
             FiddlerApplication.OnNotification += delegate(object sender, NotificationEventArgs oNEA) { Console.WriteLine("** NotifyUser: " + oNEA.NotifyString); };
             FiddlerApplication.Log.OnLogString += delegate(object sender, LogEventArgs oLEA) { Console.WriteLine("** LogString: " + oLEA.LogString); };
-            // IgnoreResources = false;
+
             FiddlerApplication.BeforeRequest += (s) =>
             {
-                Console.WriteLine("Before request for:\t" + s.fullUrl);
                 // In order to enable response tampering, buffering mode must
                 // be enabled; this allows FiddlerCore to permit modification of
                 // the response in the BeforeResponse handler rather than streaming
@@ -121,44 +120,46 @@ namespace WebTester
 
             FiddlerApplication.BeforeResponse += (s) =>
             {
-                Console.WriteLine("{0}:HTTP {1} for {2}", s.id, s.responseCode, s.fullUrl);
-
                 // Uncomment the following to decompress/unchunk the HTTP response 
                 // s.utilDecodeResponse(); 
             };
 
 
-            FiddlerApplication.AfterSessionComplete += (s) => Console.WriteLine("Finished session:\t" + s.fullUrl);
-            FiddlerApplication.AfterSessionComplete += FiddlerApplication_AfterSessionComplete;
+            FiddlerApplication.AfterSessionComplete += (fiddler_session) =>
+            {
+                // Ignore HTTPS connect requests
+                if (fiddler_session.RequestMethod == "CONNECT")
+                    return;
+
+                if (fiddler_session == null || fiddler_session.oRequest == null || fiddler_session.oRequest.headers == null)
+                    return;
+
+                // Ignore HTTPS connect requests
+                if (fiddler_session.RequestMethod == "CONNECT")
+                    return;
+
+                if (fiddler_session == null || fiddler_session.oRequest == null || fiddler_session.oRequest.headers == null)
+                    return;
+
+                var full_url = fiddler_session.fullUrl;
+                Console.WriteLine("URL: " + full_url);
+
+                HTTPResponseHeaders response_headers = fiddler_session.ResponseHeaders;
+                Console.WriteLine("HTTP Response: " + response_headers.HTTPResponseCode.ToString());
+                /*
+                foreach (HTTPHeaderItem header_item in response_headers){
+                   Console.WriteLine(header_item.Name + " " + header_item.Value);
+                }
+                    */
+                // http://fiddler.wikidot.com/timers
+                var timers = fiddler_session.Timers;
+                var duration = timers.ClientDoneResponse - timers.ClientBeginRequest;
+                Console.WriteLine(String.Format("Duration: {0:F10}", duration.Milliseconds));
+
+            };
             #endregion AttachEventListeners
         }
 
-
-        private void FiddlerApplication_AfterSessionComplete(Session fiddler_session)
-        {
-
-            // Ignore HTTPS connect requests
-            if (fiddler_session.RequestMethod == "CONNECT")
-                return;
-
-            if (fiddler_session == null || fiddler_session.oRequest == null || fiddler_session.oRequest.headers == null)
-                return;
-
-        	 var full_url = fiddler_session.fullUrl;
-        	 Console.WriteLine("URL: " + full_url);
-        	         	 
-        	 HTTPResponseHeaders response_headers = fiddler_session.ResponseHeaders;
-        	 Console.WriteLine("HTTP Response: " + response_headers.HTTPResponseCode.ToString());
-        	 
-        	 foreach (HTTPHeaderItem header_item in response_headers){
-        	 	Console.WriteLine(header_item.Name + " " + header_item.Value);
-        	 }
-        
-        	 // http://fiddler.wikidot.com/timers
-			 var timers  =  fiddler_session.Timers;
-			 var duration = timers.ClientDoneResponse - timers.ClientBeginRequest;
-			 Console.WriteLine(String.Format("Duration: {0:F10}", duration.Milliseconds));
-        }
 
         public void Start()
         {
