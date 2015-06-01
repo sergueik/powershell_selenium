@@ -10,6 +10,7 @@ using System.Data.SQLite;
 using System.IO;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Remote;
 
 namespace WebTester
 {
@@ -17,7 +18,7 @@ namespace WebTester
     public static class Extensions
     {
         static int cnt = 0;
-        // http://stackoverflow.com/questions/6229769/execute-javascript-using-selenium-webdriver-in-c-sharp
+
         public static T Execute<T>(this IWebDriver driver, string script)
         {
             return (T)((IJavaScriptExecutor)driver).ExecuteScript(script);
@@ -25,8 +26,8 @@ namespace WebTester
 
         public static List<Dictionary<String, String>> Performance(this IWebDriver driver)
         {
-            // NOTE:  performance.timing will not return anything with Chrome
-            // timing is returned by FF and PhantomJS
+            // NOTE: performance.getEntries is only with Chrome
+            // performance.timing is available for FF and PhantomJS
 
             string performance_script = @"
 var ua = window.navigator.userAgent;
@@ -84,56 +85,118 @@ if (ua.match(/PhantomJS/)) {
     [TestClass]
     public class Monitor
     {
-        private static IWebDriver driver;
+        private static string hub_url = "http://localhost:4444/wd/hub";
+        private static IWebDriver selenium_driver;
         private static string step_url = "http://www.carnival.com/";
-        private static string expected_state = "interactive";
+        private static string[] expected_states = { "interactive", "complete" };
         private static int max_cnt = 10;
+        private static string tableName = "";
+        private static string dataFolderPath;
+        private static string database;
+        private static string dataSource;
 
         public static void Main(string[] args)
         {
-            driver = new ChromeDriver();
-            driver.Navigate().GoToUrl(step_url);
-            driver.WaitDocumentReadyState(expected_state);
-            List<Dictionary<String, String>> result = driver.Performance();
+
+            dataFolderPath = Directory.GetCurrentDirectory();
+            database = String.Format("{0}\\data.db", dataFolderPath);
+            dataSource = "data source=" + database;
+            tableName = "product";
+            // driver = new ChromeDriver();
+            Console.WriteLine("Starting..");
+            // TestConnection();
+            createTable();
+			// ActiveState Remote::Selenium:Driver 
+            // selenium_driver = new RemoteWebDriver(new Uri(hub_url), DesiredCapabilities.Firefox());
+            selenium_driver = new RemoteWebDriver(new Uri(hub_url), DesiredCapabilities.Chrome());
+
+            selenium_driver.Navigate().GoToUrl(step_url);
+            selenium_driver.WaitDocumentReadyState(expected_states[1]);
+            List<Dictionary<String, String>> result = selenium_driver.Performance();
+            var dic = new Dictionary<string, object>();
+
             foreach (var row in result)
             {
+                dic["caption"] = "dummy";
                 foreach (string key in row.Keys)
                 {
-                    Console.Error.WriteLine(key + " " + row[key]);
+
+
+                    if (Regex.IsMatch(key, "(name|duration)"))
+                    {
+
+                        Console.Error.WriteLine(key + " " + row[key]);
+
+                        if (key.IndexOf("duration") > -1)
+                        {
+                            dic[key] = (Double)Double.Parse(row[key]);
+                        }
+                        else
+                        {
+                            dic[key] = (String)row[key];
+                        }
+                    }
+                }
+                insert(dic);
+                
+                foreach (string key in dic.Keys.ToArray())
+                {
+                    dic[key] = null;
                 }
                 Console.Error.WriteLine("");
             }
-            if (driver != null)
-                driver.Close();
+            if (selenium_driver != null)
+                selenium_driver.Close();
         }
 
-        [TestInitialize()]
-        public void Initialize()
-        {
-            driver = new ChromeDriver();
-        }
 
-        [TestCleanup()]
-        public void Cleanup()
-        {
-            if (driver != null)
-                driver.Close();
-        }
 
-        [ClassCleanup()]
-        public static void MyClassCleanup() { }
-
-        [TestMethod]
-        public void TestPerformance()
+        public static bool insert(Dictionary<string, object> dic)
         {
-            driver.Navigate().GoToUrl(step_url);
-            driver.WaitDocumentReadyState(expected_state);
-            List<Dictionary<String, String>> result = driver.Performance();
-            foreach (var row in result)
+            try
             {
-                foreach (string key in row.Keys)
+                using (SQLiteConnection conn = new SQLiteConnection(dataSource))
                 {
-                    Console.Error.WriteLine(key + " " + row[key]);
+                    using (SQLiteCommand cmd = new SQLiteCommand())
+                    {
+                        cmd.Connection = conn;
+                        conn.Open();
+                        SQLiteHelper sh = new SQLiteHelper(cmd);
+                        int count = sh.ExecuteScalar<int>(String.Format("select count(*) from {0};", tableName)) + 1;
+
+                        sh.Insert(tableName, dic);
+                        conn.Close();
+                        return true;
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex.ToString());
+                return false;
+            }
+
+        }
+
+        public static void createTable()
+        {
+            using (SQLiteConnection conn = new SQLiteConnection(dataSource))
+            {
+                using (SQLiteCommand cmd = new SQLiteCommand())
+                {
+                    cmd.Connection = conn;
+                    conn.Open();
+                    SQLiteHelper sh = new SQLiteHelper(cmd);
+                    sh.DropTable(tableName);
+
+                    SQLiteTable tb = new SQLiteTable(tableName);
+                    tb.Columns.Add(new SQLiteColumn("id", true)); // auto increment 
+                    tb.Columns.Add(new SQLiteColumn("caption"));
+                    tb.Columns.Add(new SQLiteColumn("name"));
+                    tb.Columns.Add(new SQLiteColumn("duration", ColType.Decimal));
+                    sh.CreateTable(tb);
+                    conn.Close();
                 }
             }
         }
