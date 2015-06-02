@@ -19,7 +19,11 @@
 #THE SOFTWARE.
 
 param(
-  [string]$browser
+  [string]$browser,
+  [string]$base_url = 'http://www.carnival.com/',
+  [switch]$debug,
+  [switch]$pause
+
 )
 
 function ellipsize {
@@ -207,7 +211,7 @@ popd
 $headless = $false
 
 $verificationErrors = New-Object System.Text.StringBuilder
-$base_url = 'http://www.carnival.com/'
+
 
 if ($browser -ne $null -and $browser -ne '') {
   try {
@@ -222,7 +226,21 @@ if ($browser -ne $null -and $browser -ne '') {
   Write-Host "Running on ${browser}"
   $selenium = $null
   if ($browser -match 'firefox') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
+   
+   #  $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
+
+  [object]$profile_manager = New-Object OpenQA.Selenium.Firefox.FirefoxProfileManager
+
+  [OpenQA.Selenium.Firefox.FirefoxProfile]$selected_profile_object = $profile_manager.GetProfile($profile)
+  [OpenQA.Selenium.Firefox.FirefoxProfile]$selected_profile_object = New-Object OpenQA.Selenium.Firefox.FirefoxProfile ($profile)
+  $selected_profile_object.setPreference('general.useragent.override',"Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/34.0")
+  $selenium = New-Object OpenQA.Selenium.Firefox.FirefoxDriver ($selected_profile_object)
+  [OpenQA.Selenium.Firefox.FirefoxProfile[]]$profiles = $profile_manager.ExistingProfiles
+
+  # [NUnit.Framework.Assert]::IsInstanceOfType($profiles , new-object System.Type( FirefoxProfile[]))
+  [NUnit.Framework.StringAssert]::AreEqualIgnoringCase($profiles.GetType().ToString(),'OpenQA.Selenium.Firefox.FirefoxProfile[]')
+
+
 
   }
   elseif ($browser -match 'chrome') {
@@ -256,9 +274,6 @@ if ($browser -ne $null -and $browser -ne '') {
     $capabilities.setCapability([OpenQA.Selenium.Chrome.ChromeOptions]::Capability,$options)
 
     $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver ($options)
-
-
-
 
   }
   elseif ($browser -match 'ie') {
@@ -325,19 +340,18 @@ namespace WebTester
             return (T)((IJavaScriptExecutor)driver).ExecuteScript(script);
         }
 
-
-        public static List<Dictionary<String, String>> Performance(
-            /* this // no longer is an extension method  */
-IWebDriver driver)
+        // no longer is an extension method  
+        public static List<Dictionary<String, String>> Performance(IWebDriver driver)
         {
-            // NOTE: performance.getEntries is only with Chrome
-            // performance.timing is available for FF and PhantomJS
-
+            // NOTE: this code is highly browser-specific: 
+            // Chrome has performance.getEntries 
+            // FF only has performance.timing 
+            // PhantomJS does not have anything
+            // System.InvalidOperationException: {"errorMessage":"undefined is not a constructor..
             string performance_script = @"
 var ua = window.navigator.userAgent;
-
 if (ua.match(/PhantomJS/)) {
-    return 'Cannot measure on ' + ua;
+    return [{}];
 } else {
     var performance =
         window.performance ||
@@ -345,10 +359,13 @@ if (ua.match(/PhantomJS/)) {
         window.msPerformance ||
         window.webkitPerformance || {};
 
-    // var timings = performance.timing || {};
-    // return timings;
-    var network = performance.getEntries() || {};
-    return network;
+    if (ua.match(/Chrome/)) {
+        var network = performance.getEntries() || {};
+        return network;
+    } else {
+        var timings = performance.timing || {};
+        return [timings];
+    }
 }
 ";
             List<Dictionary<String, String>> result = new List<Dictionary<string, string>>();
@@ -372,13 +389,14 @@ if (ua.match(/PhantomJS/)) {
         public static void WaitDocumentReadyState(IWebDriver driver, string expected_state, int max_cnt = 10)
         {
             cnt = 0;
+            Console.Error.WriteLine("X");
             var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(driver, TimeSpan.FromSeconds(30.00));
             wait.PollingInterval = TimeSpan.FromSeconds(0.50);
             wait.Until(dummy =>
             {
+
                 string result = driver.Execute<String>("return document.readyState").ToString();
                 Console.Error.WriteLine(String.Format("result = {0}", result));
-                Console.WriteLine(String.Format("cnt = {0}", cnt));
                 cnt++;
                 // TODO: match
                 return ((result.Equals(expected_state) || cnt > max_cnt));
@@ -411,29 +429,37 @@ $script_directory = Get-ScriptDirectory
 create_table -database "${script_directory}\timings.db"
 
 $selenium.Navigate().GoToUrl($base_url)
-$expected_states = @( "interactive","complete");
+$expected_states = @( 'interactive','complete');
+
 [WebTester.Extensions]::WaitDocumentReadyState($selenium,$expected_states)
+# [WebTester.Extensions]::WaitDocumentReadyState($selenium,$expected_states[0])
+# [WebTester.Extensions]::WaitDocumentReadyState($selenium,"complete")
+
+# NOTE: this code is highly browser-specific: 
+# Chrome has performance.getEntries 
+# FF only has performance.timing 
+# PhantomJS does not have anything
+# System.InvalidOperationException: {"errorMessage":"undefined is not a constructor..
+
 $script = @"
 var ua = window.navigator.userAgent;
+if (ua.match(/PhantomJS/)) {
+    return [{}];
+} else {
+    var performance =
+        window.performance ||
+        window.mozPerformance ||
+        window.msPerformance ||
+        window.webkitPerformance || {};
 
-if (ua.match(/PhantomJS/)) { 
-return 'Cannot measure on '+ ua;
+    if (ua.match(/Chrome/)) {
+        var network = performance.getEntries() || {};
+        return network;
+    } else {
+        var timings = performance.timing || {};
+        return [timings];
+    }
 }
-else{
-var performance = 
-      window.performance || 
-      window.mozPerformance || 
-      window.msPerformance || 
-      window.webkitPerformance || {}; 
-// var timings = performance.timing || {};
-// return timings;
-// NOTE:  performance.timing will not return anything with Chrome
-// timing is returned by FF
-// timing is returned by Phantom
-var network = performance.getEntries() || {}; 
- return network;
-}
-
 
 "@
 
