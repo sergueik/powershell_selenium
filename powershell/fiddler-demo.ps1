@@ -134,13 +134,6 @@ namespace WebTester
                 if (fiddler_session == null || fiddler_session.oRequest == null || fiddler_session.oRequest.headers == null)
                     return;
 
-                // Ignore HTTPS connect requests
-                if (fiddler_session.RequestMethod == "CONNECT")
-                    return;
-
-                if (fiddler_session == null || fiddler_session.oRequest == null || fiddler_session.oRequest.headers == null)
-                    return;
-
                 var full_url = fiddler_session.fullUrl;
                 Console.WriteLine("URL: " + full_url);
 
