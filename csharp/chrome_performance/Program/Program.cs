@@ -80,6 +80,23 @@ if (ua.match(/PhantomJS/)) {
                 return ((result.Equals(expected_state) || cnt > max_cnt));
             });
         }
+
+        public static void WaitDocumentReadyState(this IWebDriver driver, string[] expected_states, int max_cnt = 10)
+        {
+            cnt = 0;
+            Regex state_regex = new Regex(String.Join("","(?:", String.Join("|",expected_states),  ")"), 
+                                          RegexOptions.IgnoreCase    | RegexOptions.IgnorePatternWhitespace    | RegexOptions.Compiled);
+            var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(driver, TimeSpan.FromSeconds(30.00));
+            wait.PollingInterval = TimeSpan.FromSeconds(0.50);
+            wait.Until(dummy =>
+            {
+                string result = driver.Execute<String>("return document.readyState").ToString();
+                Console.Error.WriteLine(String.Format("result = {0}", result));
+                Console.WriteLine(String.Format("cnt = {0}", cnt));
+                cnt++;
+                return ((state_regex.IsMatch(result) || cnt > max_cnt));
+            });
+        }
     }
 
     [TestClass]
@@ -111,7 +128,7 @@ if (ua.match(/PhantomJS/)) {
             selenium_driver = new RemoteWebDriver(new Uri(hub_url), DesiredCapabilities.Chrome());
 
             selenium_driver.Navigate().GoToUrl(step_url);
-            selenium_driver.WaitDocumentReadyState(expected_states[1]);
+            selenium_driver.WaitDocumentReadyState(expected_states);
             List<Dictionary<String, String>> result = selenium_driver.Performance();
             var dic = new Dictionary<string, object>();
 

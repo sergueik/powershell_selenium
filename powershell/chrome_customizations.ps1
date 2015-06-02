@@ -311,10 +311,10 @@ using OpenQA.Selenium.Remote;
 namespace WebTester
 {
 
-        // http://stackoverflow.com/questions/6229769/execute-javascript-using-selenium-webdriver-in-c-sharp
-        // http://stackoverflow.com/questions/14146513/selenium-web-driver-c-sharp-invalidcastexception-for-list-of-webelements-after-j
-        // http://stackoverflow.com/questions/8133661/checking-page-load-time-of-several-url-simultaneously
-        // http://blogs.msdn.com/b/fiddler/archive/2011/02/10/fiddler-is-better-with-internet-explorer-9.aspx
+    // http://stackoverflow.com/questions/6229769/execute-javascript-using-selenium-webdriver-in-c-sharp
+    // http://stackoverflow.com/questions/14146513/selenium-web-driver-c-sharp-invalidcastexception-for-list-of-webelements-after-j
+    // http://stackoverflow.com/questions/8133661/checking-page-load-time-of-several-url-simultaneously
+    // http://blogs.msdn.com/b/fiddler/archive/2011/02/10/fiddler-is-better-with-internet-explorer-9.aspx
 
     public static class Extensions
     {
@@ -325,12 +325,10 @@ namespace WebTester
             return (T)((IJavaScriptExecutor)driver).ExecuteScript(script);
         }
 
-                        // http://stackoverflow.com/questions/6229769/execute-javascript-using-selenium-webdriver-in-c-sharp
-        // http://stackoverflow.com/questions/14146513/selenium-web-driver-c-sharp-invalidcastexception-for-list-of-webelements-after-j
-        // http://stackoverflow.com/questions/8133661/checking-page-load-time-of-several-url-simultaneously
-        // http://blogs.msdn.com/b/fiddler/archive/2011/02/10/fiddler-is-better-with-internet-explorer-9.aspx
 
-        public static List<Dictionary<String, String>> Performance(this IWebDriver driver)
+        public static List<Dictionary<String, String>> Performance(
+            /* this // no longer is an extension method  */
+IWebDriver driver)
         {
             // NOTE: performance.getEntries is only with Chrome
             // performance.timing is available for FF and PhantomJS
@@ -370,10 +368,8 @@ if (ua.match(/PhantomJS/)) {
             }
             return result;
         }
-
-public static void WaitDocumentReadyState(
-/* this // no longer is an extension method  */ 
-IWebDriver driver, string expected_state, int max_cnt = 10)
+        // no longer is an extension method
+        public static void WaitDocumentReadyState(IWebDriver driver, string expected_state, int max_cnt = 10)
         {
             cnt = 0;
             var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(driver, TimeSpan.FromSeconds(30.00));
@@ -388,8 +384,24 @@ IWebDriver driver, string expected_state, int max_cnt = 10)
                 return ((result.Equals(expected_state) || cnt > max_cnt));
             });
         }
+        // no longer is an extension method
+        public static void WaitDocumentReadyState(IWebDriver driver, string[] expected_states, int max_cnt = 10)
+        {
+            cnt = 0;
+            Regex state_regex = new Regex(String.Join("", "(?:", String.Join("|", expected_states), ")"),
+                                          RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
+            var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(driver, TimeSpan.FromSeconds(30.00));
+            wait.PollingInterval = TimeSpan.FromSeconds(0.50);
+            wait.Until(dummy =>
+            {
+                string result = driver.Execute<String>("return document.readyState").ToString();
+                Console.Error.WriteLine(String.Format("result = {0}", result));
+                Console.WriteLine(String.Format("cnt = {0}", cnt));
+                cnt++;
+                return ((state_regex.IsMatch(result) || cnt > max_cnt));
+            });
+        }
     }
-
 }
 "@ -ReferencedAssemblies 'System.dll','System.Data.dll','System.Data.Linq.dll',"${shared_assemblies_path}\WebDriver.dll","${shared_assemblies_path}\WebDriver.Support.dll"
 
@@ -400,7 +412,7 @@ create_table -database "${script_directory}\timings.db"
 
 $selenium.Navigate().GoToUrl($base_url)
 $expected_states = @( "interactive","complete");
-[WebTester.Extensions]::WaitDocumentReadyState($selenium,$expected_states[1])
+[WebTester.Extensions]::WaitDocumentReadyState($selenium,$expected_states)
 $script = @"
 var ua = window.navigator.userAgent;
 
