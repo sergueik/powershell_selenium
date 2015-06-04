@@ -1,4 +1,4 @@
-#Copyright (c) 2014 Serguei Kouzmine
+#Copyright (c) 2014,2015 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -149,7 +149,7 @@ $element_value_changing_handler.Invoke(
       [OpenQA.Selenium.Support.Events.WebElementEventArgs]$eventargs
     )
     Write-Host 'Value Change handler' -foreground 'Yellow'
-    if ($eventargs.Element.GetAttribute('id') -eq 'gbqfq') {
+    if ($eventargs.Element.GetAttribute('id') -eq 'lst-ib') {
       $xpath1 = "//div[@class='sbsb_a']"
       try {
         [OpenQA.Selenium.IWebElement]$local:element = $sender.FindElement([OpenQA.Selenium.By]::XPath($xpath1))
@@ -169,7 +169,7 @@ $event.Navigate().GoToUrl($base_url)
 $wait.PollingInterval = 50
 [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id("hplogo")))
 
-$xpath = "//input[@id='gbqfq']"
+$xpath = "//input[@id='lst-ib']"
 
 # for mobile
 # $xpath = "//input[@id='mib']"
