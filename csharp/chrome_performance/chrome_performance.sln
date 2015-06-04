@@ -1,14 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Program", "Program\Program.csproj", "{2449B411-EE58-4E93-9557-25F83CA3FCE5}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6E39A2DF-AA8D-4348-AB0C-788CE2629FDA}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1C704498-3079-45A0-A103-0665BD5D1AB3}"
 	ProjectSection(SolutionItems) = preProject
 		chrome_performance.vsmdi = chrome_performance.vsmdi
 		Local.testsettings = Local.testsettings
 		TraceAndTestImpact.testsettings = TraceAndTestImpact.testsettings
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "chrome_performance", "Program\chrome_performance.csproj", "{D14F219E-1737-4885-8E99-5206DD112673}"
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
@@ -19,10 +19,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2449B411-EE58-4E93-9557-25F83CA3FCE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2449B411-EE58-4E93-9557-25F83CA3FCE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2449B411-EE58-4E93-9557-25F83CA3FCE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2449B411-EE58-4E93-9557-25F83CA3FCE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D14F219E-1737-4885-8E99-5206DD112673}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D14F219E-1737-4885-8E99-5206DD112673}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D14F219E-1737-4885-8E99-5206DD112673}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D14F219E-1737-4885-8E99-5206DD112673}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

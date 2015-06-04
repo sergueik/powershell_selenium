@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using Microsoft.Activities.UnitTesting;
 using System.Data.SQLite;
 using System.IO;
@@ -114,6 +115,66 @@ if (ua.match(/PhantomJS/)) {
         private static string database;
         private static string dataSource;
 
+
+        [TestInitialize]
+        public void Initialize()
+        {
+            dataFolderPath = Directory.GetCurrentDirectory();
+            database = String.Format("{0}\\data.db", dataFolderPath);
+            dataSource = "data source=" + database;
+            tableName = "product";
+            createTable();
+            selenium_driver = new RemoteWebDriver(new Uri(hub_url), DesiredCapabilities.Chrome());
+            selenium_driver.Manage().Timeouts().ImplicitlyWait(new TimeSpan(0, 0, 30));
+        }
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+            if (selenium_driver != null)
+                selenium_driver.Close();
+        }
+
+        [TestMethod]
+        // [ExpectedException(typeof(NoSuchElementException))]
+        public void Sample()
+        {
+            selenium_driver.Navigate().GoToUrl(step_url);
+            selenium_driver.WaitDocumentReadyState(expected_states);
+            List<Dictionary<String, String>> result = selenium_driver.Performance();
+            var dic = new Dictionary<string, object>();
+
+            foreach (var row in result)
+            {
+                dic["caption"] = "dummy";
+                foreach (string key in row.Keys)
+                {
+
+
+                    if (Regex.IsMatch(key, "(name|duration)"))
+                    {
+
+                        Console.Error.WriteLine(key + " " + row[key]);
+
+                        if (key.IndexOf("duration") > -1)
+                        {
+                            dic[key] = (Double)Double.Parse(row[key]);
+                        }
+                        else
+                        {
+                            dic[key] = (String)row[key];
+                        }
+                    }
+                }
+                insert(dic);
+
+                foreach (string key in dic.Keys.ToArray())
+                {
+                    dic[key] = null;
+                }
+                Console.Error.WriteLine("");
+            }
+        }
         public static void Main(string[] args)
         {
 
@@ -124,7 +185,7 @@ if (ua.match(/PhantomJS/)) {
 
             Console.WriteLine("Starting..");
             // TestConnection();
-            // createTable();
+            createTable();
             // selenium_driver = new ChromeDriver();
             // ActiveState Remote::Selenium:Driver 
             // selenium_driver = new RemoteWebDriver(new Uri(hub_url), DesiredCapabilities.Firefox());
