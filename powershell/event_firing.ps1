@@ -139,9 +139,9 @@ $base_url = 'http://www.google.com/'
 # TODO: invoke NLog assembly for quicker logging triggered by the events
 # www.codeproject.com/Tips/749612/How-to-NLog-with-VisualStudio
 
-$event = New-Object -Type 'OpenQA.Selenium.Support.Events.EventFiringWebDriver' -ArgumentList @( $selenium)
+$event_firing_selenium = New-Object -Type 'OpenQA.Selenium.Support.Events.EventFiringWebDriver' -ArgumentList @( $selenium)
 
-$element_value_changing_handler = $event.add_ElementValueChanging
+$element_value_changing_handler = $event_firing_selenium.add_ElementValueChanging
 $element_value_changing_handler.Invoke(
   {
     param(
@@ -162,10 +162,10 @@ $element_value_changing_handler.Invoke(
 
 $verificationErrors = New-Object System.Text.StringBuilder
 $base_url = 'http://www.google.com'
-$event.Navigate().GoToUrl($base_url)
+$event_firing_selenium.Navigate().GoToUrl($base_url)
 
 # protect from blank page
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($event,[System.TimeSpan]::FromSeconds(10))
+[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($event_firing_selenium,[System.TimeSpan]::FromSeconds(10))
 $wait.PollingInterval = 50
 [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id("hplogo")))
 
@@ -174,12 +174,12 @@ $xpath = "//input[@id='lst-ib']"
 # for mobile
 # $xpath = "//input[@id='mib']"
 
-[OpenQA.Selenium.IWebElement]$element = $event.FindElement([OpenQA.Selenium.By]::XPath($xpath))
+[OpenQA.Selenium.IWebElement]$element = $event_firing_selenium.FindElement([OpenQA.Selenium.By]::XPath($xpath))
 
 # http://software-testing-tutorials-automation.blogspot.com/2014/05/how-to-handle-ajax-auto-suggest-drop.html
 $element.SendKeys('Sele')
 # NOTE:cannot use 
-# [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($event)
+# [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($event_firing_selenium)
 # $actions.SendKeys($element,'Sele')
 Start-Sleep -Millisecond $event_delay
 $element.SendKeys('nium')
@@ -194,7 +194,7 @@ $element.SendKeys([OpenQA.Selenium.Keys]::Enter)
 Start-Sleep 10
 
 # Cleanup
-cleanup ([ref]$event)
+cleanup ([ref]$event_firing_selenium) 
 
 
 
