@@ -299,14 +299,16 @@ $promo_element = $carousel_items[0]
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$promo_element).Build().Perform()
 
-@{
+$result1_hash = @{
   'LocationOnScreenOnceScrolledIntoView.X' = $promo_element.LocationOnScreenOnceScrolledIntoView.X;
   'LocationOnScreenOnceScrolledIntoView.Y ' = $promo_element.LocationOnScreenOnceScrolledIntoView.Y;
   'Location.X' = $promo_element.Location.X;
   'Location.Y' = $promo_element.Location.Y;
   'Size.Width' = $promo_element.Size.Width;
   'Size.Height' = $promo_element.Size.Height;
-} | Format-List
+}
+
+$result1_hash | Format-List
 
 $document_size_report_script = @"
 return [
@@ -317,13 +319,15 @@ document.documentElement.clientHeight
 "@
 [object]$result2 = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($document_size_report_script)
 $result2 | Format-List
-$result2_formatted = @{
+$result2_hash = @{
   'document.clientWidth' = $result2[0];
   'document.clientHeight' = $result2[1];
 }
-$result2_formatted | Format-List
+$result2_hash | Format-List
 $element_size_report_script = @"
 var target_element = arguments[0];
+//var clientHeight = target_element.clientHeight;
+//var offsetHeight = target_element.offsetHeight;
 return [
 target_element.clientHeight,
 target_element.offsetHeight,
@@ -332,7 +336,7 @@ target_element.offsetWidth
 ] 
 "@
 [object]$result3 = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($element_size_report_script,$promo_element,$null)
-$result3_formatted = @{
+$result3_hash = @{
   'element.clientHeight' = $result3[0];
   'element.offsetHeight' = $result3[1];
   'element.clientWidth' = $result3[2];
@@ -340,7 +344,7 @@ $result3_formatted = @{
 
 }
 
-$result3_formatted | Format-List
+$result3_hash | Format-List
 # DETECT if the client page is using jquery
 # by csquery check of the body
 #  <script type="text/javascript" src="/common/CCLUS/Core2/js/libs/jquery-1.8.3.min.js"></script>
@@ -351,106 +355,33 @@ return (typeof $) ;
 "@
 [string]$result0 = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($detect_jquery_in_use_script)
 Write-Output ('$ is {0}' -f $result0)
-<#
-$coords = @{
-$res['Location.X'], 
-$res['Location.X'] + ($res['element.clientHeight'] - $res['document.clientWidth']), 
-$res['elementSize_clientWidth'], 
-$res['elementSize_clientHeight']
-}
 
-#>
+$result3_hash = @{
+  'x' = $result1_hash['Location.X'];
+  'y' = $result1_hash['Location.X'] + ($result3_hash['element.clientHeight'] - $result1_hash['document.clientWidth']);
+  'width' = $result3_hash['element.clientWidth'];
+  'height' = $result3_hash['element.clientHeight'];
+}
+$result3_hash | Format-List
+
+@( 'System.Windows.Forms','System.Drawing') | ForEach-Object { [void][System.Reflection.Assembly]::LoadWithPartialName($_) }
+[OpenQA.Selenium.Screenshot]$screenshot = $selenium.GetScreenshot()
+$filename = 'full'
+$screenshot_path = get-scriptdirectory
+$image_path = ('{0}.{1}' -f $filename,'png')
+$screenshot.SaveAsFile([System.IO.Path]::Combine($screenshot_path,$image_path),[System.Drawing.Imaging.ImageFormat]::Png)
+[System.Drawing.RectangleF]$r = New-Object System.Drawing.RectangleF ($result3_hash['x'],$result3_hash['y'],$result3_hash['width'],$result3_hash['height'])
+[System.Drawing.Image]$image = [System.Drawing.Image]::FromFile([System.IO.Path]::Combine($screenshot_path,$image_path))
+[System.Drawing.Bitmap]$bitmap1 = ([System.Drawing.Bitmap]$image)
+# System.Drawing
+[System.Drawing.Bitmap]$bitmap2 = $bitmap1.Clone($r,$bitmap1.PixelFormat)
+$filename = 'cropped'
+$image_path = ('{0}.{1}' -f $filename,'png')
+$bitmap2.Save([System.IO.Path]::Combine($screenshot_path,$image_path),[System.Drawing.Imaging.ImageFormat]::Png)
 
 Start-Sleep -Milliseconds 1000
 # Cleanup
 cleanup ([ref]$selenium)
-
-
-<#
-
-http://stackoverflow.com/questions/13832322/how-to-capture-the-screenshot-of-only-a-specific-element-using-selenium-webdrive
-https://github.com/guitarrapc/PowerShellUtil/blob/master/Get-Screenshot/Get-ScreenShot.ps1
-driver.Manage().Window.Maximize();
-             RemoteWebElement remElement = (RemoteWebElement)driver.FindElement(By.Id("submit-button")); 
-             Point location = remElement.LocationOnScreenOnceScrolledIntoView;  
-
-             int viewportWidth = Convert.ToInt32(((IJavaScriptExecutor)driver).ExecuteScript("return document.documentElement.clientWidth"));
-             int viewportHeight = Convert.ToInt32(((IJavaScriptExecutor)driver).ExecuteScript("return document.documentElement.clientHeight"));
-
-             driver.SwitchTo();
-
-             int elementLocation_X = location.X;
-             int elementLocation_Y = location.Y;
-
-             IWebElement img = driver.FindElement(By.Id("submit-button"));
-
-             int elementSize_Width = img.Size.Width;
-             int elementSize_Height = img.Size.Height;
-
-             Size s = new Size();
-             s.Width = driver.Manage().Window.Size.Width;
-             s.Height = driver.Manage().Window.Size.Height;
-
-
-IWebElement img = driver.FindElement(By.Id("IMG1"));
-int width = img.Size.Width;
-int height = img.Size.Height;
-Point point = img.Location;
-int x = point.Location.X;;
-int y = point.Location.Y;
-RectangleF part = new RectangleF(x, y, width, height);
-Bitmap bmpobj = new Bitmap(filePath);
-Bitmap bn = bmpobj.Clone(part, bmpobj.PixelFormat);
-// http://stackoverflow.com/questions/6992993/selenium-c-sharp-webdriver-wait-until-element-is-present
-public static class WebDriverExtensions
-{
-    public static IWebElement FindElement(this IWebDriver driver, By by, int timeoutInSeconds)
-    {
-        if (timeoutInSeconds > 0)
-        {
-            var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutInSeconds));
-            return wait.Until(drv => drv.FindElement(by));
-        }
-        return driver.FindElement(by);
-    }
-}
-
-            // https://github.com/guitarrapc/PowerShellUtil/blob/master/Get-Screenshot/Get-ScreenShot.ps1 
-            $fileName = $FileNamePattern -f (Get-Date).ToString('yyyyMMdd_HHmmss_ffff')
-            $path = Join-Path $OutPath $fileName
-
-
-            $b = New-Object System.Drawing.Bitmap([System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width, [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height)
-            $g = [System.Drawing.Graphics]::FromImage($b)
-            $g.CopyFromScreen((New-Object System.Drawing.Point(0,0)), (New-Object System.Drawing.Point(0,0)), $b.Size)
-            $g.Dispose()
-            $b.Save($path)
-
-
-             Bitmap bitmap = new Bitmap(s.Width, s.Height);
-             Graphics graphics = Graphics.FromImage(bitmap as Image);
-             graphics.CopyFromScreen(0, 0, 0, 0, s);
-
-             bitmap.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
-
-             RectangleF part = new RectangleF(elementLocation_X, elementLocation_Y + (s.Height - viewportHeight), elementSize_Width, elementSize_Height);
-
-             Bitmap bmpobj = (Bitmap)Image.FromFile(filePath);
-             Bitmap bn = bmpobj.Clone(part, bmpobj.PixelFormat);
-             bn.Save(finalPictureFilePath, System.Drawing.Imaging.ImageFormat.Png); 
-
-#>
-
-<#
- 
-$selenium.Navigate().GoToUrl($base_url)
-$selenium.Manage().Window.Maximize()
-
-Start-Sleep -Millisecond 3000
-$selenium.FindElement([OpenQA.Selenium.By]::CssSelector("#hlogo > a")).Displayed
-Start-Sleep -Millisecond 3000
-$selenium.FindElement([OpenQA.Selenium.By]::CssSelector("#hlogo > a > b > c")).Displayed
-#>
 # Cleanup
 cleanup ([ref]$selenium)
 
