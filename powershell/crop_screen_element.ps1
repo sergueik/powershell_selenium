@@ -22,7 +22,7 @@
 # . .\shorex_carousel_box_image.ps1 -browser chrome -savedata -destination 'Manzanillo'
 
 param(
-  [string]$browser,
+  [string]$browser = 'chrome',
   [switch]$mobile,# currently unused
   [string]$base_url = 'http://www.hollandamerica.com/main/Main.action',
   [switch]$savedata,
@@ -43,6 +43,7 @@ function Get-ScriptDirectory
     $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
   }
 }
+
 
 
 function highlight {
@@ -230,56 +231,59 @@ popd
 [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
 $verificationErrors = New-Object System.Text.StringBuilder
 $phantomjs_executable_folder = 'C:\tools\phantomjs'
-if ($PSBoundParameters["browser"]) {
+
+if ($browser -ne $null -and $browser -ne '') {
   try {
     $connection = (New-Object Net.Sockets.TcpClient)
     $connection.Connect("127.0.0.1",4444)
     $connection.Close()
-  } catch [exception]{
-    Write-Output ('Exception: {0}' -f (($_.Exception.Message) -split "`n")[0])
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
+  } catch {
+    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\hub.cmd"
+    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\node.cmd"
     Start-Sleep -Seconds 10
   }
-
-
-  if ($PSBoundParameters["mobile"].IsPresent) {
-    # note $profile is not set
-    [OpenQA.Selenium.Firefox.FirefoxProfile]$selected_profile_object = $profile_manager.GetProfile($profile)
-    [OpenQA.Selenium.Firefox.FirefoxProfile]$selected_profile_object = New-Object OpenQA.Selenium.Firefox.FirefoxProfile ($profile)
-    $selected_profile_object.setPreference('general.useragent.override','Mozilla/5.0 (iPhone; U; CPU iPhone OS 3_0 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Version/4.0 Mobile/7A341 Safari/528.16')
-
-    [OpenQA.Selenium.Firefox.FirefoxProfile[]]$profiles = $profile_manager.ExistingProfiles
-
-    # [NUnit.Framework.Assert]::IsInstanceOfType($profiles , new-object System.Type( FirefoxProfile[]))
-    [NUnit.Framework.StringAssert]::AreEqualIgnoringCase($profiles.GetType().ToString(),'OpenQA.Selenium.Firefox.FirefoxProfile[]')
-
-
-    $selenium = New-Object OpenQA.Selenium.Firefox.FirefoxDriver ($selected_profile_object)
-  } else {
-    $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
+  Write-Host "Running on ${browser}"
+  if ($browser -match 'firefox') {
     $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
-    $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
-  }
-  $DebugPreference = 'Continue'
 
-} else {
-  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability("ssl-protocol","any")
-  $selenium.Capabilities.SetCapability("ignore-ssl-errors",$true)
-  $selenium.Capabilities.SetCapability("takesScreenshot",$true)
-  if ($PSBoundParameters["mobile"].IsPresent) {
-    $selenium.Capabilities.SetCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
   }
+  elseif ($browser -match 'chrome') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
+  }
+  elseif ($browser -match 'ie') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
+    if ($version -ne $null -and $version -ne 0) {
+      $capability.SetCapability('version',$version.ToString());
+    }
+  }
+  elseif ($browser -match 'safari') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
+  }
+  else {
+    throw "unknown browser choice:${browser}"
+  }
+  $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
+  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
+} else {
+  Write-Host 'Running on phantomjs'
+  $phantomjs_executable_folder = 'C:\tools\phantomjs'
+  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
+  $selenium.Capabilities.SetCapability('ssl-protocol','any')
+  $selenium.Capabilities.SetCapability('ignore-ssl-errors',$true)
+  $selenium.Capabilities.SetCapability('takesScreenshot',$true)
+  $selenium.Capabilities.SetCapability('userAgent','Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34')
   $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
+  $options.AddAdditionalCapability('phantomjs.executable.path',$phantomjs_executable_folder)
 }
+
+[bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
+
+
 [void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(3000))
 
 
 $window_position = $selenium.Manage().Window.Position
 $window_size = $selenium.Manage().Window.Size
-Write-Debug $destination
 
 $selenium.Navigate().GoToUrl($base_url)
 
@@ -294,14 +298,14 @@ try {
 }
 
 [OpenQA.Selenium.IWebElement[]]$carousel_items = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
-$promo_element = $carousel_items[0]
+$promo_element = $carousel_items[1]
 
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$promo_element).Build().Perform()
-
+start-sleep -millisecond 2000
 $result1_hash = @{
   'LocationOnScreenOnceScrolledIntoView.X' = $promo_element.LocationOnScreenOnceScrolledIntoView.X;
-  'LocationOnScreenOnceScrolledIntoView.Y ' = $promo_element.LocationOnScreenOnceScrolledIntoView.Y;
+  'LocationOnScreenOnceScrolledIntoView.Y' = $promo_element.LocationOnScreenOnceScrolledIntoView.Y;
   'Location.X' = $promo_element.Location.X;
   'Location.Y' = $promo_element.Location.Y;
   'Size.Width' = $promo_element.Size.Width;
@@ -356,25 +360,60 @@ return (typeof $) ;
 [string]$result0 = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($detect_jquery_in_use_script)
 Write-Output ('$ is {0}' -f $result0)
 
-$result3_hash = @{
-  'x' = $result1_hash['Location.X'];
-  'y' = $result1_hash['Location.X'] + ($result3_hash['element.clientHeight'] - $result1_hash['document.clientWidth']);
+$result4_hash = @{
+  'x' = $result1_hash['LocationOnScreenOnceScrolledIntoView.X'];
+  'y' = $result1_hash['LocationOnScreenOnceScrolledIntoView.Y']; 
   'width' = $result3_hash['element.clientWidth'];
   'height' = $result3_hash['element.clientHeight'];
 }
-$result3_hash | Format-List
+$result4_hash | Format-List
 
-@( 'System.Windows.Forms','System.Drawing') | ForEach-Object { [void][System.Reflection.Assembly]::LoadWithPartialName($_) }
+# $result4_hash = @{
+#'X'=294;'Y'=186;'Width'=220;'Height'=254;
+# }
+
+
+$assemblies = @( 'System.Drawing',
+  'System.Collections.Generic',
+  'System.Collections',
+  'System.ComponentModel',
+  'System.Windows.Forms',
+  'System.Text',
+  'System.Data'
+)
+
+$assemblies| ForEach-Object { $assembly = $_; [void][System.Reflection.Assembly]::LoadWithPartialName($assembly) }
+
 [OpenQA.Selenium.Screenshot]$screenshot = $selenium.GetScreenshot()
 $filename = 'full'
 $screenshot_path = get-scriptdirectory
 $image_path = ('{0}.{1}' -f $filename,'png')
 $screenshot.SaveAsFile([System.IO.Path]::Combine($screenshot_path,$image_path),[System.Drawing.Imaging.ImageFormat]::Png)
-[System.Drawing.RectangleF]$r = New-Object System.Drawing.RectangleF ($result3_hash['x'],$result3_hash['y'],$result3_hash['width'],$result3_hash['height'])
+
+
+#--------
+
+[System.Drawing.Image]$image = [System.Drawing.Image]::FromFile([System.IO.Path]::Combine($screenshot_path,$image_path))
+[System.Drawing.Graphics]$g = [System.Drawing.Graphics]::FromImage($image)
+[System.Drawing.Bitmap]$bitmap1 = ([System.Drawing.Bitmap]$image)
+$color = [System.Drawing.Color]::Red
+[System.Drawing.Pen]$pen = New-Object System.Drawing.Pen ($color)
+[System.Drawing.Rectangle]$rect = New-Object System.Drawing.Rectangle ($result4_hash['x'],$result4_hash['y'],$result4_hash['width'],$result4_hash['height'])
+$g.DrawRectangle(
+  $pen,
+  $rect
+)
+[void]$g.Save()
+$filename = 'modified'
+$image_path = ('{0}.{1}' -f $filename,'png')
+$bitmap1.Save([System.IO.Path]::Combine($screenshot_path,$image_path),[System.Drawing.Imaging.ImageFormat]::Png)
+
+#--------
+
+[System.Drawing.RectangleF]$rect = New-Object System.Drawing.RectangleF ($result4_hash['x'],$result4_hash['y'],$result4_hash['width'],$result4_hash['height'])
 [System.Drawing.Image]$image = [System.Drawing.Image]::FromFile([System.IO.Path]::Combine($screenshot_path,$image_path))
 [System.Drawing.Bitmap]$bitmap1 = ([System.Drawing.Bitmap]$image)
-# System.Drawing
-[System.Drawing.Bitmap]$bitmap2 = $bitmap1.Clone($r,$bitmap1.PixelFormat)
+[System.Drawing.Bitmap]$bitmap2 = $bitmap1.Clone($rect,$bitmap1.PixelFormat)
 $filename = 'cropped'
 $image_path = ('{0}.{1}' -f $filename,'png')
 $bitmap2.Save([System.IO.Path]::Combine($screenshot_path,$image_path),[System.Drawing.Imaging.ImageFormat]::Png)
@@ -382,9 +421,5 @@ $bitmap2.Save([System.IO.Path]::Combine($screenshot_path,$image_path),[System.Dr
 Start-Sleep -Milliseconds 1000
 # Cleanup
 cleanup ([ref]$selenium)
-# Cleanup
-cleanup ([ref]$selenium)
-
-
 
 
