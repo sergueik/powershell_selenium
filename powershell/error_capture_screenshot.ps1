@@ -164,11 +164,8 @@ $exception_handler.Invoke({
     $filename = 'test'
     # Take screenshot identifying the browser
     [OpenQA.Selenium.Screenshot]$screenshot =  $sender.GetScreenshot()
-
-
     $screenshot.SaveAsFile([System.IO.Path]::Combine((Get-ScriptDirectory),('{0}.{1}' -f $filename,'png')),[System.Drawing.Imaging.ImageFormat]::Png)
     # initiate browser close  event from the exception handler? 
-
   })
 $event_firing_selenium.Navigate().GoToUrl($base_url)
 $event_firing_selenium.Manage().Window.Maximize()
@@ -177,8 +174,9 @@ Start-Sleep -Millisecond 3000
 $event_firing_selenium.FindElement([OpenQA.Selenium.By]::CssSelector("#hlogo > a")).Displayed
 Start-Sleep -Millisecond 3000
 $event_firing_selenium.FindElement([OpenQA.Selenium.By]::CssSelector("#hlogo > a > b > c")).Displayed
+
 # Cleanup
-cleanup ([ref]$event)
+cleanup ([ref]$event_firing_selenium)
 
 
 
