@@ -68,8 +68,8 @@ namespace WebTester
             HTTPResponseHeaders response_headers = fiddler_session.ResponseHeaders;
             int http_response_code = response_headers.HTTPResponseCode;
             Console.WriteLine("HTTP Response: " + http_response_code.ToString());
-            
-            foreach (HTTPHeaderItem header_item in response_headers){
+            HTTPRequestHeaders request_headers = fiddler_session.RequestHeaders;
+            foreach (HTTPHeaderItem header_item in request_headers){
                Console.Error.WriteLine(header_item.Name + " " + header_item.Value);
             }
             
@@ -160,7 +160,8 @@ namespace WebTester
             database = String.Format("{0}\\fiddler-data.db", dataFolderPath);
             dataSource = "data source=" + database;
             tableName = "product";
-
+            // http://stackoverflow.com/questions/24969198/how-do-i-get-fiddlercore-programmatic-certificate-installation-to-stick
+            // http://weblog.west-wind.com/posts/2014/Jul/29/Using-FiddlerCore-to-capture-HTTP-Requests-with-NET
             TestConnection();
             createTable();
             // For the purposes of this demo, we'll forbid connections to HTTPS 
