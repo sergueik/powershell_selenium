@@ -1,4 +1,3 @@
-
 using System;
 using System.Text.RegularExpressions;
 using Fiddler;
@@ -14,24 +13,22 @@ namespace WebTester
 {
     public class Monitor
     {
-        string tableName = "";
-        bool IgnoreResources;
-        string dataFolderPath;
-        string database;
-        string dataSource;
+        private string tableName = "";
+        private bool IgnoreResources;
+        private string dataFolderPath;
+        private string database;
+        private string dataSource;
         public Monitor()
         {
             dataFolderPath = Directory.GetCurrentDirectory();
             database = String.Format("{0}\\data.db", dataFolderPath);
             dataSource = "data source=" + database;
             tableName = "product";
-            #region AttachEventListeners
 
             // Simply echo notifications to the console.  Because CONFIG.QuietMode=true 
             // by default, we must handle notifying the user ourselves.
             FiddlerApplication.OnNotification += delegate(object sender, NotificationEventArgs e) { Console.WriteLine("** NotifyUser: " + e.NotifyString); };
             FiddlerApplication.Log.OnLogString += delegate(object sender, Fiddler.LogEventArgs e) { Console.WriteLine("** LogString: " + e.LogString); };
-            
 
             IgnoreResources = false;
             FiddlerApplication.BeforeRequest += (s) =>
@@ -52,9 +49,40 @@ namespace WebTester
                 // s.utilDecodeResponse(); 
             };
 
-            FiddlerApplication.AfterSessionComplete += (s) => Console.WriteLine("Finished session:\t" + s.fullUrl);
             FiddlerApplication.AfterSessionComplete += FiddlerApplication_AfterSessionComplete;
-            #endregion AttachEventListeners
+
+        }
+
+        private void FiddlerApplication_AfterSessionComplete(Session fiddler_session)
+        {
+            // Ignore HTTPS connect requests
+            if (fiddler_session.RequestMethod == "CONNECT")
+                return;
+
+            if (fiddler_session == null || fiddler_session.oRequest == null || fiddler_session.oRequest.headers == null)
+                return;
+
+            var full_url = fiddler_session.fullUrl;
+            Console.WriteLine("URL: " + full_url);
+
+            HTTPResponseHeaders response_headers = fiddler_session.ResponseHeaders;
+            int http_response_code = response_headers.HTTPResponseCode;
+            Console.WriteLine("HTTP Response: " + http_response_code.ToString());
+            
+            foreach (HTTPHeaderItem header_item in response_headers){
+               Console.Error.WriteLine(header_item.Name + " " + header_item.Value);
+            }
+            
+            // http://fiddler.wikidot.com/timers
+            var timers = fiddler_session.Timers;
+            TimeSpan duration = timers.ClientDoneResponse - timers.ClientBeginRequest;
+            Console.Error.WriteLine(String.Format("Duration: {0:F10}", duration.Milliseconds));
+            var dic = new Dictionary<string, object>(){
+                	{"url" ,full_url}, {"status", http_response_code},
+                	{
+                	"duration", duration.Milliseconds }  
+                };
+            insert(dic);
         }
 
         bool TestConnection()
@@ -77,7 +105,7 @@ namespace WebTester
             }
         }
 
-        public bool insert()
+        public bool insert(Dictionary<string, object> dic)
         {
             try
             {
@@ -88,21 +116,12 @@ namespace WebTester
                         cmd.Connection = conn;
                         conn.Open();
                         SQLiteHelper sh = new SQLiteHelper(cmd);
-                        int count = sh.ExecuteScalar<int>(String.Format("select count(*) from {0};", tableName)) + 1;
-                        var dic = new Dictionary<string, object>();
+                        int count = sh.ExecuteScalar<int>(String.Format("select count(*) from {0};", this.tableName)) + 1;
 
-                        dic["name"] = "ProductName";
-                        // dic["fullUrl"] = "";
-                        // dic["responseCode"] = "";
-                        // dic["refrer"] = "";
-                        dic["datepurchase"] = new DateTime();
-                        dic["qty"] = 123;
-                        dic["price"] = 345;
                         sh.Insert(tableName, dic);
                         conn.Close();
                         return true;
                     }
-
                 }
             }
             catch (Exception ex)
@@ -110,7 +129,6 @@ namespace WebTester
                 Console.Error.WriteLine(ex.ToString());
                 return false;
             }
-
         }
 
         public void createTable()
@@ -126,62 +144,25 @@ namespace WebTester
 
                     SQLiteTable tb = new SQLiteTable(tableName);
                     tb.Columns.Add(new SQLiteColumn("id", true));
-                    tb.Columns.Add(new SQLiteColumn("name"));
-                    tb.Columns.Add(new SQLiteColumn("datepurchase", ColType.DateTime));
-                    tb.Columns.Add(new SQLiteColumn("price", ColType.Decimal));
-
-                    tb.Columns.Add(new SQLiteColumn("qty", ColType.Integer));
-
+                    tb.Columns.Add(new SQLiteColumn("url", ColType.Text));
+                    tb.Columns.Add(new SQLiteColumn("status", ColType.Integer));
+                    tb.Columns.Add(new SQLiteColumn("duration", ColType.Decimal));
                     sh.CreateTable(tb);
                     conn.Close();
                 }
             }
         }
 
-        private void FiddlerApplication_AfterSessionComplete(Session sess)
-        {
-            // Ignore HTTPS connect requests
-            if (sess.RequestMethod == "CONNECT")
-                return;
-            /*
-                if (!string.IsNullOrEmpty(CaptureConfiguration.CaptureDomain))
-                {
-                    if (sess.hostname.ToLower() != CaptureConfiguration.CaptureDomain.Trim().ToLower())
-                        return;
-                }
-            */
-
-            if (sess == null || sess.oRequest == null || sess.oRequest.headers == null)
-                return;
-
-            string headers = sess.oRequest.headers.ToString();
-            var reqBody = sess.GetRequestBodyAsString();
-
-            // to capture the response
-            // string respHeaders = session.oResponse.headers.ToString();
-            // var respBody = session.GetResponseBodyAsString();
-
-            // replace the HTTP line to inject full URL
-            string firstLine = sess.RequestMethod + " " + sess.fullUrl + " " + sess.oRequest.headers.HTTPVersion;
-            int at = headers.IndexOf("\r\n");
-            if (at < 0)
-                return;
-            extract_headers(headers.Substring(at + 1));
-            // TODO: Commit to the database
-            headers = firstLine + "\r\n" + headers.Substring(at + 1);
-
-            string output = headers + "\r\n" +
-                            (!string.IsNullOrEmpty(reqBody) ? reqBody + "\r\n" : string.Empty) +
-                             "\r\n\r\n";
-            // Console.Error.WriteLine(output);
-
-        }
         public void Start()
         {
             Console.WriteLine("Starting FiddlerCore...");
+            dataFolderPath = Directory.GetCurrentDirectory();
+            database = String.Format("{0}\\fiddler-data.db", dataFolderPath);
+            dataSource = "data source=" + database;
+            tableName = "product";
+
             TestConnection();
             createTable();
-            insert();
             // For the purposes of this demo, we'll forbid connections to HTTPS 
             // sites that use invalid certificates
             CONFIG.IgnoreServerCertErrors = false;
@@ -191,7 +172,7 @@ namespace WebTester
             Console.WriteLine("Hit CTRL+C to end session.");
             // Wait  for the user to hit CTRL+C.  
         }
-
+        // TODO : extract cookies
         public void extract_headers(string raw_text)
         {
 
@@ -203,20 +184,23 @@ namespace WebTester
 
             foreach (Match myMatch in myMatchCollection)
             {
-                Console.WriteLine(String.Format("Header name = [{0}]", myMatch.Groups["header_name"]));
-                Console.WriteLine(String.Format("Data = [{0}]", myMatch.Groups["header_value"]));
+                Console.Error.WriteLine(String.Format("Header name = [{0}]", myMatch.Groups["header_name"]));
+                Console.Error.WriteLine(String.Format("Data = [{0}]", myMatch.Groups["header_value"]));
             }
         }
-        
+
         public void Stop()
-        {          
+        {
             Console.WriteLine("Shutdown.");
-            FiddlerApplication.Shutdown();
+
+            FiddlerApplication.AfterSessionComplete -= FiddlerApplication_AfterSessionComplete;
+            if (FiddlerApplication.IsStarted())
+                FiddlerApplication.Shutdown();
             System.Threading.Thread.Sleep(1);
         }
-        
+
         public static Monitor m;
-        // No longer necessary 
+        // Not necessary if embedded in Powershell  
         public static void Main(string[] args)
         {
             m = new Monitor();

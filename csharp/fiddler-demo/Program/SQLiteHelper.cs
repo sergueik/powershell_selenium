@@ -1,7 +1,4 @@
-﻿// Version 1.2
-// Date: 2014-03-27
-// http://sh.codeplex.com
-// Dedicated to Public Domain
+﻿// http://sh.codeplex.com @Version 1.2
 
 using System;
 using System.Collections.Generic;
