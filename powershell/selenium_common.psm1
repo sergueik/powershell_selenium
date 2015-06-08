@@ -18,6 +18,16 @@ function launch_selenium {
   param(
     [string]$browser = '',
     [int]$version,
+    [string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies',
+    [string[]]$shared_assemblies = @(
+      'WebDriver.dll',
+      'WebDriver.Support.dll',
+      'nunit.framework.dll'
+    ),
+
+    [string]$hub_host = '127.0.0.1',
+    [string]$hub_port = '4444',
+
     [switch]$debug
   )
 
@@ -43,7 +53,7 @@ function launch_selenium {
   if ($browser -ne $null -and $browser -ne '') {
     try {
       $connection = (New-Object Net.Sockets.TcpClient)
-      $connection.Connect("127.0.0.1",4444)
+      $connection.Connect($hub_host,[int]$hub_port)
       $connection.Close()
     } catch {
       Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\hub.cmd"
@@ -114,23 +124,22 @@ function launch_selenium {
       throw "unknown browser choice:${browser}"
     }
     if ($selenium -eq $null) {
-      $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
+      $uri = [System.Uri](('http://{0}:{1}/wd/hub' -f $hub_host,$hub_port))
+
       $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
     }
   } else {
-
+    $phantomjs_useragent = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34'
     Write-Host 'Running on phantomjs'
     $headless = $true
     $phantomjs_executable_folder = "C:\tools\phantomjs-2.0.0\bin"
-    #  $phantomjs_executable_folder = "C:\tools\phantomjs-1.9.7"
     $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-    $selenium.Capabilities.setCapability("ssl-protocol","any")
-    $selenium.Capabilities.setCapability("ignore-ssl-errors",$true)
-    $selenium.Capabilities.setCapability("takesScreenshot",$true)
-    $selenium.Capabilities.setCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
-    $options = $null
+    $selenium.Capabilities.setCapability('ssl-protocol','any')
+    $selenium.Capabilities.setCapability('ignore-ssl-errors',$true)
+    $selenium.Capabilities.setCapability('takesScreenshot',$true)
+    $selenium.Capabilities.setCapability('userAgent',$phantomjs_useragent)
     $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-    $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
+    $options.AddAdditionalCapability('phantomjs.executable.path',$phantomjs_executable_folder)
   }
 
   return $selenium
