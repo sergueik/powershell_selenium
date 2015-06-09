@@ -20,12 +20,11 @@
 
 param(
   [string]$browser = '',
-  [int]$version,
+  [int]$version,  # TODO: version
   [switch]$many,
   [string]$destination = 'Ensenada',
   [switch]$pause
 )
-
 
 function init_database {
   param(
@@ -119,35 +118,6 @@ function query_database_basic {
 }
 
 
-function extract_match {
-  param(
-    [string]$source,
-    [string]$capturing_match_expression,
-    [string]$label,
-    [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
-
-  )
-  Write-Debug ('Extracting from {0}' -f $source)
-  $local:results = {}
-  $local:results = $source | where { $_ -match $capturing_match_expression } |
-  ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
-  Write-Debug 'extract_match:'
-  Write-Debug $local:results
-  $result_ref.Value = $local:results.Media
-}
-
-function highlight {
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [int]$delay = 300
-  )
-  # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'color: yellow; border: 4px solid yellow;')
-  Start-Sleep -Millisecond $delay
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
-}
-
 function custom_pause {
   param([bool]$fullstop)
   # Do not close Browser / Selenium when run from Powershell ISE
@@ -160,34 +130,6 @@ function custom_pause {
     Start-Sleep -Millisecond 1000
   }
 }
-
-# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
-function Get-ScriptDirectory
-{
-  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-  if ($Invocation.PSScriptRoot) {
-    $Invocation.PSScriptRoot
-  }
-  elseif ($Invocation.MyCommand.Path) {
-    Split-Path $Invocation.MyCommand.Path
-  } else {
-    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
-  }
-}
-
-function cleanup
-{
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref
-  )
-  try {
-    $selenium_ref.Value.Quit()
-  } catch [exception]{
-    # Ignore errors if unable to close the browser
-    Write-Output (($_.Exception.Message) -split "`n")[0]
-  }
-}
-
 
 function find_page_element_by_css_selector {
   param(
@@ -249,62 +191,10 @@ $shared_assemblies = @(
   'nunit.framework.dll'
 )
 
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
+$MODULE_NAME = 'selenium_utils.psd1'
+import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
 
-if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
-  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
-}
-
-pushd $shared_assemblies_path
-
-$shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
-popd
-
-$headless = $false 
-if ($browser -ne $null -and $browser -ne '') {
-  try {
-    $connection = (New-Object Net.Sockets.TcpClient)
-    $connection.Connect("127.0.0.1",4444)
-    $connection.Close()
-  } catch {
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\hub.cmd"
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\node.cmd"
-    Start-Sleep -Seconds 10
-  }
-  Write-Host "Running on ${browser}"
-  if ($browser -match 'firefox') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
-
-  }
-  elseif ($browser -match 'chrome') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
-  }
-  elseif ($browser -match 'ie') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
-    if ($version -ne $null -and $version -ne 0) {
-      $capability.SetCapability('version',$version.ToString());
-    }
-  }
-  elseif ($browser -match 'safari') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
-  }
-  else {
-    throw "unknown browser choice:${browser}"
-  }
-  $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
-  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
-} else {
-  $headless = $true 
-  Write-Host 'Running on phantomjs'
-  $phantomjs_executable_folder = 'C:\tools\phantomjs'
-  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability('ssl-protocol','any')
-  $selenium.Capabilities.SetCapability('ignore-ssl-errors',$true)
-  $selenium.Capabilities.SetCapability('takesScreenshot',$true)
-  $selenium.Capabilities.SetCapability('userAgent','Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34')
-  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability('phantomjs.executable.path',$phantomjs_executable_folder)
-}
+$selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
 
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
@@ -778,6 +668,12 @@ $skip_destinations_regex = '(' + ($skip_destinations -replace "`r`n",'|') + ')'
   $o | Add-Member Noteproperty 'caption' $row['description']
   $o | Add-Member Noteproperty 'status' 0
   insert_database -data $o -database "$script_directory\shore_ex.db"
+  <#
+  TODO: prevent
+  Exception calling "ExecuteNonQuery" with "0" argument(s): constraint failed 
+   NOT NULL constraint failed: destinations.CODE
+   UNIQUE constraint failed: destinations.CODE
+  #>
   $o = $null
 }
 

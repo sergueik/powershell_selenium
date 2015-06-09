@@ -1,4 +1,4 @@
-#Copyright (c) 2014,2015 Serguei Kouzmine
+#Copyright (c) 2015 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -134,67 +134,49 @@ if ($host.Version.Major -le 2) {
 $window_position = $selenium.Manage().Window.Position
 $window_size = $selenium.Manage().Window.Size
 
-$base_url = 'http://www.google.com/'
+$base_url = 'http://stackoverflow.com'
 
-# TODO: invoke NLog assembly for quicker logging triggered by the events
-# www.codeproject.com/Tips/749612/How-to-NLog-with-VisualStudio
 
+# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
+function Get-ScriptDirectory {
+  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
+  if ($Invocation.PSScriptRoot) {
+    $Invocation.PSScriptRoot
+  }
+  elseif ($Invocation.MyCommand.Path) {
+    Split-Path $Invocation.MyCommand.Path
+  } else {
+    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
+  }
+}
+
+
+# https://github.com/yizeng/EventFiringWebDriverExamples
 $event_firing_selenium = New-Object -Type 'OpenQA.Selenium.Support.Events.EventFiringWebDriver' -ArgumentList @( $selenium)
 
-$element_value_changing_handler = $event_firing_selenium.add_ElementValueChanging
-$element_value_changing_handler.Invoke(
-  {
+$exception_handler = $event_firing_selenium.add_ExceptionThrown
+$exception_handler.Invoke({
     param(
       [object]$sender,
-      [OpenQA.Selenium.Support.Events.WebElementEventArgs]$eventargs
+      [OpenQA.Selenium.Support.Events.WebDriverExceptionEventArgs]$eventargs
     )
-    Write-Host 'Value Change handler' -foreground 'Yellow'
-    if ($eventargs.Element.GetAttribute('id') -eq 'lst-ib') {
-      $xpath1 = "//div[@class='sbsb_a']"
-      try {
-        [OpenQA.Selenium.IWebElement]$local:element = $sender.FindElement([OpenQA.Selenium.By]::XPath($xpath1))
-      } catch [exception]{
-      }
-      Write-Host $local:element.Text -foreground 'Blue'
-    }
-
+    Write-Host 'Taking screenshot' -foreground 'Yellow'
+    $filename = 'test'
+    # Take screenshot identifying the browser
+    [OpenQA.Selenium.Screenshot]$screenshot =  $sender.GetScreenshot()
+    $screenshot.SaveAsFile([System.IO.Path]::Combine((Get-ScriptDirectory),('{0}.{1}' -f $filename,'png')),[System.Drawing.Imaging.ImageFormat]::Png)
+    # initiate browser close  event from the exception handler? 
   })
-
-$verificationErrors = New-Object System.Text.StringBuilder
-$base_url = 'http://www.google.com'
 $event_firing_selenium.Navigate().GoToUrl($base_url)
+$event_firing_selenium.Manage().Window.Maximize()
 
-# protect from blank page
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($event_firing_selenium,[System.TimeSpan]::FromSeconds(10))
-$wait.PollingInterval = 50
-[void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id("hplogo")))
-
-$xpath = "//input[@id='lst-ib']"
-
-# for mobile
-# $xpath = "//input[@id='mib']"
-
-[OpenQA.Selenium.IWebElement]$element = $event_firing_selenium.FindElement([OpenQA.Selenium.By]::XPath($xpath))
-
-# http://software-testing-tutorials-automation.blogspot.com/2014/05/how-to-handle-ajax-auto-suggest-drop.html
-$element.SendKeys('Sele')
-# NOTE:cannot use 
-# [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($event_firing_selenium)
-# $actions.SendKeys($element,'Sele')
-Start-Sleep -Millisecond $event_delay
-$element.SendKeys('nium')
-Start-Sleep -Millisecond $event_delay
-$element.SendKeys(' webdriver')
-Start-Sleep -Millisecond $event_delay
-$element.SendKeys(' C#')
-Start-Sleep -Millisecond $event_delay
-$element.SendKeys(' tutorial')
-Start-Sleep -Millisecond $event_delay
-$element.SendKeys([OpenQA.Selenium.Keys]::Enter)
-Start-Sleep 10
+Start-Sleep -Millisecond 3000
+$event_firing_selenium.FindElement([OpenQA.Selenium.By]::CssSelector("#hlogo > a")).Displayed
+Start-Sleep -Millisecond 3000
+$event_firing_selenium.FindElement([OpenQA.Selenium.By]::CssSelector("#hlogo > a > b > c")).Displayed
 
 # Cleanup
-cleanup ([ref]$event_firing_selenium) 
+cleanup ([ref]$event_firing_selenium)
 
 
 

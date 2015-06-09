@@ -106,8 +106,8 @@ namespace WebTester
 
             // Simply echo notifications to the console.  Because CONFIG.QuietMode=true 
             // by default, we must handle notifying the user ourselves.
-            FiddlerApplication.OnNotification += delegate(object sender, NotificationEventArgs oNEA) { Console.WriteLine("** NotifyUser: " + oNEA.NotifyString); };
-            FiddlerApplication.Log.OnLogString += delegate(object sender, LogEventArgs oLEA) { Console.WriteLine("** LogString: " + oLEA.LogString); };
+            FiddlerApplication.OnNotification += delegate(object sender, NotificationEventArgs oNEA) { Console.Error.WriteLine("** NotifyUser: " + oNEA.NotifyString); };
+            FiddlerApplication.Log.OnLogString += delegate(object sender, LogEventArgs oLEA) { Console.Error.WriteLine("** LogString: " + oLEA.LogString); };
 
             FiddlerApplication.BeforeRequest += (s) =>
             {
@@ -136,14 +136,22 @@ namespace WebTester
 
                 var full_url = fiddler_session.fullUrl;
                 Console.WriteLine("URL: " + full_url);
-
-                HTTPResponseHeaders response_headers = fiddler_session.ResponseHeaders;
-                Console.WriteLine("HTTP Response: " + response_headers.HTTPResponseCode.ToString());
                 /*
-                foreach (HTTPHeaderItem header_item in response_headers){
-                   Console.WriteLine(header_item.Name + " " + header_item.Value);
-                }
-                    */
+            // for cookies
+            HTTPRequestHeaders request_headers = fiddler_session.RequestHeaders;
+            foreach (HTTPHeaderItem header_item in request_headers){
+               Console.Error.WriteLine(header_item.Name + " " + header_item.Value);
+            }
+             */
+                HTTPResponseHeaders response_headers = fiddler_session.ResponseHeaders;
+                int http_response_code = response_headers.HTTPResponseCode;
+                Console.WriteLine("HTTP Response: " + http_response_code.ToString());
+                /*
+            // for referer
+            HTTPResponseHeaders response_headers = fiddler_session.ResponseHeaders;
+            foreach (HTTPHeaderItem header_item in response_headers){
+               Console.Error.WriteLine(header_item.Name + " " + header_item.Value);
+            }
                 // http://fiddler.wikidot.com/timers
                 var timers = fiddler_session.Timers;
                 var duration = timers.ClientDoneResponse - timers.ClientBeginRequest;

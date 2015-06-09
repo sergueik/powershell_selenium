@@ -2,19 +2,18 @@ using System;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using Microsoft.Activities.UnitTesting;
 using System.Data.SQLite;
 using System.IO;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Remote;
+using OpenQA.Selenium.PhantomJS;
 
 namespace WebTester
 {
-
     public static class Extensions
     {
         static int cnt = 0;
@@ -26,14 +25,16 @@ namespace WebTester
 
         public static List<Dictionary<String, String>> Performance(this IWebDriver driver)
         {
-            // NOTE: performance.getEntries is only with Chrome
-            // performance.timing is available for FF and PhantomJS
+            // NOTE: this code is highly browser-specific: 
+            // Chrome has performance.getEntries 
+            // FF only has performance.timing 
+            // PhantomJS does not have anything
+            // System.InvalidOperationException: {"errorMessage":"undefined is not a constructor..
 
             string performance_script = @"
 var ua = window.navigator.userAgent;
-
 if (ua.match(/PhantomJS/)) {
-    return 'Cannot measure on ' + ua;
+    return [{}];
 } else {
     var performance =
         window.performance ||
@@ -41,10 +42,13 @@ if (ua.match(/PhantomJS/)) {
         window.msPerformance ||
         window.webkitPerformance || {};
 
-    // var timings = performance.timing || {};
-    // return timings;
-    var network = performance.getEntries() || {};
-    return network;
+    if (ua.match(/Chrome/)) {
+        var network = performance.getEntries() || {};
+        return network;
+    } else {
+        var timings = performance.timing || {};
+        return [timings];
+    }
 }
 ";
             List<Dictionary<String, String>> result = new List<Dictionary<string, string>>();
@@ -74,7 +78,7 @@ if (ua.match(/PhantomJS/)) {
             {
                 string result = driver.Execute<String>("return document.readyState").ToString();
                 Console.Error.WriteLine(String.Format("result = {0}", result));
-                Console.WriteLine(String.Format("cnt = {0}", cnt));
+                Console.Error.WriteLine(String.Format("cnt = {0}", cnt));
                 cnt++;
                 // TODO: match
                 return ((result.Equals(expected_state) || cnt > max_cnt));
@@ -84,15 +88,14 @@ if (ua.match(/PhantomJS/)) {
         public static void WaitDocumentReadyState(this IWebDriver driver, string[] expected_states, int max_cnt = 10)
         {
             cnt = 0;
-            Regex state_regex = new Regex(String.Join("","(?:", String.Join("|",expected_states),  ")"), 
-                                          RegexOptions.IgnoreCase    | RegexOptions.IgnorePatternWhitespace    | RegexOptions.Compiled);
+            Regex state_regex = new Regex(String.Join("", "(?:", String.Join("|", expected_states), ")"),
+                                          RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
             var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(driver, TimeSpan.FromSeconds(30.00));
             wait.PollingInterval = TimeSpan.FromSeconds(0.50);
             wait.Until(dummy =>
             {
                 string result = driver.Execute<String>("return document.readyState").ToString();
                 Console.Error.WriteLine(String.Format("result = {0}", result));
-                Console.WriteLine(String.Format("cnt = {0}", cnt));
                 cnt++;
                 return ((state_regex.IsMatch(result) || cnt > max_cnt));
             });
@@ -112,6 +115,66 @@ if (ua.match(/PhantomJS/)) {
         private static string database;
         private static string dataSource;
 
+
+        [TestInitialize]
+        public void Initialize()
+        {
+            dataFolderPath = Directory.GetCurrentDirectory();
+            database = String.Format("{0}\\data.db", dataFolderPath);
+            dataSource = "data source=" + database;
+            tableName = "product";
+            createTable();
+            selenium_driver = new RemoteWebDriver(new Uri(hub_url), DesiredCapabilities.Chrome());
+            selenium_driver.Manage().Timeouts().ImplicitlyWait(new TimeSpan(0, 0, 30));
+        }
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+            if (selenium_driver != null)
+                selenium_driver.Close();
+        }
+
+        [TestMethod]
+        // [ExpectedException(typeof(NoSuchElementException))]
+        public void Sample()
+        {
+            selenium_driver.Navigate().GoToUrl(step_url);
+            selenium_driver.WaitDocumentReadyState(expected_states[0]);
+            List<Dictionary<String, String>> result = selenium_driver.Performance();
+            var dic = new Dictionary<string, object>();
+
+            foreach (var row in result)
+            {
+                dic["caption"] = "dummy";
+                foreach (string key in row.Keys)
+                {
+
+
+                    if (Regex.IsMatch(key, "(name|duration)"))
+                    {
+
+                        Console.Error.WriteLine(key + " " + row[key]);
+
+                        if (key.IndexOf("duration") > -1)
+                        {
+                            dic[key] = (Double)Double.Parse(row[key]);
+                        }
+                        else
+                        {
+                            dic[key] = (String)row[key];
+                        }
+                    }
+                }
+                insert(dic);
+
+                foreach (string key in dic.Keys.ToArray())
+                {
+                    dic[key] = null;
+                }
+                Console.Error.WriteLine("");
+            }
+        }
         public static void Main(string[] args)
         {
 
@@ -119,13 +182,17 @@ if (ua.match(/PhantomJS/)) {
             database = String.Format("{0}\\data.db", dataFolderPath);
             dataSource = "data source=" + database;
             tableName = "product";
-            // driver = new ChromeDriver();
+
             Console.WriteLine("Starting..");
             // TestConnection();
             createTable();
-			// ActiveState Remote::Selenium:Driver 
+            // selenium_driver = new ChromeDriver();
+            // ActiveState Remote::Selenium:Driver 
             // selenium_driver = new RemoteWebDriver(new Uri(hub_url), DesiredCapabilities.Firefox());
             selenium_driver = new RemoteWebDriver(new Uri(hub_url), DesiredCapabilities.Chrome());
+            // string phantomjs_executable_folder = @"C:\tools\phantomjs-2.0.0\bin";
+            // selenium_driver = new PhantomJSDriver(phantomjs_executable_folder);
+            selenium_driver.Manage().Timeouts().ImplicitlyWait(new TimeSpan(0, 0, 30));
 
             selenium_driver.Navigate().GoToUrl(step_url);
             selenium_driver.WaitDocumentReadyState(expected_states);
@@ -155,7 +222,7 @@ if (ua.match(/PhantomJS/)) {
                     }
                 }
                 insert(dic);
-                
+
                 foreach (string key in dic.Keys.ToArray())
                 {
                     dic[key] = null;
@@ -165,8 +232,6 @@ if (ua.match(/PhantomJS/)) {
             if (selenium_driver != null)
                 selenium_driver.Close();
         }
-
-
 
         public static bool insert(Dictionary<string, object> dic)
         {
@@ -179,13 +244,10 @@ if (ua.match(/PhantomJS/)) {
                         cmd.Connection = conn;
                         conn.Open();
                         SQLiteHelper sh = new SQLiteHelper(cmd);
-                        int count = sh.ExecuteScalar<int>(String.Format("select count(*) from {0};", tableName)) + 1;
-
                         sh.Insert(tableName, dic);
                         conn.Close();
                         return true;
                     }
-
                 }
             }
             catch (Exception ex)
@@ -193,7 +255,6 @@ if (ua.match(/PhantomJS/)) {
                 Console.Error.WriteLine(ex.ToString());
                 return false;
             }
-
         }
 
         public static void createTable()
