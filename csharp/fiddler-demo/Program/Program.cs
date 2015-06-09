@@ -65,22 +65,39 @@ namespace WebTester
             var full_url = fiddler_session.fullUrl;
             Console.WriteLine("URL: " + full_url);
 
+            HTTPRequestHeaders request_headers = fiddler_session.RequestHeaders;
             HTTPResponseHeaders response_headers = fiddler_session.ResponseHeaders;
             int http_response_code = response_headers.HTTPResponseCode;
             Console.WriteLine("HTTP Response: " + http_response_code.ToString());
-            HTTPRequestHeaders request_headers = fiddler_session.RequestHeaders;
-            foreach (HTTPHeaderItem header_item in request_headers){
-               Console.Error.WriteLine(header_item.Name + " " + header_item.Value);
+
+            string referer = null;
+            Dictionary<String, HTTPHeaderItem> request_headers_dictionary =
+             request_headers.ToDictionary(p => p.Name);
+            if (request_headers_dictionary.ContainsKey("Referer"))
+            {
+                referer = request_headers_dictionary["Referer"].Value;
             }
             
+            //foreach (HTTPHeaderItem header_item in response_headers)
+            //{
+            //    Console.Error.WriteLine(header_item.Name + " " + header_item.Value);
+            //}
+            
+            //foreach (HTTPHeaderItem header_item in request_headers)
+            //{
+            //    Console.Error.WriteLine(header_item.Name + " " + header_item.Value);
+            //}
+
+            Console.Error.WriteLine("Referer: " + referer);
+
             // http://fiddler.wikidot.com/timers
             var timers = fiddler_session.Timers;
             TimeSpan duration = timers.ClientDoneResponse - timers.ClientBeginRequest;
             Console.Error.WriteLine(String.Format("Duration: {0:F10}", duration.Milliseconds));
             var dic = new Dictionary<string, object>(){
                 	{"url" ,full_url}, {"status", http_response_code},
-                	{
-                	"duration", duration.Milliseconds }  
+                	{"duration", duration.Milliseconds },
+                	{"referer", referer }
                 };
             insert(dic);
         }
@@ -145,6 +162,7 @@ namespace WebTester
                     SQLiteTable tb = new SQLiteTable(tableName);
                     tb.Columns.Add(new SQLiteColumn("id", true));
                     tb.Columns.Add(new SQLiteColumn("url", ColType.Text));
+                    tb.Columns.Add(new SQLiteColumn("referer", ColType.Text));
                     tb.Columns.Add(new SQLiteColumn("status", ColType.Integer));
                     tb.Columns.Add(new SQLiteColumn("duration", ColType.Decimal));
                     sh.CreateTable(tb);
@@ -214,7 +232,6 @@ namespace WebTester
             {
                 System.Threading.Monitor.Wait(forever);
             }
-
         }
 
         static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
