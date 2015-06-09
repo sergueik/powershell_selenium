@@ -78,7 +78,7 @@ if (ua.match(/PhantomJS/)) {
             {
                 string result = driver.Execute<String>("return document.readyState").ToString();
                 Console.Error.WriteLine(String.Format("result = {0}", result));
-                Console.WriteLine(String.Format("cnt = {0}", cnt));
+                Console.Error.WriteLine(String.Format("cnt = {0}", cnt));
                 cnt++;
                 // TODO: match
                 return ((result.Equals(expected_state) || cnt > max_cnt));
@@ -140,7 +140,7 @@ if (ua.match(/PhantomJS/)) {
         public void Sample()
         {
             selenium_driver.Navigate().GoToUrl(step_url);
-            selenium_driver.WaitDocumentReadyState(expected_states);
+            selenium_driver.WaitDocumentReadyState(expected_states[0]);
             List<Dictionary<String, String>> result = selenium_driver.Performance();
             var dic = new Dictionary<string, object>();
 
@@ -189,9 +189,9 @@ if (ua.match(/PhantomJS/)) {
             // selenium_driver = new ChromeDriver();
             // ActiveState Remote::Selenium:Driver 
             // selenium_driver = new RemoteWebDriver(new Uri(hub_url), DesiredCapabilities.Firefox());
-            // selenium_driver = new RemoteWebDriver(new Uri(hub_url), DesiredCapabilities.Chrome());
-            string phantomjs_executable_folder = @"C:\tools\phantomjs-2.0.0\bin";
-            selenium_driver = new PhantomJSDriver(phantomjs_executable_folder);
+            selenium_driver = new RemoteWebDriver(new Uri(hub_url), DesiredCapabilities.Chrome());
+            // string phantomjs_executable_folder = @"C:\tools\phantomjs-2.0.0\bin";
+            // selenium_driver = new PhantomJSDriver(phantomjs_executable_folder);
             selenium_driver.Manage().Timeouts().ImplicitlyWait(new TimeSpan(0, 0, 30));
 
             selenium_driver.Navigate().GoToUrl(step_url);
@@ -244,8 +244,6 @@ if (ua.match(/PhantomJS/)) {
                         cmd.Connection = conn;
                         conn.Open();
                         SQLiteHelper sh = new SQLiteHelper(cmd);
-                        int count = sh.ExecuteScalar<int>(String.Format("select count(*) from {0};", tableName)) + 1;
-
                         sh.Insert(tableName, dic);
                         conn.Close();
                         return true;
