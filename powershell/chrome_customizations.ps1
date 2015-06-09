@@ -23,7 +23,6 @@ param(
   [string]$base_url = 'http://www.carnival.com/',
   [switch]$debug,
   [switch]$pause
-
 )
 
 function ellipsize {

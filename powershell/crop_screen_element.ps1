@@ -18,9 +18,6 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-# sample call
-# . .\shorex_carousel_box_image.ps1 -browser chrome -savedata -destination 'Manzanillo'
-
 param(
   [string]$browser = 'chrome',
   [switch]$mobile,# currently unused
@@ -29,57 +26,6 @@ param(
   [switch]$pause
 
 )
-
-# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
-function Get-ScriptDirectory
-{
-  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-  if ($Invocation.PSScriptRoot) {
-    $Invocation.PSScriptRoot
-  }
-  elseif ($Invocation.MyCommand.Path) {
-    Split-Path $Invocation.MyCommand.Path
-  } else {
-    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
-  }
-}
-
-
-
-function highlight {
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [int]$delay = 300
-  )
-
-  # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'color: yellow; border: 4px solid yellow;')
-  Start-Sleep -Millisecond $delay
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
-
-
-}
-
-function extract_match {
-  param(
-    [string]$source,
-    [string]$capturing_match_expression,
-    [string]$label,
-    [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
-
-  )
-
-  if ($DebugPreference -eq 'Continue') {
-    Write-Debug ('Extracting from {0}' -f $source)
-  }
-
-  $local:results = {}
-  $local:results = $source | where { $_ -match $capturing_match_expression } |
-  ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
-  $result_ref.Value = $local:results.Media
-}
-
 
 function set_timeouts {
   param(
@@ -94,75 +40,6 @@ function set_timeouts {
   [void]($selenium_ref.Value.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script)))
 
 }
-
-
-function redirect_workaround {
-
-  param(
-    [string]$web_host = '',
-    [string]$app_url = '',
-    [string]$app_virtual_path = ''
-
-
-  )
-
-  if ($web_host -eq $null -or $web_host -eq '') {
-    throw 'Web host cannot be null'
-
-  }
-
-  if (($app_virtual_path -ne '') -and ($app_virtual_path -ne '')) {
-    $app_url = "http://${web_host}/${app_virtual_path}"
-  }
-
-
-  if ($app_url -eq $null -or $app_url -eq '') {
-    throw 'Url cannot be null'
-  }
-
-  # workaround for 
-  # The underlying connection was closed: Could not establish
-  # trust relationship for the SSL/TLS secure channel.
-  # error 
-  # explained in 
-  # http://stackoverflow.com/questions/11696944/powershell-v3-invoke-webrequest-https-error
-  Add-Type @"
-    using System.Net;
-    using System.Security.Cryptography.X509Certificates;
-    public class TrustAllCertsPolicy : ICertificatePolicy {
-        public bool CheckValidationResult(
-            ServicePoint srvPoint, X509Certificate certificate,
-            WebRequest request, int certificateProblem) {
-            return true;
-        }
-    }
-"@
-  [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
-
-  $result = $null
-
-  try {
-    $result = (Invoke-WebRequest -MaximumRedirection 0 -Uri $app_url -ErrorAction 'SilentlyContinue')
-    if ($result.StatusCode -eq '302' -or $result.StatusCode -eq '301') {
-      $location = $result.headers.Location
-      if ($location -match '^http') {
-        # TODO capture the host
-        $location = $location -replace 'secure.carnival.com',$web_host
-      } else {
-        $location = $location -replace '^/',''
-        $location = ('http://{0}/{1}' -f $web_host,$location)
-      }
-      Write-Host ('Following {0} ' -f $location)
-
-      $result = (Invoke-WebRequest -Uri $location -ErrorAction 'Stop')
-    }
-  } catch [exception]{}
-
-
-  return $result.Content.length
-
-}
-
 
 function compute_media_dimensions {
 
@@ -192,89 +69,16 @@ function compute_media_dimensions {
 
 }
 
-
-
-function cleanup
-{
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref
-  )
-  try {
-    $selenium_ref.Value.Quit()
-  } catch [exception]{
-    Write-Output (($_.Exception.Message) -split "`n")[0]
-
-    # Ignore errors if unable to close the browser
-  }
-}
-
-$shared_assemblies = @(
-  'WebDriver.dll',
-  'WebDriver.Support.dll',
-  'System.Data.SQLite.dll',
-
-  'nunit.framework.dll'
-)
-
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
-
-if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
-  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
-}
-
-pushd $shared_assemblies_path
-$shared_assemblies | ForEach-Object {
-  # Unblock-File -Path $_; 
-  Add-Type -Path $_
-}
-popd
 [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
+
+$MODULE_NAME = 'selenium_utils.psd1'
+import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
+
+$selenium = launch_selenium -browser $browser
+
 $verificationErrors = New-Object System.Text.StringBuilder
 $phantomjs_executable_folder = 'C:\tools\phantomjs'
 
-if ($browser -ne $null -and $browser -ne '') {
-  try {
-    $connection = (New-Object Net.Sockets.TcpClient)
-    $connection.Connect("127.0.0.1",4444)
-    $connection.Close()
-  } catch {
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\hub.cmd"
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\node.cmd"
-    Start-Sleep -Seconds 10
-  }
-  Write-Host "Running on ${browser}"
-  if ($browser -match 'firefox') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
-
-  }
-  elseif ($browser -match 'chrome') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
-  }
-  elseif ($browser -match 'ie') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
-    if ($version -ne $null -and $version -ne 0) {
-      $capability.SetCapability('version',$version.ToString());
-    }
-  }
-  elseif ($browser -match 'safari') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
-  }
-  else {
-    throw "unknown browser choice:${browser}"
-  }
-  $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
-  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
-} else {
-  Write-Host 'Running on phantomjs'
-  $phantomjs_executable_folder = 'C:\tools\phantomjs'
-  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability('ssl-protocol','any')
-  $selenium.Capabilities.SetCapability('ignore-ssl-errors',$true)
-  $selenium.Capabilities.SetCapability('takesScreenshot',$true)
-  $selenium.Capabilities.SetCapability('userAgent','Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34')
-  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability('phantomjs.executable.path',$phantomjs_executable_folder)
-}
 
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
