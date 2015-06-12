@@ -1,15 +1,44 @@
+#Copyright (c) 2015 Serguei Kouzmine
+#
+#Permission is hereby granted, free of charge, to any person obtaining a copy
+#of this software and associated documentation files (the "Software"), to deal
+#in the Software without restriction, including without limitation the rights
+#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#copies of the Software, and to permit persons to whom the Software is
+#furnished to do so, subject to the following conditions:
+#
+#The above copyright notice and this permission notice shall be included in
+#all copies or substantial portions of the Software.
+#
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#THE SOFTWARE.
 
-# http://poshcode.org/5730
+
+param(
+  [string]$browser = 'chrome',
+  [string]$base_url = 'http://www.wikipedia.org',
+  [string]$script,
+  [int]$version,
+  [switch]$pause
+)
+
 #requires -version 3
-# this script uses type accelerators to shorten the progam
+
+# optional : use .net type accelerators assembly to shorten the class paths
+# http://poshcode.org/5730
 # http://blogs.technet.com/b/heyscriptingguy/archive/2013/07/08/use-powershell-to-find-powershell-type-accelerators.aspx
-# connect.microsoft.com/PowerShell/feedback/details/721443/system-management-automation-typeaccelerators-broken-in-v3-ctp2
-$ta = [psobject].Assembly.GetType('System.Management.Automation.TypeAccelerators')
+
+$type_accelerators = [psobject].Assembly.GetType('System.Management.Automation.TypeAccelerators')
 
 $shared_assemblies = @(
-  "WebDriver.dll",
-  "WebDriver.Support.dll",
-  "nunit.framework.dll"
+  'WebDriver.dll',
+  'WebDriver.Support.dll',
+  'nunit.framework.dll'
 )
 
 $shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
@@ -22,37 +51,50 @@ pushd $shared_assemblies_path
 $shared_assemblies | ForEach-Object {
 
   Unblock-File -Path $_;
-  Add-Type -Path $_ -PassThru |
+  Add-Type -Path $_ -Passthru |
   Where-Object IsPublic |
   ForEach-Object {
-    $_class = $_
+    $loaded_class = $_
     try {
-
-      $ta::Add($_class.Name,$_class)
-      Write-Debug ('Added accelerator {0} for {1}' -f  $_class.Name,$_class.FullName)
+      $type_accelerators::Add($loaded_class.Name,$loaded_class)
+      Write-Debug ('Added accelerator {0} for {1}' -f $loaded_class.Name,$loaded_class.FullName)
     } catch {
-      ('Failed to add accelerator {0} for {1}' -f $_class.Name,$_class.FullName)
+      ('Failed to add accelerator {0} for {1}' -f $loaded_class.Name,$loaded_class.FullName)
     }
   }
   Write-Debug ('Loaded type: {0} ' -f $_)
 }
 popd
 # NOTE: the following call does not require explicitly launched hub and node processes
-$selenium = New-Object FirefoxDriver
 
+Write-Host "Running on ${browser}"
+$selenium = $null
+if ($browser -match 'firefox') {
+  $selenium = New-Object FirefoxDriver
+
+}
+elseif ($browser -match 'chrome') {
+  $selenium = New-Object ChromeDriver
+
+}
+elseif ($browser -match 'ie') {
+  $selenium = New-Object InternetExplorerDriver
+
+
+}
 # WARNING: alternative syntax does not work for all types and will not be used
 # $selenium = [FirefoxDriver]@{}
- 
+
 $actions = New-Object Actions ($selenium)
-$base_url = 'http://www.wikipedia.org'
+
 $selenium.Navigate().GoToUrl($base_url)
-$timespan = [TimeSpan]::FromSeconds(3)
+$timespan = [timespan]::FromSeconds(3)
 $wait = New-Object WebDriverWait ($selenium,$timespan)
 $wait.PollingInterval = 100
 
 try {
-  $element = $wait.Until([ExpectedConditions]::ElementExists([by]::Id('searchInput')))
-  $actions.MoveToElement([iWebElement]$element).Build().Perform()
+  $element = $wait.Until([expectedconditions]::ElementExists([by]::Id('searchInput')))
+  $actions.MoveToElement([iwebelement]$element).Build().Perform()
 } catch [exception]{
 }
 Start-Sleep 3
@@ -60,7 +102,7 @@ $selenium.Close()
 # NOTE: requires  explicitly launching a hub/node
 try {
   $hub_url = 'http://127.0.0.1:4444/wd/hub'
-  $capabilities = [DesiredCapabilities]::Firefox()
+  $capabilities = [desiredcapabilities]::Firefox()
   $uri = [System.Uri]$hub_url
   $selenium = New-Object RemoteWebDriver ($uri,$capabilities)
   [void]($selenium.Manage().Timeouts().ImplicitlyWait($timespan))
