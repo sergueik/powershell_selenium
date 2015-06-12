@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+# SharpDevelop 4.4
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{A9F63A1C-E9B1-4EA4-8C9F-D5579190A8FA}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\packages.config = .nuget\packages.config
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppiumTest", "AppiumTest\AppiumTest.csproj", "{0361D6D7-C6A4-4017-B355-6462E93309FD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0361D6D7-C6A4-4017-B355-6462E93309FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0361D6D7-C6A4-4017-B355-6462E93309FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0361D6D7-C6A4-4017-B355-6462E93309FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0361D6D7-C6A4-4017-B355-6462E93309FD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.2\lib\NET35
+	EndGlobalSection
+EndGlobal
