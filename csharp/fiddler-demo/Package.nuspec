@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Package</id>
+    <version>1.0.0</version>
+    <authors>sergueik</authors>
+    <owners>sergueik</owners>
+    <licenseUrl/>
+    <projectUrl>https://github.com/sergueik/powershell_selenium/tree/master/csharp/fiddler-demo</projectUrl>
+    <iconUrl/>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Fiddler Core Page Performance Collector</description>
+    <releaseNotes></releaseNotes>
+    <copyright>Copyright 2015</copyright>
+    <tags>Tag1 Tag2</tags>
+    <dependencies>
+      <dependency id="FiddlerCore" version="4.5.1"/>
+  <dependency id="System.Data.SQLite" version="1.0.97"/>
+  <dependency id="System.Data.SQLite.Core" version="1.0.97"/>
+
+    </dependencies>
+  </metadata>
+</package>
