@@ -1,7 +1,7 @@
 SplunkClient
 ===============
 
-Console app that cloned from the [example](http://dev.splunk.com/view/csharp-sdk/SP-CAAAEXR) demostrates logging to Splunk.  It can be tested against [Splunk Light](http://docs.splunk.com/Documentation/SplunkLight).
+Console app that demostrates logging to Splunk. 
 
 Note
 ====
@@ -9,7 +9,7 @@ Note
 Building example
 ----------------
 
-The Splunk Client SDK 2.x appears to be available through Nuget only compiled to [Windows Phone 8.1 assembly](http://dev.splunk.com/view/csharp-sdk-pcl/SP-CAAAEYN#packman) for .Net 4.5.1.
+The Splunk Client SDK is only available through Nuget as a Windows Phone 8.1 assembly(!) compiled for .Net 4.5.1. 
 
 The alternative is to compile Splunk Client SDK  from source for Net 4.5 and use the locally build assembly to run examples. This may eventually allow one to have Spunk Client in plain Powershell examples.
 
