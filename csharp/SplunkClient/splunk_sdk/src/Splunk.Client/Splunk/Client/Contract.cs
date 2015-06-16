@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
+// http://stackoverflow.com/questions/18793558/building-with-code-contracts
 namespace Splunk.Client
 {
     public static class Contract
