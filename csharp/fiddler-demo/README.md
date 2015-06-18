@@ -1,6 +1,5 @@
 Fiddler Core Page Performance Collector
 =======================================
-
 Collect details of the web navigation. 
 
 by 
@@ -18,8 +17,12 @@ in the SQLite database allowing measuring  Page performance at the individual Pa
 
 Writing Tests
 =============
+Include `Program.cs` into your project and merge `nuget.config` with yours.  
 
-Include `Program.cs` into your project and merge `nuget.config` with yours. 
+
+Note
+====
+A replica of [SQLite Helper (C#) project sources](http://sh.codeplex.com) is included as the `SQLite.Utils` namespace.
 
 Author
 ------
