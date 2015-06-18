@@ -8,53 +8,77 @@ use Selenium::Remote::Driver;
 use Selenium::Remote::Commands;
 use Selenium::Remote::WebElement;
 use Selenium::Chrome;
+use Selenium::Firefox;
+
 use HTML::Parser::Simple;
 use Data::Dumper;
 use Time::Hires qw(sleep usleep);
+use Getopt::Long;
 use JSON;
+use Cwd qw(abs_path);
+use FindBin;
+
+BEGIN {
+    unshift @INC, "$FindBin::Bin/../lib";
+}
+
 our (
-    $base_url,    $driver, $element, $css_selector, $xpath,
-    $html_parser, $data,   $script,  $result
+    $browser,     $debug,   $verbose,      $base_url,
+    $selenium,    $element, $css_selector, $xpath,
+    $html_parser, $data,    $script,       $result
 );
 
-$base_url = 'http://www.carnival.com/';
+GetOptions(
+    "browser=s"  => \$browser,
+    "base_url=s" => \$base_url,
+    "debug"      => \$debug,
+    "verbose"    => \$verbose
+) or die("Error in command line arguments\n");
+$browser  ||= 'chrome';
+$base_url ||= 'http://www.carnival.com/';
 
-# $driver   = Selenium::Chrome->new(binary=>"c:/Program Files/Google/Chrome/Application/chrome.exe");
+# $selenium   = Selenium::Chrome->new(binary=>"c:/Program Files/Google/Chrome/Application/chrome.exe");
 # Unable to connect to the ...chrome.exe binary on port 9515 at C:/Perl/site/lib/Selenium/CanStartBinary.pm line 126
 
 # fallback to regular
-$driver = Selenium::Chrome->new;
-$driver->get($base_url);
+if ( $browser =~ /chrome/i ) {
+    $selenium = Selenium::Chrome->new;
+}
+elsif ( $browser =~ /firefox/i ) {
+    $selenium = Selenium::Firefox->new;
+}
+if ( not defined $selenium ) {
+    die( 'Unknown driver requested: ' . $browser );
+}
+$selenium->get($base_url);
 
 $script = join '', <DATA>;
 
-$result = $driver->execute_script($script);
+$result = $selenium->execute_script($script);
 
 # The result is already a Perl object - no JSON module call required
 print Dumper($result);
 
-$driver->quit();
+$selenium->quit();
 exit(0);
 
 __DATA__
 var ua = window.navigator.userAgent;
+if (ua.match(/PhantomJS/)) {
+    return [{}];
+} else {
+    var performance =
+        window.performance ||
+        window.mozPerformance ||
+        window.msPerformance ||
+        window.webkitPerformance || {};
 
-
-if (ua.match(/PhantomJS/)) { 
-return 'Cannot measure on '+ ua;
-}
-else{
-var performance = 
-      window.performance || 
-      window.mozPerformance || 
-      window.msPerformance || 
-      window.webkitPerformance || {}; 
-// var timings = performance.timing || {};
-// return timings;
-// NOTE:  performance.timing will not return anything with Chrome
-// timing is returned by FF
-// timing is returned by Phantom
-var network = performance.getEntries() || {}; 
- return network;
+    if (ua.match(/Chrome/)) {
+        var network = performance.getEntries() || {};
+        return network;
+    } else {
+        var timings = performance.timing || {};
+        return [timings];
+    }
 }
 
