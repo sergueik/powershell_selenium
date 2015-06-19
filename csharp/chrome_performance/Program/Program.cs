@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Microsoft.Activities.UnitTesting;
 using System.Data.SQLite;
+using SQLite.Utils;
 using System.IO;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;

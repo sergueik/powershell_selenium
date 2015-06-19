@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace System.Data.SQLite
+namespace SQLite.Utils
 {
     public class SQLiteColumn
     {

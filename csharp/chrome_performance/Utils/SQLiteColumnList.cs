@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace System.Data.SQLite
+namespace SQLite.Utils
 {
 
     public class SQLiteColumnList : IList<SQLiteColumn>
@@ -94,7 +93,7 @@ namespace System.Data.SQLite
             return _lst.GetEnumerator();
         }
 
-        Collections.IEnumerator Collections.IEnumerable.GetEnumerator()
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return _lst.GetEnumerator();
         }

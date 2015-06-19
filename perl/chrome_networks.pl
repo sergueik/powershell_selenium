@@ -25,24 +25,25 @@ BEGIN {
 our (
     $browser,     $debug,   $verbose,      $base_url,
     $selenium,    $element, $css_selector, $xpath,
-    $html_parser, $data,    $script,       $result
+    $html_parser, $data,    $script,       $result,
+    $tools_dir
 );
 
 GetOptions(
     "browser=s"  => \$browser,
     "base_url=s" => \$base_url,
+    "tool=s"     => \$tools_dir,
     "debug"      => \$debug,
     "verbose"    => \$verbose
 ) or die("Error in command line arguments\n");
+
 $browser  ||= 'chrome';
 $base_url ||= 'http://www.carnival.com/';
+$tools_dir ||= 'c:/java/selenium/';
 
-# $selenium   = Selenium::Chrome->new(binary=>"c:/Program Files/Google/Chrome/Application/chrome.exe");
-# Unable to connect to the ...chrome.exe binary on port 9515 at C:/Perl/site/lib/Selenium/CanStartBinary.pm line 126
-
-# fallback to regular
 if ( $browser =~ /chrome/i ) {
-    $selenium = Selenium::Chrome->new;
+    # NOTE had to patch CanStartBinary.pm sub shutdown_binary ..
+    $selenium   = Selenium::Chrome->new(binary=>"${tools_dir}/chromedriver.exe");
 }
 elsif ( $browser =~ /firefox/i ) {
     $selenium = Selenium::Firefox->new;
