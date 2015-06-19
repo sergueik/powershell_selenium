@@ -5,9 +5,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Netling.Core.Models;
+using Core.Models;
 
-namespace Netling.Core
+namespace Core
 {
     public class Job<T> where T : IResult
     {

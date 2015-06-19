@@ -1,6 +1,6 @@
 using System;
 
-namespace Netling.Core.Models
+namespace Core.Models
 {
     public struct UrlResult : IResult
     {

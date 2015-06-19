@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Netling.Client.Properties
+namespace Client.Properties
 {
 
 

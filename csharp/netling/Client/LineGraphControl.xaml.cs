@@ -4,7 +4,7 @@ using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 
-namespace Netling.Client
+namespace Client
 {
     public partial class LineGraphControl : UserControl
     {

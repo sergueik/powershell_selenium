@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Netling.Core.Models
+namespace Core.Models
 {
     public struct JobResult<T> where T : IResult
     {

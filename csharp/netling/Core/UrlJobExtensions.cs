@@ -5,10 +5,10 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Netling.Core.Models;
+using Core.Models;
 using System.IO;
 
-namespace Netling.Core
+namespace Core
 {
     public static class UrlJobExtensions
     {
