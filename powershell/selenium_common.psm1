@@ -177,3 +177,37 @@ function cleanup
 
   }
 }
+
+
+<#
+.SYNOPSIS
+	Sets default timeouts with current Selenium session
+.DESCRIPTION
+	Sets default timeouts with current Selenium session
+	
+.EXAMPLE
+    set_timeouts ([ref]$selenium) [-exlicit <explicit timeout>] [-page_load <page load timeout>] [-script <script timeout>]
+    
+.LINK
+	
+	
+.NOTES
+
+	VERSION HISTORY
+	2015/06/21 Initial Version
+#>
+
+
+function set_timeouts {
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [int]$explicit = 10,
+    [int]$page_load = 10,
+    [int]$script = 10
+  )
+
+  [void]($selenium_ref.Value.Manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))
+  [void]($selenium_ref.Value.Manage().timeouts().SetPageLoadTimeout([System.TimeSpan]::FromSeconds($pageload)))
+  [void]($selenium_ref.Value.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script)))
+
+}
