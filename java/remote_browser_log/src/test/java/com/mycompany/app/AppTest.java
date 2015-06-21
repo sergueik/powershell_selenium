@@ -1,5 +1,8 @@
 package com.mycompany.app;
-
+// https://code.google.com/p/selenium/wiki/Logging
+// http://www.programcreek.com/java-api-examples/index.php?api=org.testng.ITestContext
+// https://sites.google.com/a/chromium.org/chromedriver/capabilities
+// http://stackoverflow.com/questions/25431380/capturing-browser-logs-with-selenium
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
@@ -12,6 +15,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -34,11 +38,20 @@ import org.openqa.selenium.Dimension;
 // import org.openqa.selenium.firefox.ProfileManager;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.logging.LoggingPreferences;
+import org.openqa.selenium.logging.LogType;
+import java.util.logging.Level;
+import org.openqa.selenium.logging.LogEntries;
+import org.openqa.selenium.logging.LogEntry;
+import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.logging.LoggingPreferences;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
+
 import org.openqa.selenium.firefox.internal.ProfilesIni;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Platform;
-import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.HttpCommandExecutor;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -48,12 +61,90 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import org.testng.annotations.*;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.*;
 
 public class AppTest // extends BaseTest
-//
-{ // http://www.programcreek.com/java-api-examples/index.php?api=org.testng.ITestContext
+{
+
+public boolean use_remote_hub = false;
 public RemoteWebDriver driver = null;
+public String selenium_host = null;
+public String selenium_port = null;
+public String selenium_browser = null;
+public String selenium_run = null;
+
+@BeforeSuite(alwaysRun = true)
+public void setupBeforeSuite( ITestContext context ) throws InterruptedException,MalformedURLException {
+	selenium_host = context.getCurrentXmlTest().getParameter("selenium.host");
+	selenium_port = context.getCurrentXmlTest().getParameter("selenium.port");
+	selenium_browser = context.getCurrentXmlTest().getParameter("selenium.browser");
+    selenium_run = context.getCurrentXmlTest().getParameter("selenium.run");
+	if (selenium_browser.compareToIgnoreCase("remote") == 0) { // Remote Configuration
+		String hub = "http://"+  selenium_host  + ":" + selenium_port   +  "/wd/hub";
+
+		LoggingPreferences logging_preferences = new LoggingPreferences();
+		logging_preferences.enable(LogType.BROWSER, Level.ALL);
+		logging_preferences.enable(LogType.CLIENT, Level.INFO);
+		logging_preferences.enable(LogType.SERVER, Level.INFO);
+
+		if (selenium_browser.compareToIgnoreCase("chrome") == 0) {
+			DesiredCapabilities capabilities =   new DesiredCapabilities("chrome", "", Platform.ANY);
+			capabilities.setBrowserName("chrome");
+			capabilities.setCapability(CapabilityType.LOGGING_PREFS, logging_preferences);
+
+			try {
+				driver = new RemoteWebDriver(new URL("http://"+  selenium_host  + ":" + selenium_port   +  "/wd/hub"), capabilities);
+			} catch (MalformedURLException ex) { }
+		} else {
+
+			DesiredCapabilities capabilities =   new DesiredCapabilities("firefox", "", Platform.ANY);
+			capabilities.setBrowserName("firefox");
+
+			FirefoxProfile profile = new ProfilesIni().getProfile("default");
+			capabilities.setCapability("firefox_profile", profile);
+			capabilities.setCapability(CapabilityType.LOGGING_PREFS, logging_preferences);
+
+			try {
+				driver = new RemoteWebDriver(new URL("http://"+  selenium_host  + ":" + selenium_port   +  "/wd/hub"), capabilities);
+			} catch (MalformedURLException ex) { }
+		}
+
+	} else { // standalone
+		if (selenium_browser.compareToIgnoreCase("chrome") == 0) {
+			System.setProperty("webdriver.chrome.driver", "c:/java/selenium/chromedriver.exe");
+			DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+			LoggingPreferences logging_preferences = new LoggingPreferences();
+			logging_preferences.enable(LogType.BROWSER, Level.ALL);
+			capabilities.setCapability(CapabilityType.LOGGING_PREFS, logging_preferences);
+			driver = new ChromeDriver(capabilities);
+			driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+		} else {
+			DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+			LoggingPreferences logging_preferences = new LoggingPreferences();
+			logging_preferences.enable(LogType.BROWSER, Level.ALL);
+			capabilities.setCapability(CapabilityType.LOGGING_PREFS, logging_preferences);
+
+			driver = new FirefoxDriver(capabilities);
+		}
+	}
+	try{
+		driver.manage().window().setSize(new Dimension(600, 800));
+		driver.manage().timeouts().pageLoadTimeout(50, TimeUnit.SECONDS);
+		driver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
+	}  catch(Exception ex) {
+		System.out.println(ex.toString());
+	}
+
+}
+
+@AfterSuite(alwaysRun = true,enabled =true)
+public void cleanupSuite() {
+	driver.close();
+	driver.quit();
+}
+
 @Test(description="Finds a cruise")
 public void test1() throws InterruptedException {
 
@@ -77,13 +168,23 @@ public void test1() throws InterruptedException {
 	System.out.println( element2.getText());
 	new Actions(driver).moveToElement(element2).click().build().perform();
 	Thread.sleep(5000);
-
+	analyzeLog();
 	//print the node information
 	//String result = getIPOfNode(driver);
 	//System.out.println(result);
 }
 
-@Test(description="Takes S screenshot - is actually a utility")
+
+public void analyzeLog() {
+// https://logentries.com/doc/java/
+	LogEntries logEntries = driver.manage().logs().get(LogType.BROWSER);
+
+	for (LogEntry entry : logEntries) {
+		System.out.println(new Date(entry.getTimestamp()) + " " + entry.getLevel() + " " + entry.getMessage());
+	}
+}
+
+@Test(description="Takes screen shot - is actually a utility")
 public void test2() throws InterruptedException {
 	//take a screenshot
 	//File scrFile = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
@@ -91,43 +192,7 @@ public void test2() throws InterruptedException {
 	//FileUtils.copyFile(scrFile, new File(System.getProperty("user.dir") + "\\screenshot.png"));
 }
 
-public String seleniumHost = null;
-public String seleniumPort = null;
 
-public String seleniumBrowser = null;
-@AfterSuite(alwaysRun = true,enabled =true) 
-public void cleanupSuite() {
-
-	        System.out.println("testClass1.cleanupSuite: after suite");
-           driver.close();
-           driver.quit();
-	    }
-@BeforeSuite(alwaysRun = true)
-public void setupBeforeSuite( ITestContext context ) throws InterruptedException {
-	DesiredCapabilities capabilities = DesiredCapabilities.firefox();
-
-
-	seleniumHost = context.getCurrentXmlTest().getParameter("selenium.host");
-	seleniumPort = context.getCurrentXmlTest().getParameter("selenium.port");
-	seleniumBrowser = context.getCurrentXmlTest().getParameter("selenium.browser");
-
-	capabilities =   new DesiredCapabilities(seleniumBrowser, "", Platform.ANY);
-	FirefoxProfile profile = new ProfilesIni().getProfile("default");
-	capabilities.setCapability("firefox_profile", profile);
-
-	try {
-		driver = new RemoteWebDriver(new URL("http://"+  seleniumHost  + ":" + seleniumPort   +  "/wd/hub"), capabilities);
-	} catch (MalformedURLException ex) { }
-
-	try{
-		driver.manage().window().setSize(new Dimension(600, 800));
-		driver.manage().timeouts().pageLoadTimeout(50, TimeUnit.SECONDS);
-		driver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
-	}  catch(Exception ex) {
-		System.out.println(ex.toString());
-	}
-
-}
 private static String getIPOfNode(RemoteWebDriver remoteDriver)
 {
 	String hostFound = null;
