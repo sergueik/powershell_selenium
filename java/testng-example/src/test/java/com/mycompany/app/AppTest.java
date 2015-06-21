@@ -33,7 +33,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.Dimension;
 // import org.openqa.selenium.firefox.ProfileManager;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxProfile ;
+import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.firefox.internal.ProfilesIni;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.OutputType;
@@ -50,114 +50,114 @@ import org.openqa.selenium.WebElement;
 import org.testng.annotations.*;
 import org.testng.*;
 
-public class AppTest // extends BaseTest 
-// 
+public class AppTest // extends BaseTest
+//
 { // http://www.programcreek.com/java-api-examples/index.php?api=org.testng.ITestContext
-	public RemoteWebDriver driver = null;
-	@Test(description="Finds a cruise")
-	public void test1() throws InterruptedException {
-	
-		driver.get("http://m.carnival.com/");
-		WebDriverWait wait = new WebDriverWait(driver, 30);
-		String value1 = null;
+public RemoteWebDriver driver = null;
+@Test(description="Finds a cruise")
+public void test1() throws InterruptedException {
 
-		wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("ccl-logo")));
-		value1 = "ddlDestinations";
+	driver.get("http://m.carnival.com/");
+	WebDriverWait wait = new WebDriverWait(driver, 30);
+	String value1 = null;
 
-		String xpath_selector1 = String.format("//select[@id='%s']", value1);
-		wait.until(ExpectedConditions.elementToBeClickable(By.xpath(xpath_selector1)));
-		WebElement element = driver.findElement(By.xpath(xpath_selector1));
+	wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("ccl-logo")));
+	value1 = "ddlDestinations";
 
-		System.out.println( element.getAttribute("id"));
-		Actions builder = new Actions(driver);
-		builder.moveToElement(element).build().perform();
+	String xpath_selector1 = String.format("//select[@id='%s']", value1);
+	wait.until(ExpectedConditions.elementToBeClickable(By.xpath(xpath_selector1)));
+	WebElement element = driver.findElement(By.xpath(xpath_selector1));
 
-		String csspath_selector2 = "div.find-cruise-submit > a" ;         
-		WebElement element2 = driver.findElement(By.cssSelector(csspath_selector2));
-		System.out.println( element2.getText());
-		new Actions(driver).moveToElement(element2).click().build().perform();
-		Thread.sleep(5000);
+	System.out.println( element.getAttribute("id"));
+	Actions builder = new Actions(driver);
+	builder.moveToElement(element).build().perform();
 
-		//print the node information
-		//String result = getIPOfNode(driver);
-		//System.out.println(result);
-/*       finally {
+	String csspath_selector2 = "div.find-cruise-submit > a";
+	WebElement element2 = driver.findElement(By.cssSelector(csspath_selector2));
+	System.out.println( element2.getText());
+	new Actions(driver).moveToElement(element2).click().build().perform();
+	Thread.sleep(5000);
 
-           driver.close();
-           driver.quit();
-       }
-*/
+	//print the node information
+	//String result = getIPOfNode(driver);
+	//System.out.println(result);
 }
 
-	@Test(description="Takes S screenshot - is actually a utility")
-	public void test2() throws InterruptedException {
-		//take a screenshot
-		//File scrFile = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
-		//save the screenshot in png format on the disk.
-		//FileUtils.copyFile(scrFile, new File(System.getProperty("user.dir") + "\\screenshot.png"));
-	}
+@Test(description="Takes S screenshot - is actually a utility")
+public void test2() throws InterruptedException {
+	//take a screenshot
+	//File scrFile = ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
+	//save the screenshot in png format on the disk.
+	//FileUtils.copyFile(scrFile, new File(System.getProperty("user.dir") + "\\screenshot.png"));
+}
 
-public   String seleniumHost = null; 
-public   String seleniumPort = null; 
+public String seleniumHost = null;
+public String seleniumPort = null;
 
-public   String seleniumBrowser = null; 
+public String seleniumBrowser = null;
+@AfterSuite(alwaysRun = true,enabled =true) 
+public void cleanupSuite() {
 
+	        System.out.println("testClass1.cleanupSuite: after suite");6
+           driver.close();
+           driver.quit();
+	    }
 @BeforeSuite(alwaysRun = true)
-	public void setupBeforeSuite( ITestContext context ) throws InterruptedException {
-		DesiredCapabilities capabilities = DesiredCapabilities.firefox();
+public void setupBeforeSuite( ITestContext context ) throws InterruptedException {
+	DesiredCapabilities capabilities = DesiredCapabilities.firefox();
 
 
-  seleniumHost = context.getCurrentXmlTest().getParameter("selenium.host");
-  seleniumPort = context.getCurrentXmlTest().getParameter("selenium.port");
-  seleniumBrowser = context.getCurrentXmlTest().getParameter("selenium.browser");
+	seleniumHost = context.getCurrentXmlTest().getParameter("selenium.host");
+	seleniumPort = context.getCurrentXmlTest().getParameter("selenium.port");
+	seleniumBrowser = context.getCurrentXmlTest().getParameter("selenium.browser");
 
-		capabilities =   new DesiredCapabilities(seleniumBrowser , "", Platform.ANY);
-		FirefoxProfile profile = new ProfilesIni().getProfile("default");
-		capabilities.setCapability("firefox_profile", profile);
+	capabilities =   new DesiredCapabilities(seleniumBrowser, "", Platform.ANY);
+	FirefoxProfile profile = new ProfilesIni().getProfile("default");
+	capabilities.setCapability("firefox_profile", profile);
 
-		try {
-		   driver = new RemoteWebDriver(new URL("http://"+  seleniumHost  + ":" + seleniumPort   +  "/wd/hub"), capabilities);
-		} catch (MalformedURLException ex) { }
+	try {
+		driver = new RemoteWebDriver(new URL("http://"+  seleniumHost  + ":" + seleniumPort   +  "/wd/hub"), capabilities);
+	} catch (MalformedURLException ex) { }
 
-		try{
-			driver.manage().window().setSize(new Dimension(600, 800));
-			driver.manage().timeouts().pageLoadTimeout(50, TimeUnit.SECONDS);
-			driver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
-		  }  catch(Exception ex) {
-		   System.out.println(ex.toString());
-		}
-
+	try{
+		driver.manage().window().setSize(new Dimension(600, 800));
+		driver.manage().timeouts().pageLoadTimeout(50, TimeUnit.SECONDS);
+		driver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
+	}  catch(Exception ex) {
+		System.out.println(ex.toString());
 	}
-   private static String getIPOfNode(RemoteWebDriver remoteDriver)
-   {
-       String hostFound = null;
-       try  {
-		   HttpCommandExecutor ce = (HttpCommandExecutor) remoteDriver.getCommandExecutor();
-		   String hostName = ce.getAddressOfRemoteServer().getHost();
-		   int port = ce.getAddressOfRemoteServer().getPort();
-		   HttpHost host = new HttpHost(hostName, port);
-		   DefaultHttpClient client = new DefaultHttpClient();
-		   URL sessionURL = new URL(String.format("http://%s:%d/grid/api/testsession?session=%s", hostName, port, remoteDriver.getSessionId()));
-		   BasicHttpEntityEnclosingRequest r = new BasicHttpEntityEnclosingRequest( "POST", sessionURL.toExternalForm());
-		   HttpResponse response = client.execute(host, r);
-		   JSONObject object = extractObject(response);
-		   URL myURL = new URL(object.getString("proxyId"));
-           if ((myURL.getHost() != null) && (myURL.getPort() != -1)) {
-               hostFound = myURL.getHost();
-           }
-       } catch (Exception e) {
-           System.err.println(e);
-       }
-       return hostFound;
-   }
 
-   private static JSONObject extractObject(HttpResponse resp) throws IOException, JSONException {
-	   InputStream contents = resp.getEntity().getContent();
-	   StringWriter writer = new StringWriter();
-	   IOUtils.copy(contents, writer, "UTF8");
-	   JSONObject objToReturn = new JSONObject(writer.toString());
-	   return objToReturn;
-   }
+}
+private static String getIPOfNode(RemoteWebDriver remoteDriver)
+{
+	String hostFound = null;
+	try  {
+		HttpCommandExecutor ce = (HttpCommandExecutor) remoteDriver.getCommandExecutor();
+		String hostName = ce.getAddressOfRemoteServer().getHost();
+		int port = ce.getAddressOfRemoteServer().getPort();
+		HttpHost host = new HttpHost(hostName, port);
+		DefaultHttpClient client = new DefaultHttpClient();
+		URL sessionURL = new URL(String.format("http://%s:%d/grid/api/testsession?session=%s", hostName, port, remoteDriver.getSessionId()));
+		BasicHttpEntityEnclosingRequest r = new BasicHttpEntityEnclosingRequest( "POST", sessionURL.toExternalForm());
+		HttpResponse response = client.execute(host, r);
+		JSONObject object = extractObject(response);
+		URL myURL = new URL(object.getString("proxyId"));
+		if ((myURL.getHost() != null) && (myURL.getPort() != -1)) {
+			hostFound = myURL.getHost();
+		}
+	} catch (Exception e) {
+		System.err.println(e);
+	}
+	return hostFound;
+}
+
+private static JSONObject extractObject(HttpResponse resp) throws IOException, JSONException {
+	InputStream contents = resp.getEntity().getContent();
+	StringWriter writer = new StringWriter();
+	IOUtils.copy(contents, writer, "UTF8");
+	JSONObject objToReturn = new JSONObject(writer.toString());
+	return objToReturn;
+}
 }
 
 
