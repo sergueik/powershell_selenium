@@ -5,13 +5,13 @@
 	Determines script directory
 	
 .EXAMPLE
-    $script_directory = Get-ScriptDirectory
+	$script_directory = Get-ScriptDirectory
 
 .LINK
-# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed	
+	# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed	
 	
 .NOTES
-        TODO: http://joseoncode.com/2011/11/24/sharing-powershell-modules-easily/	
+	TODO: http://joseoncode.com/2011/11/24/sharing-powershell-modules-easily/	
 	VERSION HISTORY
 	2015/06/07 Initial Version
 #>
@@ -37,9 +37,9 @@ function Get-ScriptDirectory
 	Extracts match from a text, e.g. from some $element.Text or $element.GetAttribute('innerHTML')
 	
 .EXAMPLE
-    $first_item = $null
-    $capturing_match_expression = '(?<first_item>\d+)$'
-    extract_match -Source $text -capturing_match_expression $capturing_match_expression -label 'first_item' -result_ref ([ref]$first_item)
+	$first_item = $null
+	$capturing_match_expression = '(?<first_item>\d+)$'
+	extract_match -Source $text -capturing_match_expression $capturing_match_expression -label 'first_item' -result_ref ([ref]$first_item)
 
 .LINK
 	

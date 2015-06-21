@@ -3181,93 +3181,6 @@ function custom_pause {
 
 }
 
-function highlight {
-
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [int]$delay = 300
-  )
-
-  # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'color: yellow; border: 4px solid yellow;')
-  Start-Sleep -Millisecond $delay
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
-
-
-}
-
-function find_page_element_by_css_selector {
-
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$css_selector,
-    [int]$wait_seconds = 10
-
-  )
-
-  if ($css_selector -eq '' -or $css_selector -eq $null) {
-    return
-  }
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-  $element_ref.Value = $local:element
-
-}
-
-function find_page_element_by_xpath {
-
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$xpath,
-    [int]$wait_seconds = 10
-
-  )
-
-  if ($xpath -eq '' -or $xpath -eq $null) {
-    return
-  }
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::XPath($xpath))
-  $element_ref.Value = $local:element
-
-}
-
-function cleanup
-{
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref
-  )
-  try {
-    $selenium_ref.Value.Quit()
-  } catch [exception]{
-    Write-Output (($_.Exception.Message) -split "`n")[0]
-    # Ignore errors if unable to close the browser
-  }
-}
-
 function custom_debug {
   param(
     [System.Management.Automation.PSReference]$local:button_ref,
@@ -3303,84 +3216,19 @@ function custom_debug {
   $local:button.Text = $message
 }
 
-$shared_assemblies = @(
-  'WebDriver.dll',
-  'WebDriver.Support.dll',
-  'nunit.core.dll',
-  'nunit.framework.dll'
-)
-
-
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
-
-if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
-  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
-}
-
-pushd $shared_assemblies_path
-$shared_assemblies | ForEach-Object {
-
-  if ($host.Version.Major -gt 2) {
-    Unblock-File -Path $_;
-  }
-  Write-Debug $_
-  Add-Type -Path $_
-}
-popd
 [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
 
 $DebugPreference = 'Continue'
+
+
+$MODULE_NAME = 'selenium_utils.psd1'
+Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
+
+$selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
+[object]$button = $null
+custom_debug ([ref]$button) 'Starting firefox'
 # Convertfrom-JSON applies To: Windows PowerShell 3.0 and above
 [NUnit.Framework.Assert]::IsTrue($host.Version.Major -gt 2)
-
-$hub_host = '127.0.0.1'
-$hub_port = '4444'
-
-$uri = [System.Uri](('http://{0}:{1}/wd/hub' -f $hub_host,$hub_port))
-[object]$button = $null
-
-custom_debug ([ref]$button) 'Starting firefox'
-
-if ($browser -ne $null -and $browser -ne '') {
-  try {
-    $connection = (New-Object Net.Sockets.TcpClient)
-    $connection.Connect($hub_host,[int]$hub_port)
-    $connection.Close()
-  } catch {
-    Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -ArgumentList 'start cmd.exe /c c:\java\selenium\hub.cmd'
-    Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -ArgumentList 'start cmd.exe /c c:\java\selenium\node.cmd'
-    Start-Sleep -Seconds 10
-  }
-  Write-Host "Running on ${browser}"
-  if ($browser -match 'firefox') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
-
-  }
-  elseif ($browser -match 'chrome') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
-  }
-  elseif ($browser -match 'ie') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
-  }
-  elseif ($browser -match 'safari') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
-  }
-  else {
-    throw "unknown browser choice:${browser}"
-  }
-  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
-} else {
-  # this example may not work with phantomjs 
-  $phantomjs_executable_folder = "c:\tools\phantomjs"
-  Write-Host 'Running on phantomjs'
-  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability("ssl-protocol","any")
-  $selenium.Capabilities.SetCapability("ignore-ssl-errors",$true)
-  $selenium.Capabilities.SetCapability("takesScreenshot",$true)
-  $selenium.Capabilities.SetCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
-  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
-}
 
 [void]$selenium.Manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds(60))
 

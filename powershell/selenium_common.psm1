@@ -72,6 +72,25 @@ function launch_selenium {
     }
     Write-Host "Running on ${browser}"
 
+<#
+try {
+  $connection = (New-Object Net.Sockets.TcpClient)
+  $connection.Connect($hub_host,[int]$hub_port)
+  $connection.Close()
+} catch {
+  if ($PSBoundParameters['grid']) {
+
+    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
+    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
+
+  } else {
+    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\selenium.cmd"
+  }
+  Start-Sleep -Millisecond 5000
+}
+
+#>
+
 
     if ($browser -match 'firefox') {
       if ($use_remote_driver) {
@@ -235,5 +254,44 @@ function set_timeouts {
   [void]($selenium_ref.Value.Manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))
   [void]($selenium_ref.Value.Manage().timeouts().SetPageLoadTimeout([System.TimeSpan]::FromSeconds($pageload)))
   [void]($selenium_ref.Value.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script)))
+
+}
+
+
+function load_shared_assemblues_demand_versions {
+  param(
+    [string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies',
+    $shared_assemblies = @{
+      'WebDriver.dll' = 2.44;
+      'WebDriver.Support.dll' = '2.44';
+      'nunit.core.dll' = $null;
+      'nunit.framework.dll' = $null;
+    }
+  )
+
+  pushd $shared_assemblies_path
+  $shared_assemblies.Keys | ForEach-Object {
+    # http://all-things-pure.blogspot.com/2009/09/assembly-version-file-version-product.html
+    $assembly = $_
+    $assembly_path = [System.IO.Path]::Combine($shared_assemblies_path,$assembly)
+    $assembly_version = [Reflection.AssemblyName]::GetAssemblyName($assembly_path).Version
+    $assembly_version_string = ('{0}.{1}' -f $assembly_version.Major,$assembly_version.Minor)
+    if ($shared_assemblies[$assembly] -ne $null) {
+      
+      if (-not ($shared_assemblies[$assembly] -match $assembly_version_string)) {
+        Write-Output ('Need {0} {1}, got {2}' -f $assembly,$shared_assemblies[$assembly],$assembly_path)
+        Write-Output $assembly_version
+        throw ('invalid version :{0}' -f $assembly)
+      }
+    }
+
+    if ($host.Version.Major -gt 2) {
+      Unblock-File -Path $_;
+    }
+    Write-Debug $_
+    Add-Type -Path $_
+  }
+  popd
+
 
 }
