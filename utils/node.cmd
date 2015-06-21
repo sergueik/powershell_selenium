@@ -45,7 +45,9 @@ PATH=%PATH%;%LOCALAPPDATA%\Mozilla Firefox
 
 where.exe firefox.exe
 where.exe chrome.exe
+where.exe chromedriver.exe
 where.exe iexplore.exe
+
 CHOICE /T 1 /C ync /CS /D y
 
 
@@ -75,10 +77,10 @@ org.openqa.grid.selenium.GridLauncher ^
 -host %NODE_HOST% ^
 -port %NODE_HTTP_PORT% ^
 -hub http://%HUB_HOST%:%HUB_HTTP_PORT%/hub/register ^
--Dwebdriver.ie.driver=IEDriverServer.exe ^
--Dwebdriver.chrome.driver=chromedriver.exe ^
+-Dwebdriver.ie.driver=%SELENIUM_HOME%/IEDriverServer.exe ^
+-Dwebdriver.chrome.driver=%SELENIUM_HOME%/chromedriver.exe ^
 -nodeConfig %NODE_CONFIG%  ^
--browserTimeout 12000 -timeout 12000 ^
+-browserTimeout 120000 -timeout 120000 ^
 -ensureCleanSession true ^
 -trustAllSSLCertificates 
 
