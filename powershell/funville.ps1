@@ -25,96 +25,6 @@ param(
   [switch]$pause
 
 )
-function extract_match {
-
-  param(
-    [string]$source,
-    [string]$capturing_match_expression,
-    [string]$label,
-    [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
-
-  )
-  Write-Debug ('Extracting from {0}' -f $source)
-  $local:results = {}
-  $local:results = $source | where { $_ -match $capturing_match_expression } |
-  ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
-  Write-Debug 'extract_match:'
-  Write-Debug $local:results
-  $result_ref.Value = $local:results.Media
-}
-
-function highlight {
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [int]$delay = 300
-  )
-  # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'color: yellow; border: 4px solid yellow;')
-  Start-Sleep -Millisecond $delay
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
-}
-
-function find_page_element_by_css_selector {
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$container_element_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$css_selector,
-    [int]$wait_seconds = 10
-  )
-  if ($css_selector -eq '' -or $css_selector -eq $null) {
-    return
-  }
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  if ($container_element_ref -ne $null) {
-    [OpenQA.Selenium.Remote.RemoteWebElement]$local:container_element = $container_element_ref.Value
-  }
-
-  <#
-
-Cannot convert the "OpenQA.Selenium.Remote.RemoteWebElement" value of type
-"OpenQA.Selenium.Remote.RemoteWebElement" to type
-"OpenQA.Selenium.Remote.RemoteWebDriver".
-#>
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-  $element_ref.Value = $local:element
-}
-
-function find_page_element_by_xpath {
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$xpath,
-    [int]$wait_seconds = 10
-  )
-  if ($xpath -eq '' -or $xpath -eq $null) {
-    return
-  }
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::XPath($xpath))
-  $element_ref.Value = $local:element
-}
-
-
 
 function custom_pause {
 
@@ -132,98 +42,14 @@ function custom_pause {
 
 }
 
-# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
-function Get-ScriptDirectory
-{
-  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-  if ($Invocation.PSScriptRoot) {
-    $Invocation.PSScriptRoot
-  }
-  elseif ($Invocation.MyCommand.Path) {
-    Split-Path $Invocation.MyCommand.Path
-  } else {
-    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
-  }
-}
-
-function cleanup
-{
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref
-  )
-  try {
-    $selenium_ref.Value.Quit()
-  } catch [exception]{
-    # Ignore errors if unable to close the browser
-    Write-Debug (($_.Exception.Message) -split "`n")[0]
-
-  }
-}
-
-$shared_assemblies = @(
-  'WebDriver.dll',
-  'WebDriver.Support.dll',
-  'nunit.framework.dll'
-)
-
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
-
-if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
-  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
-}
-
-pushd $shared_assemblies_path
-
-
-$shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
-popd
-
 $verificationErrors = New-Object System.Text.StringBuilder
 
-if ($browser -ne $null -and $browser -ne '') {
-  try {
-    $connection = (New-Object Net.Sockets.TcpClient)
-    $connection.Connect("127.0.0.1",4444)
-    $connection.Close()
-  } catch {
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\hub.cmd"
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\node.cmd"
-    Start-Sleep -Seconds 10
-  }
-  Write-Host "Running on ${browser}"
-  if ($browser -match 'firefox') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
+$MODULE_NAME = 'selenium_utils.psd1'
+Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 
-  }
-  elseif ($browser -match 'chrome') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
-  }
-  elseif ($browser -match 'ie') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
-    if ($version -ne $null -and $version -ne 0) {
-      $capability.SetCapability("version",$version.ToString());
-    }
+$selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
 
-  }
-  elseif ($browser -match 'safari') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
-  }
-  else {
-    throw "unknown browser choice:${browser}"
-  }
-  $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
-  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
-} else {
-  Write-Host 'Running on phantomjs'
-  $phantomjs_executable_folder = "C:\tools\phantomjs"
-  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability("ssl-protocol","any")
-  $selenium.Capabilities.SetCapability("ignore-ssl-errors",$true)
-  $selenium.Capabilities.SetCapability("takesScreenshot",$true)
-  $selenium.Capabilities.SetCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
-  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
-}
+
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 $base_url = 'http://www.carnival.com/Funville/'
 # 
@@ -253,7 +79,8 @@ highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$value_element1)
 
 $forum_tab_css_selector = 'a[href="#tab-hof"]'
 $value_element2 = $null
-find_page_element_by_css_selector -selenium_driver_ref ([ref]$selenium) -container_element_ref ([ref]$value_element1) -element_ref ([ref]$value_element2) -css_selector $forum_tab_css_selector
+find_page_element_by_css_selector -selenium_driver_ref ([ref]$selenium) -element_ref ([ref]$value_element2) -css_selector $forum_tab_css_selector
+# -container_element_ref ([ref]$value_element1) is unused 
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element2).Click().Build().Perform()
 $actions = $null
@@ -406,18 +233,21 @@ $raw_data = '<rawdata>{0}</rawdata>' -f ($value_element3.GetAttribute('innerHTML
 # Error: "Reference to undeclared entity 'nbsp'."
 $raw_data = $raw_data -replace '&nbsp;',''
 # Error: "??"
-$raw_data = $raw_data -replace " \d+,?\?*\'*=\`"\`"",'' 
+$raw_data = $raw_data -replace " \d+,?\?*\'*=\`"\`"",''
+# NOTE: alternative is to use
+# 'HtmlAgilityPack.dll',
+# 'CsQuery.dll'
 $s1 = [xml]$raw_data
 $s1.'rawdata'.'div'.'div'.'ul'.'li'.'div'.'h3'.'a' | ForEach-Object {
-    Write-Output ($_.GetAttribute('title'))
-    Write-Output ($_.GetAttribute('href'))
-    $_ | get-member | out-null
-  }
+  Write-Output ($_.GetAttribute('title'))
+  Write-Output ($_.GetAttribute('href'))
+  $_ | Get-Member | Out-Null
+}
 
 $forum_title_css_locator = 'div.box-listblogs-content a.carnivalLink'
 $forums = $value_element3.FindElements([OpenQA.Selenium.By]::CssSelector($forum_title_css_locator))
 
-if ($forums.Count -gt 1){
+if ($forums.Count -gt 1) {
   0..($forums.Count - 1) | ForEach-Object {
     Write-Output $forums[$_].Text
     Write-Output $forums[$_].GetAttribute('href')

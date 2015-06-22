@@ -30,7 +30,7 @@ param(
 )
 
 function create_table3 {
-param(
+  param(
     [string]$database = "$(Get-ScriptDirectory)\shore_ex.db",
 
     # http://www.sqlite.org/datatype3.html
@@ -47,7 +47,7 @@ param(
 
 "@
   )
-write-debug $database
+  Write-Debug $database
   [int]$version = 3
   $connection = New-Object System.Data.SQLite.SQLiteConnection ('Data Source={0};Version={1};' -f $database,$version)
   $connection.Open()
@@ -77,7 +77,7 @@ INSERT INTO [media] (URL, CAPTION, CODE, SIZE, CNT, STATUS )  VALUES(?, ?, ?, ?,
 
 
   [int]$version = 3
-  write-debug $database
+  Write-Debug $database
   $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
   $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
   # Exception calling "Open" with "0" argument(s): "unable to open database file"
@@ -205,20 +205,6 @@ function query_database {
 }
 
 
-function set_timeouts {
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref,
-    [int]$explicit = 120,
-    [int]$page_load = 600,
-    [int]$script = 3000
-  )
-
-  [void]($selenium_ref.Value.Manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))
-  [void]($selenium_ref.Value.Manage().timeouts().SetPageLoadTimeout([System.TimeSpan]::FromSeconds($pageload)))
-  [void]($selenium_ref.Value.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script)))
-
-}
-
 
 function redirect_workaround {
 
@@ -325,25 +311,25 @@ $shared_assemblies = @(
 )
 
 $MODULE_NAME = 'selenium_utils.psd1'
-import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
+Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 
 $selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
 
-[void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(3000))
+# Exception calling "GoToUrl" with "1" argument(s): "timeout: Timed out receiving message from renderer: 0.000 
 
 if ($PSBoundParameters["mobile"].IsPresent) {
   if ($host.Version.Major -le 2) {
     [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
-    $selenium.Manage().Window.Size = New-Object System.Drawing.Size (480,600)
+    $selenium.Manage().Window.size = New-Object System.Drawing.Size (480,600)
     $selenium.Manage().Window.Position = New-Object System.Drawing.Point (0,0)
   } else {
-    $selenium.Manage().Window.Size = @{ 'Height' = 600; 'Width' = 480; }
+    $selenium.Manage().Window.size = @{ 'Height' = 600; 'Width' = 480; }
     $selenium.Manage().Window.Position = @{ 'X' = 0; 'Y' = 0 }
   }
 }
 $window_position = $selenium.Manage().Window.Position
-$window_size = $selenium.Manage().Window.Size
-write-debug $destination
+$window_size = $selenium.Manage().Window.size
+Write-Debug $destination
 
 $fields = @( 'CODE','CAPTION')
 
@@ -374,15 +360,15 @@ if ($DebugPreference -eq 'Continue') {
 }
 if ($DebugPreference -eq 'Continue') {
   Write-Output 'Result(s):'
-  $result |  ForEach-Object {
-    $base_url =  $_['URL']    
+  $result | ForEach-Object {
+    $base_url = $_['URL']
     $base_url
   }
 }
 
 
 $base_urls = $result
-create_table3  
+create_table3
 
 <# Do a sample insert 
 
@@ -407,87 +393,95 @@ $status  = 0
     insert_database3 -data $o 
 #>
 
-if ($true) {
-  $base_urls | ForEach-Object {
-    $row = $_
-    $base_url =  $row['URL'] 
-    $caption =  $row['CAPTION']
-    $code = $row['DEST_CODE']
-    $selenium.Navigate().GoToUrl($base_url)
+$base_urls | ForEach-Object {
+  $row = $_
+  $base_url = $row['URL']
+  $caption = $row['CAPTION']
+  $code = $row['DEST_CODE']
+  $base_url = $base_url -replace "(?:`n|`r)",''
+  if ($DebugPreference -eq 'Continue') {
+    Write-Output "Navigate to '${base_url}'"
+  }
 
-    $css_selector = 'div.carousel-wrapper div.owl-item div.item'
-    Write-Output ('Locating via CSS SELECTOR: "{0}"' -f $css_selector)
+  $selenium.Navigate().GoToUrl($base_url)
+  # TODO: fix the error with Chome 43, ChromeDriver 2.16
+  # Exception calling "GoToUrl" with "1" argument(s): "timeout: Timed out receiving message from renderer: 0.000
+  # caused by uncommenting the next line:
+  set_timeouts -selenium_ref ([ref]$selenium) -exlicit 1 -page_load 1
 
-    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
-    $wait.PollingInterval = 100
-    try {
-      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
-    } catch [exception]{
+  $css_selector = 'div.carousel-wrapper div.owl-item div.item'
+  Write-Output ('Locating via CSS SELECTOR: "{0}"' -f $css_selector)
+
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
+  $wait.PollingInterval = 100
+  try {
+    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+  } catch [exception]{
+  }
+
+  [OpenQA.Selenium.IWebElement[]]$carousel_items = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
+  Write-Output ('Iterating over {0} items' -f $carousel_items.count)
+
+  $index = 0
+  $max_count = 100
+  $sample_cnt = 99
+  [bool]$found = $false
+  foreach ($item in $carousel_items)
+  {
+    if ($index -gt $max_count) {
+      continue
     }
+    Write-Output 'Getting the media URL'
+    $css_img_selector = 'img'
 
-    [OpenQA.Selenium.IWebElement[]]$carousel_items = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
-    Write-Output ('Iterating over {0} items' -f $carousel_items.count)
+    $item_img = $item.FindElement([OpenQA.Selenium.By]::CssSelector($css_img_selector))
 
-    $index = 0
-    $max_count = 100
-    $sample_cnt = 99
-    [bool]$found = $false
-    foreach ($item in $carousel_items)
-    {
-      if ($index -gt $max_count) {
-        continue
-      }
-      Write-Output 'Getting the media URL'
-      $css_img_selector = 'img'
+    if (-not $item_img.Displayed) {
 
-      $item_img = $item.FindElement([OpenQA.Selenium.By]::CssSelector($css_img_selector))
-
-      if (-not $item_img.Displayed) {
-
-        $arrow_next_selector = 'div[class*=nav-right][class*=carousel-nav] div[class*=arrow-next]'
-        $arrow_next_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($arrow_next_selector))
-        [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-        [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$arrow_next_element).Build().Perform()
-        Start-Sleep -Milliseconds 100
-        [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$arrow_next_element).click().Build().Perform()
-        <#
+      $arrow_next_selector = 'div[class*=nav-right][class*=carousel-nav] div[class*=arrow-next]'
+      $arrow_next_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($arrow_next_selector))
+      [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+      [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$arrow_next_element).Build().Perform()
+      Start-Sleep -Milliseconds 100
+      [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$arrow_next_element).click().Build().Perform()
+      <#
       $actions2.clickAndHold($arrow_next_element)
       $actions2.release()
     #>
-        $item_img = $item.FindElement([OpenQA.Selenium.By]::CssSelector($css_img_selector))
-        Start-Sleep -Milliseconds 200
-        # Assert $item_img.Displayed
+      $item_img = $item.FindElement([OpenQA.Selenium.By]::CssSelector($css_img_selector))
+      Start-Sleep -Milliseconds 200
+      # Assert $item_img.Displayed
 
-      }
-      highlight ([ref]$selenium) ([ref]$item_img)
-      $item_img.click()
-      Start-Sleep -Milliseconds 100
-      $image_preview_selector = 'div[class *=modal] div[style^=background-image]'
-      $image_preview_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($image_preview_selector))
-      $image_preview_src = $null
-      # write-output $image_preview_element.GetAttribute('style')
-      extract_match -Source $image_preview_element.GetAttribute('style') -capturing_match_expression 'url\(\"(?<media>.+)\"\)' -label 'media' -result_ref ([ref]$image_preview_src)
-      Write-Output ('Preview Image: {0}' -f $image_preview_src)
-      $media_size = compute_media_dimensions -img_src $image_preview_src
-      Write-Host ('Media size : {0}' -f $media_size)
+    }
+    highlight ([ref]$selenium) ([ref]$item_img)
+    $item_img.click()
+    Start-Sleep -Milliseconds 100
+    $image_preview_selector = 'div[class *=modal] div[style^=background-image]'
+    $image_preview_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($image_preview_selector))
+    $image_preview_src = $null
+    # write-output $image_preview_element.GetAttribute('style')
+    extract_match -Source $image_preview_element.GetAttribute('style') -capturing_match_expression 'url\(\"(?<media>.+)\"\)' -label 'media' -result_ref ([ref]$image_preview_src)
+    Write-Output ('Preview Image: {0}' -f $image_preview_src)
+    $media_size = compute_media_dimensions -img_src $image_preview_src
+    Write-Host ('Media size : {0}' -f $media_size)
 
-      $close_selector = 'div[class *=modal] a[class*=close]'
-      $close_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($close_selector))
-      $close_element.click()
-      Start-Sleep -Milliseconds 100
+    $close_selector = 'div[class *=modal] a[class*=close]'
+    $close_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($close_selector))
+    $close_element.click()
+    Start-Sleep -Milliseconds 100
 
 
-      $carousel_img_src = $item_img.GetAttribute("data-main-img-src")
-      $photopreview_cnt = $item_img.GetAttribute("photopreview")
-      Write-Output ('Screen Location: {0}' -f $item.LocationOnScreenOnceScrolledIntoView.X)
-      Write-Output ('Count = {0}' -f $photopreview_cnt)
-      Write-Output ('Carousel Image: {0}' -f $carousel_img_src)
-      $media_size = compute_media_dimensions -img_src $carousel_img_src
-      Write-Host ('Media size : {0}' -f $media_size)
+    $carousel_img_src = $item_img.GetAttribute("data-main-img-src")
+    $photopreview_cnt = $item_img.GetAttribute("photopreview")
+    Write-Output ('Screen Location: {0}' -f $item.LocationOnScreenOnceScrolledIntoView.X)
+    Write-Output ('Count = {0}' -f $photopreview_cnt)
+    Write-Output ('Carousel Image: {0}' -f $carousel_img_src)
+    $media_size = compute_media_dimensions -img_src $carousel_img_src
+    Write-Host ('Media size : {0}' -f $media_size)
 
 
     $o = New-Object PSObject
- 
+
     $o | Add-Member Noteproperty 'code' $code
     $o | Add-Member Noteproperty 'url' $carousel_img_src
     $o | Add-Member Noteproperty 'caption' $caption
@@ -497,15 +491,15 @@ if ($true) {
     $o | Format-List
 
     if (($PSBoundParameters['savedata'].IsPresent)) {
-      insert_database3 -data $o 
+      insert_database3 -data $o
     }
     $o = $null
 
 
-      $index++
-    }
+    $index++
   }
 }
+
 Start-Sleep -Milliseconds 1000
 # Cleanup
 cleanup ([ref]$selenium)

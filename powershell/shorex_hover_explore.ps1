@@ -131,58 +131,6 @@ function custom_pause {
   }
 }
 
-function find_page_element_by_css_selector {
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$css_selector,
-    [int]$wait_seconds = 10
-  )
-  if ($css_selector -eq '' -or $css_selector -eq $null) {
-    return
-  }
-  $local:status = $false 
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
-    $local:status = $true 
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-  if ($local:status) {
-    $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-    $element_ref.Value = $local:element
-  }
-}
-
-function find_page_element_by_xpath {
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$xpath,
-    [int]$wait_seconds = 10
-
-  )
-  if ($xpath -eq '' -or $xpath -eq $null) {
-    return
-  }
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::XPath($xpath))
-  $element_ref.Value = $local:element
-}
-
 # Setup 
 $shared_assemblies = @(
   'WebDriver.dll',

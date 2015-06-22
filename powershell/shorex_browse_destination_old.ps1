@@ -260,53 +260,6 @@ function cleanup
   }
 }
 
-function find_page_element_by_css_selector {
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$css_selector,
-    [int]$wait_seconds = 10
-  )
-  if ($css_selector -eq '' -or $css_selector -eq $null) {
-    return
-  }
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-  $element_ref.Value = $local:element
-}
-
-function find_page_element_by_xpath {
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$xpath,
-    [int]$wait_seconds = 10
-  )
-  if ($xpath -eq '' -or $xpath -eq $null) {
-    return
-  }
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::XPath($xpath))
-  $element_ref.Value = $local:element
-}
 
 # Setup 
 $shared_assemblies = @(
@@ -316,60 +269,11 @@ $shared_assemblies = @(
   'nunit.framework.dll'
 )
 
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
+$MODULE_NAME = 'selenium_utils.psd1'
+import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
 
-if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
-  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
-}
+$selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
 
-pushd $shared_assemblies_path
-
-$shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
-popd
-
-if ($browser -ne $null -and $browser -ne '') {
-  try {
-    $connection = (New-Object Net.Sockets.TcpClient)
-    $connection.Connect("127.0.0.1",4444)
-    $connection.Close()
-  } catch {
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\hub.cmd"
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\node.cmd"
-    Start-Sleep -Seconds 10
-  }
-  Write-Host "Running on ${browser}"
-  if ($browser -match 'firefox') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
-
-  }
-  elseif ($browser -match 'chrome') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
-  }
-  elseif ($browser -match 'ie') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
-    if ($version -ne $null -and $version -ne 0) {
-      $capability.SetCapability('version',$version.ToString());
-    }
-  }
-  elseif ($browser -match 'safari') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
-  }
-  else {
-    throw "unknown browser choice:${browser}"
-  }
-  $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
-  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
-} else {
-  Write-Host 'Running on phantomjs'
-  $phantomjs_executable_folder = 'C:\tools\phantomjs'
-  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability('ssl-protocol','any')
-  $selenium.Capabilities.SetCapability('ignore-ssl-errors',$true)
-  $selenium.Capabilities.SetCapability('takesScreenshot',$true)
-  $selenium.Capabilities.SetCapability('userAgent','Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34')
-  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability('phantomjs.executable.path',$phantomjs_executable_folder)
-}
 
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
