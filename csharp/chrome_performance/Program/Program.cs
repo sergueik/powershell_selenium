@@ -104,6 +104,7 @@ if (ua.match(/PhantomJS/)) {
     }
 
     [TestClass]
+    [DeploymentItem(@"x86\SQLite.Interop.dll", "x86")] 
     public class Monitor
     {
         private static string hub_url = "http://localhost:4444/wd/hub";

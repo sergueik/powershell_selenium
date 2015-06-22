@@ -20,7 +20,7 @@ TestResults
 _ReSharper*
 
 # NuGet Packages Directory
-**/.nuget
-**/packages/**
+.nuget/**
+packages/**
 
 
