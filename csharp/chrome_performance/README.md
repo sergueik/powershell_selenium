@@ -1,29 +1,6 @@
 Chrome Page Element Performance Collector
 =========================================
-
-Collect details of the web navigation. 
-
-by 
-running the Javascript to  collect
-
-    (
-    window.performance ||
-    window.mozPerformance ||
-    window.msPerformance ||
-    window.webkitPerformance 
-    ).getEntries() 
-    
-    
-while the page is being loaded.
-
-Stores selected headers 
-
- * id
- * url
- * duration 
-
-in the SQLite database allowing measuring  Page performance at the individual Page element level.
-
+Collect details of the web navigation from the browser. Stores results in the SQLite database allowing measuring  Page performance at the individual Page element level.
 
 Writing Tests
 =============
@@ -33,8 +10,30 @@ Include `Program.cs` into your project and merge `nuget.config` with yours. Ther
 Note
 ====
 
-This code is highly browser-specific:  Chrome has `performance.getEntries`, while Firefox only has `performance.timing` 
-and  PhantomJS does not seem to have anything
+This code is not browser-agnostic, and is fully functional for Chrome only :  Chrome has `performance.getEntries`, while barebones Firefox only has `performance.timing` - with no further details. For better results with Firefox, one needs to install [Firebug](https://getfirebug.com/releases/) and [netExport](https://getfirebug.com/releases/netexport/) add-ons into the profile the test is run. It is unknown if PhantomJS supports the same - currenty a stub is used .
+
+
+The following Javascript is run to collect performance results while the page is being loaded:
+
+    (
+    window.performance ||
+    window.mozPerformance ||
+    window.msPerformance ||
+    window.webkitPerformance 
+    ).getEntries() 
+    
+The scrupt is invoked when browser reports certain `document.readyState`.
+
+
+The following headers are selected to go to the database:
+
+ * id
+ * url
+ * duration 
+
+
+The [browsermob-proxy](https://github.com/lightbody/browsermob-proxy) offers similar functionality for Java - see e.g. [http://amormoeba.blogspot.com/2014/02/how-to-use-browser-mob-proxy.html][http://amormoeba.blogspot.com/2014/02/how-to-use-browser-mob-proxy.html]
+
 
 Author
 ------
