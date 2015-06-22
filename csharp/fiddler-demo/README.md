@@ -22,7 +22,10 @@ Include `Program.cs` into your project and merge `nuget.config` with yours.
 
 Note
 ====
-A replica of [SQLite Helper (C#) project sources](http://sh.codeplex.com) is included as the `SQLite.Utils` namespace.
+A replica of [SQLite Helper (C#) project sources](http://sh.codeplex.com) is included as the `Sqlite.Utils` namespace (Utils project).
+
+The [browsermob-proxy](https://github.com/lightbody/browsermob-proxy) offers similar functionality for Java - see e.g. [http://amormoeba.blogspot.com/2014/02/how-to-use-browser-mob-proxy.html][http://amormoeba.blogspot.com/2014/02/how-to-use-browser-mob-proxy.html]
+
 
 Author
 ------
