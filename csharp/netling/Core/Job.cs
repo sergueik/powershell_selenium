@@ -28,17 +28,6 @@ namespace Core
     {
         public delegate void ProgressEventHandler(double value);
         public ProgressEventHandler OnProgress { get; set; }
-        /*
-                public JobResult<T> Process(int threads, TimeSpan duration, Func<IEnumerable<Task<T>>> processAction, CancellationToken cancellationToken = default(CancellationToken))
-                {
-                    return Process(threads, int.MaxValue, duration, processAction, cancellationToken);
-                }
-
-                public JobResult<T> Process(int threads, int runs, Func<IEnumerable<Task<T>>> processAction, CancellationToken cancellationToken = default(CancellationToken))
-                {
-                    return Process(threads, runs, TimeSpan.MaxValue, processAction, cancellationToken);
-                }
-        */
         public JobResult<T> Process(Stream args, Func<IEnumerable<Task<T>>> processAction, CancellationToken cancellationToken = default(CancellationToken))
         {
 
@@ -64,7 +53,6 @@ namespace Core
             return Process(_ia.threads, _ia.runs, _ia.duration, processAction, cancellationToken);
 
         }
-
 
         private JobResult<T> Process(int threads, int runs, TimeSpan duration, Func<IEnumerable<Task<T>>> processAction, CancellationToken cancellationToken = default(CancellationToken))
         {
