@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Data.SQLite;
 using SQLite.Utils;
@@ -108,22 +108,14 @@ namespace Client
                 StatusProgressbar.Visibility = Visibility.Visible;
                 job.OnProgress += OnProgress;
 
-                
-                
-                InvocationArgs  invocation_args = new InvocationArgs();
-                
-            invocation_args.threads = threads;
-            invocation_args.runs = runs;
-            invocation_args.duration = duration;
-            MemoryStream invocation_args_stream = new MemoryStream();
-            DataContractJsonSerializer ser = 
-              new DataContractJsonSerializer(typeof(InvocationArgs));
-            ser.WriteObject(invocation_args_stream , invocation_args);
-            invocation_args_stream.Position  = 0;
+                MemoryStream args = new MemoryStream();
+                DataContractJsonSerializer ser =
+                  new DataContractJsonSerializer(typeof(InvocationArgs));
+                ser.WriteObject(args, new InvocationArgs() { threads = threads, runs = runs, duration = duration });
 
-            task = Task.Run(() => job.ProcessUrls((Stream)invocation_args_stream, urls, cancellationToken));
+                task = Task.Run(() => job.ProcessUrls((Stream)args, urls, cancellationToken));
 
-            // TaskAwaiter Structure
+                // TaskAwaiter Structure
                 System.Runtime.CompilerServices.TaskAwaiter<JobResult<UrlResult>> awaiter = task.GetAwaiter();
                 awaiter.OnCompleted(JobCompleted);
 
