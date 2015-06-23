@@ -6,12 +6,22 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Core.Models;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 using System.IO;
 
 namespace Core
 {
     public static class UrlJobExtensions
     {
+
+    	 public static JobResult<UrlResult> ProcessUrls(this Job<UrlResult> job, Stream args, IEnumerable<string> urls, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            ServicePointManager.UseNagleAlgorithm = false;
+            ServicePointManager.DefaultConnectionLimit = int.MaxValue;
+            return job.Process(args, () => Action(urls), cancellationToken);
+        }
+        /*
         public static JobResult<UrlResult> ProcessUrls(this Job<UrlResult> job, int threads, int runs, IEnumerable<string> urls, CancellationToken cancellationToken = default(CancellationToken))
         {
             ServicePointManager.UseNagleAlgorithm = false;
@@ -25,7 +35,7 @@ namespace Core
             ServicePointManager.DefaultConnectionLimit = int.MaxValue;
             return job.Process(threads, duration, () => Action(urls), cancellationToken);
         }
-
+        */
         private static IEnumerable<Task<UrlResult>> Action(IEnumerable<string> urls)
         {
             return urls.Select(GetResult);

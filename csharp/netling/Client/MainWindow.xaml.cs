@@ -9,6 +9,8 @@ using System.Windows;
 using System.Collections.Generic;
 using System.Windows.Controls;
 using System.Windows.Threading;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 using System.IO;
 using Core;
 using Core.Models;
@@ -106,13 +108,31 @@ namespace Client
                 StatusProgressbar.Visibility = Visibility.Visible;
                 job.OnProgress += OnProgress;
 
+                
+                
+                InvocationArgs  invocation_args = new InvocationArgs();
+                
+            invocation_args.threads = threads;
+            invocation_args.runs = runs;
+            invocation_args.duration = duration;
+            MemoryStream invocation_args_stream = new MemoryStream();
+            DataContractJsonSerializer ser = 
+              new DataContractJsonSerializer(typeof(InvocationArgs));
+            ser.WriteObject(invocation_args_stream , invocation_args);
+            invocation_args_stream.Position  = 0;
+
+            task = Task.Run(() => job.ProcessUrls((Stream)invocation_args_stream, urls, cancellationToken));
+            /*
                 if (timeLimited)
                     task = Task.Run(() => job.ProcessUrls(threads, duration, urls, cancellationToken));
                 else
                     task = Task.Run(() => job.ProcessUrls(threads, runs, urls, cancellationToken));
+*/
+            
+            // TaskAwaiter Structure
 
 
-                var awaiter = task.GetAwaiter();
+                System.Runtime.CompilerServices.TaskAwaiter<JobResult<UrlResult>> awaiter = task.GetAwaiter();
                 awaiter.OnCompleted(JobCompleted);
 
                 StartButton.Content = "Cancel";

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -19,7 +19,6 @@
   <PropertyGroup>
     <ApplicationIcon>netling-icon.ico</ApplicationIcon>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
@@ -40,7 +39,6 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
@@ -80,6 +78,10 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -92,13 +94,9 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
   </ItemGroup>
-    <ItemGroup>
-
+  <ItemGroup>
     <None Include="x86\SQLite.Interop.dll" />
-
   </ItemGroup>
-
-
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -149,7 +147,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -179,10 +179,9 @@
   </Target>
   -->
   <Target Name="AfterBuild" Condition=" '$(Configuration)' == 'Release'">
-  <Copy SourceFiles="..\packages\System.Data.SQLite.Core.1.0.97.0\build\net45\$(PlatformTarget)\SQLite.Interop.dll" DestinationFolder="$(OutputPath)" />  
- </Target>
+    <Copy SourceFiles="..\packages\System.Data.SQLite.Core.1.0.97.0\build\net45\$(PlatformTarget)\SQLite.Interop.dll" DestinationFolder="$(OutputPath)" />
+  </Target>
   <Target Name="AfterBuild" Condition=" '$(Configuration)' == 'Debug'">
-  <Copy SourceFiles="..\packages\System.Data.SQLite.Core.1.0.97.0\build\net45\$(PlatformTarget)\SQLite.Interop.dll" DestinationFolder="$(OutputPath)" />  
- </Target>
-  
+    <Copy SourceFiles="..\packages\System.Data.SQLite.Core.1.0.97.0\build\net45\$(PlatformTarget)\SQLite.Interop.dll" DestinationFolder="$(OutputPath)" />
+  </Target>
 </Project>

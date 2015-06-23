@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using Core.Models;
+ 
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
@@ -40,6 +41,7 @@ namespace Client
 
             LoadUrlSummary();
             LoadGraphs();
+           
         }
 
         private void LoadGraphs()

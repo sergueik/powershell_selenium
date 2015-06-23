@@ -6,23 +6,65 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Core.Models;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.IO;
 
 namespace Core
 {
+
+    [DataContract]
+    public class InvocationArgs
+    {
+        [DataMember]
+        public int threads;
+        [DataMember]
+        public int runs;
+        [DataMember]
+        public TimeSpan duration;
+    }
+
     public class Job<T> where T : IResult
     {
         public delegate void ProgressEventHandler(double value);
         public ProgressEventHandler OnProgress { get; set; }
+        /*
+                public JobResult<T> Process(int threads, TimeSpan duration, Func<IEnumerable<Task<T>>> processAction, CancellationToken cancellationToken = default(CancellationToken))
+                {
+                    return Process(threads, int.MaxValue, duration, processAction, cancellationToken);
+                }
 
-        public JobResult<T> Process(int threads, TimeSpan duration, Func<IEnumerable<Task<T>>> processAction, CancellationToken cancellationToken = default(CancellationToken))
+                public JobResult<T> Process(int threads, int runs, Func<IEnumerable<Task<T>>> processAction, CancellationToken cancellationToken = default(CancellationToken))
+                {
+                    return Process(threads, runs, TimeSpan.MaxValue, processAction, cancellationToken);
+                }
+        */
+        public JobResult<T> Process(Stream args, Func<IEnumerable<Task<T>>> processAction, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Process(threads, int.MaxValue, duration, processAction, cancellationToken);
+
+            args.Position = 0;
+            DataContractJsonSerializer ser =
+     new DataContractJsonSerializer(typeof(InvocationArgs));
+            InvocationArgs _ia = (InvocationArgs)ser.ReadObject(args);
+
+            if (_ia.runs == 0)
+            {
+                _ia.runs = 10;
+            }
+            if (_ia.duration.Seconds == 0)
+            {
+                _ia.duration = TimeSpan.FromSeconds(10);
+            }
+
+            // TODO - better detect subnormal launch conditions 
+            Console.WriteLine("Deserialized Invocation Args:");
+            Console.WriteLine("Threads: " + _ia.threads);
+            Console.Write("runs=" + _ia.runs);
+            Console.WriteLine("Duration=" + _ia.duration);
+            return Process(_ia.threads, _ia.runs, _ia.duration, processAction, cancellationToken);
+
         }
 
-        public JobResult<T> Process(int threads, int runs, Func<IEnumerable<Task<T>>> processAction, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return Process(threads, runs, TimeSpan.MaxValue, processAction, cancellationToken);
-        }
 
         private JobResult<T> Process(int threads, int runs, TimeSpan duration, Func<IEnumerable<Task<T>>> processAction, CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -63,7 +105,7 @@ namespace Core
                                 if (index == 0 && OnProgress != null)
                                 {
                                     if (duration == TimeSpan.MaxValue)
-                                        OnProgress(100.0/runs*(j + 1));
+                                        OnProgress(100.0 / runs * (j + 1));
                                     else
                                         OnProgress(100.0 / duration.TotalMilliseconds * sw.ElapsedMilliseconds);
                                 }
