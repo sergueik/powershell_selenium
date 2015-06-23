@@ -18,57 +18,14 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
-function Get-ScriptDirectory {
-  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-  if ($Invocation.PSScriptRoot) {
-    $Invocation.PSScriptRoot
-  }
-  elseif ($Invocation.MyCommand.Path) {
-    Split-Path $Invocation.MyCommand.Path
-  } else {
-    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
-  }
-}
+$MODULE_NAME = 'selenium_utils.psd1'
+import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
 
-# TODO: local connections only ?
-function netstat_check
-{
-  param(
-    [string]$selenium_http_port = 4444
-  )
 
-  $results = Invoke-Expression -Command "netsh interface ipv4 show tcpconnections"
 
-  $t = $results -split "`r`n" | Where-Object { ($_ -match "\s$selenium_http_port\s") }
-  (($t -ne '') -and $t -ne $null)
-
-}
-
-$shared_assemblies = @(
-  'WebDriver.dll',
-  'WebDriver.Support.dll',
-  'nunit.framework.dll'
-)
-
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
-
-if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
-  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
-}
-
-pushd $shared_assemblies_path
-$shared_assemblies | ForEach-Object {
-
-  if ($host.Version.Major -gt 2) {
-    Unblock-File -Path $_;
-  }
-  Write-Debug $_
-  Add-Type -Path $_
-}
-popd
-
+load_shared_assemblies 
 [NUnit.Framework.Assert]::IsTrue($host.Version.Major -ge 2)
+
 # TODO : leftover profile lock file
 <#
  Directory of C:\Users\sergueik\AppData\Roaming\Mozilla\Firefox\Profiles\wfywwbuv.default
@@ -96,8 +53,11 @@ $profiles | ForEach-Object {
   $item
 }
 
-[string]$profile_directory = 'c:\Users\sergueik\AppData\Roaming\Mozilla\Firefox\Profiles\6us7lrj6.Selenium'
-$profile = New-Object OpenQA.Selenium.Firefox.FirefoxProfile ($profile_directory)
+# TODO: find profile directory
+# [string]$profile_directory = 'c:\Users\sergueik\AppData\Roaming\Mozilla\Firefox\Profiles\6us7lrj6.Selenium'
+# $profile = New-Object OpenQA.Selenium.Firefox.FirefoxProfile ($profile_directory)
+$profile = New-Object OpenQA.Selenium.Firefox.FirefoxProfile ('default')
+
 Write-Debug 'Adding extensions'
 $profile.AddExtension("C:\developer\sergueik\powershell_ui_samples\external\java\capture\resources\firebug-2.0.8.xpi")
 $profile.AddExtension("C:\developer\sergueik\powershell_ui_samples\external\java\capture\resources\netExport-0.9b7.xpi")
@@ -159,30 +119,7 @@ Write-Output 'Calling the script'
 $timeout = 10
 
 
-[string]$script = "window.setTimeout(function(){document.getElementById('searchInput').value = 'test'}, ${timeout});"
-
-$start = (Get-Date -UFormat "%s")
-
-try {
-  [void]([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeAsyncScript($script);
-
-} catch [OpenQA.Selenium.WebDriverTimeoutException]{
-  # Ignore
-  # Timed out waiting for async script result  (Firefox)
-  # asynchronous script timeout: result was not received (Chrome)
-  [NUnit.Framework.Assert]::IsTrue($_.Exception.Message -match '(?:Timed out waiting for async script result|asynchronous script timeout)')
-}
-catch [OpenQA.Selenium.NoSuchWindowException]{
-  Write-Host $_.Exception.Message # Unable to get browser
-  $_.Exception | Get-Member
-
-}
-$end = (Get-Date -UFormat "%s")
-$elapsed = New-TimeSpan -Seconds ($end - $start)
-Write-Output ('Elapsed time {0:00}:{1:00}:{2:00} ({3})' -f $elapsed.Hours,$elapsed.Minutes,$elapsed.Seconds,($end - $start))
-
-
-$script = 'window.NetExport.triggerExport("abcde")'
+[string]$script = 'window.NetExport.triggerExport("abcde")'
 Write-Output "Calling the script:`r`n${script}"
 
 $start = (Get-Date -UFormat '%s')
@@ -201,6 +138,8 @@ catch [OpenQA.Selenium.NoSuchWindowException]{
   # $_.Exception | Get-Member
 
 } catch [exception]{
+
+  # "window.NetExport is undefined
   # http://blogs.msdn.com/b/mwories/archive/2009/06/08/powershell-tips-tricks-getting-more-detailed-error-information-from-powershell.aspx
   $error[0] | Format-List -Force
 
@@ -211,11 +150,4 @@ Write-Output ('Elapsed time {0:00}:{1:00}:{2:00} ({3})' -f $elapsed.Hours,$elaps
 
 
 Write-Debug 'Closing'
-try {
-  $selenium.Close()
-  $selenium.Quit()
-} catch [exception]{
-  Write-Output (($_.Exception.Message) -split "`n")[0]
-}
-
-
+cleanup ([ref]$selenium)

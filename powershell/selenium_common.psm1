@@ -1,3 +1,4 @@
+
 <#
 .SYNOPSIS
 	Start Selenium
@@ -72,7 +73,7 @@ function launch_selenium {
     }
     Write-Host "Running on ${browser}"
 
-<#
+    <#
 try {
   $connection = (New-Object Net.Sockets.TcpClient)
   $connection.Connect($hub_host,[int]$hub_port)
@@ -215,6 +216,7 @@ function cleanup
     [System.Management.Automation.PSReference]$selenium_ref
   )
   try {
+    $selenium_ref.Value.Close()
     $selenium_ref.Value.Quit()
   } catch [exception]{
     # Ignore errors if unable to close the browser
@@ -258,6 +260,60 @@ function set_timeouts {
 }
 
 
+<#
+.SYNOPSIS
+	Loads calller-provided list of .net assembly dlls or fails with a custom exception
+	
+.DESCRIPTION
+	Loads calller-provided list of .net assembly dlls or fails with a custom exception    
+.EXAMPLE
+	load_shared_assemblies -shared_assemblies_path 'c:\tools' -shared_assemblies @('WebDriver.dll','WebDriver.Support.dll','nunit.framework.dll')
+.LINK 
+	
+	
+.NOTES
+
+	VERSION HISTORY
+	2015/06/22 Initial Version
+#>
+
+function load_shared_assemblies {
+
+  param(
+    [string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies',
+
+    [string[]]$shared_assemblies = @(
+      'WebDriver.dll',
+      'WebDriver.Support.dll',
+      'nunit.core.dll',
+      'nunit.framework.dll'
+    )
+  )
+
+  pushd $shared_assemblies_path
+
+  $shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
+  popd
+}
+
+
+<#
+.SYNOPSIS
+	Loads calller-provided list of .net assembly dlls with specific versions or fails with a custom exception
+.DESCRIPTION
+	Loads calller-provided list of .net assembly dlls with specific versions or fails with a custom exception
+	
+.EXAMPLE
+	load_shared_assemblues_demand_versions -shared_assemblies_path 'c:\tools'    
+.LINK
+	
+	
+.NOTES
+
+	VERSION HISTORY
+	2015/06/22 Initial Version
+#>
+
 function load_shared_assemblues_demand_versions {
   param(
     [string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies',
@@ -277,7 +333,7 @@ function load_shared_assemblues_demand_versions {
     $assembly_version = [Reflection.AssemblyName]::GetAssemblyName($assembly_path).Version
     $assembly_version_string = ('{0}.{1}' -f $assembly_version.Major,$assembly_version.Minor)
     if ($shared_assemblies[$assembly] -ne $null) {
-      
+
       if (-not ($shared_assemblies[$assembly] -match $assembly_version_string)) {
         Write-Output ('Need {0} {1}, got {2}' -f $assembly,$shared_assemblies[$assembly],$assembly_path)
         Write-Output $assembly_version
@@ -295,3 +351,18 @@ function load_shared_assemblues_demand_versions {
 
 
 }
+
+
+# TODO: local connections only ?
+function netstat_check {
+  param(
+    [string]$selenium_http_port = 4444
+  )
+
+  $local_tcpconnections = Invoke-Expression -Command ("C:\Windows\System32\netsh.exe interface ipv4 show tcpconnections localport={0}" -f $selenium_http_port)
+
+  $established_tcpconnections = $local_tcpconnections | Where-Object { ($_ -match '\bEstablished\b') }
+  (($established_tcpconnections -ne '') -and $established_tcpconnections -ne $null)
+
+}
+
