@@ -19,45 +19,10 @@
 #THE SOFTWARE.
 
 param(
-  [string]$hub_host = '127.0.0.1',
   [string]$browser,
+  [string]$hub_host = '127.0.0.1',
+  [string]$hub_port = '4444',
   [string]$version
-)
-# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
-function Get-ScriptDirectory
-{
-  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-  if ($Invocation.PSScriptRoot) {
-    $Invocation.PSScriptRoot
-  }
-  elseif ($Invocation.MyCommand.Path) {
-    Split-Path $Invocation.MyCommand.Path
-  } else {
-    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
-  }
-}
-
-function cleanup
-{
-  param(
-  [System.Management.Automation.PSReference]$selenium_ref 
-  )
-  try {
-    $selenium_ref.Value.Quit()
-  } catch [exception]{
-  # Ignore errors if unable to close the browser
-  Write-Output (($_.Exception.Message) -split "`n")[0]
-
-  }
-}
-
-
-$shared_assemblies = @(
-  "WebDriver.dll",
-  "WebDriver.Support.dll",
-  'nunit.core.dll',
-  'nunit.framework.dll'
-
 )
 <#
 
@@ -74,77 +39,19 @@ use fixw2k3.ps1
 Add-Type : Unable to load one or more of the requested types. Retrieve the LoaderExceptions property for more information.
 #>
 
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
-
-if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
-  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
-}
-
-pushd $shared_assemblies_path
-$shared_assemblies | ForEach-Object {
-
-  if ($host.Version.Major -gt 2) {
-    Unblock-File -Path $_;
-  }
-  Write-Debug $_
-  Add-Type -Path $_
-}
-popd
-
 $verificationErrors = New-Object System.Text.StringBuilder
+
+
 
 # use Default Web Site to host the page. Enable Directory Browsing.
 
+$MODULE_NAME = 'selenium_utils.psd1'
+import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
 
-$hub_port = '4444'
-$uri = [System.Uri](('http://{0}:{1}/wd/hub' -f $hub_host,$hub_port))
-# 
+$selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies -hub_host $hub_host -hub_port $hub_port
+
 $base_url = 'file:///root/popup.html'
 $base_url = 'file:///C:/developer/sergueik/powershell_ui_samples/selenium/popup.html'
-
-if ($browser -ne $null -and $browser -ne '') {
-  try {
-    $connection = (New-Object Net.Sockets.TcpClient)
-    $connection.Connect($hub_host,[int]$hub_port)
-    $connection.Close()
-  } catch {
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
-    Start-Sleep -Seconds 10
-  }
-  Write-Host "Running on ${browser}"
-  if ($browser -match 'firefox') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
-
-  }
-  elseif ($browser -match 'chrome') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
-    if ($version -ne $null -and $version -ne 0) {
-      $capability.SetCapability("version",$version.ToString());
-    }
-
-  }
-  elseif ($browser -match 'ie') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
-  }
-  elseif ($browser -match 'safari') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
-  }
-  else {
-    throw "unknown browser choice:${browser}"
-  }
-  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
-} else {
-  Write-Host 'Running on phantomjs'
-  $phantomjs_executable_folder = 'C:\tools\phantomjs'
-  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability("ssl-protocol","any")
-  $selenium.Capabilities.SetCapability("ignore-ssl-errors",$true)
-  $selenium.Capabilities.SetCapability("takesScreenshot",$true)
-  $selenium.Capabilities.SetCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
-  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
-}
 
 $selenium.Navigate().GoToUrl( $base_url )
 $selenium.Navigate().Refresh()

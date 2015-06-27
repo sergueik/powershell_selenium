@@ -48,7 +48,13 @@ function launch_selenium {
 
   pushd $shared_assemblies_path
 
-  $shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
+  $shared_assemblies | ForEach-Object { 
+  if ($host.Version.Major -gt 2) {
+    Unblock-File -Path $_;
+  }
+  Write-Debug $_
+  Add-Type -Path $_
+}
   popd
   $use_remote_driver = $true
   $uri = [System.Uri](('http://{0}:{1}/wd/hub' -f $hub_host,$hub_port))
@@ -366,3 +372,7 @@ function netstat_check {
 
 }
 
+
+<#
+findstr /ic:"`$selenium " *.ps1
+#>
