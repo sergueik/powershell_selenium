@@ -68,7 +68,6 @@ import org.testng.*;
 public class AppTest // extends BaseTest
 {
 
-public boolean use_remote_hub = false;
 public RemoteWebDriver driver = null;
 public String selenium_host = null;
 public String selenium_port = null;
@@ -118,10 +117,14 @@ public void setupBeforeSuite( ITestContext context ) throws InterruptedException
 			LoggingPreferences logging_preferences = new LoggingPreferences();
 			logging_preferences.enable(LogType.BROWSER, Level.ALL);
 			capabilities.setCapability(CapabilityType.LOGGING_PREFS, logging_preferences);
+			/*
+			prefs.js:user_pref("extensions.logging.enabled", true);
+			user.js:user_pref("extensions.logging.enabled", true);
+			*/
 			driver = new ChromeDriver(capabilities);
 			driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
 		} else {
-			DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+			DesiredCapabilities capabilities = DesiredCapabilities.firefox();
 			LoggingPreferences logging_preferences = new LoggingPreferences();
 			logging_preferences.enable(LogType.BROWSER, Level.ALL);
 			capabilities.setCapability(CapabilityType.LOGGING_PREFS, logging_preferences);
@@ -167,7 +170,7 @@ public void test1() throws InterruptedException {
 	WebElement element2 = driver.findElement(By.cssSelector(csspath_selector2));
 	System.out.println( element2.getText());
 	new Actions(driver).moveToElement(element2).click().build().perform();
-	Thread.sleep(5000);
+	Thread.sleep(600000);
 	analyzeLog();
 	//print the node information
 	//String result = getIPOfNode(driver);
