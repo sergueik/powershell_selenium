@@ -18,6 +18,7 @@
 function launch_selenium {
   param(
     [string]$browser = '',
+    [switch]$grid,
     [int]$version,
     [string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies',
     [string[]]$shared_assemblies = @(
@@ -25,38 +26,36 @@ function launch_selenium {
       'WebDriver.Support.dll',
       'nunit.framework.dll'
     ),
-
     [string]$hub_host = '127.0.0.1',
     [string]$hub_port = '4444',
-
+    [bool]$use_remote_driver = $false,
     [switch]$debug
   )
 
-  # Setup 
-  $shared_assemblies = @(
-    'WebDriver.dll',
-    'WebDriver.Support.dll',
-    'System.Data.SQLite.dll',
-    'nunit.framework.dll'
-  )
+  $use_remote_driver = [bool]$PSBoundParameters['grid'].IsPresent
 
-  $shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
-
+  # SHARED_ASSEMBLIES_PATH environment overrides parameter, for Team City
   if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
     $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
   }
 
+  $driver_folder_path = 'c:\java\selenium'
+  # SELENIUM_DRIVERS_PATH environment overrides parameter, for Team City
+  if (($env:SELENIUM_DRIVERS_PATH -ne $null) -and ($env:SELENIUM_DRIVERS_PATH -ne '')) {
+    $driver_folder_path = $env:SELENIUM_DRIVERS_PATH
+  }
+
   pushd $shared_assemblies_path
 
-  $shared_assemblies | ForEach-Object { 
-  if ($host.Version.Major -gt 2) {
-    Unblock-File -Path $_;
+  $shared_assemblies | ForEach-Object {
+    if ($host.Version.Major -gt 2) {
+      Unblock-File -Path $_;
+    }
+    Write-Debug $_
+    Add-Type -Path $_
   }
-  Write-Debug $_
-  Add-Type -Path $_
-}
   popd
-  $use_remote_driver = $true
+
   $uri = [System.Uri](('http://{0}:{1}/wd/hub' -f $hub_host,$hub_port))
   if ($DebugPreference -eq 'Continue') {
     if ($use_remote_driver) {
@@ -68,36 +67,42 @@ function launch_selenium {
 
   $selenium = $null
   if ($browser -ne $null -and $browser -ne '') {
-    try {
-      $connection = (New-Object Net.Sockets.TcpClient)
-      $connection.Connect($hub_host,[int]$hub_port)
-      $connection.Close()
-    } catch {
-      Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\hub.cmd"
-      Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\node.cmd"
-      Start-Sleep -Seconds 10
+    if ($use_remote_driver) {
+
+      try {
+        $connection = (New-Object Net.Sockets.TcpClient)
+        $connection.Connect($hub_host,[int]$hub_port)
+        Write-Debug 'Grid is already running'
+
+        $connection.Close()
+      } catch {
+        Write-Debug 'Launching grid'
+        Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
+        Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
+        Start-Sleep -Millisecond 5000
+      }
+
+    } else {
+      # launching Selenium jar in  standalone is not needed
+
+      # adding driver folder to the path environment
+      if (!(Test-Path $driver_folder_path))
+      {
+        throw "Folder ${driver_folder_path} does not Exist, cannot be added to $env:PATH"
+      }
+
+      # See if the new folder is already in the path.
+      if ($env:PATH | Select-String -SimpleMatch $driver_folder_path)
+      { Write-Debug "Folder ${driver_folder_path} already within `$env:PATH"
+
+      }
+
+      # Set the new PATH environment
+      $env:PATH = $env:PATH + ';' + $driver_folder_path
     }
-    Write-Host "Running on ${browser}"
 
-    <#
-try {
-  $connection = (New-Object Net.Sockets.TcpClient)
-  $connection.Connect($hub_host,[int]$hub_port)
-  $connection.Close()
-} catch {
-  if ($PSBoundParameters['grid']) {
 
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
-
-  } else {
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\selenium.cmd"
-  }
-  Start-Sleep -Millisecond 5000
-}
-
-#>
-
+    Write-Debug "Launching ${browser}"
 
     if ($browser -match 'firefox') {
       if ($use_remote_driver) {

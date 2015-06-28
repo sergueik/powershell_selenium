@@ -25,6 +25,7 @@ param(
   [switch]$all,
   [int]$maxitems = 1000,
   [switch]$savedata,
+  [switch]$grid,
   [switch]$pause
 )
 
@@ -220,7 +221,7 @@ function paginate_destinations
     if ($last) {
       $pagination_result_css_selector = 'p[class*="ca-guest-visitor-pagination-result"][ng-show]'
       #                                                                                ^^^^^^^^^^ 
-     <#
+      <#
      <div class="ca-guest-visitor-pagination-container">
      <hr class="ca-divider ca-guest-visitor-divider">
      <p class="ca-guest-visitor-pagination-result ng-hide" ng-hide="vm.searchResultsLoaded">1 - 12 of 26 results</p>
@@ -304,10 +305,14 @@ $shared_assemblies = @(
 )
 
 $MODULE_NAME = 'selenium_utils.psd1'
-import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
+Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
+if ([bool]$PSBoundParameters['grid'].IsPresent) {
+  $selenium = launch_selenium -browser $browser -grid -shared_assemblies $shared_assemblies
 
-$selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
+} else {
+  $selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
 
+}
 
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
@@ -329,7 +334,7 @@ create_table -database "$script_directory\shore_ex.db" -create_table_query @"
 $destinations = @()
 
 if (($PSBoundParameters['all'].IsPresent)) {
-  $cnt  = 0
+  $cnt = 0
   $result = query_database_basic
 
   $result | ForEach-Object {
@@ -344,11 +349,11 @@ if (($PSBoundParameters['all'].IsPresent)) {
 $base_urls = @()
 
 
-function collect_excursions { 
-param ([string]$base_url,
-[bool]$savedata)
+function collect_excursions {
+  param([string]$base_url,
+    [bool]$savedata)
 
-<#
+  <#
   $selenium.Navigate().GoToUrl($base_url)
 
   [void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(100))
@@ -439,17 +444,17 @@ param ([string]$base_url,
     }
     $o = $null
   }
- 
+
 }
 $destinations | ForEach-Object {
 
-  $cnt ++ 
+  $cnt++
   $destination = $_
 
   $result = @()
 
   $fields = @( 'URL','CODE')
-  if ($cnt -gt $maxitems ) { return } 
+  if ($cnt -gt $maxitems) { return }
   query_database -Destination $destination -result_ref ([ref]$result) -fields_ref ([ref]$fields)
   if ($DebugPreference -eq 'Continue') {
     Write-Output 'Result:'

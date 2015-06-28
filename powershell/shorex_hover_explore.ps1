@@ -20,7 +20,8 @@
 
 param(
   [string]$browser = '',
-  [int]$version,  # TODO: version
+  [switch]$grid,
+  [int]$version,# TODO: version
   [switch]$many,
   [string]$destination = 'Ensenada',
   [switch]$pause
@@ -32,7 +33,7 @@ function init_database {
   )
   [int]$version = 3
   [System.Data.SQLite.SQLiteConnection]::CreateFile($database)
-  $connection_string = ('Data Source={0};Version={1};' -f $database,$version )
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
   $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
   $connection.Open()
   $command = $connection.CreateCommand()
@@ -54,7 +55,7 @@ function create_table {
 "@ # http://www.sqlite.org/datatype3.html
   )
   [int]$version = 3
-  $connection_string = ('Data Source={0};Version={1};' -f $database,$version )
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
   $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
   $connection.Open()
   Write-Debug $create_table_query
@@ -73,7 +74,7 @@ INSERT INTO [destinations] (CODE, CAPTION, URL, STATUS )  VALUES(?, ?, ?, ?)
   )
 
   [int]$version = 3
-  $connection_string = ('Data Source={0};Version={1};' -f $database,$version )
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
   $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
   $connection.Open()
   Write-Debug $query
@@ -140,9 +141,16 @@ $shared_assemblies = @(
 )
 
 $MODULE_NAME = 'selenium_utils.psd1'
-import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
+Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 
-$selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
+if ([bool]$PSBoundParameters['grid'].IsPresent) {
+  $selenium = launch_selenium -browser $browser -grid -shared_assemblies $shared_assemblies
+
+} else {
+  $selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
+
+}
+
 
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
@@ -208,11 +216,11 @@ $data_target = 'destinationModal'
 $data_target_css_selector = ('button[class*="ca-primary-button"][data-target="#{0}"]' -f $data_target)
 
 find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element3) $data_target_css_selector
-if ($value_element3 -ne $null){
-[OpenQA.Selenium.Interactions.Actions]$actions3 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-$actions3.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Click().Build().Perform()
-$value_element3 = $null
-$actions3 = $null
+if ($value_element3 -ne $null) {
+  [OpenQA.Selenium.Interactions.Actions]$actions3 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+  $actions3.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Click().Build().Perform()
+  $value_element3 = $null
+  $actions3 = $null
 }
 # get al destinations 
 
@@ -588,21 +596,21 @@ $skip_destinations_regex = '(' + ($skip_destinations -replace "`r`n",'|') + ')'
 
   if (-not $destination_data_val) { return }
   if ($destination_name -match $skip_destinations_regex) { return }
-  if ($headless) {  
-      $row | format-list
- return } 
-    Write-Output ('will find "{0}"' -f $destination_data_val)
+  if ($headless) {
+    $row | Format-List
+    return }
+  Write-Output ('will find "{0}"' -f $destination_data_val)
 
-    $destination_css_selector = ('div#destinations a[data-val="{0}"]' -f $destination_data_val)
+  $destination_css_selector = ('div#destinations a[data-val="{0}"]' -f $destination_data_val)
 
-    find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element4) $destination_css_selector
-    Write-Output ('Destinaton: {0}' -f ($value_element4.GetAttribute('innerHTML') -join ''))
-    $data[$cnt]['url'] = $value_element4.GetAttribute('href')
-    Write-Output ('Link: {0}' -f $value_element4.GetAttribute('href'))
-    highlight ([ref]$selenium) ([ref]$value_element4) -Delay 30
-    # TODO Assert url
+  find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element4) $destination_css_selector
+  Write-Output ('Destinaton: {0}' -f ($value_element4.GetAttribute('innerHTML') -join ''))
+  $data[$cnt]['url'] = $value_element4.GetAttribute('href')
+  Write-Output ('Link: {0}' -f $value_element4.GetAttribute('href'))
+  highlight ([ref]$selenium) ([ref]$value_element4) -Delay 30
+  # TODO Assert url
 
-    $value_element4 = $null
+  $value_element4 = $null
 
 }
 
@@ -629,7 +637,7 @@ $skip_destinations_regex = '(' + ($skip_destinations -replace "`r`n",'|') + ')'
 
 if (($PSBoundParameters['many'].IsPresent)) {
 
-$result = query_database_basic
+  $result = query_database_basic
 
   $result | ForEach-Object {
     $row = $_
