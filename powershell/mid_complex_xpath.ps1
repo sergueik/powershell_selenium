@@ -27,13 +27,16 @@ param(
 $MODULE_NAME = 'selenium_utils.psd1'
 import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
 
-$selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies -hub_host $hub_host -hub_port $hub_port
+$selenium = launch_selenium -browser $browser -hub_host $hub_host -hub_port $hub_port
+
+
+$base_url = ('file:///{0}\{1}' -f (Get-ScriptDirectory), 'forms_test.html' ) -replace '\\', '/'
+write-output $base_url 
 
 $verificationErrors = New-Object System.Text.StringBuilder
 
 # http://www.w3schools.com/xpath/xpath_axes.asp
 
-$base_url = ('file:///{0}\{1}' -f (Get-ScriptDirectory), 'forms_test.html' ) -replace '\\', '/'
 $selenium.Navigate().GoToUrl($base_url)
 $selenium.Navigate().Refresh()
 
@@ -273,7 +276,10 @@ $result_css = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($g
 
 
 Write-Output ('Javascript-generated CSS selector = "{0}"' -f $result_css)
+$result_css = get_css_path_of ([ref] $element)
+
 $css_selector = $result_css
+Write-Output ('Javascript-generated CSS selector = "{0}"' -f $result_css)
 
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
   $wait.PollingInterval = 100
@@ -334,7 +340,9 @@ return get_xpath_of(arguments[0]);
 $result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_xpath_script,$element,'')).ToString()
 
 Write-Output ('Javascript-generated XPath = "{0}"' -f $result)
+$resul = get_xpath_of ([ref] $element)
 
+Write-Output ('Javascript-generated XPath = "{0}"' -f $result)
 try {
 
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))

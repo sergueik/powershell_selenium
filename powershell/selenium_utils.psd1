@@ -7,6 +7,5 @@
    GUID              = '{bfd116a9-5bc5-429f-9013-d03abd91e0cc}'
    PowerShellVersion = '2.0'
    CLRVersion        = '4.0'
-   NestedModules     = 'selenium_common.psm1',
-                       'page_navigation_common.psm1'
+   NestedModules     = 'selenium_common.psm1','page_navigation_common.psm1'
 }

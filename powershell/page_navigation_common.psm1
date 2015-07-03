@@ -1,11 +1,65 @@
 <#
 .SYNOPSIS
-	Determines script directory
+	Returns the Xpath to the provided Selenium page element
 .DESCRIPTION
-	Determines script directory
+	Runs the javascript code through Selenium and returns the Xpath path to the provided Selenium page element
 	
 .EXAMPLE
-	$script_directory = Get-ScriptDirectory
+	$javascript_generated_xpath_to_element = get_xpath_of ([ref] $element)
+
+.LINK
+	# https://chromium.googlesource.com/chromium/blink/+/master/Source/devtools/front_end/components/DOMPresentationUtils.js
+	
+.NOTES
+	VERSION HISTORY
+	2015/07/03 Initial Version
+#>
+
+
+function get_xpath_of {
+  param(
+   <# there is no need to explicitly pass the reference to selenium 
+    [System.Management.Automation.PSReference]$selenium_ref,
+    #>
+    [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
+  )
+  [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
+  [string]$local:result = $null
+
+  [string]$local:script = @"
+function get_xpath_of(element) {
+    if (element.id !== '')
+        return '*[@id="' + element.id + '"]';
+    // alternative: return 'id("' + element.id + '")';
+    if (element === document.body)
+        return element.tagName;
+    var ix = 0;
+    var siblings = element.parentNode.childNodes;
+    for (var i = 0; i < siblings.length; i++) {
+        var sibling = siblings[i];
+        if (sibling === element)
+            return get_xpath_of(element.parentNode) + '/' + element.tagName + '[' + (ix + 1) + ']';
+        if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
+            ix++;
+    }
+}
+return '//' + get_xpath_of(arguments[0]);
+"@
+  $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
+  Write-Debug ('Javascript-generated XPath = "{0}"' -f $local:result)
+
+  return $local:result
+}
+
+
+<#
+.SYNOPSIS
+	Returns the CSS path to the provided Selenium page element
+.DESCRIPTION
+	Runs the javascript code through Selenium and returns the CSS path to the provided Selenium page element
+		
+.EXAMPLE
+	$javascript_generated_css_path_to_element = get_css_path_of ([ref] $element)
 
 .LINK
 	# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed	
@@ -16,17 +70,56 @@
 	2015/06/07 Initial Version
 #>
 
-function Get-ScriptDirectory
-{
-  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-  if ($Invocation.PSScriptRoot) {
-    $Invocation.PSScriptRoot
-  }
-  elseif ($Invocation.MyCommand.Path) {
-    Split-Path $Invocation.MyCommand.Path
-  } else {
-    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(''))
-  }
+function get_css_path_of {
+
+  param(
+   <# there is no need to explicitly pass the reference to selenium 
+    [System.Management.Automation.PSReference]$selenium_ref,
+    #>
+    [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
+  )
+  [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
+  [string]$local:result = $null
+
+  [string]$local:script = @"
+function get_css_selector_of(el) {
+    if (!(el instanceof Element))
+        return;
+    var path = [];
+    while (el.nodeType === Node.ELEMENT_NODE) {
+        var selector = el.nodeName.toLowerCase();
+        if (el.id) {
+            if (el.id.indexOf('-') > -1) {
+                selector += '[id = "' + el.id + '"]';
+            } else {
+                selector += '#' + el.id;
+            }
+            path.unshift(selector);
+            break;
+        } else {
+            var el_sib = el,
+                cnt = 1;
+            while (el_sib = el_sib.previousElementSibling) {
+                if (el_sib.nodeName.toLowerCase() == selector)
+                    cnt++;
+            }
+            if (cnt != 1)
+                selector += ':nth-of-type(' + cnt + ')';
+        }
+        path.unshift(selector);
+        el = el.parentNode;
+    }
+    return path.join(' > ');
+} // invoke 
+return get_css_selector_of(arguments[0]);
+"@
+
+  $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
+
+
+  Write-Debug ('Javascript-generated CSS selector = "{0}"' -f $local:result)
+  return $local:result
+
 }
 
 
@@ -168,7 +261,7 @@ function find_page_element_by_css_selector {
   if ($css_selector -eq '' -or $css_selector -eq $null) {
     return
   }
-  $local:status = $false 
+  $local:status = $false
   $local:element = $null
   [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
@@ -176,7 +269,7 @@ function find_page_element_by_css_selector {
 
   try {
     [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
-    $local:status = $true 
+    $local:status = $true
   } catch [exception]{
     Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
   }

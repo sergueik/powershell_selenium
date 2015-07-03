@@ -1,6 +1,37 @@
 
 <#
 .SYNOPSIS
+	Determines script directory
+.DESCRIPTION
+	Determines script directory
+	
+.EXAMPLE
+	$script_directory = Get-ScriptDirectory
+
+.LINK
+	# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed	
+	
+.NOTES
+	TODO: http://joseoncode.com/2011/11/24/sharing-powershell-modules-easily/	
+	VERSION HISTORY
+	2015/06/07 Initial Version
+#>
+
+function Get-ScriptDirectory
+{
+  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
+  if ($Invocation.PSScriptRoot) {
+    $Invocation.PSScriptRoot
+  }
+  elseif ($Invocation.MyCommand.Path) {
+    Split-Path $Invocation.MyCommand.Path
+  } else {
+    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(''))
+  }
+}
+
+<#
+.SYNOPSIS
 	Start Selenium
 .DESCRIPTION
 	Start Selenium
@@ -31,7 +62,7 @@ function launch_selenium {
     [bool]$use_remote_driver = $false,
     [switch]$debug
   )
-
+  Write-Debug (Get-ScriptDirectory)
   $use_remote_driver = [bool]$PSBoundParameters['grid'].IsPresent
 
   # SHARED_ASSEMBLIES_PATH environment overrides parameter, for Team City
@@ -77,8 +108,8 @@ function launch_selenium {
         $connection.Close()
       } catch {
         Write-Debug 'Launching grid'
-        Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
-        Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
+        Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
+        Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
         Start-Sleep -Millisecond 5000
       }
 
@@ -123,7 +154,7 @@ function launch_selenium {
         [OpenQA.Selenium.Firefox.FirefoxProfile[]]$profiles = $profile_manager.ExistingProfiles
 
         # [NUnit.Framework.Assert]::IsInstanceOfType($profiles , new-object System.Type( FirefoxProfile[]))
-        [NUnit.Framework.StringAssert]::AreEqualIgnoringCase($profiles.GetType().ToString(),'OpenQA.Selenium.Firefox.FirefoxProfile[]')
+        # [NUnit.Framework.StringAssert]::AreEqualIgnoringCase($profiles.GetType().ToString(),'OpenQA.Selenium.Firefox.FirefoxProfile[]')
       }
     }
     elseif ($browser -match 'chrome') {
@@ -170,14 +201,23 @@ function launch_selenium {
 
     }
     elseif ($browser -match 'ie') {
-      $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
-      if ($version -ne $null -and $version -ne 0) {
-        $capability.setCapability("version",$version.ToString());
-      }
+      if ($use_remote_driver) {
+        $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
+        if ($version -ne $null -and $version -ne 0) {
+          $capability.setCapability('version',$version.ToString());
+        }
 
-      $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
+        $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
+      } else {
+        <#
+NOTE:
+New-Object : Exception calling ".ctor" with "1" argument(s): "Unexpected error launching Internet Explorer. Browser zoom level was set to 75%. It should be
+#>
+        $selenium = New-Object OpenQA.Selenium.IE.InternetExplorerDriver ($driver_folder_path)
+      }
     }
     elseif ($browser -match 'safari') {
+      # TODO: throw exception if not provided the 'grid' switch
       $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
 
       $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
@@ -300,10 +340,13 @@ function load_shared_assemblies {
       'nunit.framework.dll'
     )
   )
-
   pushd $shared_assemblies_path
 
-  $shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
+  $shared_assemblies | ForEach-Object {
+    Unblock-File -Path $_;
+    Write-Host $_
+
+    Add-Type -Path $_ }
   popd
 }
 
