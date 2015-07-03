@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html class="k-material">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="This demo shows Kendo UI chart">
+    <title>bar chart</title>
+    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.2.624/styles/kendo.rtl.min.css"/>
+    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.2.624/styles/kendo.default.min.css"/>
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+    <script src="http://cdn.kendostatic.com/2015.2.624/js/kendo.all.min.js"></script>
+  </head>
+  <body>
+    <div id="chart"/>
+    <script>
+$("#chart").kendoChart({
+    title: {
+        text: "Kendo Chart Example"
+    },
+    series: [{
+        name: "Example Series",
+        data: [200, 450, 300, 125],
+        spacing: 0},
+    {
+        name: "Another Series",
+        data: [200, 450, 300, 125],
+        }],
+    categoryAxis: {
+        categories: [2000, 2001, 2002, 2003]
+    }
+});  
+    </script>
+  </body>
+</html>
