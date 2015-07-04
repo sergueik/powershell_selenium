@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="description" content="This demo shows Kendo UI chart">
-    <title>bar chart</title>
-    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.2.624/styles/kendo.rtl.min.css"/>
-    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.2.624/styles/kendo.default.min.css"/>
+    <title>Kendo Chart Example</title>
+    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.2.624/styles/kendo.common-material.min.css" />
+    <link rel="stylesheet" href="http://cdn.kendostatic.com/2015.2.624/styles/kendo.material.min.css" />
     <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
     <script src="http://cdn.kendostatic.com/2015.2.624/js/kendo.all.min.js"></script>
   </head>
@@ -17,18 +17,26 @@ $("#chart").kendoChart({
     title: {
         text: "Kendo Chart Example"
     },
+    seriesDefaults: {
+        labels: {
+            template: "#= kendo.format('{0:4d}', value)#",
+            position: "outsideEnd",
+            visible: true,
+            background: "transparent"
+        }
+    },
+
     series: [{
         name: "Example Series",
         data: [200, 450, 300, 125],
-        spacing: 0},
-    {
+        spacing: 0
+    }, {
         name: "Another Series",
-        data: [200, 450, 300, 125],
-        }],
+        data: [210, 440, 200, 175],
+    }],
     categoryAxis: {
-        categories: [2000, 2001, 2002, 2003]
+        categories: ['apple', 'banana', 'kivi', 'pineapple']
     }
-});  
-    </script>
+});    </script>
   </body>
 </html>

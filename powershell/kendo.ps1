@@ -21,8 +21,77 @@
 param(
   [string]$browser,
   [string]$hub_host = '127.0.0.1',
-  [string]$hub_port = '4444'
+  [string]$hub_port = '4444',
+  [string]$sample = 'barchart'
 )
+
+if ('barchart','piechart' -notcontains $sample)
+{
+  throw "$($sample) is not a valid sample! Please use 'barchart','piechart'"
+}
+Add-Type -TypeDefinition @"
+
+using System;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
+
+public class MouseHelper
+{
+    // http://www.pinvoke.net/default.aspx/user32.mouse_event
+    [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    public static extern void mouse_event(uint dwFlags, int dx, int dy, uint cButtons, uint dwExtraInfo);
+    // static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+    public static extern long SetCursorPos(int X, int Y);
+
+    private const int MOUSEEVENTF_LEFTDOWN = 0x02;
+    private const int MOUSEEVENTF_LEFTUP = 0x04;
+    private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
+    private const int MOUSEEVENTF_RIGHTUP = 0x10;
+    private const int MOUSEEVENTF_WHEEL = 0x800;
+    private const uint MOUSEEVENTF_MOVE = 0x0001;
+    public MouseHelper()
+    {
+    }
+/*
+    public void MouseHelper_mouse_event(int X, int Y)
+    {
+        mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, X, Y, 0, 0);
+    }
+*/
+    public void MouseHelper_mouse_event(int X, int Y)
+    {
+        mouse_event(MOUSEEVENTF_MOVE , X, Y, 0, 0);
+    }
+
+    public void MouseHelper_SetCursorPos(int X, int Y)
+    {
+        SetCursorPos(X, Y);
+    }
+
+}
+
+/* usage
+IWebElement element = driver.FindElement(........);
+var X = element.Location.X;
+var Y = element.Location.Y;
+SetCursorPos(X, Y);
+mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0); 
+*/
+
+"@ -ReferencedAssemblies 'System.Windows.Forms.dll','System.Drawing.dll'
+
+$assemblies = @( 'System.Drawing',
+  'System.Collections.Generic',
+  'System.Collections',
+  'System.ComponentModel',
+  'System.Windows.Forms',
+  'System.Text',
+  'System.Data'
+)
+
+$assemblies | ForEach-Object { $assembly = $_; [void][System.Reflection.Assembly]::LoadWithPartialName($assembly) }
 
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
@@ -32,14 +101,11 @@ $selenium = launch_selenium -browser $browser -hub_host $hub_host -hub_port $hub
 # http://mikaelkoskinen.net/post/kendoui-dataviz-tips-and-tricks
 $base_url = 'http://demos.telerik.com/kendo-ui/bar-charts/column'
 
-$base_url = ('file:///{0}\{1}' -f (Get-ScriptDirectory),'../assets/barchart.html') -replace '\\','/'
+$base_url = ('file:///{0}/{1}' -f (Get-ScriptDirectory),('../assets/{0}.html' -f $sample)) -replace '\\','/'
 
 Write-Output $base_url
 
 $verificationErrors = New-Object System.Text.StringBuilder
-
-# http://www.w3schools.com/xpath/xpath_axes.asp
-
 $selenium.Navigate().GoToUrl($base_url)
 $selenium.Navigate().Refresh()
 Start-Sleep 3
@@ -54,16 +120,23 @@ $result = get_xpath_of ([ref]$element)
 # next : path
 Write-Output ('Javascript-generated XPath = "{0}"' -f $result)
 $path_css_selector = 'path[fill = "#fff"]'
+# $path_css_selector = 'path[d="M0 0 L 50 0 50 15 0 15Z"]'
+#
+
+[OpenQA.Selenium.IMouse]$mouse = ([OpenQA.Selenium.IHasInputDevices]$selenium).Mouse
+$o = New-Object -TypeName MouseHelper
+
 $paths = $element.FindElements([OpenQA.Selenium.By]::CssSelector($path_css_selector))
 $delay = 2000
 Start-Sleep 1
 $paths | ForEach-Object {
   $path_element = $_
+  $path_element.GetAttribute('d')
   Write-Output ('{{X = {0}; Y = {1}}}' -f $path_element.Location.X,$path_element.Location.Y)
   $result = get_css_path_of ([ref]$path_element)
   Write-Output ('CSS "{0}"' -f $result)
   $assert_element = $null
-  find_page_element_by_css_selector ([ref]$selenium) ([ref]$assert_element) $result
+  find_page_element_by_css_selector ([ref]$selenium) ([ref]$assert_element) $result -wait_seconds 2
 
   Write-Output $assert_element.GetAttribute('fill')
 
@@ -72,19 +145,44 @@ $paths | ForEach-Object {
   Write-Output ('XPath "{0}"' -f $result)
 
 
-  # fails.
+  # XPath will fail
   $assert_element = $null
   try {
-    find_page_element_by_xpath ([ref]$selenium) ([ref]$assert_element) $result
+    find_page_element_by_xpath ([ref]$selenium) ([ref]$assert_element) $result -wait_seconds 2
   } catch [exception]{
     Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
   }
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('fill', arguments[1]);",$path_element,'#AAA')
+
+  [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+  $actions.MoveToElement([OpenQA.Selenium.IWebElement]$path_element).Build().Perform()
+
+
+  Write-Output $path_element.LocationOnScreenOnceScrolledIntoView.X
+  Write-Output $path_element.LocationOnScreenOnceScrolledIntoView.Y
+  $mouse.MouseMove($path_element.Coordinates)
+
+  [System.Drawing.Point]$point = $path_element.Coordinates.LocationInDom
+  Write-Output 'point:'
+  $point | Format-Table -AutoSize
+
+  $o.MouseHelper_SetCursorPos($point.X,$point.Y)
+  [OpenQA.Selenium.Interactions.Actions]$builder = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+
+  [void]$builder.Build()
+  [void]$builder.MoveToElement($element,10,10)
+  [void]$builder.Perform()
   Start-Sleep -Millisecond $delay
+  [void]$builder.clickAndHold()
+  [void]$builder.moveByOffset(40,60)
+  [void]$builder.release()
+  [void]$builder.Perform()
+
+  Start-Sleep -Millisecond $delay
+
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('fill', arguments[1]);",$path_element,'#fff')
   Write-Output $path_element.GetAttribute('fill')
   Start-Sleep -Millisecond $delay
-
 
 
 }

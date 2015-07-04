@@ -19,54 +19,15 @@
 #THE SOFTWARE.
 
 param(
-  [switch]$browser
+  [string]$browser,
+  [string]$hub_host = '127.0.0.1',
+  [string]$hub_port = '4444'
 )
 
-function cleanup
-{
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref
-  )
-  try {
-    $selenium_ref.Value.Quit()
-  } catch [exception]{
-    Write-Output (($_.Exception.Message) -split "`n")[0]
-    # Ignore errors if unable to close the browser
-  }
-}
+$MODULE_NAME = 'selenium_utils.psd1'
+Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 
-
-# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
-function Get-ScriptDirectory
-{
-  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-  if ($Invocation.PSScriptRoot) {
-    $Invocation.PSScriptRoot
-  }
-  elseif ($Invocation.MyCommand.Path) {
-    Split-Path $Invocation.MyCommand.Path
-  } else {
-    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
-  }
-}
-$shared_assemblies = @(
-  'WebDriver.dll',
-  'WebDriver.Support.dll',
-  'Selenium.WebDriverBackedSelenium.dll',
-  'nunit.framework.dll'
-
-)
-
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
-
-if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
-  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
-}
-
-pushd $shared_assemblies_path
-
-$shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
-popd
+$selenium = launch_selenium -browser $browser -hub_host $hub_host -hub_port $hub_port
 
 <# 
 pushd C:\tools 
@@ -74,45 +35,20 @@ mklink /D phantomjs C:\phantomjs-1.9.7-windows
 symbolic link created for phantomjs <<===>> C:\phantomjs-1.9.7-windows
 #>
 
-$verificationErrors = New-Object System.Text.StringBuilder
-$baseURL = "http://www.theautomatedtester.co.uk/demo1.html"
-$phantomjs_executable_folder = "C:\tools\phantomjs"
-if ($PSBoundParameters["browser"]) {
-  try {
-    $connection = (New-Object Net.Sockets.TcpClient)
-    $connection.Connect("127.0.0.1",4444)
-    $connection.Close()
-  } catch {
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
-    Start-Sleep -Seconds 10
-  }
-  $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
-  $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
-  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
-} else {
-  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability("ssl-protocol","any")
-  $selenium.Capabilities.SetCapability("ignore-ssl-errors",$true)
-  $selenium.Capabilities.SetCapability("takesScreenshot",$true)
-  $selenium.Capabilities.SetCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
-  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
-}
-
-
-
-$selenium.Navigate().GoToUrl($baseURL + "")
+$selenium.Navigate().GoToUrl($base_url)
 # https://groups.google.com/forum/?fromgroups#!topic/selenium-users/V1eoFUMEPqI
 [OpenQA.Selenium.Interactions.Actions]$builder = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 # NOTE: failed in phantomjs
 [OpenQA.Selenium.IWebElement]$canvas = $selenium.FindElement([OpenQA.Selenium.By]::Id("tutorial"))
-$builder.Build();
-$builder.MoveToElement($canvas,100,100)
-$builder.clickAndHold()
-$builder.moveByOffset(40,60)
-$builder.release()
-$builder.Perform()
+[void]$builder.Build()
+[void]$builder.MoveToElement($canvas,100,100)
+Start-Sleep -Seconds 4
+[void]$builder.clickAndHold()
+[void]$builder.moveByOffset(40,60)
+Start-Sleep -Seconds 4
+
+[void]$builder.release()
+[void]$builder.Perform()
 
 Start-Sleep -Seconds 4
 
