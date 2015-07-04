@@ -22,7 +22,9 @@ param(
   [string]$browser,
   [string]$hub_host = '127.0.0.1',
   [string]$hub_port = '4444',
-  [string]$sample = 'barchart'
+  [string]$sample = 'barchart',
+  [switch]$use_native_methods # NOTE: native_methods do not work
+
 )
 
 if ('barchart','piechart' -notcontains $sample)
@@ -123,65 +125,75 @@ $path_css_selector = 'path[fill = "#fff"]'
 # $path_css_selector = 'path[d="M0 0 L 50 0 50 15 0 15Z"]'
 #
 
+
+[bool]$use_native_methods = [bool]$PSBoundParameters['use_native_methods'].IsPresent
+
 [OpenQA.Selenium.IMouse]$mouse = ([OpenQA.Selenium.IHasInputDevices]$selenium).Mouse
 $o = New-Object -TypeName MouseHelper
+[OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
 $paths = $element.FindElements([OpenQA.Selenium.By]::CssSelector($path_css_selector))
-$delay = 2000
-Start-Sleep 1
+$delay = 500
+
 $paths | ForEach-Object {
   $path_element = $_
-  $path_element.GetAttribute('d')
-  Write-Output ('{{X = {0}; Y = {1}}}' -f $path_element.Location.X,$path_element.Location.Y)
+  # Write-Output $path_element.GetAttribute('d')
+  <# CSS Selector can be used to locate the elements 
   $result = get_css_path_of ([ref]$path_element)
   Write-Output ('CSS "{0}"' -f $result)
   $assert_element = $null
   find_page_element_by_css_selector ([ref]$selenium) ([ref]$assert_element) $result -wait_seconds 2
+  #>
 
-  Write-Output $assert_element.GetAttribute('fill')
-
+ <#
+  # XPath is known to fail
+  # https://www.linkedin.com/grp/post/961927-6022651674206748672
   $result = get_xpath_of ([ref]$path_element)
-
   Write-Output ('XPath "{0}"' -f $result)
 
-
-  # XPath will fail
   $assert_element = $null
   try {
     find_page_element_by_xpath ([ref]$selenium) ([ref]$assert_element) $result -wait_seconds 2
   } catch [exception]{
     Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
   }
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('fill', arguments[1]);",$path_element,'#AAA')
+  #>
 
-  [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-  $actions.MoveToElement([OpenQA.Selenium.IWebElement]$path_element).Build().Perform()
+  if ($use_native_methods){ 
 
-
-  Write-Output $path_element.LocationOnScreenOnceScrolledIntoView.X
-  Write-Output $path_element.LocationOnScreenOnceScrolledIntoView.Y
-  $mouse.MouseMove($path_element.Coordinates)
-
-  [System.Drawing.Point]$point = $path_element.Coordinates.LocationInDom
+  [System.Drawing.Point]$point = $path_element.Location
   Write-Output 'point:'
   $point | Format-Table -AutoSize
 
   $o.MouseHelper_SetCursorPos($point.X,$point.Y)
-  [OpenQA.Selenium.Interactions.Actions]$builder = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
-  [void]$builder.Build()
-  [void]$builder.MoveToElement($element,10,10)
-  [void]$builder.Perform()
-  Start-Sleep -Millisecond $delay
-  [void]$builder.clickAndHold()
-  [void]$builder.moveByOffset(40,60)
-  [void]$builder.release()
-  [void]$builder.Perform()
+  } else { 
 
-  Start-Sleep -Millisecond $delay
+  # need to use LocationOnScreenOnceScrolledIntoView, or Coordinates
+  Write-Output ('Location: {{X = {0}; Y = {1}}}' -f $path_element.Location.X,$path_element.Location.Y)
+  Write-Output ('LocationOnScreenOnceScrolledIntoView: {{X = {0}; Y = {1}}}' -f $path_element.LocationOnScreenOnceScrolledIntoView.X,$path_element.LocationOnScreenOnceScrolledIntoView.Y)
+  Write-Output 'Coordinates:'
+  $path_element.Coordinates | format-list
+   
+  $actions.MoveToElement([OpenQA.Selenium.IWebElement]$path_element).Build().Perform()
 
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('fill', arguments[1]);",$path_element,'#fff')
-  Write-Output $path_element.GetAttribute('fill')
+  $mouse.MouseMove($path_element.Coordinates)
+
+  }
+
+  # [OpenQA.Selenium.Interactions.Actions]$builder = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+
+  # http://stackoverflow.com/questions/14592213/selenium-webdriver-clicking-on-elements-within-an-svg-using-xpath
+
+
+  # this breaks kendo chart - first clicker element disappears, the rest of the loop throws "stale element reference: element is not attached to the page document" errors 
+  # $actions.click($path_element).Perform()
+
+  # the next two seem to have no effect:
+  # [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("if (arguments[0].className!=''){arguments[0].focus();}",$path_element)
+  # [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].dispatchEvent(new MouseEvent('click', {view: window, bubbles:true, cancelable: true}))",$path_element)
+
+
   Start-Sleep -Millisecond $delay
 
 
