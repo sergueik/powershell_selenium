@@ -27,24 +27,38 @@ function get_xpath_of {
   [string]$local:result = $null
 
   [string]$local:script = @"
-function get_xpath_of(element) {
-    if (element.id !== '')
-        return '*[@id="' + element.id + '"]';
-    // alternative: return 'id("' + element.id + '")';
-    if (element === document.body)
-        return element.tagName;
-    var ix = 0;
-    var siblings = element.parentNode.childNodes;
-    for (var i = 0; i < siblings.length; i++) {
-        var sibling = siblings[i];
-        if (sibling === element)
-            return get_xpath_of(element.parentNode) + '/' + element.tagName + '[' + (ix + 1) + ']';
-        if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
-            ix++;
-    }
-}
-return '//' + get_xpath_of(arguments[0]);
+ function get_xpath_of(element) {
+     var elementTagName = element.tagName.toLowerCase();
+     if (element.id != '') {
+         return 'id("' + element.id + '")';
+         // alternative : 
+         // return '*[@id="' + element.id + '"]';
+     } else if (element.name && document.getElementsByName(element.name).length === 1) {
+         return '//' + elementTagName + '[@name="' + element.name + '"]';
+     }
+     if (element === document.body) {
+         return '/html/' + elementTagName;
+     }
+     var sibling_count = 0;
+     var siblings = element.parentNode.childNodes;
+     siblings_length = siblings.length;
+     for (cnt = 0; cnt < siblings_length; cnt++) {
+         var sibling_element = siblings[cnt];
+         if (sibling_element.nodeType !== 1) { // not ELEMENT_NODE
+             continue;
+         }
+         if (sibling_element === element) {
+             return get_xpath_of(element.parentNode) + '/' + elementTagName + '[' + (sibling_count + 1) + ']';
+         }
+         if (sibling_element.nodeType === 1 && sibling_element.tagName === elementTagName) {
+             sibling_count++;
+         }
+     }
+     return;
+ };
+ return get_xpath_of(arguments[0]);
 "@
+
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
   Write-Debug ('Javascript-generated XPath = "{0}"' -f $local:result)
 
@@ -130,9 +144,9 @@ return get_css_selector_of(arguments[0]);
 	Extracts match from a text, e.g. from some $element.Text or $element.GetAttribute('innerHTML')
 	
 .EXAMPLE
-	$first_item = $null
-	$capturing_match_expression = '(?<first_item>\d+)$'
-	extract_match -Source $text -capturing_match_expression $capturing_match_expression -label 'first_item' -result_ref ([ref]$first_item)
+	$firstitem = $null
+	$capturing_match_expression = '(?<firstitem>\d+)$'
+	extract_match -Source $text -capturing_match_expression $capturing_match_expression -label 'firstitem' -result_ref ([ref]$firstitem)
 
 .LINK
 	
