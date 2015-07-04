@@ -73,7 +73,7 @@ function get_xpath_of {
 	Runs the javascript code through Selenium and returns the CSS path to the provided Selenium page element
 		
 .EXAMPLE
-	$javascript_generated_css_path_to_element = get_css_path_of ([ref] $element)
+	$javascript_generated_css_selector_of_element = get_css_selector_of ([ref] $element)
 
 .LINK
 	# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed	
@@ -84,7 +84,7 @@ function get_xpath_of {
 	2015/06/07 Initial Version
 #>
 
-function get_css_path_of {
+function get_css_selector_of {
 
   param(
    <# there is no need to explicitly pass the reference to selenium 
@@ -96,35 +96,36 @@ function get_css_path_of {
   [string]$local:result = $null
 
   [string]$local:script = @"
-function get_css_selector_of(el) {
-    if (!(el instanceof Element))
+function get_css_selector_of(element) {
+
+    if (!(element instanceof Element))
         return;
     var path = [];
-    while (el.nodeType === Node.ELEMENT_NODE) {
-        var selector = el.nodeName.toLowerCase();
-        if (el.id) {
-            if (el.id.indexOf('-') > -1) {
-                selector += '[id = "' + el.id + '"]';
+    while (element.nodeType === Node.ELEMENT_NODE) {
+        var selector = element.nodeName.toLowerCase();
+        if (element.id) {
+            if (element.id.indexOf('-') > -1) {
+                selector += '[id = "' + element.id + '"]';
             } else {
-                selector += '#' + el.id;
+                selector += '#' + element.id;
             }
             path.unshift(selector);
             break;
         } else {
-            var el_sib = el,
-                cnt = 1;
-            while (el_sib = el_sib.previousElementSibling) {
-                if (el_sib.nodeName.toLowerCase() == selector)
-                    cnt++;
+            var element_sibling = element;
+            var sibling_cnt = 1;
+            while (element_sibling = element_sibling.previousElementSibling) {
+                if (element_sibling.nodeName.toLowerCase() == selector)
+                    sibling_cnt++;
             }
-            if (cnt != 1)
-                selector += ':nth-of-type(' + cnt + ')';
+            if (sibling_cnt != 1)
+                selector += ':nth-of-type(' + sibling_cnt + ')';
         }
         path.unshift(selector);
-        el = el.parentNode;
+        element = element.parentNode;
     }
     return path.join(' > ');
-} // invoke 
+} // invoke
 return get_css_selector_of(arguments[0]);
 "@
 
@@ -292,3 +293,19 @@ function find_page_element_by_css_selector {
     $element_ref.Value = $local:element
   }
 }
+
+
+<#
+
+# http://www.phpied.com/sleep-in-javascript/
+
+function sleep(milliseconds) {
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > milliseconds){
+      break;
+    }
+  }
+}
+
+#>

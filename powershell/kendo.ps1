@@ -22,7 +22,7 @@ param(
   [string]$browser,
   [string]$hub_host = '127.0.0.1',
   [string]$hub_port = '4444',
-  [string]$sample = 'barchart',
+  [string]$sample = 'piechart', # barchart has less impressive behavior
   [switch]$use_native_methods # NOTE: native_methods do not work
 
 )
@@ -138,12 +138,11 @@ $delay = 500
 $paths | ForEach-Object {
   $path_element = $_
   # Write-Output $path_element.GetAttribute('d')
-  <# CSS Selector can be used to locate the elements 
-  $result = get_css_path_of ([ref]$path_element)
+  # CSS Selector can be used to locate the elements
+  $result = get_css_selector_of ([ref]$path_element)
   Write-Output ('CSS "{0}"' -f $result)
   $assert_element = $null
   find_page_element_by_css_selector ([ref]$selenium) ([ref]$assert_element) $result -wait_seconds 2
-  #>
 
  <#
   # XPath is known to fail

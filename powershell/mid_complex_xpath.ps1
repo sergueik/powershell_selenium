@@ -276,7 +276,7 @@ $result_css = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($g
 
 
 Write-Output ('Javascript-generated CSS selector = "{0}"' -f $result_css)
-$result_css = get_css_path_of ([ref] $element)
+$result_css = get_css_selector_of ([ref] $element)
 
 $css_selector = $result_css
 Write-Output ('Javascript-generated CSS selector = "{0}"' -f $result_css)
