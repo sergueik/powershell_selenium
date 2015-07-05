@@ -1,3 +1,6 @@
+param(
+[int]$model_choice = 2
+)
 # https://knutkj.wordpress.com/2012/04/29/how-to-render-a-razor-template-with-powershell/
 # https://github.com/dzharii/swd-recorder
 # This is a vanilla script to bootstrap code requird to invoke RazorEngine.
@@ -48,7 +51,7 @@ if ($assembly_in_the_GAC -eq $null) {
   if ($assembly_nuget_package_path -ne $null) {
     Add-Type -Path $assembly_nuget_package_path
   } else {
-    throw ('The System.Web.Razor assembly cannot be found. Nothing was found in nuget package restore of "{0}"' -f $nuget_packages_base_path  )
+    throw ('The System.Web.Razor assembly cannot be found. Nothing was found in nuget package restore of "{0}"' -f $nuget_packages_base_path)
   }
 }
 
@@ -214,47 +217,15 @@ $functions = @'
 
 '@
 
-$model2 = New-Object PSObject
-
-$element = New-Object PSObject
-$element | Add-Member Noteproperty 'Name' 'element_name'
-$element | Add-Member Noteproperty 'Type' 'ordered_list'
-$element | Add-Member Noteproperty 'How' 'CssSelector'
-$element | Add-Member Noteproperty 'HtmlTag' 'element_html_tag'
-$element | Add-Member Noteproperty 'Locator' 'CssSelector'
-
-$model2 | Add-Member Noteproperty 'PageObject' $element
-
-
-[object]$model3 = New-Object PSObject
-
-$items = @()
-
-(0..2) | ForEach-Object {
-
-  $cnt = $_
-  $element = New-Object PSObject
-  $element | Add-Member Noteproperty 'Name' ('element_name_{0}' -f $cnt)
-  $element | Add-Member Noteproperty 'Type' 'ordered_list'
-  $element | Add-Member Noteproperty 'How' 'CssSelector'
-  $element | Add-Member Noteproperty 'HtmlTag' ('element_html_tag_{0}' -f $cnt)
-  $element | Add-Member Noteproperty 'Locator' ('div > :nth-of-type({0})' -f $cnt)
-
-
-  $items += $element
-}
-[object]$pageobject_items = New-Object PSObject
-$pageobject_items | Add-Member Noteproperty 'Items' $items
-
-$model3 | Add-Member Noteproperty 'PageObject' $pageobject_items
-
 $models = @(
-@{ 
-'input' =  '<ul>@foreach(var i in Model){<li>@i</li>}</ul>';
-[object]'model' = @( 0..3);
-},
-@{ 
-'input' =   @"
+  @{
+    'input' = '<ul>@foreach(var i in Model){<li>@i</li>}</ul>';
+    [object]'model' = @( 0..3);
+    'model_generator' = [scriptblock]{ @( 0..3) };
+
+  },
+  @{
+    'input' = @"
 
 @{
 
@@ -270,10 +241,24 @@ $models = @(
 }
 
 "@;
-[object]'model' = $model2;
-},
-@{ 
-'input' =  @"
+    'model_generator' = [scriptblock]{
+
+      $model = New-Object PSObject
+
+      $element = New-Object PSObject
+      $element | Add-Member Noteproperty 'Name' 'element_name'
+      $element | Add-Member Noteproperty 'Type' 'ordered_list'
+      $element | Add-Member Noteproperty 'How' 'CssSelector'
+      $element | Add-Member Noteproperty 'HtmlTag' 'element_html_tag'
+      $element | Add-Member Noteproperty 'Locator' 'CssSelector'
+
+      $model | Add-Member Noteproperty 'PageObject' $element
+      return $model;
+    }
+
+  },
+  @{
+    'input' = @"
 
 @foreach (var element in @Model.PageObject.Items ) 
 {
@@ -289,21 +274,46 @@ $models = @(
     </text>
 }
 
-"@ ;
-[object]'model' = $model3;
+"@;
+    'model_generator' = [scriptblock]{
 
 
-}
+      $model = New-Object PSObject
+
+      $items = @()
+
+      (0..2) | ForEach-Object {
+
+        $cnt = $_
+        $element = New-Object PSObject
+        $element | Add-Member Noteproperty 'Name' ('element_name_{0}' -f $cnt)
+        $element | Add-Member Noteproperty 'Type' 'ordered_list'
+        $element | Add-Member Noteproperty 'How' 'CssSelector'
+        $element | Add-Member Noteproperty 'HtmlTag' ('element_html_tag_{0}' -f $cnt)
+        $element | Add-Member Noteproperty 'Locator' ('div > :nth-of-type({0})' -f $cnt)
+
+
+        $items += $element
+      }
+      $pageobject = New-Object PSObject
+      $pageobject | Add-Member Noteproperty 'Items' $items
+
+      $model | Add-Member Noteproperty 'PageObject' $pageobject
+      return $model
+    }
+
+  }
 )
 
-$input = $models[2].input
-$model = $models[2].model
- 
-$template = @($imports, $functions, $input) -join "`r`n"
+
+$input = $models[$model_choice].input
+$model = Invoke-Command $models[$model_choice].model_generator
+
+$template = @( $imports,$functions,$input) -join "`r`n"
 
 $modelType = 'dynamic'
 $template_class_name = ('t_{0}' -f (Get-Random -Maximum 5000))
-$TemplateBaseClassName = ('t_{0}' -f (Get-Random -Maximum 5000))
+$template_baseclass_name = ('t_{0}' -f (Get-Random -Maximum 5000))
 $template_namespace = 'razor.templates'
 
 # generate unique template base class
@@ -341,28 +351,28 @@ namespace {2} {{
         }}
     }}
 }}
-"@ -f $modelType,$TemplateBaseClassName,$template_namespace
+"@ -f $modelType,$template_baseclass_name,$template_namespace
 
 # instantiate a razor template
 [System.Web.Razor.CSharpRazorCodeLanguage]$razor_code_language = New-Object System.Web.Razor.CSharpRazorCodeLanguage
 $razor_engine_host = New-Object -TypeName 'System.Web.Razor.RazorEngineHost' -ArgumentList $razor_code_language -Property @{
-  DefaultBaseClass = ('{0}.{1}' -f $template_namespace,$TemplateBaseClassName);
+  DefaultBaseClass = ('{0}.{1}' -f $template_namespace,$template_baseclass_name);
   DefaultClassName = $template_class_name;
   DefaultNamespace = $template_namespace;
 }
-$razor_template_engine = New-Object System.Web.Razor.RazorTemplateEngine($razor_engine_host)
+$razor_template_engine = New-Object System.Web.Razor.RazorTemplateEngine ($razor_engine_host)
 
-$sr = New-Object System.IO.StringReader($template)
+$sr = New-Object System.IO.StringReader ($template)
 $code = $razor_template_engine.GenerateCode($sr)
 
 # do template compilation
 [System.IO.StringWriter]$sw = New-Object System.IO.StringWriter
 [Microsoft.CSharp.CSharpCodeProvider]$compiler = New-Object Microsoft.CSharp.CSharpCodeProvider
-[void]$compiler.GenerateCodeFromCompileUnit( $code.GeneratedCode, $sw, $null)
+[void]$compiler.GenerateCodeFromCompileUnit($code.GeneratedCode,$sw,$null)
 
 # do template execution
 Add-Type -TypeDefinition ($template_base_class + "`n" + $sw.ToString()) -ReferencedAssemblies 'System.Core','Microsoft.CSharp'
 
-$instance = New-Object -TypeName ('{0}.{1}' -f $template_namespace, $template_class_name)
+$instance = New-Object -TypeName ('{0}.{1}' -f $template_namespace,$template_class_name)
 
 $instance.Render($model)
