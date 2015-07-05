@@ -67,19 +67,6 @@ param(
 )
 # END OF PARAMETERS.
 
-<# 
-OPTIONAL OVERRIDE $shared_assemblies:
-
-$shared_assemblies = @@(
-  'WebDriver.dll',
-  'WebDriver.Support.dll',
-  'System.Data.SQLite.dll',
-  'nunit.framework.dll'
-)
-
-#> 
-
-
 $module_name = 'selenium_utils.psd1'
 $module_path = '.'
   # MODULE_PATH environment overrides parameter, e.g. for Team City
@@ -118,81 +105,19 @@ $functions = @'
 
 @functions{
 
-    string RubyHow(string how)
+    string FindHow(string how)
     {
         switch (how)
         {
             case "Id":              return "id";
             case "Name":            return "name";
             case "ClassName":       return "class";
-            case "CssSelector":     return "css";
+            case "CssSelector":     return "css_selector";
             case "LinkText":        return "text";
             case "PartialLinkText": return "text";
             case "XPath":           return "xpath";
             default:                return String.Format("!!! LOCATOR PARSE ERROR : '{0}' !!!", how);
         }
-    }
-
-    string RubyTagToAccessor(string tag, string type)
-    {
-        string result = string.Empty;
-
-        tag = tag.ToLower();
-        type = type.ToLower();
-
-        Dictionary<string, string[]> AccessorsAndTags = new Dictionary<string, string[]>();
-        AccessorsAndTags.Add("text_area",       new string[] { "textarea"   });
-        AccessorsAndTags.Add("select_list",     new string[] { "select"     });
-        AccessorsAndTags.Add("link",            new string[] { "a"          });
-        AccessorsAndTags.Add("list_item",       new string[] { "li"         });
-        AccessorsAndTags.Add("unordered_list",  new string[] { "ul"         });
-        AccessorsAndTags.Add("ordered_list",    new string[] { "ol"         });
-        AccessorsAndTags.Add("paragraph",       new string[] { "p"          });
-        AccessorsAndTags.Add("cell",            new string[] { "td", "th"   });
-        AccessorsAndTags.Add("image",           new string[] { "img"        });
-
-        Dictionary<string, string[]> AccessorsAndTypes = new Dictionary<string, string[]>();
-        AccessorsAndTypes.Add("area",         new string[] { "area"      });
-        AccessorsAndTypes.Add("audio",        new string[] { "audio"     });
-        AccessorsAndTypes.Add("button",       new string[] { "submit", "image", "button", "reset",});
-        AccessorsAndTypes.Add("canvas",       new string[] { "canvas"    });
-        AccessorsAndTypes.Add("checkbox",     new string[] { "checkbox"  });
-        AccessorsAndTypes.Add("file_field",   new string[] { "file"      });
-        AccessorsAndTypes.Add("hidden_field", new string[] { "hidden"    });
-        AccessorsAndTypes.Add("radio_button", new string[] { "radio"     });
-        AccessorsAndTypes.Add("text_field",   new string[] { "text", "password"});
-        AccessorsAndTypes.Add("video",        new string[] { "video"     });
-
-        if (!String.IsNullOrEmpty(type))
-        {
-            foreach (KeyValuePair<string, string[]> entry in AccessorsAndTypes)
-            {
-                if (Array.Exists(entry.Value, delegate(string item) { return item == type; }))
-                {
-                    result = entry.Key;
-                    break;
-                }
-            }
-        }
-
-        if (String.IsNullOrEmpty(result))
-        {
-            foreach (KeyValuePair<string, string[]> entry in AccessorsAndTags)
-            {
-                if (Array.Exists(entry.Value, delegate(string item) { return item == tag; }))
-                {
-                    result = entry.Key;
-                    break;
-                }
-            }
-        }
-
-        if (String.IsNullOrEmpty(result))
-        {
-            result = tag;
-        }
-        
-        return result;
     }
 
     string QuoteLocator(string locator)
@@ -202,13 +127,13 @@ $functions = @'
     }    
 
 
-    string RubyWebElement(string name, string tag, string type, string how, string locator)
+    string PowershellElementFindCommand(string name, string tag, string type, string how, string locator)
     {
         System.Text.StringBuilder result = new System.Text.StringBuilder();
-        
-        result.AppendFormat("{0}(", RubyTagToAccessor(tag, type));
-        result.AppendFormat(":{0}, ", name);
-        result.AppendFormat("{0}: '{1}')", RubyHow(how), QuoteLocator(locator));
+        result.AppendFormat("${0} = find_element ", name);   
+        result.AppendFormat("-{0} ", FindHow(how));   
+        result.AppendFormat("'{0}'", QuoteLocator(locator));
+        result.AppendFormat("\n<# tag = '{0}' type = '{1}' #>", tag, type);
 
         return result.ToString();
     }
@@ -216,7 +141,7 @@ $functions = @'
 
 
 '@
-
+$base_url = 'https://github.com/dzharii/swd-recorder'
 $models = @(
   @{
     'input' = '<ul>@foreach(var i in Model){<li>@i</li>}</ul>';
@@ -235,7 +160,7 @@ $models = @(
     <text>@@Model.PageObject.Type = '@Model.PageObject.Type'</text> 
     <text>@@Model.PageObject.How = '@Model.PageObject.How'</text>
     <text>@@Model.PageObject.Locator = '@Model.PageObject.Locator'</text>
-    <text>@RubyWebElement(@Model.PageObject.Name, @Model.PageObject.HtmlTag, @Model.PageObject.Type, @Model.PageObject.How, @Model.PageObject.Locator);</text>
+    <text>@PowershellElementFindCommand(@Model.PageObject.Name, @Model.PageObject.HtmlTag, @Model.PageObject.Type, @Model.PageObject.How, @Model.PageObject.Locator)</text>
     <text>###
     </text>
 }
@@ -246,11 +171,11 @@ $models = @(
       $model = New-Object PSObject
 
       $element = New-Object PSObject
-      $element | Add-Member Noteproperty 'Name' 'element_name'
+      $element | Add-Member Noteproperty 'Name' 'search_field'
       $element | Add-Member Noteproperty 'Type' 'ordered_list'
-      $element | Add-Member Noteproperty 'How' 'CssSelector'
-      $element | Add-Member Noteproperty 'HtmlTag' 'element_html_tag'
-      $element | Add-Member Noteproperty 'Locator' 'CssSelector'
+      $element | Add-Member Noteproperty 'How' 'XPath'
+      $element | Add-Member Noteproperty 'HtmlTag' ''
+      $element | Add-Member Noteproperty 'Locator' 'id("searchInput")'
 
       $model | Add-Member Noteproperty 'PageObject' $element
       return $model;
@@ -269,14 +194,13 @@ $models = @(
     <text>@@element.Type = '@element.Type'</text> 
     <text>@@element.How = '@element.How'</text>
     <text>@@element.Locator = '@element.Locator'</text>
-    <text>@RubyWebElement(@element.Name, @element.HtmlTag, @element.Type, @element.How, @element.Locator)</text>
+    <text>@PowershellElementFindCommand(@element.Name, @element.HtmlTag, @element.Type, @element.How, @element.Locator)</text>
     <text>### 
     </text>
 }
 
 "@;
     'model_generator' = [scriptblock]{
-
 
       $model = New-Object PSObject
 
@@ -286,12 +210,13 @@ $models = @(
 
         $cnt = $_
         $element = New-Object PSObject
-        $element | Add-Member Noteproperty 'Name' ('element_name_{0}' -f $cnt)
-        $element | Add-Member Noteproperty 'Type' 'ordered_list'
+        $element | Add-Member Noteproperty 'Name' ('element_{0}' -f $cnt)
+        $element | Add-Member Noteproperty 'Type' 'unused'
         $element | Add-Member Noteproperty 'How' 'CssSelector'
         $element | Add-Member Noteproperty 'HtmlTag' ('element_html_tag_{0}' -f $cnt)
         $element | Add-Member Noteproperty 'Locator' ('div > :nth-of-type({0})' -f $cnt)
-
+        $element | Add-Member Noteproperty 'Xpath' 'id("js-repo-pjax-container")/div[1]/table[1]/tbody[1]/tr[1]/td[1]/span[1]/a[1]'
+        $element | Add-Member Noteproperty 'CssSelector' 'div[id = "js-repo-pjax-container"] > div:nth-of-type(6) > table > tbody > tr:nth-of-type(9) > td:nth-of-type(3) > span > a' 
 
         $items += $element
       }
