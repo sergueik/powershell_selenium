@@ -18,7 +18,7 @@
 
 function get_xpath_of {
   param(
-   <# there is no need to explicitly pass the reference to selenium 
+    <# there is no need to explicitly pass the reference to selenium 
     [System.Management.Automation.PSReference]$selenium_ref,
     #>
     [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
@@ -87,7 +87,7 @@ function get_xpath_of {
 function get_css_selector_of {
 
   param(
-   <# there is no need to explicitly pass the reference to selenium 
+    <# there is no need to explicitly pass the reference to selenium 
     [System.Management.Automation.PSReference]$selenium_ref,
     #>
     [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
@@ -209,8 +209,8 @@ function highlight {
 .EXAMPLE
 	$link_alt_text = 'Shore Excursions'
 	$element = $null
-	$css_selector = ('img[alt="{0}"]' -f $link_alt_text)
-	find_page_element_by_css_selector ([ref]$selenium) ([ref]$element) $css_selector
+	$xpath = ('img[@alt="{0}"]' -f $link_alt_text)
+	find_page_element_by_xpath ([ref]$selenium) ([ref]$element) $xpath
 
 .LINK
 	
@@ -245,7 +245,15 @@ function find_page_element_by_xpath {
   $element_ref.Value = $local:element
 }
 
+<# 
+TODO: implement the helper methfs for the rest of By's
+e.g.
 
+
+<input id="searchInput" name="search" type="search" size="20" autofocus="autofocus" accesskey="F" dir="auto" results="10" autocomplete="off" list="suggestions">
+
+https://www.wikipedia.org/
+#>
 
 <#
 .SYNOPSIS
@@ -309,3 +317,75 @@ function sleep(milliseconds) {
 }
 
 #>
+
+
+
+# http://stackoverflow.com/questions/1767219/mutually-exclusive-powershell-parameters
+# https://seleniumhq.github.io/selenium/docs/api/java/org/openqa/selenium/By.html
+
+function find_element {
+  param(
+    [Parameter(ParameterSetName = 'set_xpath')] $xpath,
+    [Parameter(ParameterSetName = 'set_css_locator')] $css,
+    [Parameter(ParameterSetName = 'set_id')] $id,
+    [Parameter(ParameterSetName = 'set_linktext')] $linktext,
+    [Parameter(ParameterSetName = 'set_partial_link_text')] $partial_link_text,
+    [Parameter(ParameterSetName = 'set_css_tagname')] $tagname,
+    [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
+  )
+
+
+  # guard
+  $implemented_options = @{
+    'xpath' = $true;
+    'css' = $true;
+    'id' = $false;
+    'linktext' = $false;
+    'partial_link_text' = $false;
+    'tagname' = $false;
+  }
+
+  $implemented.Keys | ForEach-Object { $option = $_
+    if ($psBoundParameters.ContainsKey($option)) {
+
+      if (-not $implemented_options[$option]) {
+
+        Write-Output ('Option {0} i not implemented' -f $option)
+
+
+
+      } else {
+
+      }
+    }
+  }
+  if ($false) {
+    Write-Output @psBoundParameters | Format-Table -AutoSize
+  }
+
+  # fall back to calling legacy implementation
+
+  if ($css -ne $null) {
+    $local:element = $null
+
+    find_page_element_by_css_selector ([ref]$selenium) ([ref]($local:element)) -css_selector $css
+    return local:element
+
+  }
+
+
+  if ($xpath -ne $null) {
+
+    $local:element = $null
+    $xpath = ('img[@alt="{0}"]' -f $link_alt_text)
+    find_page_element_by_xpath ([ref]$selenium) ([ref]($local:element)) $xpath
+
+    return local:element
+
+  }
+
+}
+
+
+
+

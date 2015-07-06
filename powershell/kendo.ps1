@@ -1,4 +1,4 @@
-#Copyright (c) 2014 Serguei Kouzmine
+#Copyright (c) 2015 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -165,8 +165,10 @@ Start-Sleep 3
 
 $element = $null
 $css_selector = 'div#chart svg'
-
 find_page_element_by_css_selector ([ref]$selenium) ([ref]$element) $css_selector
+# $element = find_element -css $css_selector
+# fails in hext line ?
+$element
 # highlight ([ref]$selenium) ([ref]$element )
 $result = get_xpath_of ([ref]$element)
 # next : path
@@ -192,7 +194,10 @@ $paths | ForEach-Object {
   $result = get_css_selector_of ([ref]$path_element)
   Write-Output ('CSS "{0}"' -f $result)
   $assert_element = $null
-  find_page_element_by_css_selector ([ref]$selenium) ([ref]$assert_element) $result -wait_seconds 2
+  # TODO pass flags to module legacy implementation
+  find_page_element_by_css_selector ([ref]$selenium) ([ref]$assert_element) $result
+  # $assert_element = find_element -css $result 
+  # -wait_seconds 2
 
   <#
   # XPath is known to fail
