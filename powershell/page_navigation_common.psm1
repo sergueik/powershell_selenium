@@ -330,8 +330,7 @@ function find_element {
     [Parameter(ParameterSetName = 'set_id')] $id,
     [Parameter(ParameterSetName = 'set_linktext')] $linktext,
     [Parameter(ParameterSetName = 'set_partial_link_text')] $partial_link_text,
-    [Parameter(ParameterSetName = 'set_css_tagname')] $tagname,
-    [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
+    [Parameter(ParameterSetName = 'set_css_tagname')] $tagname
   )
 
 
@@ -369,7 +368,7 @@ function find_element {
     $local:element = $null
 
     find_page_element_by_css_selector ([ref]$selenium) ([ref]($local:element)) -css_selector $css
-    return local:element
+    return $local:element
 
   }
 
@@ -380,7 +379,7 @@ function find_element {
     $xpath = ('img[@alt="{0}"]' -f $link_alt_text)
     find_page_element_by_xpath ([ref]$selenium) ([ref]($local:element)) $xpath
 
-    return local:element
+    return $local:element
 
   }
 
