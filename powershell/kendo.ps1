@@ -22,10 +22,60 @@ param(
   [string]$browser,
   [string]$hub_host = '127.0.0.1',
   [string]$hub_port = '4444',
-  [string]$sample = 'piechart', # barchart has less impressive behavior
+  [string]$sample = 'piechart',# barchart has less impressive behavior
   [switch]$use_native_methods # NOTE: native_methods do not work
 
 )
+
+function get_svg_xpath_of {
+  param(
+    <# there is no need to explicitly pass the reference to selenium 
+    [System.Management.Automation.PSReference]$selenium_ref,
+    #>
+    [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
+  )
+  [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
+  [string]$local:result = $null
+
+  [string]$local:script = @"
+ function get_svg_xpath_of(element) {
+     var elementTagName = element.tagName.toLowerCase();
+     if (element.id != '') {
+         return 'id("' + element.id + '")';
+         // alternative : 
+         // return '*[@id="' + element.id + '"]';
+     } else if (element.name && document.getElementsByName(element.name).length === 1) {
+         return '//' + elementTagName + '[@name="' + element.name + '"]';
+     }
+     if (element === document.body) {
+         return '/html/' + elementTagName;
+     }
+     var sibling_count = 0;
+     var siblings = element.parentNode.childNodes;
+     siblings_length = siblings.length;
+     for (cnt = 0; cnt < siblings_length; cnt++) {
+         var sibling_element = siblings[cnt];
+         if (sibling_element.nodeType !== 1) { // not ELEMENT_NODE
+             continue;
+         }
+         if (sibling_element === element) {
+             return get_svg_xpath_of(element.parentNode) + '/*[name()="' + elementTagName + '"][' + (sibling_count + 1) + ']';
+         }
+         if (sibling_element.nodeType === 1 && sibling_element.tagName === elementTagName) {
+             sibling_count++;
+         }
+     }
+     return;
+ };
+ return get_svg_xpath_of(arguments[0]);
+"@
+
+  $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
+  Write-Debug ('Javascript-generated XPath = "{0}"' -f $local:result)
+
+  return $local:result
+}
+
 
 if ('barchart','piechart' -notcontains $sample)
 {
@@ -144,10 +194,14 @@ $paths | ForEach-Object {
   $assert_element = $null
   find_page_element_by_css_selector ([ref]$selenium) ([ref]$assert_element) $result -wait_seconds 2
 
- <#
+  <#
   # XPath is known to fail
   # https://www.linkedin.com/grp/post/961927-6022651674206748672
-  $result = get_xpath_of ([ref]$path_element)
+  # one has to switch to equivalent, but more verbose XPath
+  # e.g. //*[@id="chartdiv"]/div/div[1]/*[name()="svg"]/*[name()="g"][7]/*[name()="g"]/*[name()="g"][1]/*[name()="path"][starts-with(@d, "M371.75,174.28l")]
+  # http://stackoverflow.com/questions/26722421/how-do-i-test-a-click-on-svg-objects-using-selenium-webdriver
+ #>
+  $result = get_svg_xpath_of ([ref]$path_element)
   Write-Output ('XPath "{0}"' -f $result)
 
   $assert_element = $null
@@ -156,27 +210,27 @@ $paths | ForEach-Object {
   } catch [exception]{
     Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
   }
-  #>
+  <#  #>
 
-  if ($use_native_methods){ 
+  if ($use_native_methods) {
 
-  [System.Drawing.Point]$point = $path_element.Location
-  Write-Output 'point:'
-  $point | Format-Table -AutoSize
+    [System.Drawing.Point]$point = $path_element.Location
+    Write-Output 'point:'
+    $point | Format-Table -AutoSize
 
-  $o.MouseHelper_SetCursorPos($point.X,$point.Y)
+    $o.MouseHelper_SetCursorPos($point.X,$point.Y)
 
-  } else { 
+  } else {
 
-  # need to use LocationOnScreenOnceScrolledIntoView, or Coordinates
-  Write-Output ('Location: {{X = {0}; Y = {1}}}' -f $path_element.Location.X,$path_element.Location.Y)
-  Write-Output ('LocationOnScreenOnceScrolledIntoView: {{X = {0}; Y = {1}}}' -f $path_element.LocationOnScreenOnceScrolledIntoView.X,$path_element.LocationOnScreenOnceScrolledIntoView.Y)
-  Write-Output 'Coordinates:'
-  $path_element.Coordinates | format-list
-   
-  $actions.MoveToElement([OpenQA.Selenium.IWebElement]$path_element).Build().Perform()
+    # need to use LocationOnScreenOnceScrolledIntoView, or Coordinates
+    Write-Output ('Location: {{X = {0}; Y = {1}}}' -f $path_element.Location.X,$path_element.Location.Y)
+    Write-Output ('LocationOnScreenOnceScrolledIntoView: {{X = {0}; Y = {1}}}' -f $path_element.LocationOnScreenOnceScrolledIntoView.X,$path_element.LocationOnScreenOnceScrolledIntoView.Y)
+    Write-Output 'Coordinates:'
+    $path_element.Coordinates | Format-List
 
-  $mouse.MouseMove($path_element.Coordinates)
+    $actions.MoveToElement([OpenQA.Selenium.IWebElement]$assert_element).Build().Perform()
+
+    $mouse.MouseMove($assert_element.Coordinates)
 
   }
 
@@ -200,4 +254,3 @@ $paths | ForEach-Object {
 
 # Cleanup
 cleanup ([ref]$selenium)
-
