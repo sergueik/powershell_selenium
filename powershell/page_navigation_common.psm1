@@ -385,6 +385,86 @@ function find_element {
 
 }
 
+<#
+
+function find_element {
+  param(
+    [Parameter(ParameterSetName = 'set_xpath')] $xpath,
+    [Parameter(ParameterSetName = 'set_css_selector')] $css,
+    [Parameter(ParameterSetName = 'set_id')] $id,
+    [Parameter(ParameterSetName = 'set_linktext')] $linktext,
+    [Parameter(ParameterSetName = 'set_partial_link_text')] $partial_link_text,
+    [Parameter(ParameterSetName = 'set_css_tagname')] $tagname
+  )
+
+
+  # guard
+  $implemented_options = @@{
+    'xpath' = $true;
+    'css' = $true;
+    'id' = $false;
+    'linktext' = $false;
+    'partial_link_text' = $false;
+    'tagname' = $false;
+  }
+
+  $implemented.Keys | ForEach-Object { $option = $_
+    if ($psBoundParameters.ContainsKey($option)) {
+
+      if (-not $implemented_options[$option]) {
+
+        Write-Output ('Option {0} i not implemented' -f $option)
+
+
+
+      } else {
+
+      }
+    }
+  }
+  if ($false) {
+    Write-Output @@psBoundParameters | Format-Table -AutoSize
+  }
+  $element = $null
+  $wait_seconds = 5
+  $wait_polling_interval = 50
+
+  if ($css -ne $null) {
+
+    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+    $wait.PollingInterval = $wait_polling_interval
+
+    try {
+      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css)))
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`ncss = '{1}'" -f (($_.Exception.Message) -split "`n")[0],$css)
+    }
+    $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css))
+
+
+  }
+
+
+  if ($xpath -ne $null) {
+
+    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenum,[System.TimeSpan]::FromSeconds($wait_seconds))
+    $wait.PollingInterval = $wait_polling_interval
+
+    try {
+      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$xpath)
+    }
+
+    $element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::XPath($xpath))
+
+
+  }
+
+  return $element
+}
+
+#>
 
 
 
