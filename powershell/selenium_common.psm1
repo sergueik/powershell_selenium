@@ -117,7 +117,7 @@ function launch_selenium {
       # launching Selenium jar in  standalone is not needed
 
       # adding driver folder to the path environment
-      if (-not Test-Path $driver_folder_path)
+      if (-not (Test-Path $driver_folder_path))
       {
         throw "Folder ${driver_folder_path} does not Exist, cannot be added to $env:PATH"
       }

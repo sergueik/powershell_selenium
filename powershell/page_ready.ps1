@@ -24,18 +24,12 @@ param(
   [string]$hub_port = '4444'
 )
 
-$shared_assemblies = @(
-  'WebDriver.dll',
-  'WebDriver.Support.dll',
-  'nunit.framework.dll'
-)
-
-
 
 $MODULE_NAME = 'selenium_utils.psd1'
 import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
 
-$selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies -hub_host $hub_host -hub_port $hub_port
+[string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
+$selenium = launch_selenium -browser $browser -hub_host $hub_host -hub_port $hub_port
 
 $verificationErrors = New-Object System.Text.StringBuilder
 Add-Type @"
@@ -54,7 +48,10 @@ namespace WaitForExtensions
         public static void Wait(/* this // no longer is an extension method  */ IWebDriver driver)
         {
             var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(driver, TimeSpan.FromSeconds(30.00));
-            wait.Until(dummy => ((IJavaScriptExecutor)driver).ExecuteScript("return document.readyState").Equals("complete"));
+            wait.Until(dummy => ((IJavaScriptExecutor) driver).ExecuteScript("return document.readyState").Equals("complete"));
+// https://www.linkedin.com/grp/post/961927-6024383820957040643
+// wait.Until(dummy => ((IJavaScriptExecutor)driver).ExecuteScript("return jQuery.active").Equals("0"));
+
         }
 
         public static void Wait2(/* this // no longer is an extension method  */ IWebDriver driver)
