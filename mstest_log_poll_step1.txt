@@ -1,0 +1,100 @@
+<#
+ This is script run periodically by Team City
+
+ This step periodically check for the logs
+ if no logs are present, exit without failing the build 
+ Otherwise copy logs and the test artifacts into the workspace 
+ and signal TC to process the MS Test results
+
+#>
+
+# http://confluence.jetbrains.com/display/TCD7/Build+Script+Interaction+with+TeamCity#BuildScriptInteractionwithTeamCity-ReportingBuildProgress
+
+$env:POLL_INTERVAL=10
+write-output "##teamcity[progressMessage 'Check for the logs']"
+# start-sleep -seconds $env:POLL_INTERVAL
+
+# write-debug 'Processing the status of log discovery'
+# write-debug ('LOG_FOUND = {0}' -f $env:LOG_FOUND )
+
+#
+# check for the logs.
+# define $env:LOG_FOUND appropriately
+# 
+
+if ((  $env:LOG_FILE -eq '' -or $env:LOG_FILE -eq $null ) -or (  $env:LOG_PATH -eq '' -or $env:LOG_PATH -eq $null ) ) {
+  write-output 'Script Error, aborting'
+  write-output "##teamcity[buildStatus status='FAILURE' text='Script Error']"
+  exit 1
+}
+
+if (-not (test-path -path $env:LOG_PATH -PathType Container ) ) {
+  write-output 'Log directory is missing'
+  write-output "##teamcity[buildStatus status='FAILURE' text='Log directory is missing']"
+  exit 1
+
+
+}
+# Copy the log and all mstest generated output drectories  
+
+$WORKDIR = Get-Location
+
+pushd $env:LOG_PATH
+
+write-output ('Recursively copying {0} to {1}' -f $env:LOG_PATH , $WORKDIR  )
+dir
+Copy-Item -Path '.\*' -Destination $WORKDIR -recurse
+popd
+if ( test-path -path $env:LOG_FILE -PathType Leaf ){
+  $env:LOG_FOUND = 'true' 
+} else {
+  $env:LOG_FOUND = 'false'
+}
+# Stop without failing the build if no logs found 
+if (  $env:LOG_FOUND -match 'false'  ) {
+  write-output 'No new logs found, aborting'
+  write-output "##teamcity[progressMessage 'No new logs found']"
+  #  .... 
+  write-output "##teamcity[buildStatus status='SUCCESS' text='No new logs found']"
+
+exit 0 
+}
+
+if (  $env:LOG_FOUND  -match 'true' ) {
+
+  write-output 'Found the logs, processing'
+
+# TODO
+write-output "##teamcity[progressMessage 'Found Results']"
+
+# copying loally 
+start-sleep -seconds 10 
+
+write-output "##teamcity[progressMessage 'Run MSTest report watcher']"
+
+echo '' | out-file -append -encoding  ascii -filepath 'results.trx'
+
+ 
+# This is done in a separate job now.
+# write-output "##teamcity[importData id='mstest' file='results.trx']"
+
+write-output "##teamcity[progressMessage 'set RUN_TRIGGER=VARIABLE_SET_BY_BUILD_STEP']"
+write-output "##teamcity[setParameter name='RUN_TRIGGER' value='VARIABLE_SET_BY_BUILD_STEP']"
+
+write-output "##teamcity[progressMessage 'set env.RUN_TRIGGER=ENVIRONMENT_VARIABLE_SET_BY_BUILD_STEP']"
+write-output "##teamcity[setParameter name='env.RUN_TRIGGER' value='ENVIROsNMENT_VARIABLE_SET_BY_BUILD_STEP']"
+
+write-output "##teamcity[progressMessage 'set system.RUN_TRIGGER=SYSTEM_VARIABLE_SET_BY_BUILD_STEP']"
+write-output "##teamcity[setParameter name='system.RUN_TRIGGER' value='SYSTEM_VARIABLE_SET_BY_BUILD_STEP']"
+
+start-sleep -seconds 10 
+write-output "##teamcity[progressMessage 'Done']"
+
+# append the build status - do not overwrite
+# write-output "##teamcity[buildStatus status='SUCCESS' text='Processed logs']"
+
+exit 0 
+}
+
+write-output 'Script Error, aborting'
+write-output "##teamcity[buildStatus status='FAILURE' text='Script Error']"
