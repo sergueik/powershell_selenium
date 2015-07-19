@@ -31,7 +31,7 @@ function AdddLoadCapabilities (
   $f.Text = $title
 
   $panel2 = New-Object System.Windows.Forms.TabPage
-  $textbox1 = New-Object System.Windows.Forms.TextBox
+  $tb1 = New-Object System.Windows.Forms.TextBox
   $panel1 = New-Object System.Windows.Forms.TabPage
   $panel1.Text = "Add Capabilities"
   $button1 = New-Object System.Windows.Forms.Button
@@ -40,38 +40,27 @@ function AdddLoadCapabilities (
   $panel1.SuspendLayout()
   $tab_contol1.SuspendLayout()
   $f.SuspendLayout()
-  # https://github.com/rossrowe/sauce-ci-java-demo/blob/master/src/test/java/SauceConnectTest.java
-  <#
-http://YOUR_USERNAME:YOUR_ACCESS_KEY@ondemand.saucelabs.com:80/wd/hub
-http://ondemand.saucelabs.com:80/wd/hub
 
-
-Username
-API Access Key
-
-username:YOUR_USERNAME
-key:YOUR_ACCESS_KEY
-#>
-  $textbox1.Location = New-Object System.Drawing.Point (72,7)
-  $textbox1.Name = "textBoxMessage"
-  $textbox1.Size = New-Object System.Drawing.Size (200,20)
-  $textbox1.TabIndex = 0
+  $tb1.Location = New-Object System.Drawing.Point (72,7)
+  $tb1.Name = "textBoxMessage"
+  $tb1.Size = New-Object System.Drawing.Size (200,20)
+  $tb1.TabIndex = 0
 
   $l1 = New-Object System.Windows.Forms.Label
   $l1.Location = New-Object System.Drawing.Size (202,32)
   $l1.Size = New-Object System.Drawing.Size (140,16)
-  $hub_host = 'http://ondemand.saucelabs.com'
-  $hub_port = '80'
+  $hub_host = 'http://127.0.0.1'
+  $hub_port = '4444'
 
   $l1.Text = ''
 
   $l1.Font = New-Object System.Drawing.Font ('Microsoft Sans Serif',8,[System.Drawing.FontStyle]::Regular,[System.Drawing.GraphicsUnit]::Point,0);
   $panel2.Controls.Add($l1)
-  $textbox1.Text = ('http://{0}:{1}/wd/hub' -f $hub_host,$hub_port)
-  $uri = [System.Uri]($textbox1.Text)
+  $tb1.Text = ('http://{0}:{1}/wd/hub' -f $hub_host,$hub_port)
+  $uri = [System.Uri]($tb1.Text)
 
 
-  $textbox1.Add_Leave({
+  $tb1.Add_Leave({
       param(
         [object]$sender,
         [System.EventArgs]$eventargs
@@ -101,7 +90,7 @@ key:YOUR_ACCESS_KEY
       [System.EventArgs]$eventargs
     )
 
-<#
+    <#
   [OpenQA.Selenium.Remote.DesiredCapabilities]$capabillities = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
 
   $capabillities.SetCapability([OpenQA.Selenium.Remote.CapabilityType]::Platform,"Windows 8.1")
@@ -112,13 +101,13 @@ key:YOUR_ACCESS_KEY
   $capabillities.SetCapability("accessKey","my acces key value")
   $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capabillities)
 #>
-    $caller.Message = $textbox1.Text
-    [System.Windows.Forms.MessageBox]::Show($textbox1.Text);
+    $caller.Message = $tb1.Text
+    [System.Windows.Forms.MessageBox]::Show($tb1.Text);
   }
   $button1.add_click($button1_Click)
   $panel2.Controls.Add($button1)
 
-  $panel2.Controls.Add($textbox1)
+  $panel2.Controls.Add($tb1)
   $panel2.Location = New-Object System.Drawing.Point (4,22)
   $panel2.Name = "tabPage2"
   $panel2.Padding = New-Object System.Windows.Forms.Padding (3)
@@ -138,7 +127,7 @@ key:YOUR_ACCESS_KEY
   $grid.ColumnCount = 2
   $grid.Columns[0].Name = 'Parameter Name'
   $grid.Columns[1].Name = 'Value'
-  (0..3) | ForEach-Object {
+  (0..2) | ForEach-Object {
     $row1 = @( '','')
     $grid.Rows.Add($row1)
   }
@@ -147,15 +136,91 @@ key:YOUR_ACCESS_KEY
 
   foreach ($row in $grid.Rows) {
     $row.cells[0].Style.BackColor = [System.Drawing.Color]::LightGray
+    $row.cells[0].Style.Font = New-Object System.Drawing.Font ('Microsoft Sans Serif',8.25)
     $row.cells[0].Style.ForeColor = [System.Drawing.Color]::White
     $row.cells[1].Style.Font = New-Object System.Drawing.Font ('Microsoft Sans Serif',8.25)
   }
+  <#
 
-  $button = New-Object System.Windows.Forms.Button
-  $button.Text = 'Test'
-  $button.Dock = [System.Windows.Forms.DockStyle]::Bottom
+http://www.howtogeek.com/howto/30014/run-ie6-and-other-old-apps-in-windows-7-with-spoon/
 
-  $panel1.Controls.Add($button)
+http://stackoverflow.com/questions/22010163/internet-explorer-versions-testing-in-february-2014-browserstack-saucelabs-gh
+https://saucelabs.com/selenium?dmr=0801f3fc4276057257c2237525fc69da0a6063f5c14eb80155a27cd9
+
+#>
+  # http://www.seleniumhq.org/ecosystem/
+  $configuration = @{
+    'BrowserStack' =
+    @{ 'capabilities' = @{
+        'browserstack.user' = 'USERNAME';
+        'browserstack.key' = 'ACCESS_KEY';
+      };
+      'hub_url' = 'http://hub.browserstack.com/wd/hub/';
+      'help_url' = 'https://www.browserstack.com/automate/c-sharp#configure-capabilities';
+
+    };
+
+    'Sauce Labs' =
+    @{ 'capabilities' = @{
+        'username' = 'USERNAME';
+        'accesskey' = 'ACCESS_KEY';
+      };
+      'hub_url' = 'http://ondemand.saucelabs.com:80/wd/hub';
+      'help_url' = 'https://www.browserstack.com/automate/c-sharp#configure-capabilities';
+      # http://YOUR_USERNAME:YOUR_ACCESS_KEY@ondemand.saucelabs.com:80/wd/hub
+    };
+
+    'TestingBot' =
+    @{ 'capabilities' = @{
+        'username' = $null;
+        'accesskey' = $null;
+      };
+      'hub_url' = $null;
+      'help_url' = 'https://testingbot.com/features';
+
+    };
+
+    # https://spoon.net/selenium
+
+  }
+
+  $cb1 = New-Object System.Windows.Forms.ComboBox
+  $cb1.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
+  $cb1.Dock = [System.Windows.Forms.DockStyle]::Bottom
+
+  $cb1_SelectedIndexChanged = {
+    param(
+      [object]$sender,
+      [System.EventArgs]$eventargs
+    )
+    
+    $caller.Message = $sender.SelectedIndex.ToString()
+    # [System.Windows.Forms.MessageBox]::Show($sender.Text)
+    if ($sender.Text -match '\w+') {
+      $tb1.Text = $configuration[$sender.Text]['hub_url']
+      $capabilities = $configuration[$sender.Text]['capabilities']
+      $grid.Rows.Clear()
+      $capabilities.Keys | ForEach-Object {
+        $row1 = @( $_,$capabilities[$_])
+        $grid.Rows.Add($row1)
+      }
+
+    }
+
+  }
+  $cb1.add_SelectedIndexChanged($cb1_SelectedIndexChanged)
+
+  $cb1.Location = New-Object System.Drawing.Size (10,40)
+  $cb1.Size = New-Object System.Drawing.Size (260,20)
+  $cb1.Height = 80
+
+
+  [void]$cb1.Items.Add('Sauce Labs')
+  [void]$cb1.Items.Add('BrowserStack')
+  [void]$cb1.Items.Add('TestingBot')
+
+  $panel1.Controls.Add($cb1)
+
   $panel1.Controls.Add($grid)
   $grid.ResumeLayout($false)
 
@@ -181,8 +246,8 @@ key:YOUR_ACCESS_KEY
   $tab_contol1.Location = New-Object System.Drawing.Point (13,13)
   $tab_contol1.Name = "tabControl1"
   $tab_contol1.SelectedIndex = 1
-  $textbox1.Select()
-  $textbox1.Enabled = $true
+  $tb1.Select()
+  $tb1.Enabled = $true
   $tab_contol1.Size = New-Object System.Drawing.Size (550,208)
   $tab_contol1.TabIndex = 0
 
@@ -194,7 +259,7 @@ key:YOUR_ACCESS_KEY
   $panel1.ResumeLayout($false)
   $tab_contol1.ResumeLayout($false)
   $f.ResumeLayout($false)
-  $f.ActiveControl = $textbox1
+  $f.ActiveControl = $tb1
 
   $f.Topmost = $true
   $f.Add_Shown({ $f.Activate() })
