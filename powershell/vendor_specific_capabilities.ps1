@@ -18,13 +18,15 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-# http://www.java2s.com/Code/CSharpAPI/System.Windows.Forms/TabControlControlsAdd.htm
-# with sizes adjusted to run the focus demo
-
+# https://github.com/saucelabs/sauce-dotnet-examples/
 function AdddLoadCapabilities (
-  [string]$title,
-  [object]$caller
+  [string]$title
+
 ) {
+
+
+  $MODULE_NAME = 'selenium_utils.psd1'
+  Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 
   @( 'System.Drawing','System.Windows.Forms') | ForEach-Object { [void][System.Reflection.Assembly]::LoadWithPartialName($_) }
   $f = New-Object System.Windows.Forms.Form
@@ -35,10 +37,10 @@ function AdddLoadCapabilities (
   $panel1 = New-Object System.Windows.Forms.TabPage
   $panel1.Text = "Add Capabilities"
   $button1 = New-Object System.Windows.Forms.Button
-  $tab_contol1 = New-Object System.Windows.Forms.TabControl
+  $tbc1 = New-Object System.Windows.Forms.TabControl
   $panel2.SuspendLayout()
   $panel1.SuspendLayout()
-  $tab_contol1.SuspendLayout()
+  $tbc1.SuspendLayout()
   $f.SuspendLayout()
 
   $tb1.Location = New-Object System.Drawing.Point (72,7)
@@ -49,7 +51,7 @@ function AdddLoadCapabilities (
   $l1 = New-Object System.Windows.Forms.Label
   $l1.Location = New-Object System.Drawing.Size (202,32)
   $l1.Size = New-Object System.Drawing.Size (140,16)
-  $hub_host = 'http://127.0.0.1'
+  $hub_host = '127.0.0.1'
   $hub_port = '4444'
 
   $l1.Text = ''
@@ -68,7 +70,7 @@ function AdddLoadCapabilities (
       if ($sender.Text.Length -eq 0) {
         $l1.Text = 'Input required'
         # [System.Windows.Forms.MessageBox]::Show('Input required') 
-        $tab_contol1.SelectedIndex = 1
+        $tbc1.SelectedIndex = 1
         $sender.Select()
         $result = $sender.Focus()
       } else {
@@ -90,19 +92,58 @@ function AdddLoadCapabilities (
       [System.EventArgs]$eventargs
     )
 
-    <#
-  [OpenQA.Selenium.Remote.DesiredCapabilities]$capabillities = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
 
-  $capabillities.SetCapability([OpenQA.Selenium.Remote.CapabilityType]::Platform,"Windows 8.1")
-  $capabillities.SetCapability([OpenQA.Selenium.Remote.CapabilityType]::Version,"36")
+    $selenium = $null
+    $browser = 'chrome'
+    $version = '43'
+    $version = '35'
 
-  $capabillities.SetCapability("name","R(...)")
-  $capabillities.SetCapability("username","My username")
-  $capabillities.SetCapability("accessKey","my acces key value")
-  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capabillities)
-#>
+    $platform = 'windows'
+    $platform = 'linux'
+
+    $username = 'kouzmine_serguei'
+    $access_key = 'fbd94661-d447-4d16-bdb8-5317fe264604'
+    $platforms = @{
+      'windows' = [OpenQA.Selenium.PlatformType]::Windows;
+      'mac' = [OpenQA.Selenium.PlatformType]::Mac;
+      'linux' = [OpenQA.Selenium.PlatformType]::Linux;
+
+    }
+
+
+    load_shared_assemblies
+
+
+    [OpenQA.Selenium.Remote.DesiredCapabilities]$capabillities = New-Object OpenQA.Selenium.Remote.DesiredCapabilities ($browser,$version,[OpenQA.Selenium.Platform]::CurrentPlatform)
+    # wrong  argument
+    #    $capabillities.SetCapability("platform",$platforms[$platform])
+    $capabillities.SetCapability("platform",$platform)
+
+    $capabillities.SetCapability("username",$username)
+    $capabillities.SetCapability("accessKey",$access_key)
+    $capabillities.SetCapability("name","Test_Name")
+    # start a new remote web driver session on sauce labs
+    $uri = $tb1.Text
+    [System.Windows.Forms.MessageBox]::Show($uri);
+    $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capabillities)
+
+    $explicit = 30
+    [void]($selenium.Manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))
+
+    $base_url = "https://saucelabs.com/test/guinea-pig"
+    $selenium.Navigate().GoToUrl($base_url)
+    Write-Host "https://www.whatismybrowser.com/"
+    $selenium.Navigate().GoToUrl("https://www.whatismybrowser.com/")
+
+
+    [OpenQA.Selenium.Screenshot]$screenshot = $selenium.GetScreenshot()
+    $filename = 'test'
+    $screenshot_path = (Get-ScriptDirectory)
+    Write-Host ([System.IO.Path]::Combine($screenshot_path,('{0}.{1}' -f $filename,'png')))
+    $screenshot.SaveAsFile([System.IO.Path]::Combine($screenshot_path,('{0}.{1}' -f $filename,'png')),[System.Drawing.Imaging.ImageFormat]::Png)
+    Write-Host 'saved'
     $caller.Message = $tb1.Text
-    [System.Windows.Forms.MessageBox]::Show($tb1.Text);
+
   }
   $button1.add_click($button1_Click)
   $panel2.Controls.Add($button1)
@@ -193,7 +234,7 @@ https://saucelabs.com/selenium?dmr=0801f3fc4276057257c2237525fc69da0a6063f5c14eb
       [object]$sender,
       [System.EventArgs]$eventargs
     )
-    
+
     $caller.Message = $sender.SelectedIndex.ToString()
     # [System.Windows.Forms.MessageBox]::Show($sender.Text)
     if ($sender.Text -match '\w+') {
@@ -224,40 +265,23 @@ https://saucelabs.com/selenium?dmr=0801f3fc4276057257c2237525fc69da0a6063f5c14eb
   $panel1.Controls.Add($grid)
   $grid.ResumeLayout($false)
 
-  $button.add_click({
-
-      foreach ($row in $grid.Rows) {
-        if (($row.cells[0].Value -ne $null -and $row.cells[0].Value -ne '') -and ($row.cells[1].Value -eq $null -or $row.cells[1].Value -eq '')) {
-          $row.cells[0].Style.ForeColor = [System.Drawing.Color]::Red
-          $grid.CurrentCell = $row.cells[1]
-          return;
-        }
-      }
-      # TODO: return $caller.HashData
-      # write-host ( '{0} = {1}' -f $row.cells[0].Value, $row.cells[1].Value.ToString())
-
-      $f.Close()
-
-    })
-
-
-  $tab_contol1.Controls.Add($panel1)
-  $tab_contol1.Controls.Add($panel2)
-  $tab_contol1.Location = New-Object System.Drawing.Point (13,13)
-  $tab_contol1.Name = "tabControl1"
-  $tab_contol1.SelectedIndex = 1
+  $tbc1.Controls.Add($panel1)
+  $tbc1.Controls.Add($panel2)
+  $tbc1.Location = New-Object System.Drawing.Point (13,13)
+  $tbc1.Name = "tabControl1"
+  $tbc1.SelectedIndex = 1
   $tb1.Select()
   $tb1.Enabled = $true
-  $tab_contol1.Size = New-Object System.Drawing.Size (550,208)
-  $tab_contol1.TabIndex = 0
+  $tbc1.Size = New-Object System.Drawing.Size (550,208)
+  $tbc1.TabIndex = 0
 
   $f.AutoScaleBaseSize = New-Object System.Drawing.Size (5,13)
   $f.ClientSize = New-Object System.Drawing.Size (553,258)
-  $f.Controls.Add($tab_contol1)
+  $f.Controls.Add($tbc1)
   $panel2.ResumeLayout($false)
   $panel2.PerformLayout()
   $panel1.ResumeLayout($false)
-  $tab_contol1.ResumeLayout($false)
+  $tbc1.ResumeLayout($false)
   $f.ResumeLayout($false)
   $f.ActiveControl = $tb1
 
