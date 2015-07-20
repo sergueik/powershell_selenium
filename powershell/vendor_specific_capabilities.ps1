@@ -94,35 +94,75 @@ function AdddLoadCapabilities (
 
 
     $selenium = $null
-    $browser = 'chrome'
-    $version = '43'
-    $version = '35'
 
-    $platform = 'windows'
-    $platform = 'linux'
+    $browser = $null
+    $version = $null
+    $version = ''
+    $capabilibies = @{}
 
-    $username = 'kouzmine_serguei'
-    $access_key = 'fbd94661-d447-4d16-bdb8-5317fe264604'
+    # extract $platform, $browser, $version
+    # the rest goes into $capabilibies
+
+    foreach ($row in $grid.Rows) {
+
+      $capability_name = $row.cells[0].Value;
+      $capability_value = $row.cells[1].Value;
+      if ($capability_name -ne '' -and $capability_name -ne $null) {
+        if ($capability_name -match 'browser') {
+          $browser = $capability_value
+          Write-Host ('Request for "{0}" = "{1}"' -f $capability_name,$capability_value)
+
+        }
+        elseif ($capability_name -match 'platform') {
+          $platform = $capability_value
+          Write-Host ('Request for "{0}" = "{1}"' -f $capability_name,$capability_value)
+
+        }
+        elseif ($capability_name -match 'version') {
+          $version = $capability_value
+          Write-Host ('Request for "{0}" = "{1}"' -f $capability_name,$capability_value)
+
+        }
+        else {
+          Write-Host ('Detecting capability request for "{0}" = "{1}"' -f $capability_name,$capability_value)
+          $capabilibies[$capability_name ] =  $capability_value
+        }
+      }
+    }
+
+    load_shared_assemblies
+    if ($browser -eq '' -or $browser -eq $null) {
+      return
+    }
+
+    if ($platform -eq '' -or $platform -eq $null) {
+      return
+    }
+
+    [OpenQA.Selenium.Remote.DesiredCapabilities]$capabillities = New-Object OpenQA.Selenium.Remote.DesiredCapabilities ($browser,$version,[OpenQA.Selenium.Platform]::CurrentPlatform)
+
+<#
+    # wrong  call
     $platforms = @{
       'windows' = [OpenQA.Selenium.PlatformType]::Windows;
       'mac' = [OpenQA.Selenium.PlatformType]::Mac;
       'linux' = [OpenQA.Selenium.PlatformType]::Linux;
-
     }
-
-
-    load_shared_assemblies
-
-
-    [OpenQA.Selenium.Remote.DesiredCapabilities]$capabillities = New-Object OpenQA.Selenium.Remote.DesiredCapabilities ($browser,$version,[OpenQA.Selenium.Platform]::CurrentPlatform)
-    # wrong  argument
-    #    $capabillities.SetCapability("platform",$platforms[$platform])
+    $capabillities.SetCapability("platform",$platforms[$platform])
+#>
+    
     $capabillities.SetCapability("platform",$platform)
 
-    $capabillities.SetCapability("username",$username)
-    $capabillities.SetCapability("accessKey",$access_key)
     $capabillities.SetCapability("name","Test_Name")
-    # start a new remote web driver session on sauce labs
+
+    foreach ($capability_name in $capabilibies.Keys) {
+
+      $capability_value = $capabilibies[$capability_name]
+        Write-Host ('Setting capability "{0}" = "{1}"' -f $capability_name,$capability_value)
+        $capabillities.SetCapability($capability_name,$capability_value)
+    }
+
+    # start a new remote web driver session on vendor browser 
     $uri = $tb1.Text
     [System.Windows.Forms.MessageBox]::Show($uri);
     $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capabillities)
@@ -130,21 +170,21 @@ function AdddLoadCapabilities (
     $explicit = 30
     [void]($selenium.Manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))
 
-    $base_url = "https://saucelabs.com/test/guinea-pig"
-    $selenium.Navigate().GoToUrl($base_url)
-    Write-Host "https://www.whatismybrowser.com/"
-    $selenium.Navigate().GoToUrl("https://www.whatismybrowser.com/")
+    # take a screenshot
 
+    $base_url = "https://www.whatismybrowser.com/"
+    Write-Host ('Navigate to "{0}"' -f $base_url )
+    $selenium.Navigate().GoToUrl($base_url)
 
     [OpenQA.Selenium.Screenshot]$screenshot = $selenium.GetScreenshot()
     $filename = 'test'
     $screenshot_path = (Get-ScriptDirectory)
-    Write-Host ([System.IO.Path]::Combine($screenshot_path,('{0}.{1}' -f $filename,'png')))
+    Write-Host ('Saving "{0}"' -f ([System.IO.Path]::Combine($screenshot_path,('{0}.{1}' -f $filename,'png'))))
     $screenshot.SaveAsFile([System.IO.Path]::Combine($screenshot_path,('{0}.{1}' -f $filename,'png')),[System.Drawing.Imaging.ImageFormat]::Png)
-    Write-Host 'saved'
-    $caller.Message = $tb1.Text
+    Write-Host ('Saved "{0}"' -f ([System.IO.Path]::Combine($screenshot_path,('{0}.{1}' -f $filename,'png'))))
 
   }
+
   $button1.add_click($button1_Click)
   $panel2.Controls.Add($button1)
 
@@ -170,7 +210,7 @@ function AdddLoadCapabilities (
   $grid.Columns[1].Name = 'Value'
   (0..2) | ForEach-Object {
     $row1 = @( '','')
-    $grid.Rows.Add($row1)
+    [void]$grid.Rows.Add($row1)
   }
 
   $grid.Columns[0].ReadOnly = $false;
@@ -198,13 +238,20 @@ https://saucelabs.com/selenium?dmr=0801f3fc4276057257c2237525fc69da0a6063f5c14eb
       };
       'hub_url' = 'http://hub.browserstack.com/wd/hub/';
       'help_url' = 'https://www.browserstack.com/automate/c-sharp#configure-capabilities';
+      'platform' = '';
+      'browser' = '';
+      'version' = '';
 
     };
 
     'Sauce Labs' =
     @{ 'capabilities' = @{
-        'username' = 'USERNAME';
-        'accesskey' = 'ACCESS_KEY';
+        'username' = 'kouzmine_serguei';
+        'accessKey' = 'fbd94661-d447-4d16-bdb8-5317fe264604';
+        'platform' = 'linux';
+        'browser' = 'chrome';
+        'version' = '';
+
       };
       'hub_url' = 'http://ondemand.saucelabs.com:80/wd/hub';
       'help_url' = 'https://www.browserstack.com/automate/c-sharp#configure-capabilities';
@@ -215,6 +262,9 @@ https://saucelabs.com/selenium?dmr=0801f3fc4276057257c2237525fc69da0a6063f5c14eb
     @{ 'capabilities' = @{
         'username' = $null;
         'accesskey' = $null;
+        'platform' = '';
+        'browser' = '';
+        'version' = '';
       };
       'hub_url' = $null;
       'help_url' = 'https://testingbot.com/features';
@@ -243,7 +293,7 @@ https://saucelabs.com/selenium?dmr=0801f3fc4276057257c2237525fc69da0a6063f5c14eb
       $grid.Rows.Clear()
       $capabilities.Keys | ForEach-Object {
         $row1 = @( $_,$capabilities[$_])
-        $grid.Rows.Add($row1)
+        [void]$grid.Rows.Add($row1)
       }
 
     }
@@ -332,4 +382,3 @@ $title = 'Enter Message'
 $caller = New-Object Win32Window -ArgumentList ([System.Diagnostics.Process]::GetCurrentProcess().MainWindowHandle)
 
 AdddLoadCapabilities -Title $title -caller $caller
-Write-Debug ("Message is : {0} " -f $caller.Message)

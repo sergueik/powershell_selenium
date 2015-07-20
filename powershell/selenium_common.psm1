@@ -344,8 +344,7 @@ function load_shared_assemblies {
 
   $shared_assemblies | ForEach-Object {
     Unblock-File -Path $_;
-    Write-Host $_
-
+    # Write-Debug $_
     Add-Type -Path $_ }
   popd
 }
