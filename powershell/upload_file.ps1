@@ -20,35 +20,26 @@
 
 # http://winsysadm.net/
 # http://weblog.west-wind.com/posts/2007/May/21/Downloading-a-File-with-a-Save-As-Dialog-in-ASPNET
+
 param(
   [string]$browser,
   [string]$hub_host = '127.0.0.1',
   [string]$hub_port = '4444'
 )
 
-
 $MODULE_NAME = 'selenium_utils.psd1'
-
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
-
 load_shared_assemblies
-
-[NUnit.Framework.Assert]::IsTrue($host.Version.Major -ge 2)
-
 $selenium = launch_selenium -browser $browser -hub_host $hub_host -hub_port $hub_port
 
 $base_url = 'http://www.freetranslation.com/'
 $selenium.Navigate().GoToUrl($base_url)
-
-# set_timeouts ([ref]$selenium)
-
 [void]$selenium.Manage().Window.Maximize()
 
 
 $element_title = 'Translate text, documents and websites for free'
-$element = $null
 $css_selector = 'a.brand'
-find_page_element_by_css_selector ([ref]$selenium) ([ref]$element) $css_selector
+$element = find_element_new -css_selector $css_selector
 
 [NUnit.Framework.Assert]::IsTrue($element.GetAttribute('title') -match $element_title)
 $element.GetAttribute('title')
@@ -60,40 +51,24 @@ Write-Output $text | Out-File -FilePath $text_file -Encoding ascii
 
 $upload_button = $null
 $css_selector = ('div[id = "{0}"]' -f 'upload-button')
-find_page_element_by_css_selector ([ref]$selenium) ([ref]$upload_button) $css_selector
+$upload_button = find_element_new -css_selector $css_selector
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$upload_button) -Delay 1500
 
-$upload_element = $selenium.FindElement([OpenQA.Selenium.By]::ClassName('ajaxupload-input'))
+$upload_element = find_element_new -classname 'ajaxupload-input'
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$upload_element) -Delay 1500
 
 Write-Host ('Uploading the file "{0}".' -f $text_file)
 $upload_element.SendKeys($text_file)
-
+# hard wait
 Start-Sleep 2
 
-<#
-Wait until the following element is present:
-<a href="..." class="gw-download-link">
-  <img class="gw-icon download" src="http://d2yxcfsf8zdogl.cloudfront.net/home-php/assets/home/img/pixel.gif"/>
-  Download
-</a>
-#>
-
-
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
-
 $element_text = 'Download'
-$wait.PollingInterval = 500
-[OpenQA.Selenium.Remote.RemoteWebElement]$element1 = $wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName("gw-download-link")))
+$classname = 'gw-download-link'
+$element1 = find_element_new -classname $classname 
 [NUnit.Framework.Assert]::IsTrue($element1.Text -match $element_text)
 
-
-$element_title = ''
-$element2 = $null
 $css_selector = 'div [class="status-text"] img[class *= "gw-icon"]'
-find_page_element_by_css_selector ([ref]$selenium) ([ref]$element2) $css_selector
-
-
+$element2 = find_element_new -css_selector $css_selector
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element2) -Delay 3000
 
 $text_url = $element1.GetAttribute('href')
@@ -102,10 +77,7 @@ write-host 'This version performs the direct upload of the translated text'
 Write-Host ('Reading "{0}"' -f $text_url)
 
 $result = Invoke-WebRequest -Uri $text_url
-$result | get-member
-$result.RawContent
 $result_body = $result.ToString() -join '`r`n'
-
 
 $transalted_text = $null
 $capturing_match_expression = '^(?<all>.+)$'
@@ -113,5 +85,4 @@ extract_match -Source $result_body -capturing_match_expression $capturing_match_
 [NUnit.Framework.Assert]::IsTrue(($transalted_text -match 'Bonjour Driver'))
 write-host 'Verified translation.'
 
-# Cleanup
 cleanup ([ref]$selenium)
