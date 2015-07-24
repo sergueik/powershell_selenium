@@ -164,6 +164,8 @@ function extract_match {
     [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
   )
   Write-Debug ('Extracting from {0}' -f $source)
+  Write-Debug ('Extracting expression {0}' -f $capturing_match_expression)
+  Write-Debug ('Extracting tag {0}' -f $label)
   $local:results = {}
   $local:results = $source | where { $_ -match $capturing_match_expression } |
   ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
@@ -386,26 +388,43 @@ function find_element {
 }
 
 <#
+.SYNOPSIS
+	Finds element using speficic method of finding : xpath, classname, css_selector etc.
+.DESCRIPTION
+        Receives the 	
+.EXAMPLE
+	$element = find_element_new -classname $classname
 
-function find_element {
+.LINK
+	# https://chromium.googlesource.com/chromium/blink/+/master/Source/devtools/front_end/components/DOMPresentationUtils.js
+	
+.NOTES
+	VERSION HISTORY
+	2015/07/03 Initial Version
+
+#>
+
+function find_element_new {
   param(
     [Parameter(ParameterSetName = 'set_xpath')] $xpath,
-    [Parameter(ParameterSetName = 'set_css_selector')] $css,
+    [Parameter(ParameterSetName = 'set_css_selector')] $css_selector,
     [Parameter(ParameterSetName = 'set_id')] $id,
     [Parameter(ParameterSetName = 'set_linktext')] $linktext,
     [Parameter(ParameterSetName = 'set_partial_link_text')] $partial_link_text,
-    [Parameter(ParameterSetName = 'set_css_tagname')] $tagname
+    [Parameter(ParameterSetName = 'set_css_tagname')] $tagname,
+    [Parameter(ParameterSetName = 'set_css_classname')] $classname
   )
 
 
   # guard
-  $implemented_options = @@{
+  $implemented_options = @{
     'xpath' = $true;
-    'css' = $true;
+    'css_selector' = $true;
     'id' = $false;
     'linktext' = $false;
     'partial_link_text' = $false;
     'tagname' = $false;
+    'classname' = $true;
   }
 
   $implemented.Keys | ForEach-Object { $option = $_
@@ -415,31 +434,30 @@ function find_element {
 
         Write-Output ('Option {0} i not implemented' -f $option)
 
-
-
-      } else {
+      } else { 
+        # will find
 
       }
     }
   }
   if ($false) {
-    Write-Output @@psBoundParameters | Format-Table -AutoSize
+    Write-Output @psBoundParameters | Format-Table -AutoSize
   }
   $element = $null
   $wait_seconds = 5
   $wait_polling_interval = 50
 
-  if ($css -ne $null) {
+  if ($css_selector -ne $null) {
 
     [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
     $wait.PollingInterval = $wait_polling_interval
 
     try {
-      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css)))
+      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
     } catch [exception]{
       Write-Debug ("Exception : {0} ...`ncss = '{1}'" -f (($_.Exception.Message) -split "`n")[0],$css)
     }
-    $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css))
+    $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
 
 
   }
@@ -447,7 +465,7 @@ function find_element {
 
   if ($xpath -ne $null) {
 
-    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenum,[System.TimeSpan]::FromSeconds($wait_seconds))
+    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
     $wait.PollingInterval = $wait_polling_interval
 
     try {
@@ -456,15 +474,29 @@ function find_element {
       Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$xpath)
     }
 
-    $element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::XPath($xpath))
+    $element = $selenium.FindElement([OpenQA.Selenium.By]::XPath($xpath))
 
 
+  }
+
+
+  if ($classname -ne $null) {
+
+    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+    $wait.PollingInterval = $wait_polling_interval
+    try {
+      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName($classname)))
+
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$classname)
+    }
+    $element = $selenium.FindElement([OpenQA.Selenium.By]::ClassName($classname))
   }
 
   return $element
 }
 
-#>
+
 
 
 
