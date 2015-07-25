@@ -36,7 +36,7 @@ load_shared_assemblies
 #>
 
 $profile_name = 'test'
-$profile = New-Object OpenQA.Selenium.Firefox.FirefoxProfile ('test')
+$profile = New-Object OpenQA.Selenium.Firefox.FirefoxProfile
 
 $download_path = 'c:\temp\xxx'
 [void]$profile.SetPreference('browser.helperApps.neverAsk.saveToDisk','text/csv, application/pdf, application/octet-stream')
@@ -94,7 +94,7 @@ highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$download_link_eleme
 Write-Host 'Cleaning dowload directory' .
 Remove-Item -Path ([System.IO.Path]::Combine($download_path,'testfile.txt')) -ErrorAction 'silentlycontinue'
 
-Write-Host 'click on  "Download Icon"'
+Write-Host 'click on  "Download" link'
 $download_link_element.Click()
 
 $file_present = $false
