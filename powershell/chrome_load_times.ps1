@@ -36,57 +36,6 @@ function ellipsize {
   }
 }
 
-function read_registry {
-  param([string]$registry_path,
-    [string]$package_name,
-    [string]$subfolder
-
-  )
-
-  $install_location_result = $null
-  pushd HKLM:
-
-  cd $registry_path
-  $apps = Get-ChildItem -Path .
-
-  $apps | ForEach-Object {
-
-    $registry_key = $_
-
-
-    pushd $registry_key.Path
-    $values = $registry_key.GetValueNames()
-
-    if (-not ($values.GetType().BaseType.Name -match 'Array')) {
-      throw 'Unexpected result type'
-    }
-
-
-    $values | Where-Object { $_ -match '^DisplayName$' } | ForEach-Object {
-
-      try {
-        $displayname_result = $registry_key.GetValue($_).ToString()
-
-      } catch [exception]{
-        Write-Debug $_
-      }
-
-
-      if ($displayname_result -ne $null -and $displayname_result -match "\b${package_name}\b") {
-        $values2 = $registry_key.GetValueNames()
-        $install_location_result = $null
-        $values2 | Where-Object { $_ -match '\bInstallLocation\b' } | ForEach-Object {
-          $install_location_result = $registry_key.GetValue($_).ToString()
-          Write-Host -ForegroundColor 'yellow' (($displayname_result,$registry_key.Name,$install_location_result) -join "`r`n")
-        }
-      }
-    }
-    popd
-  }
-  popd
-  return ('{0}{1}' -f $install_location_result,$subfolder)
-}
-
 function create_table {
   param(
     [string]$database = "$(Get-ScriptDirectory)\timings.db",
@@ -155,18 +104,18 @@ $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 load_shared_assemblies
 
-
-$extra_assemblies_path = read_registry -subfolder 'bin' -registry_path '/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/' -package_name 'System.Data.SQLite'
+$sqlite_installlocation_path = read_installed_programs_registry -registry_path '/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/' -package_name 'System.Data.SQLite'
+$sqlite_assemblies_path = [System.IO.Path]::Combine($sqlite_installlocation_path,'bin')
 $extra_assemblies = @(
   'System.Data.SQLite.dll'
 )
 
-pushd $extra_assemblies_path
+pushd $sqlite_assemblies_path
 $extra_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
 popd
 
 # Probably will work with embedded only 
-$selenium = launch_selenium -browser 'chrome' -hub_host $hub_host -hub_port $hub_port
+$selenium = launch_selenium -browser 'chrome'
 # close and reload with the profie
 cleanup ([ref]$selenium)
 $headless = $false
@@ -203,7 +152,7 @@ $options.addArguments('--profile-directory=Default')
 $capabilities.setCapability([OpenQA.Selenium.Chrome.ChromeOptions]::Capability,$options)
 
 $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver ($options)
-
+$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
 Add-Type @"
 
 using System;

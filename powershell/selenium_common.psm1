@@ -426,3 +426,74 @@ function netstat_check {
 <#
 findstr /ic:"`$selenium " *.ps1
 #>
+
+
+<#
+.SYNOPSIS
+	Common method to read installed program installlocation information
+.DESCRIPTION
+	
+	
+.EXAMPLE
+	$sqlite_installlocation_path = read_registry -registry_path '/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/' -package_name 'System.Data.SQLite'
+	$sqlite_assemblies_path = [System.IO.Path]::Combine($sqlite_installlocation_path,'bin')
+.LINK
+	
+	
+.NOTES
+
+	VERSION HISTORY
+	2015/07/25 Initial Version
+#>
+
+function read_installed_programs_registry {
+  param([string]$registry_path = '/SOFTWARE/Microsoft/Windows/CurrentVersion/Uninstall/',
+    [string]$registry_hive = 'HKLM:',
+    [string]$package_name
+  )
+
+  $install_location = $null
+
+  pushd $registry_hive
+
+  cd $registry_path
+  $apps = Get-ChildItem -Path .
+
+  $apps | ForEach-Object {
+    # https://msdn.microsoft.com/en-us/library/microsoft.win32.registrykey%28v=vs.110%29.aspx
+    $registry_key = $_
+    $registry_key_path = ($registry_key.ToString()) -replace '^.+\\','.\'
+    $values = $registry_key.GetValueNames()
+
+    if (-not ($values.GetType().BaseType.Name -match 'Array')) {
+      popd
+      throw 'Unexpected result type'
+    }
+
+
+    $values | Where-Object { $_ -match '^DisplayName$' } | ForEach-Object {
+
+      try {
+        $displayname_result = $registry_key.GetValue($_).ToString()
+
+      } catch [exception]{
+        Write-Debug $_
+      }
+
+      if ($displayname_result -ne $null -and $displayname_result -match "\b${package_name}\b") {
+
+        Write-Host -foreground 'blue' $registry_key_path
+
+        $pachage_information = $registry_key.GetValueNames()
+        $install_location = $null
+        $pachage_information | Where-Object { $_ -match '\bInstallLocation\b' } | ForEach-Object {
+          $install_location = $registry_key.GetValue($_).ToString()
+          Write-Host -ForegroundColor 'yellow' (($displayname_result,$registry_key.Name,$install_location) -join "`r`n")
+        }
+      }
+    }
+  }
+  popd
+  return $install_location
+}
+
