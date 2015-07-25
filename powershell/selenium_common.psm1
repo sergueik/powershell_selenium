@@ -230,6 +230,9 @@ New-Object : Exception calling ".ctor" with "1" argument(s): "Unexpected error l
     Write-Host 'Running on phantomjs'
     $headless = $true
     $phantomjs_executable_folder = "C:\tools\phantomjs-2.0.0\bin"
+    if (-not (Test-Path -Path $phantomjs_executable_folder)) {
+      throw 'Missing PhantomJS'
+    }
     $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
     $selenium.Capabilities.setCapability('ssl-protocol','any')
     $selenium.Capabilities.setCapability('ignore-ssl-errors',$true)
