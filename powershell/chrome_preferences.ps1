@@ -58,10 +58,18 @@ $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
 
 $options.addArguments('start-maximized')
 $options.addArguments(('user-data-dir={0}' -f ("${env:LOCALAPPDATA}\Google\Chrome\User Data" -replace '\\','/')))
+
 # Custom profile parent directory:
 # $options.addArguments('user-data-dir=c:/TEMP'); 
 
+
 $options.addArguments('--profile-directory=Default')
+
+# Remember initial setting from
+$preferences_obj = ((get-content -path "${env:LocalAppData}\google\chrome\user data\Default\Preferences") -join '`r`n') | convertfrom-json 
+$original_setting = $preferences_obj.'savefile'.'default_directory'
+# TODO: restore initial setting
+
 <#
 # https://code.google.com/p/chromedriver/issues/detail?id=330
 # http://stackoverflow.com/questions/15824996/how-to-set-chrome-preferences-using-selenium-webdriver-net-binding
@@ -98,6 +106,8 @@ $script_directory = Get-ScriptDirectory
 
 # Repeat the test case with translation
 
+cleanup ([ref]$selenium)
+return
 
 $selenium.Navigate().GoToUrl($base_url)
 [void]$selenium.Manage().Window.Maximize()
