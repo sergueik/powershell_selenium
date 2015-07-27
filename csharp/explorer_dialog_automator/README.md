@@ -1,6 +1,6 @@
 IE (File Explorer) file download Dialog manager
 ===============================================
-Resussected old project, originally popup dialog 'hunter', now tailored to provide input 
+Resurrected old project, originally popup dialog 'hunter', now tailored to provide input 
 (text entry and click event) do Windows Explorer file save dialog.
 
 Author
