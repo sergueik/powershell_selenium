@@ -21,20 +21,15 @@ THE SOFTWARE.
 
 */
 using System;
-using System.Drawing;
 using System.IO;
 using System.Threading;
+// TODO: restore process tracking
 using System.Diagnostics;
 // http://msdn.microsoft.com/en-us/library/aa288468%28v=vs.71%29.aspx
 using System.Runtime.InteropServices;
-using System.ComponentModel;
-using System.Windows.Forms;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Reflection;
 using System.Globalization;
 
 public delegate bool CallBackPtr(IntPtr hWnd, int lParam);
@@ -43,6 +38,21 @@ public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr parameter);
 
 public class EnumReport
 {
+
+    private static int _data;
+    private static string _filename = String.Format("my random filename {0}", new Random().Next(10));
+    private static string _filepath;
+    public static int Data
+    {
+        get { return _data; }
+        set { _data = value; }
+    }
+    public static string Filename
+    {
+        get { return _filename; }
+        set { _filename = value; }
+    }
+
     private static bool bHasButton = false;
     public static String CommandLine = String.Empty;
     public static int ProcessID = 0;
@@ -201,12 +211,11 @@ public class EnumReport
             // const UInt32 WM_KEYUP = 0x0101;
             const UInt32 VK_RETURN = 0x0D;
             SendMessage(handle, WM_CHAR, new IntPtr(WM_KEYDOWN), IntPtr.Zero);
-            SetText(handle, String.Format(@"{0}\{1}{2}",
-                  Environment.GetEnvironmentVariable("TEMP"), "my random filename", new Random().Next(10)));
+            SetText(handle, Path.Combine(Environment.GetEnvironmentVariable("TEMP"), _filename));
             Thread.Sleep(1000);
             SendMessage(handle, WM_CHAR, new IntPtr(VK_RETURN), IntPtr.Zero);
         }
-        
+
         // Click "Save"
         if (string.Compare(window_class_name, "Button", true, CultureInfo.InvariantCulture) == 0)
         {
@@ -225,10 +234,38 @@ public class EnumReport
         list.Add(handle);
         return true;
     }
+    //	http://www.java2s.com/Tutorial/CSharp/0300__File-Directory-Stream/UseFileSystemWatchertodetectfilechanges.htm     
+    private static void OnCreatedOrDeleted(object sender, FileSystemEventArgs e)
+    {
+        Console.WriteLine("\tNOTIFICATION: " + e.FullPath + "' was " + e.ChangeType.ToString());
+    }
 
 
+    public static void watchFileCreation()
+    {
+        _filepath = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), _filename);
+        using (FileSystemWatcher watch = new FileSystemWatcher())
+        {
+            watch.Path = Environment.GetEnvironmentVariable("TEMP");
+            watch.Filter = _filename;
+            watch.IncludeSubdirectories = false;
+
+            watch.Created += new FileSystemEventHandler(OnCreatedOrDeleted);
+            watch.Deleted += new FileSystemEventHandler(OnCreatedOrDeleted);
+            watch.EnableRaisingEvents = true;
+
+            if (File.Exists(_filepath))
+            {
+                File.Delete(_filepath);
+            }
+            EnumWindows(Report, 0);
+            Thread.Sleep(120);
+        }
+    }
     public static void Main()
     {
-        EnumReport.EnumWindows(EnumReport.Report, 0);
+        EnumReport.Filename = "test.txt";
+        EnumReport.watchFileCreation();
+        // EnumReport.EnumWindows(EnumReport.Report, 0);
     }
 }
