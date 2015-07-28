@@ -36,7 +36,7 @@ $base_url = 'http://www.freetranslation.com/'
 $selenium.Navigate().GoToUrl($base_url)
 [void]$selenium.Manage().Window.Maximize()
 
-
+# Wait for page logo / title 
 $element_title = 'Translate text, documents and websites for free'
 $css_selector = 'a.brand'
 $element = find_element_new -css_selector $css_selector
@@ -49,11 +49,13 @@ Write-Host ('Translating: "{0}"' -f $text)
 $text_file = [System.IO.Path]::Combine((Get-ScriptDirectory),'testfile.txt')
 Write-Output $text | Out-File -FilePath $text_file -Encoding ascii
 
+
 $upload_button = $null
 $css_selector = ('div[id = "{0}"]' -f 'upload-button')
 $upload_button = find_element_new -css_selector $css_selector
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$upload_button) -Delay 1500
 
+# Populate upload input
 $upload_element = find_element_new -classname 'ajaxupload-input'
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$upload_element) -Delay 1500
 

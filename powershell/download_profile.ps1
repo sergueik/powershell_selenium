@@ -54,11 +54,13 @@ $selenium = New-Object OpenQA.Selenium.Firefox.FirefoxDriver ($profile)
 
 # Repeat the test case with translation
 
+
 $base_url = 'http://www.freetranslation.com/'
 $selenium.Navigate().GoToUrl($base_url)
 [void]$selenium.Manage().Window.Maximize()
 
 
+# Wait for page logo / title 
 $element_title = 'Translate text, documents and websites for free'
 $css_selector = 'a.brand'
 $element = find_element_new -css_selector $css_selector
@@ -76,6 +78,7 @@ $css_selector = ('div[id = "{0}"]' -f 'upload-button')
 $upload_button = find_element_new -css_selector $css_selector
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$upload_button) -Delay 1500
 
+# Populate upload input
 $upload_element = find_element_new -classname 'ajaxupload-input'
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$upload_element) -Delay 1500
 
