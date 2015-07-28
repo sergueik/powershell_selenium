@@ -279,6 +279,39 @@ function cleanup
   }
 }
 
+<#
+.SYNOPSIS
+	Pauses the Selenium execution
+.DESCRIPTION
+	Pauses the Selenium execution
+	
+.EXAMPLE
+	custom_pause [-fullstop]
+    
+.LINK
+	
+	
+.NOTES
+
+	VERSION HISTORY
+	2015/06/21 Initial Version
+#>
+
+
+function custom_pause {
+  param([bool]$fullstop)
+  # Do not close Browser / Selenium when run from Powershell ISE
+  if ($fullstop) {
+    try {
+      Write-Output 'pause'
+      [void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    } catch [exception]{}
+  } else {
+    Start-Sleep -Millisecond 1000
+  }
+}
+
+
 
 <#
 .SYNOPSIS
