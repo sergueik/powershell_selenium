@@ -49,7 +49,7 @@ function AdddLoadCapabilities (
   $tb1.TabIndex = 0
 
   $l1 = New-Object System.Windows.Forms.Label
-  $l1.Location = New-Object System.Drawing.Size (202,32)
+  $l1.Location = New-Object System.Drawing.Size (102,32)
   $l1.Size = New-Object System.Drawing.Size (140,16)
   $hub_host = '127.0.0.1'
   $hub_port = '4444'
@@ -83,17 +83,17 @@ function AdddLoadCapabilities (
 
   $button1.Location = New-Object System.Drawing.Point (297,7)
   $button1.Name = "buttonShowMessage"
-  $button1.Size = New-Object System.Drawing.Size (107,24)
+  $button1.Size = New-Object System.Drawing.Size (107,107)
+
   $button1.TabIndex = 0
   $button1.Text = 'Test Connection'
-  # TODO: crop and swap
-  # $button1.Image = New-Object System.Drawing.Bitmap ([System.IO.Path]::Combine((Get-ScriptDirectory),"downArrow16.bmp"))
+  # TODO: crop / resize 
+  # $button1.Image = New-Object System.Drawing.Bitmap ([System.IO.Path]::Combine((Get-ScriptDirectory),"test.bmp"))
   $button1_Click = {
     param(
       [object]$sender,
       [System.EventArgs]$eventargs
     )
-
 
     $selenium = $null
 
@@ -127,7 +127,7 @@ function AdddLoadCapabilities (
         }
         else {
           Write-Host ('Detecting capability request for "{0}" = "{1}"' -f $capability_name,$capability_value)
-          $capabilibies[$capability_name ] =  $capability_value
+          $capabilibies[$capability_name] = $capability_value
         }
       }
     }
@@ -143,7 +143,7 @@ function AdddLoadCapabilities (
 
     [OpenQA.Selenium.Remote.DesiredCapabilities]$capabillities = New-Object OpenQA.Selenium.Remote.DesiredCapabilities ($browser,$version,[OpenQA.Selenium.Platform]::CurrentPlatform)
 
-<#
+    <#
     # wrong  call
     $platforms = @{
       'windows' = [OpenQA.Selenium.PlatformType]::Windows;
@@ -152,21 +152,20 @@ function AdddLoadCapabilities (
     }
     $capabillities.SetCapability("platform",$platforms[$platform])
 #>
-    
-    $capabillities.SetCapability("platform",$platform)
 
+    $capabillities.SetCapability("platform",$platform)
     $capabillities.SetCapability("name","Test_Name")
 
     foreach ($capability_name in $capabilibies.Keys) {
 
       $capability_value = $capabilibies[$capability_name]
-        Write-Host ('Setting capability "{0}" = "{1}"' -f $capability_name,$capability_value)
-        $capabillities.SetCapability($capability_name,$capability_value)
+      Write-Host ('Setting capability "{0}" = "{1}"' -f $capability_name,$capability_value)
+      $capabillities.SetCapability($capability_name,$capability_value)
     }
 
     # start a new remote web driver session on vendor browser 
     $uri = $tb1.Text
-    [System.Windows.Forms.MessageBox]::Show($uri);
+    # [System.Windows.Forms.MessageBox]::Show($uri);
     $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capabillities)
 
     $explicit = 30
@@ -175,19 +174,25 @@ function AdddLoadCapabilities (
     # take a screenshot
 
     $base_url = 'https://www.whatismybrowser.com/'
-    $base_url = 'https://saucelabs.com/test/guinea-pig'
-    Write-Host ('Navigate to "{0}"' -f $base_url )
+    # $base_url = 'https://saucelabs.com/test/guinea-pig'
+    Write-Host ('Navigate to "{0}"' -f $base_url)
     $selenium.Navigate().GoToUrl($base_url)
 
     [OpenQA.Selenium.Screenshot]$screenshot = $selenium.GetScreenshot()
-    $filename = 'test'
+    $file_basename = 'test'
+    $file_name = ('{0}.bmp' -f $file_basename)
     $screenshot_path = (Get-ScriptDirectory)
-    Write-Host ('Saving "{0}"' -f ([System.IO.Path]::Combine($screenshot_path,('{0}.{1}' -f $filename,'png'))))
-    $screenshot.SaveAsFile([System.IO.Path]::Combine($screenshot_path,('{0}.{1}' -f $filename,'png')),[System.Drawing.Imaging.ImageFormat]::Png)
-
-
-    Write-Host ('Saved "{0}"' -f ([System.IO.Path]::Combine($screenshot_path,('{0}.{1}' -f $filename,'png'))))
-
+    Write-Host ('Saving "{0}"' -f ([System.IO.Path]::Combine($screenshot_path,$file_name)))
+    $screenshot.SaveAsFile([System.IO.Path]::Combine($screenshot_path,$file_name),[System.Drawing.Imaging.ImageFormat]::Bmp)
+    cleanup ([ref]$selenium)
+    Write-Host ('Saved "{0}"' -f ([System.IO.Path]::Combine($screenshot_path,$file_name)))
+    [System.Drawing.Bitmap]$browser_screenshot_fullsize = New-Object System.Drawing.Bitmap ([System.IO.Path]::Combine((Get-ScriptDirectory),$file_name))
+    $scaling_factor = 10.5
+    $width_resized = $browser_screenshot_fullsize.Width / $scaling_factor
+    $height_resized = $browser_screenshot_fullsize.Width / $scaling_factor
+    $size_resized = New-Object System.Drawing.Size ($width_resized,$height_resized)
+    [System.Drawing.Bitmap]$browser_screenshot_resized = New-Object System.Drawing.Bitmap ($browser_screenshot_fullsize,$size_resized)
+    $button1.Image = $browser_screenshot_resized
   }
 
   $button1.add_click($button1_Click)
