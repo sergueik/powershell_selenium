@@ -86,6 +86,8 @@ function AdddLoadCapabilities (
   $button1.Size = New-Object System.Drawing.Size (107,24)
   $button1.TabIndex = 0
   $button1.Text = 'Test Connection'
+  # TODO: crop and swap
+  # $button1.Image = New-Object System.Drawing.Bitmap ([System.IO.Path]::Combine((Get-ScriptDirectory),"downArrow16.bmp"))
   $button1_Click = {
     param(
       [object]$sender,
@@ -172,7 +174,8 @@ function AdddLoadCapabilities (
 
     # take a screenshot
 
-    $base_url = "https://www.whatismybrowser.com/"
+    $base_url = 'https://www.whatismybrowser.com/'
+    $base_url = 'https://saucelabs.com/test/guinea-pig'
     Write-Host ('Navigate to "{0}"' -f $base_url )
     $selenium.Navigate().GoToUrl($base_url)
 
@@ -181,6 +184,8 @@ function AdddLoadCapabilities (
     $screenshot_path = (Get-ScriptDirectory)
     Write-Host ('Saving "{0}"' -f ([System.IO.Path]::Combine($screenshot_path,('{0}.{1}' -f $filename,'png'))))
     $screenshot.SaveAsFile([System.IO.Path]::Combine($screenshot_path,('{0}.{1}' -f $filename,'png')),[System.Drawing.Imaging.ImageFormat]::Png)
+
+
     Write-Host ('Saved "{0}"' -f ([System.IO.Path]::Combine($screenshot_path,('{0}.{1}' -f $filename,'png'))))
 
   }
@@ -382,3 +387,20 @@ $title = 'Enter Message'
 $caller = New-Object Win32Window -ArgumentList ([System.Diagnostics.Process]::GetCurrentProcess().MainWindowHandle)
 
 AdddLoadCapabilities -Title $title -caller $caller
+
+
+<#
+
+		
+new files to be placed in 
++---SwdMain
+    +---Panels
+       +---Presenters
+
+folder structure in the project.
+
+Panel will implement 
+IView
+Presenter will implement 
+IPresenter
+#>
