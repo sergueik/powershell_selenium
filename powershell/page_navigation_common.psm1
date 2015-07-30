@@ -420,10 +420,10 @@ function find_element_new {
   $implemented_options = @{
     'xpath' = $true;
     'css_selector' = $true;
-    'id' = $false;
+    'id' = $true;
     'link_text' = $true;
     'partial_link_text' = $true;
-    'tag_name' = $false;
+    'tag_name' = $true;
     'classname' = $true;
   }
 
@@ -434,7 +434,7 @@ function find_element_new {
 
         Write-Output ('Option {0} i not implemented' -f $option)
 
-      } else { 
+      } else {
         # will find
 
       }
@@ -447,10 +447,11 @@ function find_element_new {
   $wait_seconds = 5
   $wait_polling_interval = 50
 
-  if ($css_selector -ne $null) {
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+  $wait.PollingInterval = $wait_polling_interval
 
-    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
-    $wait.PollingInterval = $wait_polling_interval
+
+  if ($css_selector -ne $null) {
 
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
@@ -465,9 +466,6 @@ function find_element_new {
 
   if ($xpath -ne $null) {
 
-    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
-    $wait.PollingInterval = $wait_polling_interval
-
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
     } catch [exception]{
@@ -479,24 +477,7 @@ function find_element_new {
 
   }
 
-
-  if ($classname -ne $null) {
-
-    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
-    $wait.PollingInterval = $wait_polling_interval
-    try {
-      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName($classname)))
-
-    } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$classname)
-    }
-    $element = $selenium.FindElement([OpenQA.Selenium.By]::ClassName($classname))
-  }
-
   if ($link_text -ne $null) {
-
-    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
-    $wait.PollingInterval = $wait_polling_interval
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::LinkText($link_text)))
 
@@ -504,38 +485,9 @@ function find_element_new {
       Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$link_text)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::LinkText($link_text))
-  }
-
-  if ($link_text -ne $null) {
-
-    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
-    $wait.PollingInterval = $wait_polling_interval
-    try {
-      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::LinkText($link_text)))
-
-    } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$link_text)
-    }
-    $element = $selenium.FindElement([OpenQA.Selenium.By]::LinkText($link_text))
-  }
-
-  if ($partial_link_text -ne $null) {
-
-    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
-    $wait.PollingInterval = $wait_polling_interval
-    try {
-      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::PartialLinkText($partial_link_text)))
-
-    } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$partial_link_text)
-    }
-    $element = $selenium.FindElement([OpenQA.Selenium.By]::PartialLinkText($partial_link_text))
   }
 
   if ($tag_name -ne $null) {
-
-    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
-    $wait.PollingInterval = $wait_polling_interval
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::TagName($tag_name)))
 
@@ -545,6 +497,37 @@ function find_element_new {
     $element = $selenium.FindElement([OpenQA.Selenium.By]::TagName($tag_name))
   }
 
+  if ($partial_link_text -ne $null) {
+    try {
+      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::PartialLinkText($partial_link_text)))
+
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$partial_link_text)
+    }
+    $element = $selenium.FindElement([OpenQA.Selenium.By]::PartialLinkText($partial_link_text))
+  }
+
+  if ($classname -ne $null) {
+
+    try {
+      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName($classname)))
+
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$classname)
+    }
+    $element = $selenium.FindElement([OpenQA.Selenium.By]::ClassName($classname))
+  }
+
+  if ($id -ne $null) {
+
+    try {
+      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id($id)))
+
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$id)
+    }
+    $element = $selenium.FindElement([OpenQA.Selenium.By]::Id($id))
+  }
 
   return $element
 }

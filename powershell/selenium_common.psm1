@@ -80,7 +80,7 @@ function launch_selenium {
 
   $shared_assemblies | ForEach-Object {
     if ($host.Version.Major -gt 2) {
-      Unblock-File -Path $_;
+      Unblock-File -Path $_
     }
     Write-Debug $_
     Add-Type -Path $_
