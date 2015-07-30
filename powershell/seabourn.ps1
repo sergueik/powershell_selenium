@@ -26,10 +26,10 @@ param(
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
-  $selenium = launch_selenium -browser $browser -grid -shared_assemblies $shared_assemblies
+  $selenium = launch_selenium -browser $browser -grid
 
 } else {
-  $selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
+  $selenium = launch_selenium -browser $browser
 
 }
 
@@ -242,6 +242,7 @@ function explore_portaction {
 click_menu -value0 'pnav-planACruise' -nested $true -pause $pause
 click_menu -value0 'pnav-planACruise' -nested $false  -pause $pause
 explore_portaction
+[bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
 custom_pause -fullstop $fullstop
 
