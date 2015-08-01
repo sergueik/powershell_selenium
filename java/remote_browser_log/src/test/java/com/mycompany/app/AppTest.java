@@ -1,8 +1,5 @@
 package com.mycompany.app;
-// https://code.google.com/p/selenium/wiki/Logging
-// http://www.programcreek.com/java-api-examples/index.php?api=org.testng.ITestContext
-// https://sites.google.com/a/chromium.org/chromedriver/capabilities
-// http://stackoverflow.com/questions/25431380/capturing-browser-logs-with-selenium
+
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
@@ -35,11 +32,11 @@ import org.json.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.Dimension;
+import org.openqa.selenium.JavascriptExecutor;
 // import org.openqa.selenium.firefox.ProfileManager;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.logging.LoggingPreferences;
-import org.openqa.selenium.logging.LogType;
 import java.util.logging.Level;
 import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.logging.LogEntry;
@@ -76,11 +73,14 @@ public String selenium_run = null;
 
 @BeforeSuite(alwaysRun = true)
 public void setupBeforeSuite( ITestContext context ) throws InterruptedException,MalformedURLException {
+	// http://www.programcreek.com/java-api-examples/index.php?api=org.testng.ITestContext
 	selenium_host = context.getCurrentXmlTest().getParameter("selenium.host");
 	selenium_port = context.getCurrentXmlTest().getParameter("selenium.port");
 	selenium_browser = context.getCurrentXmlTest().getParameter("selenium.browser");
-    selenium_run = context.getCurrentXmlTest().getParameter("selenium.run");
-	if (selenium_browser.compareToIgnoreCase("remote") == 0) { // Remote Configuration
+	selenium_run = context.getCurrentXmlTest().getParameter("selenium.run");
+
+	// Remote Configuration
+	if (selenium_browser.compareToIgnoreCase("remote") == 0) { 
 		String hub = "http://"+  selenium_host  + ":" + selenium_port   +  "/wd/hub";
 
 		LoggingPreferences logging_preferences = new LoggingPreferences();
@@ -110,7 +110,9 @@ public void setupBeforeSuite( ITestContext context ) throws InterruptedException
 			} catch (MalformedURLException ex) { }
 		}
 
-	} else { // standalone
+	} 
+	// standalone
+	else { 
 		if (selenium_browser.compareToIgnoreCase("chrome") == 0) {
 			System.setProperty("webdriver.chrome.driver", "c:/java/selenium/chromedriver.exe");
 			DesiredCapabilities capabilities = DesiredCapabilities.chrome();
@@ -118,9 +120,9 @@ public void setupBeforeSuite( ITestContext context ) throws InterruptedException
 			logging_preferences.enable(LogType.BROWSER, Level.ALL);
 			capabilities.setCapability(CapabilityType.LOGGING_PREFS, logging_preferences);
 			/*
-			prefs.js:user_pref("extensions.logging.enabled", true);
-			user.js:user_pref("extensions.logging.enabled", true);
-			*/
+			   prefs.js:user_pref("extensions.logging.enabled", true);
+			   user.js:user_pref("extensions.logging.enabled", true);
+			 */
 			driver = new ChromeDriver(capabilities);
 			driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
 		} else {
@@ -134,8 +136,8 @@ public void setupBeforeSuite( ITestContext context ) throws InterruptedException
 	}
 	try{
 		driver.manage().window().setSize(new Dimension(600, 800));
-		driver.manage().timeouts().pageLoadTimeout(50, TimeUnit.SECONDS);
-		driver.manage().timeouts().implicitlyWait(20, TimeUnit.SECONDS);
+		driver.manage().timeouts().pageLoadTimeout(10, TimeUnit.SECONDS);
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 	}  catch(Exception ex) {
 		System.out.println(ex.toString());
 	}
@@ -148,38 +150,27 @@ public void cleanupSuite() {
 	driver.quit();
 }
 
-@Test(description="Finds a cruise")
-public void test1() throws InterruptedException {
-
-	driver.get("http://m.carnival.com/");
-	WebDriverWait wait = new WebDriverWait(driver, 30);
+@Test(description="Opens the site")
+public void LoggingTest() throws InterruptedException {
+	String base_url = "http://www.cnn.com/";
+	driver.get(base_url);
+	WebDriverWait wait = new WebDriverWait(driver, 5);
+        
 	String value1 = null;
-
-	wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("ccl-logo")));
-	value1 = "ddlDestinations";
-
-	String xpath_selector1 = String.format("//select[@id='%s']", value1);
-	wait.until(ExpectedConditions.elementToBeClickable(By.xpath(xpath_selector1)));
-	WebElement element = driver.findElement(By.xpath(xpath_selector1));
-
-	System.out.println( element.getAttribute("id"));
+        String class_name = "logo";
+	wait.until(ExpectedConditions.visibilityOfElementLocated(By.className(class_name)));
+	WebElement element = driver.findElement(By.className(class_name));
+	if (driver instanceof JavascriptExecutor) {
+        	((JavascriptExecutor)driver).executeScript("arguments[0].style.border='3px solid yellow'", element);
+	}
+	Thread.sleep(3000L);
 	Actions builder = new Actions(driver);
-	builder.moveToElement(element).build().perform();
-
-	String csspath_selector2 = "div.find-cruise-submit > a";
-	WebElement element2 = driver.findElement(By.cssSelector(csspath_selector2));
-	System.out.println( element2.getText());
-	new Actions(driver).moveToElement(element2).click().build().perform();
-	Thread.sleep(600000);
+	builder.moveToElement(element).click().build().perform();
 	analyzeLog();
-	//print the node information
-	//String result = getIPOfNode(driver);
-	//System.out.println(result);
 }
 
 
 public void analyzeLog() {
-// https://logentries.com/doc/java/
 	LogEntries logEntries = driver.manage().logs().get(LogType.BROWSER);
 
 	for (LogEntry entry : logEntries) {
@@ -195,29 +186,6 @@ public void test2() throws InterruptedException {
 	//FileUtils.copyFile(scrFile, new File(System.getProperty("user.dir") + "\\screenshot.png"));
 }
 
-
-private static String getIPOfNode(RemoteWebDriver remoteDriver)
-{
-	String hostFound = null;
-	try  {
-		HttpCommandExecutor ce = (HttpCommandExecutor) remoteDriver.getCommandExecutor();
-		String hostName = ce.getAddressOfRemoteServer().getHost();
-		int port = ce.getAddressOfRemoteServer().getPort();
-		HttpHost host = new HttpHost(hostName, port);
-		DefaultHttpClient client = new DefaultHttpClient();
-		URL sessionURL = new URL(String.format("http://%s:%d/grid/api/testsession?session=%s", hostName, port, remoteDriver.getSessionId()));
-		BasicHttpEntityEnclosingRequest r = new BasicHttpEntityEnclosingRequest( "POST", sessionURL.toExternalForm());
-		HttpResponse response = client.execute(host, r);
-		JSONObject object = extractObject(response);
-		URL myURL = new URL(object.getString("proxyId"));
-		if ((myURL.getHost() != null) && (myURL.getPort() != -1)) {
-			hostFound = myURL.getHost();
-		}
-	} catch (Exception e) {
-		System.err.println(e);
-	}
-	return hostFound;
-}
 
 private static JSONObject extractObject(HttpResponse resp) throws IOException, JSONException {
 	InputStream contents = resp.getEntity().getContent();
