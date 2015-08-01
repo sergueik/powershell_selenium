@@ -49,8 +49,8 @@ namespace SwdPageRecorder.UI
             string vendor = cbSeleniumVendor.SelectedItem.ToString();
             if (dtVendorCapabilities.ContainsKey(vendor))
             {
-                // create a dummy vendorBrowser2
-                vendorBrowser = new VendorBrowser2 ();
+                // create a dummy vendorBrowser
+                vendorBrowser = new VendorBrowser ();
 
                 vendorBrowser.Browser = null;
                 vendorBrowser.Version = null;
@@ -59,13 +59,13 @@ namespace SwdPageRecorder.UI
                 
                 vendorBrowser.HubUrl =  dtVendorCapabilities[vendor]["hub_url"].ToString();
                 // TODO: update  the chkUseRemoteHub.Checked and txtRemoteHubUrl.Text
-                // txtRemoteHubUrl.Text = vendorBrowser.HubUrl;
-                // chkUseRemoteHub.Checked = true;
-                // fill dtAdditonalCapabilities DataGridView with vendor-specific inputs
-                dtAdditonalCapabilities.Rows.Clear();
+                parent.txtRemoteHubUrl.Text = vendorBrowser.HubUrl;
+                parent.chkUseRemoteHub.Checked = true;
+                // fill dataGridView DataGridView with vendor-specific inputs
+                dataGridView.Rows.Clear();
                 foreach (var configuration_input in new String[] { "browser", "platform", "version" })
                 {
-                    dtAdditonalCapabilities.Rows.Add(new String[] { configuration_input, dtVendorCapabilities[vendor][configuration_input].ToString() });
+                    dataGridView.Rows.Add(new String[] { configuration_input, dtVendorCapabilities[vendor][configuration_input].ToString() });
                 }
 
                 Object capabilities_input_object;
@@ -79,26 +79,27 @@ namespace SwdPageRecorder.UI
 
                 foreach (string capability_name in capabilities_input.Keys)
                 {
-                    dtAdditonalCapabilities.Rows.Add(new String[] { capability_name, capabilities_input[capability_name].ToString() });
+                    dataGridView.Rows.Add(new String[] { capability_name, capabilities_input[capability_name].ToString() });
                 }
             }
         }
         public void InitializeDataGridView()
         {
-            string[] row1 = new string[] { "Meatloaf", "Main Dish", "ground beef",
-                                       "**" };
-            string[] row2 = new string[] { "Chocolate Cheesecake", "Dessert",
-                                       "cream cheese", "***" };
+            string[] row1 = new string[] { "Browser Name", "<BROWSER_NAME>" };
+            string[] row2 = new string[] { "Browser Platform", "<BROWSER_PLATFORM>" };
 
-            object[] rows = new object[] { row1, row2 };
-            foreach (string[] rowArray in rows)
+            foreach (string[] rowArray in new object[] { row1, row2 })
             {
-                dtAdditonalCapabilities.Rows.Add(rowArray);
+                dataGridView.Rows.Add(rowArray);
             }
         }
+		void DataGridViewCellContentClick(object sender, DataGridViewCellEventArgs e)
+		{
+	
+		}
 
     }
-        public class VendorBrowser2
+    public class VendorBrowser
     {
         public string Browser { get; set; }
         public string Version { get; set; }

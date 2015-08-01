@@ -28,10 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            this.dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BrowserSettingsTabView));
             this.label3 = new System.Windows.Forms.Label();
             this.chkUseRemoteHub = new System.Windows.Forms.CheckBox();
@@ -59,8 +55,8 @@
             
             this.grpRemoteConnection.SuspendLayout();
             this.dtAdditonalCapabilities = new CapabilitiesDataGridView();
+            this.dtAdditonalCapabilities.parent = this;
             this.dtAdditonalCapabilities.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dtAdditonalCapabilities.dtAdditonalCapabilities)).BeginInit();
             this.grpDesiredCaps.SuspendLayout();
             this.tabControl10.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -328,7 +324,6 @@
             this.Size = new System.Drawing.Size(694, 426);
             this.grpRemoteConnection.ResumeLayout(false);
             this.grpRemoteConnection.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dtAdditonalCapabilities.dtAdditonalCapabilities)).EndInit();
             this.grpDesiredCaps.ResumeLayout(false);
             this.tabControl10.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
@@ -355,11 +350,6 @@
         private System.Windows.Forms.GroupBox grpDesiredCaps;
         public System.Windows.Forms.PropertyGrid grdDesiredCapabilities;
         
-        private System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 ;
-        private System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 ;
-        private System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 ;
-        private System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 ;
-
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.CheckBox chkAutomaticallyStartServer;
         private System.Windows.Forms.PictureBox pictureBox2;
@@ -370,10 +360,6 @@
         private System.Windows.Forms.TabControl tabControl10;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
-        // private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
-        // private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
-        // private System.Windows.Forms.ComboBox cbSeleniumVendor;
-        // private VendorBrowser vendorBrowser = null;
         private CapabilitiesDataGridView dtAdditonalCapabilities;
     }
 }

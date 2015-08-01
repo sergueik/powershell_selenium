@@ -52,7 +52,7 @@ namespace SwdPageRecorder.UI
             if (dtAdditonalCapabilities.vendorBrowser != null && dtAdditonalCapabilities.vendorBrowser.Custom)
             {
 
-                foreach (DataGridViewRow row in dtAdditonalCapabilities.dtAdditonalCapabilities.Rows)
+                foreach (DataGridViewRow row in dtAdditonalCapabilities.dataGridView.Rows)
                 {
                     string name = row.Cells[0].ToString();
                     string value = row.Cells[1].ToString();
@@ -231,7 +231,7 @@ namespace SwdPageRecorder.UI
             object[] rows = new object[] { row1, row2 };
             foreach (string[] rowArray in rows)
             {
-                dtAdditonalCapabilities.dtAdditonalCapabilities.Rows.Add(rowArray);
+                dtAdditonalCapabilities.dataGridView.Rows.Add(rowArray);
             }
         }
 
@@ -261,15 +261,4 @@ namespace SwdPageRecorder.UI
             });
         }
     }
-
-    public class VendorBrowser
-    {
-        public string Browser { get; set; }
-        public string Version { get; set; }
-        public string Platform { get; set; }
-        public string HubUrl { get; set; }
-        public bool Custom { get; set; }
-    }
-
-
 }
