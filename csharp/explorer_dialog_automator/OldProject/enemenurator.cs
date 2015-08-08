@@ -375,6 +375,8 @@ public static bool Report( IntPtr hWnd,  int lParam)
 	string sToken =  GetText(hWnd);
 	MatchCollection m = r.Matches( sToken);
 	if ( sToken != null && m.Count != 0 ) {
+        Console.WriteLine(String.Format("==>{0}", sToken));
+
 		EnumPropsEx(hWnd, EnumPropsExManaged, 0 );
 
 		bHasEnemyChild = false;
@@ -432,6 +434,7 @@ public static List<IntPtr> GetChildWindows(IntPtr parent)
 		foreach ( System.IntPtr s in sArray) {
 
 			string sChT =  GetText(s);
+                        Console.WriteLine(sChT); 
 			if (x == null )
 				x = new ConfigRead();
 			x.LoadConfiguration("Configuration/DialogDetection/Pattern", "DialogText");
@@ -977,7 +980,7 @@ public void Perform( )
 
 				if (Debug) Console.WriteLine( "{0}{1}",  myProcess.Id.ToString(),  z.CommandLine  ); CommandLine =  z.CommandLine;
 				// CommandLine = myProcess.ProcessName;
-				Console.WriteLine("{0} {1} {2} {3}", sProbe, myProcess.ProcessName, myProcess.Id, DateTime.Now -  myProcess.StartTime);
+				Console.WriteLine("--> {0} {1} {2} {3}", sProbe, myProcess.ProcessName, myProcess.Id, DateTime.Now -  myProcess.StartTime);
 			} catch (Win32Exception e) { System.Diagnostics.Trace.Assert(e !=  null); }
 		}
 	}
