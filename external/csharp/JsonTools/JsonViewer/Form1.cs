@@ -9,6 +9,8 @@ using System.Windows.Forms;
 using System.IO;
 using BjSTools.File;
 using System.Net;
+using NUnit.Framework;
+using Newtonsoft.Json;
 
 namespace JsonViewer
 {

@@ -6,6 +6,9 @@ using System.Reflection;
 using System.Collections;
 using System.IO;
 using System.Drawing;
+using NUnit.Framework;
+using Newtonsoft.Json;
+// https://weblog.west-wind.com/posts/2012/Aug/30/Using-JSONNET-for-dynamic-JSON-parsing
 
 namespace BjSTools.File
 {

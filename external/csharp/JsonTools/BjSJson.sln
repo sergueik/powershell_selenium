@@ -1,6 +1,7 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+﻿Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+# SharpDevelop 5.1
+
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BjSTools.File.Json", "BjSTools.File.Json\BjSTools.File.Json.csproj", "{74BD08ED-6C19-4CA9-A812-4A16F7D1F1C5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonViewer", "JsonViewer\JsonViewer.csproj", "{CC09DF9D-314D-4C66-9D7E-75E273D09FA7}"
