@@ -42,26 +42,25 @@ Add-Type : Unable to load one or more of the requested types. Retrieve the Loade
 $verificationErrors = New-Object System.Text.StringBuilder
 
 
-
 # use Default Web Site to host the page. Enable Directory Browsing.
 
 $MODULE_NAME = 'selenium_utils.psd1'
-import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
+Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 
-$selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies -hub_host $hub_host -hub_port $hub_port
+$selenium = launch_selenium -browser $browser -hub_host $hub_host -hub_port $hub_port
 
 $base_url = 'file:///root/popup.html'
-$base_url = 'file:///C:/developer/sergueik/powershell_ui_samples/selenium/popup.html'
+$base_url = 'file:///C:/developer/sergueik/powershell_selenium/assets/popup.html'
 
-$selenium.Navigate().GoToUrl( $base_url )
+$selenium.Navigate().GoToUrl($base_url)
 $selenium.Navigate().Refresh()
 # $selenium.Manage().Window.Maximize()
 
-start-sleep 3
+Start-Sleep 3
 
 $xpath = "//input[@type='button']"
 
-[OpenQA.Selenium.Remote.RemoteWebElement]$button = $selenium.findElement([OpenQA.Selenium.By]::XPath($xpath ))
+[OpenQA.Selenium.Remote.RemoteWebElement]$button = $selenium.findElement([OpenQA.Selenium.By]::XPath($xpath))
 
 $button.click()
 # http://www.programcreek.com/java-api-examples/index.php?api=org.openqa.selenium.Alert
@@ -69,7 +68,7 @@ $button.click()
 # [OpenQA.Selenium.Remote.RemoteAlert]
 $alert = $selenium.switchTo().alert()
 
-write-output $alert.Text
+Write-Output $alert.Text
 $alert.accept()
 
 # This works on FF, Chrome, IE 8 - 11
