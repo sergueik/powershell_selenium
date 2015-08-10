@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<Configuration>
-<ProcessDetection>
-<Process><ProcessName/></Process>
-<CommandLine><Pattern/></CommandLine>
-</ProcessDetection>
-<WindowDetection><Window><Text/></Window></WindowDetection>
-<DialogDetection><Pattern><DialogText/><ButtonText/></Pattern></DialogDetection>
-</Configuration>
