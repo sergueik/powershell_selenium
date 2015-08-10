@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" ToolsVersion="4.0">
   <ProjectExtensions>
 
@@ -23,7 +23,7 @@ http://msdn2.microsoft.com/en-us/library/bb651786.aspx
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation/>
+    <UpgradeBackupLocation />
     <ProjectGuid>{D14F219E-1737-4885-8E99-5206DD112673}</ProjectGuid>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -89,7 +89,7 @@ http://msdn2.microsoft.com/en-us/library/bb651786.aspx
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets"/>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Reference Include="mscorlib">
       <Name>mscorlib</Name>
@@ -114,11 +114,17 @@ http://msdn2.microsoft.com/en-us/library/bb651786.aspx
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="commandline.cs" />
+    <Compile Include="configuration.cs" />
+    <Compile Include="dialogdetector.cs" />
+    <Compile Include="dosdrive.cs" />
     <Compile Include="enemenurator.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
-    <EmbeddedResource Include="IdleIcon.ico"/>
-    <EmbeddedResource Include="BusyIcon.ico"/>
+    <Compile Include="loggers.cs" />
+    <Compile Include="prorgam.cs" />
+    <EmbeddedResource Include="IdleIcon.ico" />
+    <EmbeddedResource Include="BusyIcon.ico" />
     <EmbeddedResource Include="defaultconfig.xml">
       <LogicalName>config.xml</LogicalName>
     </EmbeddedResource>
@@ -163,7 +169,7 @@ http://msdn2.microsoft.com/en-us/library/bb651786.aspx
 </Target>
 -->
   <Target Name="Clean">
-    <RemoveDir Directories="$(OutDir);$(ObjectPath);obj\$(Configuration)"/>
-    <MakeDir Directories="$(OutDir)"/>
+    <RemoveDir Directories="$(OutDir);$(ObjectPath);obj\$(Configuration)" />
+    <MakeDir Directories="$(OutDir)" />
   </Target>
 </Project>

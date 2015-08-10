@@ -1,0 +1,15 @@
+build/SwdPageRecorder_Latest
+SwdPageRecorder*.zip
+build/SwdPageRecorder_v*
+build.log
+
+# driver executables may be copied into project
+
+**/*.exe
+**/*.zip
+**/*jar
+**/bin
+**/obj
+**/*.suo
+**/.nuget
+**/packages/**
