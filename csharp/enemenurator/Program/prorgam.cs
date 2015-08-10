@@ -14,9 +14,8 @@ namespace SystemTrayApp
         private int isStateone = 0;
         private Icon IdleIcon;
         private Icon BusyIcon;
-        // Define the menu.
         private ContextMenu sysTrayMenu = new ContextMenu();
-        // TODO: offer options
+        // TODO: offer options?
         private MenuItem runNowMenuItem = new MenuItem("Run Now");
         private MenuItem exitApp = new MenuItem("Exit");
         // private DialogHunter worker = new DialogHunter();
@@ -24,7 +23,7 @@ namespace SystemTrayApp
         static System.Windows.Forms.Timer myTimer = new System.Windows.Forms.Timer();
         static int nScanCounter = 1;
         static bool exitFlag = false;
-        // This is the method to run when the timer is raised.
+        
         private void TimerEventProcessor(Object myObject,
                          EventArgs myEventArgs) {
             myTimer.Stop();
@@ -32,12 +31,13 @@ namespace SystemTrayApp
             Console.Write("{0}\r", nScanCounter.ToString());
             isStateone = 1 - isStateone;
             appIcon.Visible = false;
-            if (isStateone == 1)
+            if(isStateone == 1)
                 appIcon.Icon = BusyIcon;
             else
                 appIcon.Icon = IdleIcon;
             appIcon.Visible = true;
-            // Change the background image to the next image.
+            
+            // indicate the worker process is running
             DialogDetector Worker = new DialogDetector();
             Worker.Perform();
             // Thread.Sleep (1000);
@@ -58,8 +58,6 @@ namespace SystemTrayApp
 
             appIcon.Icon = IdleIcon;
             appIcon.Text = "Popup Hunter Tool";
-
-            // Place the menu items in the menu.
             sysTrayMenu.MenuItems.Add(runNowMenuItem);
             sysTrayMenu.MenuItems.Add(exitApp);
             appIcon.ContextMenu = sysTrayMenu;
@@ -71,13 +69,10 @@ namespace SystemTrayApp
             myTimer.Interval = 3600000;
             myTimer.Start();
 
-            // Show the system tray icon.
             appIcon.Visible = true;
 
-            // Attach event handlers.
             runNowMenuItem.Click += new EventHandler(runNow);
             exitApp.Click += new EventHandler(ExitApp);
-
         }
 
         private void runNow(object sender, System.EventArgs e) {
@@ -94,18 +89,14 @@ namespace SystemTrayApp
             Application.Exit();
         }
 
-
         public static void Main() {
 #if DEBUG
             Console.WriteLine("Debug version.");
 #endif
             App app = new App();
             app.Start();
-            // No forms are being displayed,
-            // next statement to prevent the application from automatically ending.
             Application.Run();
         }
     }
 }
 #endregion
-

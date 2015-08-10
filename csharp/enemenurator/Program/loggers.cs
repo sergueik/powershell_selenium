@@ -1,21 +1,6 @@
 using System;
-using System.Drawing;
-using System.IO;
-using System.Threading;
 using System.Diagnostics;
-// http://msdn.microsoft.com/en-us/library/aa288468%28v=vs.71%29.aspx
-using System.Runtime.InteropServices;
-using System.ComponentModel;
-using System.Windows.Forms;
-using System.Collections;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Reflection;
-using System.Xml;
-using System.Xml.XPath;
-using System.Management;
 using System.Net;
 
 #region NT EventLog Logger
@@ -62,12 +47,7 @@ public class NTEventLogLogger
 
 #endregion
 
-
-
-
 #region Console Logger
-
-
 
 class ConsoleLogger
 {
@@ -79,17 +59,11 @@ class ConsoleLogger
 
 #endregion
 
-
-
-
 #region SMS/MailLogger
-
 class FormPoster
 {
-
     static bool DEBUG = false;
     public static bool Debug { get { return DEBUG; } set { DEBUG = value; } }
-
     WebClient myWebClient;
     string uriString = @"http://ftlplanb02/planb/result.pl";
 
@@ -99,24 +73,17 @@ class FormPoster
     }
 
     //  [Conditional("Debug")]
-
     private void Action(ToolSpecificEventargs arg)
     {
-
-
-
         // Create a new NameValueCollection instance to hold some custom parameters to be posted to the URL.
         NameValueCollection myNameValueCollection = new NameValueCollection();
 
         string BuildMachine = System.Environment.GetEnvironmentVariable("COMPUTERNAME");
         string UserName = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
 
-
-
 #if DEBUG
         // Maintain VBLMonitor and VBLManager
         Console.WriteLine("I see you.");
-
         //        if (DEBUG ) {
         Console.WriteLine("\nUploading to {0} ...", uriString);
         Console.WriteLine("\nComputer {0}", BuildMachine);
@@ -128,9 +95,7 @@ class FormPoster
         //         }
 
         System.Diagnostics.Debug.Assert(uriString != null);
-
 #else
-
     byte[] responseArray = null;
 	// Add necessary parameter/value pairs to the name/value container.
 	myNameValueCollection.Add("Computer", BuildMachine );
@@ -156,9 +121,7 @@ class FormPoster
     public void handler(object source, ToolSpecificEventargs arg)
     {
         Action(arg);
-
     }
-
 }
 
 #endregion

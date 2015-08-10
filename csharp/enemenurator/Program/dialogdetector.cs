@@ -7,9 +7,17 @@ using System.Text.RegularExpressions;
 
 public class DialogDetector
 {
-    static public bool DialogDetected = false;
+    private ConsoleLogger MyConsoleLogger;
+    private NTEventLogLogger MyNTEventLogLogger;
+    private ToolSpecificEvent myDiscovery;
+    private FormPoster MyFormPoster;
+    private ConfigRead configuration_from_xml;
+    private ProcessCommandLine process_command_line;
+
+	static public bool DialogDetected = false;
     static private String CommandLine = String.Empty;
     static bool DEBUG = false;
+
     public static bool Debug
     {
         get { return DEBUG; }
@@ -20,36 +28,39 @@ public class DialogDetector
     {
         Process[] myProcesses;
         myProcesses = Process.GetProcesses();
-        FormPoster MyFormPoster = new FormPoster();
-        ConsoleLogger MyConsoleLogger = new ConsoleLogger();
-        NTEventLogLogger MyNTEventLogLogger = new NTEventLogLogger();
-        ToolSpecificEvent myDiscovery = new ToolSpecificEvent();
+        MyFormPoster = new FormPoster();
+        MyConsoleLogger = new ConsoleLogger();
+        MyNTEventLogLogger = new NTEventLogLogger();
+        myDiscovery = new ToolSpecificEvent();
 
         myDiscovery.ActionEvent += new ToolSpecificEventHandler(MyConsoleLogger.handler);
         myDiscovery.ActionEvent += new ToolSpecificEventHandler(MyNTEventLogLogger.handler);
         myDiscovery.ActionEvent += new ToolSpecificEventHandler(MyFormPoster.handler);
-        ConfigRead x = new ConfigRead();
-        x.LoadConfiguration("Configuration/ProcessDetection/Process", "ProcessName");
-        string s = x.DetectorExpression;
-        Regex r = new Regex(s, RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase);
+        configuration_from_xml = new ConfigRead();
+        configuration_from_xml.LoadConfiguration("Configuration/ProcessDetection/Process", "ProcessName");
+        string process_detector_expression = configuration_from_xml.DetectorExpression;
+        Regex process_detector_regex = new Regex(process_detector_expression, RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase);
 
         foreach (Process myProcess in myProcesses)
         {
             string res = String.Empty;
             string sProbe = myProcess.ProcessName;
             //  myProcess.StartInfo.FileName - not accessible
-            if (Debug) Console.WriteLine("Process scan: {0}", s); MatchCollection m = r.Matches(sProbe);
+            if (Debug) Console.WriteLine("Process scan: {0}", process_detector_expression); MatchCollection m = process_detector_regex.Matches(sProbe);
             if (sProbe != null && m.Count != 0)
             {
                 try
                 {
                     DialogDetected = true;
-                    ProcessCommandLine z = new ProcessCommandLine(myProcess.Id.ToString());
-                    if (Debug) Console.WriteLine("{0}{1}", myProcess.Id.ToString(), z.CommandLine); CommandLine = z.CommandLine;
+                    process_command_line = new ProcessCommandLine(myProcess.Id.ToString());
+                    if (Debug) Console.WriteLine("{0}{1}", myProcess.Id.ToString(), process_command_line.CommandLine); 
+                    CommandLine = process_command_line.CommandLine;
                     // CommandLine = myProcess.ProcessName;
                     Console.WriteLine("--> {0} {1} {2} {3}", sProbe, myProcess.ProcessName, myProcess.Id, DateTime.Now - myProcess.StartTime);
                 }
-                catch (Win32Exception e) { System.Diagnostics.Trace.Assert(e != null); }
+                catch (Win32Exception e) { 
+                     System.Diagnostics.Trace.Assert(e != null); 
+                }
             }
         }
         CallBackPtr callBackPtr = new CallBackPtr(EnumReport.Report);

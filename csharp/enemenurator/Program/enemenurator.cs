@@ -1,8 +1,5 @@
 using System;
 using System.Drawing;
-using System.IO;
-using System.Threading;
-using System.Diagnostics;
 // http://msdn.microsoft.com/en-us/library/aa288468%28v=vs.71%29.aspx
 using System.Runtime.InteropServices;
 using System.ComponentModel;
@@ -12,11 +9,6 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Reflection;
-using System.Xml;
-using System.Xml.XPath;
-using System.Management;
-using System.Net;
 
 #region PInvoke Win32 API
 
@@ -390,9 +382,7 @@ public class ToolSpecificEvent
 {
     static int count = 0;        // may be needed for continuous monitoring
     public event ToolSpecificEventHandler ActionEvent;
-    /// <summary>
-    /// Fires ToolSpecificEvent
-    /// </summary>
+
     public void FireToolSpecificEvent()
     {
         ToolSpecificEventargs arg = new ToolSpecificEventargs();
@@ -408,10 +398,6 @@ public class ToolSpecificEvent
         }
     }
 
-    /// <summary>
-    /// Fires ToolSpecificEvent with value data
-    /// </summary>
-
     public void FireToolSpecificEvent(int value)
     {
         ToolSpecificEventargs arg = new ToolSpecificEventargs();
@@ -421,10 +407,6 @@ public class ToolSpecificEvent
             ActionEvent(this, arg);
         }
     }
-
-    /// <summary>
-    /// Fires ToolSpecificEvent with value data
-    /// </summary>
 
     public void FireToolSpecificEvent(int ProcessID, string CommandLine, string WindowTitle, string DialogText)
     {

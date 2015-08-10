@@ -1,40 +1,34 @@
 using System;
-using System.Drawing;
 using System.IO;
-using System.Threading;
-using System.Diagnostics;
-// http://msdn.microsoft.com/en-us/library/aa288468%28v=vs.71%29.aspx
 using System.Runtime.InteropServices;
-using System.ComponentModel;
-using System.Windows.Forms;
 using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Reflection;
-using System.Xml;
-using System.Xml.XPath;
-using System.Management;
-using System.Net;
 
 #region DOS Drive Discovery
 
 public class DosDriveInventory
 {
-    private ArrayList _MappedDriveLettersArrayList = new ArrayList(24);
-    private ArrayList _UnusedDriveLettersArrayList = new ArrayList(24);
-    private string _MappedDriveLetters = "";
-    private string _UnusedDriveLetters = "";
+    private string _myProperty;
+    private Hashtable Unused = new Hashtable();
+    private Hashtable Used = new Hashtable();
+    private Encoding ascii = Encoding.ASCII;
+    // Internal Drive letter hash table .
+    private String[] drive_letters = new String[24];
+
+	private ArrayList _mappedDriveLettersArrayList = new ArrayList(24);
+    private ArrayList _unusedDriveLettersArrayList = new ArrayList(24);
+    private string _mappedDriveLetters = "";
+    private string _unusedDriveLetters = "";
     static bool DEBUG = false;
 
     public string UnusedDriveLetters
     {
-        get { return _UnusedDriveLetters; }
+        get { return _unusedDriveLetters; }
     }
     public string MappedDriveLetters
     {
-        get { return _MappedDriveLetters; }
+        get { return _mappedDriveLetters; }
     }
 
     [DllImport("kernel32.dll")]
@@ -43,45 +37,36 @@ public class DosDriveInventory
     [DllImport("kernel32.dll")]
     public static extern long GetDriveType(string driveLetter);
 
-    private string FmyProperty;
-
-    private Hashtable Unused = new Hashtable();
-    private Hashtable Used = new Hashtable();
-
-    private Encoding ascii = Encoding.ASCII;
-    private String[] x = new String[24];
-
     public string MyProperty
     {
-        get { return FmyProperty; }
-        set { FmyProperty = value; }
+        get { return _myProperty; }
+        set { _myProperty = value; }
     }
-
 
     public static void Main()
     {
         DEBUG = (System.Environment.GetEnvironmentVariable("DEBUG") == null) ? false : true;
-        DosDriveInventory x = new DosDriveInventory();
-        x.Execute();
+        DosDriveInventory processor = new DosDriveInventory();
+        processor.Execute();
         string SampleCommand = @"""C:\Program Files\Wise for Windows Installer\wfwi.exe"" /c N:\foobar""X:\src\layouts\msi\MergeModules\mf\mf_lang\x64\retail\es\MF_LANG.wsm"" /o ""x64\retail\es\MF_LANG.msm"" /s /v /l ""x64\retail\es\MF_LANG_msm.log""";
-        Console.WriteLine(x.ReportMappedDosDrives(SampleCommand));
+        Console.WriteLine(processor.ReportMappedDosDrives(SampleCommand));
     }
     public bool Execute()
     {
         byte cnt;
-        // Internal Drive letter  hash table .
-        for (cnt = 0; cnt != x.Length; cnt++)
+        
+        for (cnt = 0; cnt != drive_letters.Length; cnt++)
         {
-            String z = String.Format("{0}:\\", ascii.GetString(new byte[] { (byte)(cnt + 67) }));
-            x[cnt] = z;
-            Unused.Add(z, 1);
-            Used.Add(z, 1);
+            String drive_letter = String.Format("{0}:\\", ascii.GetString(new byte[] { (byte)(cnt + 67) }));
+            drive_letters[cnt] = drive_letter;
+            Unused.Add(drive_letter, 1);
+            Used.Add(drive_letter, 1);
         }
-        string[] aDrives = Environment.GetLogicalDrives();
+        string[] logical_drives = Environment.GetLogicalDrives();
 
-        for (cnt = 0; cnt != aDrives.Length; cnt++)
+        for (cnt = 0; cnt != logical_drives.Length; cnt++)
         {
-            String sDriveRoot = aDrives[cnt];
+            String sDriveRoot = logical_drives[cnt];
             String aRealDriveRootPath = GetRealPath(sDriveRoot);
             int iDriveTypeResult = (int)GetDriveType(sDriveRoot);
             /*
@@ -123,23 +108,23 @@ public class DosDriveInventory
                 }
             }
 
-            if (Unused.Contains(aDrives[cnt]))
-                Unused[aDrives[cnt]] = 0;
+            if (Unused.Contains(logical_drives[cnt]))
+                Unused[logical_drives[cnt]] = 0;
 
-            if (Used.Contains(aDrives[cnt]))
+            if (Used.Contains(logical_drives[cnt]))
             {
-                Used[aDrives[cnt]] = aRealDriveRootPath;
-                _MappedDriveLettersArrayList.Add(aDrives[cnt]);
+                Used[logical_drives[cnt]] = aRealDriveRootPath;
+                _mappedDriveLettersArrayList.Add(logical_drives[cnt]);
             }
         }
 
-        for (cnt = 0; cnt != x.Length; cnt++)
+        for (cnt = 0; cnt != drive_letters.Length; cnt++)
         {
-            if (Unused[(x[cnt])].ToString() == "1")
-                _UnusedDriveLettersArrayList.Add(x[cnt]);
+            if (Unused[(drive_letters[cnt])].ToString() == "1")
+                _unusedDriveLettersArrayList.Add(drive_letters[cnt]);
         }
-        _MappedDriveLetters = String.Join(";", (string[])_MappedDriveLettersArrayList.ToArray(typeof(string)));
-        _UnusedDriveLetters = String.Join(";", (string[])_UnusedDriveLettersArrayList.ToArray(typeof(string)));
+        _mappedDriveLetters = String.Join(";", (string[])_mappedDriveLettersArrayList.ToArray(typeof(string)));
+        _unusedDriveLetters = String.Join(";", (string[])_unusedDriveLettersArrayList.ToArray(typeof(string)));
         return true;
     }
 
@@ -180,7 +165,7 @@ public class DosDriveInventory
 
     public int DosDriveCount()
     {
-        return _UnusedDriveLettersArrayList.Count;
+        return _unusedDriveLettersArrayList.Count;
     }
 
     public String DosDriveRealPath(string sDosDriveLetterAlias)

@@ -1,21 +1,11 @@
 using System;
-using System.Drawing;
 using System.IO;
-using System.Threading;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.ComponentModel;
 using System.Windows.Forms;
 using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Xml;
 using System.Xml.XPath;
-using System.Management;
-using System.Net;
 
 #region Configuration Processor
 
@@ -100,11 +90,9 @@ public class ConfigRead
 
 public class XMLDataExtractor
 {
-
-
     private bool DEBUG = false;
     public bool Debug { get { return DEBUG; } set { DEBUG = value; } }
-    // see http://support.microsoft.com/kb/308333 about XPathNavigator
+    // http://support.microsoft.com/kb/308333
 
     private XPathNavigator nav;
     private XPathDocument docNav;
@@ -115,9 +103,7 @@ public class XMLDataExtractor
     {
         try
         {
-            // Open the XML.
             docNav = new XPathDocument(sFile);
-
         }
         catch (Exception e)
         {
@@ -126,17 +112,12 @@ public class XMLDataExtractor
         }
 
         if (docNav != null)
-            // Create a navigator to query with XPath.
             nav = docNav.CreateNavigator();
-
     }
 
     public String[] ReadAllNodes(String sNodePath, String sFieldPath)
     {
-
-        // Select the node and place the results in an iterator.
         NodeIter = nav.Select(sNodePath);
-
         ArrayList _DATA = new ArrayList(1024);
 
         // Iterate through the results showing the element value.
@@ -196,17 +177,13 @@ public class XMLDataExtractor
             {
                 while (NodeResult.MoveNext())
                     _DATA.Add(NodeResult.Current.Value);
-
             }
-
-
         }
         ;
         String[] res = (String[])_DATA.ToArray(typeof(string));
         if (DEBUG)
             Console.WriteLine(String.Join(";", res));
         return res;
-
     }
 
     public void ReadSingleNode(String sNodePath)
@@ -217,12 +194,8 @@ public class XMLDataExtractor
         // Iterate through the results showing the element value.
         while (NodeIter.MoveNext())
             Console.WriteLine("Book Title: {0}", NodeIter.Current.Value);
-        ;
     }
-
-
 }
-
 #endregion
 
 
