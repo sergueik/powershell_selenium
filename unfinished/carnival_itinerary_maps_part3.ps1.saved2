@@ -1,0 +1,619 @@
+#Copyright (c) 2015 Serguei Kouzmine
+#
+#Permission is hereby granted, free of charge, to any person obtaining a copy
+#of this software and associated documentation files (the "Software"), to deal
+#in the Software without restriction, including without limitation the rights
+#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#copies of the Software, and to permit persons to whom the Software is
+#furnished to do so, subject to the following conditions:
+#
+#The above copyright notice and this permission notice shall be included in
+#all copies or substantial portions of the Software.
+#
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#THE SOFTWARE.
+param(
+  [string]$browser = 'firefox',
+  [string]$dest = 'Caribbean',
+  [string]$port = 'Miami, FL',
+  [switch]$pause
+)
+
+function extract_match {
+  param(
+    [string]$source,
+    [string]$capturing_match_expression,
+    [string]$label,
+    [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
+  )
+  Write-Debug ('Extracting from {0}' -f $source)
+  $local:results = {}
+  $local:results = $source | where { $_ -match $capturing_match_expression } |
+  ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
+  Write-Debug 'extract_match:'
+  Write-Debug $local:results
+  $result_ref.Value = $local:results.Media
+}
+
+
+function custom_pause {
+
+  param([bool]$fullstop)
+  # Do not close Browser / Selenium when run from Powershell ISE
+
+  if ($fullstop) {
+    try {
+      Write-Output 'pause'
+      [void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    } catch [exception]{}
+  } else {
+    Start-Sleep -Millisecond 1000
+  }
+
+}
+
+# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
+function Get-ScriptDirectory
+{
+  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
+  if ($Invocation.PSScriptRoot) {
+    $Invocation.PSScriptRoot
+  }
+  elseif ($Invocation.MyCommand.Path) {
+    Split-Path $Invocation.MyCommand.Path
+  } else {
+    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
+  }
+}
+
+function cleanup
+{
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref
+  )
+  try {
+    $selenium_ref.Value.Quit()
+  } catch [exception]{
+    # Ignore errors if unable to close the browser
+    Write-Debug (($_.Exception.Message) -split "`n")[0]
+
+  }
+}
+
+function print_itinerary_link_info {
+  param (
+   [int]$position,
+   [string]$destination,
+   [string]$port,
+   [string]$description,
+   [string]$url,
+   [string]$log_filename
+    )
+
+  Write-Output ('{0}|{1}|{2}|{3}|{4}' -f `
+       $position,`
+       $destination,`
+       $port, `
+       $description,`
+       $url) | Out-File $log_filename -Append
+
+}
+
+
+function extract_itinerary_description {
+  param([string]$text)
+
+  $description = ($element1.Text -split "`r`n")[0]
+  $port_ship = ($element1.Text -split "`r`n")[1]
+
+}
+
+$shared_assemblies = @(
+  'WebDriver.dll',
+  'WebDriver.Support.dll',
+  'nunit.framework.dll'
+)
+
+$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
+
+if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
+  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
+}
+
+pushd $shared_assemblies_path
+
+
+$shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
+popd
+
+$verificationErrors = New-Object System.Text.StringBuilder
+
+if ($browser -ne $null -and $browser -ne '') {
+  try {
+    $connection = (New-Object Net.Sockets.TcpClient)
+    $connection.Connect("127.0.0.1",4444)
+    $connection.Close()
+  } catch {
+    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\hub.cmd"
+    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\node.cmd"
+    Start-Sleep -Seconds 10
+  }
+  Write-Host "Running on ${browser}"
+  if ($browser -match 'firefox') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
+
+  }
+  elseif ($browser -match 'chrome') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
+  }
+  elseif ($browser -match 'ie') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
+    if ($version -ne $null -and $version -ne 0) {
+      $capability.SetCapability("version",$version.ToString());
+    }
+
+  }
+  elseif ($browser -match 'safari') {
+    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
+  }
+  else {
+    throw "unknown browser choice:${browser}"
+  }
+  $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
+  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
+} else {
+  Write-Host 'Running on phantomjs'
+  $phantomjs_executable_folder = "C:\tools\phantomjs"
+  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
+  $selenium.Capabilities.SetCapability("ssl-protocol","any")
+  $selenium.Capabilities.SetCapability("ignore-ssl-errors",$true)
+  $selenium.Capabilities.SetCapability("takesScreenshot",$true)
+  $selenium.Capabilities.SetCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
+  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
+  $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
+}
+
+$script_directory = (Get-ScriptDirectory)
+$script_directory = 'C:\developer\sergueik\powershell_selenium\powershell'
+Write-Output '---' | Out-File ('{0}\{1}' -f $script_directory,'results.csv') -Append
+
+$base_url = 'http://www.carnival.com'
+
+$selenium.Navigate().GoToUrl($base_url + '/')
+
+[void]$selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds(100))
+# protect from blank page
+[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
+$wait.PollingInterval = 150
+[void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName('logo')))
+
+Write-Debug ('Started with {0}' -f $selenium.Title)
+
+
+$selenium.Manage().Window.Maximize()
+
+$destinations = @{
+  'Alaska' = 'A';
+  'Bahamas' = 'BH';
+  'Bermuda' = 'BM';
+  'Canada/New England' = 'NN';
+  'Caribbean' = 'C';
+  'Cruise To Nowhere' = 'CN';
+  'Europe' = 'E';
+  'Hawaii' = 'H'
+  'Mexico' = 'M'
+  'Transatlantic' = 'ET'
+}
+$ports = @{
+  'Miami, FL' = 'MIA';
+  'New York, NY' = 'NYC';
+  'Seattle, WA' = 'SEA';
+  'Los Angeles, CA' = 'LAX';
+  'Fort Lauderdale, FL' = 'FLL';
+  'Jacksonville, FL' = 'JAX';
+  'Honolulu, HI' = 'HNL';
+  'Galveston, TX' = 'GAL';
+  'Athenes' = 'ATH';
+  'Baltimore, MD' = 'BWI';
+  'Barbados' = 'BDS';
+  'Barcelona, Spain' = 'BCN';
+  'Charleston, SC' = 'CHS';
+  'New Orleans, LA' = 'MSY';
+  'Norfolk, VA' = 'ORF';
+  'Port Canaveral (Orlando), FL' = 'PCV';
+  'San Juan, Puerto Rico' = 'SJU';
+  'Tampa, FL' = 'TPA';
+  'Trieste' = 'TRS';
+  'Vancouver, BC, Canada' = 'YVR';
+}
+
+
+
+
+function select_first_option {
+  param([string]$choice = $null,
+    [string]$label = $null
+  )
+
+  $select_name = $choice
+
+  $select_css_selector = ('a[data-param={0}]' -f $select_name)
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
+  $wait.PollingInterval = 150
+  try {
+    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($select_css_selector)))
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+  }
+  $wait = $null
+  $select_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($select_css_selector))
+  Start-Sleep -Milliseconds 500
+
+  [NUnit.Framework.Assert]::IsTrue(($select_element.Text -match $label))
+
+  Write-Debug ('Clicking on ' + $select_element.Text)
+
+  $select_element.Click()
+  $select_element = $null
+  Start-Sleep -Milliseconds 500
+
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
+  $wait.PollingInterval = 150
+
+  # TODO the css_selector needs refactoring
+
+  $select_value_css_selector = ('div[class=option][data-param={0}] div.scrollable-content div.viewport div.overview ul li a' -f $select_name)
+  $value_element = $null
+  Write-Debug ('Selecting CSS: "{0}"' -f $select_value_css_selector)
+  try {
+    [OpenQA.Selenium.Remote.RemoteWebElement]$value_element = $wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($select_value_css_selector)))
+    Write-Debug 'Found...'
+    Write-Debug ('Selected value: {0} / attribute "{1}"' -f $value_element.Text,$value_element.GetAttribute('data-id'))
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+  }
+  $wait = $null
+
+  Start-Sleep -Milliseconds 500
+  [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+  [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$value_element).Click().Build().Perform()
+  $value_element = $null
+
+  $actions2 = $null
+  Start-Sleep -Milliseconds 500
+}
+
+
+function select_criteria {
+
+  param([string]$choice = $null,
+    [string]$label = $null,
+    [string]$option = $null,
+    [System.Management.Automation.PSReference]$choice_value_ref = ([ref]$null),
+    [string]$value = $null # note formatting
+
+  )
+
+  $select_name = $choice
+
+  if ($value) {
+    $selecting_value = $value
+  } else {
+    Write-Debug ('"{0}"' -f $option)
+    $selecting_value = $choice_value_ref.Value[$option]
+    Write-Debug $selecting_value
+  }
+  $select_css_selector = ('a[data-param={0}]' -f $select_name)
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
+  $wait.PollingInterval = 150
+  try {
+    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($select_css_selector)))
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+  }
+  $wait = $null
+  $select_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($select_css_selector))
+  Start-Sleep -Milliseconds 500
+  [NUnit.Framework.Assert]::IsTrue(($select_element.Text -match $label))
+
+  Write-Debug ('Clicking on ' + $select_element.Text)
+  $select_element.Click()
+  Start-Sleep -Milliseconds 500
+  $select_element = $null
+
+
+
+  $select_value_css_selector = ('div[class=option][data-param={0}] a[data-id={1}]' -f $select_name,$selecting_value)
+  Write-Debug ('Selecting CSS(2): "{0}"' -f $select_value_css_selector)
+
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
+
+  $wait.PollingInterval = 150
+
+  $value_element = $null
+  try {
+    [OpenQA.Selenium.Remote.RemoteWebElement]$value_element = $wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($select_value_css_selector)))
+    Write-Debug 'Found value_element...'
+    # $value_element
+    Write-Debug ('Selected value: {0} / attribute "{1}"' -f $value_element.Text,$value_element.GetAttribute('data-id'))
+
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+  }
+
+  $wait = $null
+  Start-Sleep -Milliseconds 500
+  [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+  [void]$actions2.MoveToElement([OpenQA.Selenium.IWebElement]$value_element).Click().Build().Perform()
+  Start-Sleep -Milliseconds 500
+  $wait = $null
+  $actions2 = $null
+  $value_element = $null
+
+}
+
+function search_cruises {
+  $css_selector1 = 'div.actions > a.search'
+  try {
+    [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+  }
+
+  $element1 = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
+  [NUnit.Framework.Assert]::IsTrue(($element1.Text -match 'SEARCH'))
+  Write-Debug ('Clicking on ' + $element1.Text)
+  $element1.Click()
+  $element1 = $null
+
+}
+function count_cruises {
+  param(
+    [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
+  )
+
+  $css_selector1 = "li[class*=num-found] strong"
+
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(3))
+  $wait.PollingInterval = 500
+  try {
+    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector1)))
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+  }
+
+  try {
+    [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
+  }
+
+  $element1 = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
+  Write-Debug ('Found ' + $element1.Text)
+  $result_ref.Value = $element1.Text
+
+}
+
+# TODO :finish parameters
+$fullstop = (($PSBoundParameters['pause']) -ne $null)
+
+select_criteria -choice 'numGuests' -Value '"2"' -label 'TRAVELERS'
+#Write-Debug ('Selecting Destination {0}' -f $dest )
+#
+select_criteria -choice 'dest' -label 'Sail To' -Option $dest -choice_value_ref ([ref]$destinations)
+#Write-Debug ('Selecting Port {0}' -f $port )
+select_criteria -choice 'port' -label 'Sail from' -Option $port -choice_value_ref ([ref]$ports)
+
+# find first avail
+select_first_option -choice 'dat' -label 'Date'
+search_cruises
+Start-Sleep -Milliseconds 1500
+$cruises_count_text = $null
+count_cruises -result_ref ([ref]$cruises_count_text)
+Write-Host $cruises_count_text
+$itins_found = 1
+extract_match -Source $cruises_count_text -capturing_match_expression '\b(?<media>\d+)\b' -label 'media' -result_ref ([ref]$itins_found)
+
+[NUnit.Framework.Assert]::IsTrue(($itins_found -match '\d+'))
+Write-Output ('Found {0} itinear(ies)' -f $itins_found)
+
+$css_selector1 = 'div#results_container div[class *="search-result"]'
+
+[OpenQA.Selenium.Support.UI.WebDriverWait]$wait1 = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
+
+try {
+  [void]$wait1.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector1)))
+} catch [exception]{
+  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,$_.Exception.Message)
+}
+
+[OpenQA.Selenium.IWebElement]$element1 = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
+
+[OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+$actions.MoveToElement([OpenQA.Selenium.IWebElement]$element1).Build().Perform()
+$actions = $null
+$description = ($element1.Text -split "`r`n")[0]
+$port_ship = ($element1.Text -split "`r`n")[1]
+
+Write-Host ('Sailing to {0} {1}' -f $description,$port_ship)
+# For debugging:
+# $page_source = (($element1.GetAttribute("innerHTML")) -join '')
+
+$css_selector3 = 'a[class *= "itin-select" ]'
+[OpenQA.Selenium.IWebElement]$element3 = $element1.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector3))
+
+
+
+
+$itins_to_find = $itins_found
+$itins_found   = 1 
+
+
+print_itinerary_link_info `
+      -position $itins_found `
+      -destination $dest `
+      -port $port `
+      -description $description `
+      -url $element3.GetAttribute('href') `
+      -log_filename ('{0}\{1}' -f $script_directory,'results.csv')
+
+
+while ($itins_found -lt $itins_to_find) {
+
+  [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+  $xpath2 = "following-sibling::div[contains(@class, 'search-result')][1]"
+
+  [OpenQA.Selenium.IWebElement]$element2 = $element1.FindElement([OpenQA.Selenium.By]::XPath($xpath2))
+
+  $itins_found = $itins_found + 1
+
+  $description = ($element2.Text -split "`r`n")[0]
+  $port_ship = ($element2.Text -split "`r`n")[1]
+
+  Write-Host ('Sailing to {0} {1}' -f $description,$port_ship)
+  # For debugging:
+  # $page_source = (($element1.GetAttribute("innerHTML")) -join '')
+
+  $css_selector3 = 'a[class *= "itin-select" ]'
+  [OpenQA.Selenium.IWebElement]$element3 = $element2.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector3))
+
+  $adjust_vscroll = $element3.LocationOnScreenOnceScrolledIntoView.Y
+  if ($adjust_vscroll -eq 1) {
+    $adjust_vscroll = 10
+  }
+  if ($adjust_vscroll -gt 0) {
+    [void]([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript(('scroll(0, {0})' -f $adjust_vscroll),$null)
+    Write-Debug ('Scroll {0} px' -f $adjust_vscroll)
+    Start-Sleep -Millisecond 500
+  }
+
+  $actions.MoveToElement([OpenQA.Selenium.IWebElement]$element3).Build().Perform()
+  Start-Sleep -Millisecond 1000
+
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element3,'border: 2px solid red;')
+  Start-Sleep -Millisecond 1000
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element3,'')
+  $actions = $null
+  $url =  $element3.GetAttribute('href')
+print_itinerary_link_info `
+      -position $itins_found `
+      -destination $dest `
+      -port $port `
+      -description $description `
+      -url $element3.GetAttribute('href') `
+      -log_filename ('{0}\{1}' -f $script_directory,'results.csv')
+
+$expect_url =  'http://www.carnival.com/itinerary/7-day-eastern-caribbean-cruise/miami/glory/7-days/cem/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA'
+$expect_url = $expect_url -replace '\?' , '\?' 
+ 
+  if ($url -match $expect_url)
+{ 
+ write-output 'need to pick XPATH'
+  [string]$script = @"
+function getPathTo(element) {
+    if (element.id!=='')
+        return '*[@id="'+element.id+'"]';
+    if (element===document.body)
+        return element.tagName;
+
+    var ix= 0;
+    var siblings= element.parentNode.childNodes;
+    for (var i= 0; i<siblings.length; i++) {
+        var sibling= siblings[i];
+        if (sibling===element)
+            return getPathTo(element.parentNode)+'/'+element.tagName+'['+(ix+1)+']';
+        if (sibling.nodeType===1 && sibling.tagName===element.tagName)
+            ix++;
+    }
+}
+return getPathTo(arguments[0]);
+"@
+
+
+            $result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($script,$element4,'')).ToString()
+
+            Write-Output ('Saving  XPATH for {0} = "{1}" ' -f $element3.Text,$result)
+
+}
+
+  # next iterator 
+  $element1 = $element2
+}
+
+custom_pause -fullstop $fullstop
+# At the end of the run - do not close Browser / Selenium when executing from Powershell ISE
+if (-not ($host.Name -match 'ISE')) {
+  # Cleanup
+  cleanup ([ref]$selenium)
+}
+<#
+# example output
+sep=   
+Num    Destination    Port    Description    Url
+1	Caribbean	Miami, FL	Carnival Live Presents Smokey Robinson - 4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/ecstasy/4-days/dab/?evsel=SYR&numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+2	Caribbean	Miami, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/ecstasy/4-days/kc3/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+3	Caribbean	Miami, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/victory/4-days/kwp/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+4	Caribbean	Miami, FL	5 Day Eastern Caribbean	http://www.carnival.com/itinerary/5-day-eastern-caribbean-cruise/miami/victory/5-days/ec0/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+5	Caribbean	Miami, FL	5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/miami/victory/5-days/wcn/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+1	Canada/New England	New York, NY	4 Day Canada/New England	http://www.carnival.com/itinerary/4-day-canada-new-england-cruise/new-york/splendor/4-days/cac/?numGuests=2&destination=canada-new-england&dest=NN&datFrom=062015&datTo=062015&embkCode=NYC
+1	Europe	Barcelona, Spain	10 Day Europe	http://www.carnival.com/itinerary/10-day-europe-cruise/barcelona/vista/10-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN
+2	Europe	Barcelona, Spain	10 Day Europe	http://www.carnival.com/itinerary/10-day-europe-cruise/athens/vista/10-days/mea/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN
+3	Europe	Barcelona, Spain	13 Day Europe	http://www.carnival.com/itinerary/13-day-europe-cruise/trieste/vista/13-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN
+1	Alaska	Seattle, WA	8 Day Glacier Bay	http://www.carnival.com/itinerary/8-day-glacier-bay-cruise/vancouver/legend/8-days/glb/?numGuests=2&destination=alaska&dest=A&datFrom=052015&datTo=052015&embkCode=SEA
+2	Alaska	Seattle, WA	7 Day Glacier Bay	http://www.carnival.com/itinerary/7-day-glacier-bay-cruise/seattle/legend/7-days/glm/?numGuests=2&destination=alaska&dest=A&datFrom=052015&datTo=052015&embkCode=SEA
+1	Hawaii	Los Angeles, CA	Carnival Journeys - 15 Day Hawaii	http://www.carnival.com/itinerary/15-day-hawaii-cruise/los-angeles/miracle/15-days/jh0/?evsel=J&numGuests=2&destination=hawaii&dest=H&datFrom=102015&datTo=102015&embkCode=LAX
+1	Bahamas	Miami, FL	4 Day Bahamas	http://www.carnival.com/itinerary/4-day-bahamas-cruise/miami/ecstasy/4-days/ba4/?numGuests=2&destination=bahamas&dest=BH&datFrom=042015&datTo=042015&embkCode=MIA
+2	Bahamas	Miami, FL	3 Day Bahamas	http://www.carnival.com/itinerary/3-day-bahamas-cruise/miami/ecstasy/3-days/bad/?numGuests=2&destination=bahamas&dest=BH&datFrom=042015&datTo=042015&embkCode=MIA
+1	Mexico	Los Angeles, CA	3 Day Baja Mexico	http://www.carnival.com/itinerary/3-day-baja-mexico-cruise/los-angeles/imagination/3-days/laf/?numGuests=2&destination=mexico&dest=M&datFrom=042015&datTo=042015&embkCode=LAX
+2	Mexico	Los Angeles, CA	4 Day Baja Mexico	http://www.carnival.com/itinerary/4-day-baja-mexico-cruise/los-angeles/imagination/4-days/lai/?numGuests=2&destination=mexico&dest=M&datFrom=042015&datTo=042015&embkCode=LAX
+3	Mexico	Los Angeles, CA	4 Day Baja Mexico	http://www.carnival.com/itinerary/4-day-baja-mexico-cruise/los-angeles/inspiration/4-days/lai/?numGuests=2&destination=mexico&dest=M&datFrom=042015&datTo=042015&embkCode=LAX
+4	Mexico	Los Angeles, CA	4 Day Baja Mexico	http://www.carnival.com/itinerary/4-day-baja-mexico-cruise/los-angeles/imagination/4-days/lah/?numGuests=2&destination=mexico&dest=M&datFrom=042015&datTo=042015&embkCode=LAX
+5	Mexico	Los Angeles, CA	4 Day Baja Mexico	http://www.carnival.com/itinerary/4-day-baja-mexico-cruise/los-angeles/inspiration/4-days/lah/?numGuests=2&destination=mexico&dest=M&datFrom=042015&datTo=042015&embkCode=LAX
+1	Bahamas	Fort Lauderdale, FL	4 Day Bahamas	http://www.carnival.com/itinerary/4-day-bahamas-cruise/ft-lauderdale/conquest/4-days/ba0/?numGuests=2&destination=bahamas&dest=BH&datFrom=062016&datTo=062016&embkCode=FLL
+1	Caribbean	Fort Lauderdale, FL	6 Day Western Caribbean	http://www.carnival.com/itinerary/6-day-western-caribbean-cruise/ft-lauderdale/conquest/6-days/wc6/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=FLL
+2	Caribbean	Fort Lauderdale, FL	6 Day Western Caribbean	http://www.carnival.com/itinerary/6-day-western-caribbean-cruise/ft-lauderdale/conquest/6-days/wca/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=FLL
+3	Caribbean	Fort Lauderdale, FL	8 Day Southern Caribbean	http://www.carnival.com/itinerary/8-day-southern-caribbean-cruise/ft-lauderdale/conquest/8-days/cse/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=FLL
+1	Bahamas	Jacksonville, FL	4 Day Bahamas	http://www.carnival.com/itinerary/4-day-bahamas-cruise/jacksonville/fascination/4-days/bae/?numGuests=2&destination=bahamas&dest=BH&datFrom=042015&datTo=042015&embkCode=JAX
+2	Bahamas	Jacksonville, FL	5 Day Bahamas	http://www.carnival.com/itinerary/5-day-bahamas-cruise/jacksonville/fascination/5-days/baw/?numGuests=2&destination=bahamas&dest=BH&datFrom=042015&datTo=042015&embkCode=JAX
+3	Bahamas	Jacksonville, FL	5 Day Bahamas	http://www.carnival.com/itinerary/5-day-bahamas-cruise/jacksonville/fascination/5-days/bav/?numGuests=2&destination=bahamas&dest=BH&datFrom=042015&datTo=042015&embkCode=JAX
+4	Bahamas	Jacksonville, FL	5 Day Bahamas	http://www.carnival.com/itinerary/5-day-bahamas-cruise/jacksonville/fascination/5-days/baz/?numGuests=2&destination=bahamas&dest=BH&datFrom=042015&datTo=042015&embkCode=JAX
+1	Caribbean	Jacksonville, FL	6 Day Eastern Caribbean	http://www.carnival.com/itinerary/6-day-eastern-caribbean-cruise/jacksonville/fascination/6-days/ec0/?numGuests=2&destination=caribbean&dest=C&datFrom=042016&datTo=042016&embkCode=JAX
+2	Caribbean	Jacksonville, FL	Carnival Journeys - 10 Day Southern Caribbean	http://www.carnival.com/itinerary/10-day-southern-caribbean-cruise/san-juan/elation/10-days/js1/?evsel=J&numGuests=2&destination=caribbean&dest=C&datFrom=042016&datTo=042016&embkCode=JAX
+1	Bahamas	Norfolk, VA	5 Day Bahamas	http://www.carnival.com/itinerary/5-day-bahamas-cruise/norfolk/splendor/5-days/ba2/?numGuests=2&destination=bahamas&dest=BH&datFrom=052015&datTo=052015&embkCode=ORF
+1	Caribbean	San Juan, Puerto Rico	7 Day Southern Caribbean	http://www.carnival.com/itinerary/7-day-southern-caribbean-cruise/san-juan/liberty/7-days/scy/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=SJU
+1	Caribbean	Tampa, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/tampa/paradise/4-days/kwh/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=TPA
+2	Caribbean	Tampa, FL	5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/tampa/paradise/5-days/kwt/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=TPA
+3	Caribbean	Tampa, FL	Carnival Live Presents Smokey Robinson - 5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/tampa/paradise/5-days/dab/?evsel=SYR&numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=TPA
+1	Europe	Trieste	13 Day Europe	http://www.carnival.com/itinerary/13-day-europe-cruise/trieste/vista/13-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=TRS
+1	Hawaii	Vancouver, BC, Canada	10 Day Hawaii	http://www.carnival.com/itinerary/10-day-hawaii-cruise/vancouver/legend/10-days/hw0/?numGuests=2&destination=hawaii&dest=H&datFrom=092015&datTo=092015&embkCode=YVR
+1	Bermuda	Norfolk, VA	7 Day Bermuda	http://www.carnival.com/itinerary/7-day-bermuda-cruise/norfolk/splendor/7-days/br0/?numGuests=2&destination=bermuda&dest=BM&datFrom=102015&datTo=102015&embkCode=ORF
+1	Cruise To Nowhere	Norfolk, VA	2 Day Cruise To Nowhere	http://www.carnival.com/itinerary/2-day-cruise-to-nowhere-cruise/norfolk/splendor/2-days/ct8/?numGuests=2&destination=cruise-to-nowhere&dest=CN&datFrom=052015&datTo=052015&embkCode=ORF
+1	Caribbean	Tampa, FL	5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/tampa/paradise/5-days/kwt/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=TPA
+1	Caribbean	Tampa, FL	Carnival Live Presents Smokey Robinson - 5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/tampa/paradise/5-days/dab/?evsel=SYR&numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=TPA
+1	Caribbean	Tampa, FL	Carnival Live Presents Smokey Robinson - 5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/tampa/paradise/5-days/dab/?evsel=SYR&numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=TPA
+1	Caribbean	Tampa, FL	3 Day Bahamas	http://www.carnival.com/itinerary/3-day-bahamas-cruise/miami/ecstasy/3-days/bad/?numGuests=2&destination=all-destinations&dest=any&datFrom=042015&datTo=042017
+1	Caribbean	Tampa, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/ecstasy/4-days/kc3/?numGuests=2&destination=all-destinations&dest=any&datFrom=042015&datTo=042017
+1	Caribbean	Tampa, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/ecstasy/4-days/wcb/?numGuests=2&destination=all-destinations&dest=any&datFrom=042015&datTo=042017
+1	Caribbean	Miami, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/ecstasy/4-days/kc3/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+1	Caribbean	Miami, FL	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/miami/victory/4-days/kwp/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+1	Caribbean	Miami, FL	5 Day Eastern Caribbean	http://www.carnival.com/itinerary/5-day-eastern-caribbean-cruise/miami/victory/5-days/ec0/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+1	Caribbean	Miami, FL	5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/miami/victory/5-days/wcn/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+1	Caribbean	Miami, FL	6 Day Western Caribbean	http://www.carnival.com/itinerary/6-day-western-caribbean-cruise/miami/splendor/6-days/wch/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+1	Caribbean	Miami, FL	5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/miami/victory/5-days/wcp/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+1	Caribbean	Miami, FL	Carnival Live Presents Smokey Robinson - 6 Day Western Caribbean	http://www.carnival.com/itinerary/6-day-western-caribbean-cruise/miami/breeze/6-days/daf/?evsel=SYR&numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+1	Caribbean	Miami, FL	7 Day Eastern Caribbean	http://www.carnival.com/itinerary/7-day-eastern-caribbean-cruise/miami/glory/7-days/cem/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+1	Caribbean	Miami, FL	7 Day Western Caribbean	http://www.carnival.com/itinerary/7-day-western-caribbean-cruise/miami/glory/7-days/cw6/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+1	Caribbean	Miami, FL	8 Day Eastern Caribbean	http://www.carnival.com/itinerary/8-day-eastern-caribbean-cruise/miami/breeze/8-days/ecr/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+1	Caribbean	Miami, FL	8 Day Eastern Caribbean	http://www.carnival.com/itinerary/8-day-eastern-caribbean-cruise/miami/breeze/8-days/ecr/?numGuests=2&destination=caribbean&dest=C&datFrom=042015&datTo=042015&embkCode=MIA
+1	Europe	Barcelona, Spain	10 Day Europe	http://www.carnival.com/itinerary/10-day-europe-cruise/barcelona/vista/10-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN
+1	Europe	Barcelona, Spain	13 Day Europe	http://www.carnival.com/itinerary/13-day-europe-cruise/trieste/vista/13-days/meb/?numGuests=2&destination=europe&dest=E&datFrom=052016&datTo=052016&embkCode=BCN
+1	Caribbean	Jacksonville, FL	Carnival Journeys - 10 Day Southern Caribbean	http://www.carnival.com/itinerary/10-day-southern-caribbean-cruise/san-juan/elation/10-days/js1/?evsel=J&numGuests=2&destination=caribbean&dest=C&datFrom=042016&datTo=042016&embkCode=JAX
+1	Caribbean	Galveston, TX	5 Day Western Caribbean	http://www.carnival.com/itinerary/5-day-western-caribbean-cruise/galveston/triumph/5-days/glq/?numGuests=2&destination=all-destinations&dest=any&datFrom=042015&datTo=042015&embkCode=GAL
+1	Caribbean	Galveston, TX	4 Day Western Caribbean	http://www.carnival.com/itinerary/4-day-western-caribbean-cruise/galveston/triumph/4-days/gl1/?numGuests=2&destination=all-destinations&dest=any&datFrom=042015&datTo=042015&embkCode=GAL
+1	Caribbean	Galveston, TX	7 Day Eastern Caribbean	http://www.carnival.com/itinerary/7-day-eastern-caribbean-cruise/galveston/magic/7-days/ec2/?numGuests=2&destination=all-destinations&dest=any&datFrom=042015&datTo=042015&embkCode=GAL
+#>
