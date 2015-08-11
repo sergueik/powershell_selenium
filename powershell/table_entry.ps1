@@ -50,13 +50,60 @@ try {
 
 
 $table_id = 'example';
+$table_element = find_element_new -Id $table_id
+
+
+# two-step input
+
 $text_input_css_selector = 'input[id="row-5-age"]'
-
-
 
 $cell_text = 'Software Developer'
 
-$table_element = find_element_new -Id $table_id
+# Find a specific leftmost column input field
+[OpenQA.Selenium.IWebElement]$text_input_element = $table_element.FindElement([OpenQA.Selenium.By]::CssSelector($text_input_css_selector))
+
+[OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+[void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$text_input_element).Build().Perform()
+
+highlight ([ref]$selenium) ([ref]$text_input_element)
+
+$text_input_element.SendKeys(([OpenQA.Selenium.Keys]::Backspace + [OpenQA.Selenium.Keys]::Backspace + [OpenQA.Selenium.Keys]::Backspace + [OpenQA.Selenium.Keys]::Backspace + [OpenQA.Selenium.Keys]::Backspace + [OpenQA.Selenium.Keys]::Backspace))
+Start-Sleep -Millisecond 100
+$text_input_element.SendKeys(("20" + [OpenQA.Selenium.Keys]::Tab + $cell_text + [OpenQA.Selenium.Keys]::Enter))
+Start-Sleep -Millisecond 100
+$select_css_selector = 'select[id="row-5-office"]'
+$target_input = 'New York'
+
+# [OpenQA.Selenium.IWebElement]$select_element = $table_element.FindElement([OpenQA.Selenium.By]::CssSelector($select_css_selector))
+
+[OpenQA.Selenium.Support.UI.SelectElement]$select_element = New-Object OpenQA.Selenium.Support.UI.SelectElement ($table_element.FindElement([OpenQA.Selenium.By]::CssSelector($select_css_selector)))
+
+$availableOptions = $select_element.Options
+# $availableOptions
+$index = 0
+$max_count = 100
+[bool]$found = $false
+# http://stackoverflow.com/questions/15535069/select-each-option-in-a-dropdown-using-selenium
+foreach ($item in $availableOptions)
+{
+  if ($item.Text -match $target_input) {
+
+    $found = $true
+    Write-Output ("Found:`r`n[{0}]" -f $item.Text)
+    $select_element.SelectByText($target_input)
+    $select_element.SelectByIndex($index)
+    Start-Sleep -Milliseconds 100
+  }
+  $index++
+}
+
+
+
+
+# One-step input
+$text_input_css_selector = 'input[id="row-19-age"]'
+
+$cell_text = 'Software Developer'
 
 # Find a specific input
 [OpenQA.Selenium.IWebElement]$text_input_element = $table_element.FindElement([OpenQA.Selenium.By]::CssSelector($text_input_css_selector))
@@ -75,15 +122,14 @@ highlight ([ref]$selenium) ([ref]$text_input_element)
 # TODO : keyboard
 # [void]$selenium.Keyboard.SendKeys([System.Windows.Forms.SendKeys]::SendWait("{BACKSPACE}"))
 
-
+# https://github.com/chandramouleswaran/Hypertest/blob/master/Src/Hypertest.Core/Utils/StringExtensions.cs
 # https://selenium.googlecode.com/svn/trunk/docs/api/java/org/openqa/selenium/Keys.html
 $text_input_element.SendKeys(([OpenQA.Selenium.Keys]::Backspace + [OpenQA.Selenium.Keys]::Backspace + [OpenQA.Selenium.Keys]::Backspace + [OpenQA.Selenium.Keys]::Backspace + [OpenQA.Selenium.Keys]::Backspace + [OpenQA.Selenium.Keys]::Backspace))
 Start-Sleep -Millisecond 100
-$text_input_element.SendKeys(("20" + [OpenQA.Selenium.Keys]::Tab + $cell_text + [OpenQA.Selenium.Keys]::Enter))
-
+# $text_input_element.SendKeys(("20" + [OpenQA.Selenium.Keys]::Tab + $cell_text + [OpenQA.Selenium.Keys]::Enter))
+$text_input_element.SendKeys(("20" + [OpenQA.Selenium.Keys]::Tab + $cell_text + [OpenQA.Selenium.Keys]::Tab + [OpenQA.Selenium.Keys]::Up))
 Start-Sleep -Millisecond 100
-$select_css_selector = 'select[id="row-5-office"]'
-
+$select_css_selector = 'select[id="row-19-office"]'
 
 [OpenQA.Selenium.IWebElement]$select_element = $table_element.FindElement([OpenQA.Selenium.By]::CssSelector($select_css_selector))
 
@@ -93,7 +139,7 @@ $select_css_selector = 'select[id="row-5-office"]'
 [OpenQA.Selenium.IWebElement[]]$option_collection = $select_element.FindElements([OpenQA.Selenium.By]::XPath('option'))
 [object]$move_to_top = ''
 $option_collection | ForEach-Object {
-  Write-Output $_.Text
+  Write-Debug $_.Text
 }
 0..$option_collection.Count | ForEach-Object {
   $move_to_top += [OpenQA.Selenium.Keys]::Up
@@ -103,14 +149,14 @@ $target_input = 'New York'
 # TODO: 'New York'
 $found = $false
 $option_collection | ForEach-Object {
-  if ($_.Text -match $target_input ) {
+  if ($_.Text -match $target_input) {
     $found = $true
     return
   }
-  Write-Output $_.Text
-  if (-not $found ) {
+  Write-Debug $_.Text
+  if (-not $found) {
     $move_to_target += [OpenQA.Selenium.Keys]::Down
-   }
+  }
 }
 
 $select_element.SendKeys($move_to_top)
