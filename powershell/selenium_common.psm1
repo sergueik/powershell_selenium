@@ -335,9 +335,9 @@ function custom_pause {
 function set_timeouts {
   param(
     [System.Management.Automation.PSReference]$selenium_ref,
-    [int]$explicit = 10,
-    [int]$page_load = 10,
-    [int]$script = 10
+    [int]$explicit = 60,
+    [int]$page_load = 60,
+    [int]$script = 60
   )
 
   [void]($selenium_ref.Value.Manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))

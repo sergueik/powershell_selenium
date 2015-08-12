@@ -163,17 +163,16 @@ $selenium.Navigate().Refresh()
 Start-Sleep 3
 
 
-$element = $null
 $css_selector = 'div#chart svg'
-find_page_element_by_css_selector ([ref]$selenium) ([ref]$element) $css_selector
-# $element = find_element -css $css_selector
+$element = find_element_new -css $css_selector
 # fails in hext line ?
 $element
 # highlight ([ref]$selenium) ([ref]$element )
-$result = get_xpath_of ([ref]$element)
+$xpath_of_element = get_xpath_of ([ref]$element)
 # next : path
-Write-Output ('Javascript-generated XPath = "{0}"' -f $result)
+Write-Output ('Javascript-generated XPath = "{0}"' -f $xpath_of_element)
 $path_css_selector = 'path[fill = "#fff"]'
+
 # $path_css_selector = 'path[d="M0 0 L 50 0 50 15 0 15Z"]'
 #
 
@@ -191,12 +190,9 @@ $paths | ForEach-Object {
   $path_element = $_
   # Write-Output $path_element.GetAttribute('d')
   # CSS Selector can be used to locate the elements
-  $result = get_css_selector_of ([ref]$path_element)
-  Write-Output ('CSS "{0}"' -f $result)
-  $assert_element = $null
-  # TODO pass flags to module legacy implementation
-  find_page_element_by_css_selector ([ref]$selenium) ([ref]$assert_element) $result
-  # $assert_element = find_element -css $result 
+  $css_selector_of_path_element = get_css_selector_of ([ref]$path_element)
+  Write-Output ('CSS "{0}"' -f $css_selector_of_path_element)
+  $assert_element = find_element_new -css $css_selector_of_path_element
   # -wait_seconds 2
 
   <#
@@ -206,12 +202,12 @@ $paths | ForEach-Object {
   # e.g. //*[@id="chartdiv"]/div/div[1]/*[name()="svg"]/*[name()="g"][7]/*[name()="g"]/*[name()="g"][1]/*[name()="path"][starts-with(@d, "M371.75,174.28l")]
   # http://stackoverflow.com/questions/26722421/how-do-i-test-a-click-on-svg-objects-using-selenium-webdriver
  #>
-  $result = get_svg_xpath_of ([ref]$path_element)
-  Write-Output ('XPath "{0}"' -f $result)
+  $svg_xpath_of_element = get_svg_xpath_of ([ref]$path_element)
+  Write-Output ('XPath "{0}"' -f $svg_xpath_of_element)
 
-  $assert_element = $null
   try {
-    find_page_element_by_xpath ([ref]$selenium) ([ref]$assert_element) $result -wait_seconds 2
+    # TODO - variable names
+    $assert_element = find_element_new -xpath $svg_xpath_of_element
   } catch [exception]{
     Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
   }

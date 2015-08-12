@@ -26,29 +26,17 @@ param(
 
 )
 
-function custom_pause {
-
-  param([bool]$fullstop)
-  # Do not close Browser / Selenium when run from Powershell ISE
-
-  if ($fullstop) {
-    try {
-      Write-Output 'pause'
-      [void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-    } catch [exception]{}
-  } else {
-    Start-Sleep -Millisecond 1000
-  }
-
-}
-
 $verificationErrors = New-Object System.Text.StringBuilder
 
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
+if ([bool]$PSBoundParameters['grid'].IsPresent) {
+  $selenium = launch_selenium -browser $browser -grid
 
-$selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
+} else {
+  $selenium = launch_selenium -browser $browser
 
+}
 
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 $base_url = 'http://www.carnival.com/Funville/'
@@ -69,17 +57,14 @@ $wait.PollingInterval = 150
 
 $selenium.Manage().Window.Maximize()
 $forum_search_css_selector = 'ul.ui-tabs-nav'
-$value_element1 = $null
-find_page_element_by_css_selector -selenium_driver_ref ([ref]$selenium) -element_ref ([ref]$value_element1) -css_selector $forum_search_css_selector
-
+$value_element1 = find_element_new -css $forum_search_css_selector
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element1).Build().Perform()
 $actions = $null
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$value_element1)
 
 $forum_tab_css_selector = 'a[href="#tab-hof"]'
-$value_element2 = $null
-find_page_element_by_css_selector -selenium_driver_ref ([ref]$selenium) -element_ref ([ref]$value_element2) -css_selector $forum_tab_css_selector
+$value_element2 = find_element_new -css $forum_tab_css_selector
 # -container_element_ref ([ref]$value_element1) is unused 
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element2).Click().Build().Perform()
@@ -225,8 +210,7 @@ Fir <a href="http://www.carnival.com/Funville/forums/thread/1651730.aspx">...rea
 #  NOTE: The actual forums is not well-formed.
 # 
 $forum_css_selector = 'div#tab-hof'
-$value_element3 = $null
-find_page_element_by_css_selector -selenium_driver_ref ([ref]$selenium) -element_ref ([ref]$value_element3) -css_selector $forum_css_selector
+$value_element3 =  find_element_new -css $forum_css_selector
 
 $raw_data = '<rawdata>{0}</rawdata>' -f ($value_element3.GetAttribute('innerHTML') -join '')
 # Pruning the known bad syntax elements:
@@ -257,18 +241,12 @@ if ($forums.Count -gt 1) {
 
 
 <#
-$value_element3 = $null
-
 $link_forums_xpath = '//a[@class="link-readcarnivalblog"]'
-find_page_element_by_xpath -selenium_driver_ref ([ref]$selenium) -element_ref ([ref]$value_element3) -xpath $link_forums_xpath
+$value_element3 = find_element_new -xpath $link_forums_xpath
 #>
 <#
-$value_element3 = $null
-
 $link_forums_css_selector = 'div[class="box-listblogs"] a[class="link-readcarnivalblog"]'
-
-find_page_element_by_css_selector -selenium_driver_ref ([ref]$selenium) -element_ref ([ref]$value_element3) -css_selector $link_forums_css_selector
-
+$value_element3 = find_element_new -css $link_forums_css_selector
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Build().Perform()
 $actions = $null
@@ -277,7 +255,10 @@ highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$value_element3)
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Click().Build().Perform()
 $actions = $null
+
 #>
+
+[bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 custom_pause -fullstop $fullstop
 
 # At the end of the run - do not close Browser / Selenium when executing from Powershell ISE

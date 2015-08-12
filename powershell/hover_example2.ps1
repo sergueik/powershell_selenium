@@ -18,155 +18,24 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 param(
-  # in the current environment phantomejs is not installed 
-  [string]$browser = 'chrome',
-  [int]$version,
+  [string]$browser = '',
+  [switch]$grid,
   [switch]$pause
-
 )
-function extract_match {
-
-  param(
-    [string]$source,
-    [string]$capturing_match_expression,
-    [string]$label,
-    [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
-
-  )
-  Write-Debug ('Extracting from {0}' -f $source)
-  $local:results = {}
-  $local:results = $source | where { $_ -match $capturing_match_expression } |
-  ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
-  Write-Debug 'extract_match:'
-  Write-Debug $local:results
-  $result_ref.Value = $local:results.Media
-}
-
-function highlight {
-
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [int]$delay = 300
-  )
-
-  # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'color: yellow; border: 4px solid yellow;')
-  Start-Sleep -Millisecond $delay
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
-
-
-}
-
-
-function custom_pause {
-
-  param([bool]$fullstop)
-  # Do not close Browser / Selenium when run from Powershell ISE
-
-  if ($fullstop) {
-    try {
-      Write-Output 'pause'
-      [void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-    } catch [exception]{}
-  } else {
-    Start-Sleep -Millisecond 1000
-  }
-
-}
-
-# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
-function Get-ScriptDirectory
-{
-  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-  if ($Invocation.PSScriptRoot) {
-    $Invocation.PSScriptRoot
-  }
-  elseif ($Invocation.MyCommand.Path) {
-    Split-Path $Invocation.MyCommand.Path
-  } else {
-    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
-  }
-}
-
-function cleanup
-{
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref
-  )
-  try {
-    $selenium_ref.Value.Quit()
-  } catch [exception]{
-    # Ignore errors if unable to close the browser
-    Write-Output (($_.Exception.Message) -split "`n")[0]
-
-  }
-}
-
-$shared_assemblies = @(
-  'WebDriver.dll',
-  'WebDriver.Support.dll',
-  'nunit.framework.dll'
-)
-
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
-
-if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
-  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
-}
-
-pushd $shared_assemblies_path
-
-
-$shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
-popd
 
 $verificationErrors = New-Object System.Text.StringBuilder
 
-if ($browser -ne $null -and $browser -ne '') {
-  try {
-    $connection = (New-Object Net.Sockets.TcpClient)
-    $connection.Connect("127.0.0.1",4444)
-    $connection.Close()
-  } catch {
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\hub.cmd"
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\node.cmd"
-    Start-Sleep -Seconds 10
-  }
-  Write-Host "Running on ${browser}"
-  if ($browser -match 'firefox') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
+$MODULE_NAME = 'selenium_utils.psd1'
+Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
+if ([bool]$PSBoundParameters['grid'].IsPresent) {
+  $selenium = launch_selenium -browser $browser -grid
 
-  }
-  elseif ($browser -match 'chrome') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
-  }
-  elseif ($browser -match 'ie') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
-    if ($version -ne $null -and $version -ne 0) {
-      $capability.SetCapability("version",$version.ToString());
-    }
-
-  }
-  elseif ($browser -match 'safari') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
-  }
-  else {
-    throw "unknown browser choice:${browser}"
-  }
-  $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
-  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
 } else {
-  Write-Host 'Running on phantomjs'
-  $phantomjs_executable_folder = "C:\tools\phantomjs"
-  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability("ssl-protocol","any")
-  $selenium.Capabilities.SetCapability("ignore-ssl-errors",$true)
-  $selenium.Capabilities.SetCapability("takesScreenshot",$true)
-  $selenium.Capabilities.SetCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
-  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
+  $selenium = launch_selenium -browser $browser
+
 }
+
+$DebugPreference = 'Continue'
 
 $base_url = 'http://www.carnival.com'
 
@@ -351,36 +220,6 @@ function count_cruises {
 }
 
 
-function find_page_element_by_xpath {
-
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$xpath,
-    [int]$wait_seconds = 10
-
-  )
-
-  if ($xpath -eq '' -or $xpath -eq $null) {
-    return
-  }
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::XPath($xpath))
-  $element_ref.Value = $local:element
-
-}
-
-
 # TODO :finish parameters
 $fullstop = (($PSBoundParameters['pause']) -ne $null)
 
@@ -413,45 +252,14 @@ Write-Output ('Selected value: {0} / attribute "{1}"' -f $value_element1.Text,$v
 $value_element1 = $null
 Start-Sleep -Milliseconds 1500
 
-
-
-
-function find_page_element_by_css_selector {
-
-  param(
-    [System.Management.Automation.PSReference]$selenium_driver_ref,
-    [System.Management.Automation.PSReference]$element_ref,
-    [string]$css_selector,
-    [int]$wait_seconds = 10
-
-  )
-
-  if ($css_selector -eq '' -or $css_selector -eq $null) {
-    return
-  }
-  $local:element = $null
-  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-  $wait.PollingInterval = 50
-
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
-  } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
-  }
-
-  $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-  $element_ref.Value = $local:element
-}
-
-
-
 $xpath_template = '//*[@id="ccl-refresh-header"]/DIV[2]/DIV[1]/DIV[1]/DIV[2]/UL[1]/LI[{0}]/A[1]/SPAN[1]/IMG[1]'
 
 @( 1,2,3,4,5,6) | ForEach-Object { $link_count = $_;
-  $image = $null
 
-  find_page_element_by_xpath ([ref]$selenium) ([ref]$image) ($xpath_template -f $link_count)
+  $image = $null
+  $image = find_element_new -xpath ($xpath_template -f $link_count)
+  # $image = $null
+  # find_page_element_by_xpath ([ref]$selenium) ([ref]$image) ($xpath_template -f $link_count)
   highlight ([ref]$selenium) ([ref]$image)
   @( 'alt','src') | ForEach-Object {
     $attr = $_
@@ -465,9 +273,12 @@ $alt_texts = @( 'Onboard Activities','Dining','Accommodations','Our Ships','Shor
 $alt_texts | ForEach-Object { $link_alt_text = $_;
 
   $css_selector = ('img[alt="{0}"]' -f $link_alt_text)
-  $image = $null
+#  $image = $null
+#  find_page_element_by_css_selector ([ref]$selenium) ([ref]$image) $css_selector
 
-  find_page_element_by_css_selector ([ref]$selenium) ([ref]$image) $css_selector
+  $image = $null
+  $image = find_element_new -css $css_selector
+
   highlight ([ref]$selenium) ([ref]$image)
   @( 'alt','src') | ForEach-Object {
     $attr = $_
@@ -493,11 +304,15 @@ highlight ([ref]$selenium) ([ref]$image)
 
 # Continue with 
 $link_alt_text = 'Shore Excursions'
-$value_element2 = $null
 $css_selector = ('img[alt="{0}"]' -f $link_alt_text)
 
 
-find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element2) $css_selector
+# $value_element2 = $null
+# find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element2) $css_selector
+
+$value_element2 = $null
+$value_element2 = find_element_new -css $css_selector
+
 [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 $actions2.MoveToElement([OpenQA.Selenium.IWebElement]$value_element2).Click().Build().Perform()
 $value_element2 = $null
