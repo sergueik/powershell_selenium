@@ -9,7 +9,7 @@
     <ProjectGuid>{D14F219E-1737-4885-8E99-5206DD112673}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>EnumReport</RootNamespace>
+    <RootNamespace>Program</RootNamespace>
     <AssemblyName>explorer_dialog_automator</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -108,6 +108,7 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EnumReport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
