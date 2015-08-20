@@ -23,46 +23,46 @@ THE SOFTWARE.
 
 using System;
 using System.IO;
-using System.Threading;
 
-namespace ConsoleProgram
+namespace ExplorerFileDialogDetector
 {
-public class ConsoleProgram
-{
-    private static string _filename = String.Format("my random filename {0}", new Random().Next(10));
-    private static string _filepath;
-    public static string Filename
+    public class ConsoleProgram
     {
-        get { return _filename; }
-        set { _filename = value; }
-    }
-
-    //	http://www.java2s.com/Tutorial/CSharp/0300__File-Directory-Stream/UseFileSystemWatchertodetectfilechanges.htm     
-    private static void OnCreatedOrDeleted(object sender, FileSystemEventArgs e)
-    {
-        Console.WriteLine("\tNOTIFICATION: " + e.FullPath + "' was " + e.ChangeType.ToString());
-    }
-
-    public static void Main()
-    {
-        EnumReport.Filename = _filename;
-        _filepath = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), _filename);
-        using (FileSystemWatcher watch = new FileSystemWatcher())
+        private static string _filename = String.Format("my random filename {0}", new Random().Next(10));
+        private static string _filepath;
+        public static string Filename
         {
-            watch.Path = Environment.GetEnvironmentVariable("TEMP");
-            watch.Filter = _filename;
-            watch.IncludeSubdirectories = false;
-            watch.Created += new FileSystemEventHandler(OnCreatedOrDeleted);
-            watch.Deleted += new FileSystemEventHandler(OnCreatedOrDeleted);
-            watch.EnableRaisingEvents = true;
-
-            if (File.Exists(_filepath))
-            {
-                File.Delete(_filepath);
-            }
-            EnumReport.EnumWindows(EnumReport.Report, 0);
-            Thread.Sleep(120);
+            get { return _filename; }
+            set { _filename = value; }
         }
+
+        //	http://www.java2s.com/Tutorial/CSharp/0300__File-Directory-Stream/UseFileSystemWatchertodetectfilechanges.htm     
+        private static void OnCreatedOrDeleted(object sender, FileSystemEventArgs e)
+        {
+            Console.WriteLine("\tNOTIFICATION: " + e.FullPath + "' was " + e.ChangeType.ToString());
+        }
+        /*
+        public static void Main()
+        {
+            EnumReport.Filename = _filename;
+            _filepath = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), _filename);
+            using (FileSystemWatcher watch = new FileSystemWatcher())
+            {
+                watch.Path = Environment.GetEnvironmentVariable("TEMP");
+                watch.Filter = _filename;
+                watch.IncludeSubdirectories = false;
+                watch.Created += new FileSystemEventHandler(OnCreatedOrDeleted);
+                watch.Deleted += new FileSystemEventHandler(OnCreatedOrDeleted);
+                watch.EnableRaisingEvents = true;
+
+                if (File.Exists(_filepath))
+                {
+                    File.Delete(_filepath);
+                }
+                EnumReport.EnumWindows(EnumReport.Report, 0);
+                Thread.Sleep(120);
+            }
+        }
+         */
     }
-}
 }
