@@ -25,7 +25,9 @@ using System;
 using System.IO;
 using System.Threading;
 
-public class Program
+namespace ConsoleProgram
+{
+public class ConsoleProgram
 {
     private static string _filename = String.Format("my random filename {0}", new Random().Next(10));
     private static string _filepath;
@@ -43,7 +45,6 @@ public class Program
 
     public static void Main()
     {
-        EnumReport.Filename = "test.txt";
         EnumReport.Filename = _filename;
         _filepath = Path.Combine(Environment.GetEnvironmentVariable("TEMP"), _filename);
         using (FileSystemWatcher watch = new FileSystemWatcher())
@@ -63,4 +64,5 @@ public class Program
             Thread.Sleep(120);
         }
     }
+}
 }
