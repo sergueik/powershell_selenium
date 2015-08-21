@@ -7,7 +7,7 @@
     </ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{D14F219E-1737-4885-8E99-5206DD112673}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ExplorerFileDialogDetector</RootNamespace>
     <AssemblyName>explorer_dialog_automator</AssemblyName>
@@ -110,29 +110,26 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfigureApp.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ConfigureApp.designer.cs">
+      <DependentUpon>ConfigureApp.cs</DependentUpon>
+    </Compile>
     <Compile Include="EnumReport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ConsoleProgram.cs" />
     <Compile Include="SystemTrayApp.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SystemTrayApp.Designer.cs">
-      <DependentUpon>SystemTrayApp.cs</DependentUpon>
+      <SubType>UserControl</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="SystemTrayApp.resx">
-      <DependentUpon>SystemTrayApp.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="idle_icon.ico" />
     <EmbeddedResource Include="busy_icon.ico" />
   </ItemGroup>
-
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Import Project="..\packages\System.Data.SQLite.Core.1.0.97.0\build\net40\System.Data.SQLite.Core.targets" Condition="Exists('..\packages\System.Data.SQLite.Core.1.0.97.0\build\net40\System.Data.SQLite.Core.targets')" />

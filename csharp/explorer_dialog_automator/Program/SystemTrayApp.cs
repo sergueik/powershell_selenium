@@ -30,36 +30,7 @@ using System.Threading;
 
 namespace ExplorerFileDialogDetector
 {
-    public partial class ConfigureApp : System.Windows.Forms.Form
-    {
-        public ConfigureApp()
-        {
-            InitializeComponent();
-        }
-
-        private void cmdClose_Click(object sender, System.EventArgs e)
-        {
-            this.Close();
-        }
-
-        public void FillList(ArrayList list)
-        {
-            lstFiles.DataSource = list;
-        }
-protected override void Dispose( bool disposing )
-    {
-      if( disposing )
-      {
-        if(components != null)
-        {
-          components.Dispose();
-        }
-      }
-      base.Dispose( disposing );
-    }
-
-    }
-    public class App : System.Windows.Forms.Form
+    public class SystemTrayApp : UserControl
     {
 
         private string _filename = String.Format("my random filename {0}", new Random().Next(10));
@@ -160,7 +131,7 @@ protected override void Dispose( bool disposing )
 
         public static void Main()
         {
-            App app = new App();
+            SystemTrayApp app = new SystemTrayApp();
             app.Start();
             Application.Run();
         }
