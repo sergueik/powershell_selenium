@@ -29,15 +29,29 @@
         private void InitializeComponent()
         {
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+            this.cmdClose = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // richTextBox1
             // 
             this.richTextBox1.Location = new System.Drawing.Point(12, 12);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(235, 214);
+            this.richTextBox1.Size = new System.Drawing.Size(235, 160);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
+
+            // 
+            // cmdClose
+            // 
+            this.cmdClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.cmdClose.FlatStyle = System.Windows.Forms.FlatStyle.System;
+            this.cmdClose.Location = new System.Drawing.Point(162, 203);
+            this.cmdClose.Name = "cmdClose";
+            this.cmdClose.Size = new System.Drawing.Size(88, 24);
+            this.cmdClose.TabIndex = 4;
+            this.cmdClose.Text = "Close";
+            this.cmdClose.Click += new System.EventHandler(this.cmdClose_Click);
+
             // 
             // Form1
             // 
@@ -45,6 +59,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(262, 242);
             this.Controls.Add(this.richTextBox1);
+            this.Controls.Add(this.cmdClose);
             this.Name = "Form1";
             this.Text = "SendMessage Demo";
             this.Load += new System.EventHandler(this.Form1_Load);
@@ -55,6 +70,8 @@
         #endregion
 
         private System.Windows.Forms.RichTextBox richTextBox1;
+        private System.Windows.Forms.Button cmdClose;
+
     }
 }
 

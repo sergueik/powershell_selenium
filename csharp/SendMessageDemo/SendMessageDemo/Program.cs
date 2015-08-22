@@ -18,7 +18,7 @@ namespace SendMessageDemo
             Application.SetCompatibleTextRenderingDefault(false);
 
             // Get the filename if it exists
-            string fileName = null;
+            string fileName = "test 2";
             if (args.Length == 1)
                 fileName = args[0];
 
@@ -34,12 +34,13 @@ namespace SendMessageDemo
             }
             else
             {
-                string windowTitle = "SendMessage Demo";
+                string windowTitle = "SystemTrayApp";
+                windowTitle = "SendMessage Demo";
                 // Find the window with the name of the main form
                 IntPtr ptrWnd = NativeMethods.FindWindow(null, windowTitle);
                 if (ptrWnd == IntPtr.Zero)
                 {
-                    MessageBox.Show(String.Format("No window found with the title '{0}'.", windowTitle), "SendMessage Demo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(String.Format("No window found with the title '{0}'.", windowTitle), "Program", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 else
                 {
@@ -68,6 +69,7 @@ namespace SendMessageDemo
                         // Free the allocated memory after the contol has been returned
                         if (ptrCopyData != IntPtr.Zero)
                             Marshal.FreeCoTaskMem(ptrCopyData);
+                        singleMutex.ReleaseMutex();
                     }
                 }
             }

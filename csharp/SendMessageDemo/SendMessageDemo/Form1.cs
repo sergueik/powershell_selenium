@@ -13,7 +13,10 @@ namespace SendMessageDemo
             if (!String.IsNullOrEmpty(fileName))
                 richTextBox1.Text = String.Format("{0}\r\n", fileName);
         }
-
+        private void cmdClose_Click(object sender, System.EventArgs e)
+        {
+            this.Close();
+        }
         private void Form1_Load(object sender, EventArgs e)
         {
             NativeMethods.CHANGEFILTERSTRUCT changeFilter = new NativeMethods.CHANGEFILTERSTRUCT();
