@@ -116,10 +116,12 @@
     <Compile Include="ConfigureApp.designer.cs">
       <DependentUpon>ConfigureApp.cs</DependentUpon>
     </Compile>
+    <Compile Include="ConsoleProgram2.cs" />
     <Compile Include="CustomIntervalPicker.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="EnumReport.cs" />
+    <Compile Include="NativeMethods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ConsoleProgram.cs" />
     <Compile Include="SystemTrayApp.cs">

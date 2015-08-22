@@ -135,6 +135,5 @@ namespace ExplorerFileDialogDetector
             app.Start();
             Application.Run();
         }
-
     }
 }

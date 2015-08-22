@@ -27,6 +27,7 @@ using System.Diagnostics;
 using System.Collections;
 using System.Windows.Forms;
 using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace ExplorerFileDialogDetector
 {
@@ -46,17 +47,58 @@ namespace ExplorerFileDialogDetector
         {
             lstFiles.DataSource = list;
         }
-protected override void Dispose( bool disposing )
-    {
-      if( disposing )
-      {
-        if(components != null)
+        protected override void Dispose(bool disposing)
         {
-          components.Dispose();
+            if (disposing)
+            {
+                if (components != null)
+                {
+                    components.Dispose();
+                }
+            }
+            base.Dispose(disposing);
         }
-      }
-      base.Dispose( disposing );
+
+
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            NativeMethods.CHANGEFILTERSTRUCT changeFilter = new NativeMethods.CHANGEFILTERSTRUCT();
+            changeFilter.size = (uint)Marshal.SizeOf(changeFilter);
+            changeFilter.info = 0;
+            if (!NativeMethods.ChangeWindowMessageFilterEx(this.Handle, NativeMethods.WM_COPYDATA, NativeMethods.ChangeWindowMessageFilterExAction.Allow, ref changeFilter))
+            {
+                int error = Marshal.GetLastWin32Error();
+                MessageBox.Show(String.Format("The error {0} occured.", error));
+            }
+        }
+
+        // http://www.codeproject.com/Tips/1017834/How-to-Send-Data-from-One-Process-to-Another-in-Cs
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == NativeMethods.WM_COPYDATA)
+            {
+                // Extract the file name
+                NativeMethods.COPYDATASTRUCT copyData = (NativeMethods.COPYDATASTRUCT)Marshal.PtrToStructure(m.LParam, typeof(NativeMethods.COPYDATASTRUCT));
+                int dataType = (int)copyData.dwData;
+                if (dataType == 2)
+                {
+                    string fileName = Marshal.PtrToStringAnsi(copyData.lpData);
+
+                    // Add the file name to the edit box
+                    this.lstFiles.Items.Add(fileName);
+                    // richTextBox1.AppendText("\r\n");
+                }
+                else
+                {
+                    MessageBox.Show(String.Format("Unrecognized data type = {0}.", dataType), "SendMessageDemo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            else
+            {
+                base.WndProc(ref m);
+            }
+        }
     }
 
-    }
 }
