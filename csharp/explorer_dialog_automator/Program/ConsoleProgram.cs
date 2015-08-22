@@ -35,6 +35,11 @@ namespace ExplorerFileDialogDetector
             get { return _filename; }
             set { _filename = value; }
         }
+        public static string Filepath
+        {
+            get { return _filepath; }
+            set { _filepath = value; }
+        }
 
         //	http://www.java2s.com/Tutorial/CSharp/0300__File-Directory-Stream/UseFileSystemWatchertodetectfilechanges.htm     
         private static void OnCreatedOrDeleted(object sender, FileSystemEventArgs e)
