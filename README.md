@@ -7,36 +7,36 @@ Collection of Powershell scripts and modules for work with Selenium C# Client
 Prerequisites
 ------------- 
 Common functionality is in the modules `page_navigation_common.psm1` and `selenium_common.psm1`
-Powershell uses C# Selenium Client API library and a few of standard asemblies which are stored in the location:
+Powershell uses C# Selenium Client API library and a few of standard asemblies which are stored 
+in the location `$env:SHARED_ASSEMBLIES_PATH`  (default is `C:\developer\sergueik\csharp\sharedassemblies`):
 
-   Directory: C:\developer\sergueik\csharp\sharedassemblies
-    log4net.dll
-    nunit.core.dll
-    nunit.framework.dll
-    nunit.mocks.dll
-    pnunit.framework.dll
-    WebDriver.dll
-    WebDriver.Support.dll
+		log4net.dll
+		nunit.core.dll
+		nunit.framework.dll
+		nunit.mocks.dll
+		pnunit.framework.dll
+		WebDriver.dll
+		WebDriver.Support.dll
 
 The Selenium JARs are supposed to be installed under `c:\java\selenium`:
-    chromedriver.exe
-    hub.cmd
-    hub.json
-    hub.log4j.properties
-    log4j-1.2.17.jar
-    node.cmd
-    node.json
-    node.log4j.properties
-    node.xml
-    selenium-server-standalone-2.47.1.jar
+		chromedriver.exe
+		hub.cmd
+		hub.json
+		hub.log4j.properties
+		log4j-1.2.17.jar
+		node.cmd
+		node.json
+		node.log4j.properties
+		node.xml
+		selenium-server-standalone-2.47.1.jar
 
 The standard Java applications are all supposed to be installed under `c:\java`:
-    c:\java\
-    c:\java\apache-maven-3.3.3
-    c:\java\groovy-2.4.4
-    c:\java\jdk1.7.0_79
-    c:\java\jre7
-    c:\java\selenium
+
+		c:\java\apache-maven-3.3.3
+		c:\java\groovy-2.4.4
+		c:\java\jdk1.7.0_79
+		c:\java\jre7
+		c:\java\selenium
 
 The Java applications  and framework versions  need to be updated in `hub.cmd`, `node.cmd` e.g.	
 
