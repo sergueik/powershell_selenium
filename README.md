@@ -38,6 +38,8 @@ The standard Java applications are all supposed to be installed under `c:\java`:
 		c:\java\jre7
 		c:\java\selenium
 
+The phantomjs is supposed to be installed under `C:\tools\phantomjs-2.0.0\bin`. 
+
 The Java applications  and framework versions  need to be updated in `hub.cmd`, `node.cmd` e.g.	
 
     set SELENIUM_VERSION=2.47.1
@@ -46,6 +48,14 @@ The Java applications  and framework versions  need to be updated in `hub.cmd`, 
     set MAVEN_VERSION=3.3.3
     set JAVA_HOME=c:\java\jdk%JAVA_VERSION%
     set GROOVY_HOME=c:\java\groovy-%GROOVY_VERSION%
+
+Alternatively the test script can provide 
+
+    [string]$hub_host
+    [string]$hub_port
+    [bool]$use_remote_drive
+
+when the test script provides the `grid` switch but does not specify `$hub_host`, the Selenium hub and node are launched locally.
 
 Skeleton script
 ---------------
