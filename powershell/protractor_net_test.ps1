@@ -67,12 +67,28 @@ $second.SendKeys("2")
 $goButton.Click()
 [int]$wait_seconds = 10
 # Exception calling "FindElement" with "1" argument(s): "asynchronous script timeout: result was not received in 0 seconds
-Start-Sleep -Millisecond 2000
-# TODO : 
-# [Protractor.ClientSideScripts.WaitForAngular]$wait = new-object Protractor.ClientSideScripts.WaitForAngular($ng_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
-# combining OpenQA.Selenium.Support.UI.WebDriverWait with Protractor.NgBy does not work
+# Start-Sleep -Millisecond 2000
+$script_timeout = 120
+[void]($selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script_timeout)))
 
+$wait_seconds = 10
+$wait_polling_interval = 50
+
+[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+$wait.PollingInterval = $wait_polling_interval
+$wait.IgnoreExceptionTypes([OpenQA.Selenium.WebDriverTimeoutException],[OpenQA.Selenium.WebDriverException])
+
+try {
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([Protractor.NgBy]::Binding('latest')))
+} catch [OpenQA.Selenium.WebDriverTimeoutException]{
+  Write-Debug ("Exception : {0} ...`n{1}" -f (($_.Exception.Message) -split "`n")[0],$_.Exception.Type)
+} catch [exception]{
+  Write-Debug ("Exception : {0} ...`n{1}" -f (($_.Exception.Message) -split "`n")[0],$_.Exception.Type)
+}
 $latest_element = $ng_driver.FindElement([Protractor.NgBy]::Binding('latest'))
+$element = $latest_element.WrappedElement
+
+highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -Delay 150
 
 try {
   highlight ([ref]$selenium) ([ref]$latest_element) }
