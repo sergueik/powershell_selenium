@@ -104,10 +104,13 @@ Start-Sleep 4
         # $project_title = $project_element.Text
         if (-not $titles.ContainsKey($project_title)) {
           $titles.Add($project_title,$null)
-          Write-Output ("---`n{0}`n---" -f $project_title)
-
           highlight ([ref]$selenium) ([ref]$project_element)
-          # TODO -  collect  class="i-project" ng-click="clickProject($event)" href="/projects/buddy-your-family-s-companion-robot/pipp?sa=0&sp=0">
+          $href_selector = 'a[class*="i-project"][href^="/projects/"]'
+          [object]$href_element = $col_element.FindElement([OpenQA.Selenium.By]::CssSelector($href_selector))
+          $project_href = $href_element.GetAttribute('href') 
+          $titles[$project_title] = $project_href 
+          Write-Output ("---`n{0}`n{1}`n---" -f $project_title, $project_href)
+
         }
       }
     }
