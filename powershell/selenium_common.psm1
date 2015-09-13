@@ -150,6 +150,14 @@ function launch_selenium {
         [OpenQA.Selenium.Firefox.FirefoxProfile]$selected_profile_object = $profile_manager.GetProfile($profile)
         [OpenQA.Selenium.Firefox.FirefoxProfile]$selected_profile_object = New-Object OpenQA.Selenium.Firefox.FirefoxProfile ($profile)
         $selected_profile_object.setPreference('general.useragent.override',"Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/34.0")
+
+        # https://code.google.com/p/selenium/issues/detail?id=40
+
+        $selected_profile_object.setPreference("browser.cache.disk.enable", $false)
+        $selected_profile_object.setPreference("browser.cache.memory.enable", $false)
+        $selected_profile_object.setPreference("browser.cache.offline.enable", $false)
+        $selected_profile_object.setPreference("network.http.use-cache", $false)
+
         $selenium = New-Object OpenQA.Selenium.Firefox.FirefoxDriver ($selected_profile_object)
         [OpenQA.Selenium.Firefox.FirefoxProfile[]]$profiles = $profile_manager.ExistingProfiles
 
@@ -207,6 +215,8 @@ function launch_selenium {
           $capability.setCapability('version',$version.ToString());
         }
 
+        # $capability.setCapability(InternetExplorerDriver.ENABLE_ELEMENT_CACHE_CLEANUP, true)
+        # $capability.setCapability(InternetExplorerDriver.IE_ENSURE_CLEAN_SESSION, $true)
         $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
       } else {
         <#

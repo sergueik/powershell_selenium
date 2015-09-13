@@ -21,7 +21,9 @@
 param(
   [string]$browser = '',
   [string]$base_url = 'https://www.upwork.com/',
+  [string]$username = 'kouzmine_serguei@yahoo.com',
   [string]$password,
+  [switch]$grid,
   [switch]$debug,
   [switch]$pause
 )
@@ -42,7 +44,7 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
 
 } else {
   $selenium = launch_selenium -browser $browser
-
+  start-sleep -millisecond 500
 }
 
 $selenium.Navigate().GoToUrl($base_url)
@@ -60,7 +62,7 @@ Write-Output 'Log in'
 
 
 [string]$login_username_selector = "form#login input#username"
-[string]$login_username_data = 'kouzmine_serguei@yahoo.com'
+[string]$login_username_data = $username
 [object]$login_username_element = find_element_new -css_selector $login_username_selector
 highlight ([ref]$selenium) ([ref]$login_username_element)
 $login_username_element.SendKeys($login_username_data)

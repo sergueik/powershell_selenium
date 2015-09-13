@@ -24,6 +24,7 @@ param(
   [string]$username = 'kouzmine_serguei@yahoo.com',
   [string]$password,
   [string]$secret = 'moscow',
+  [switch]$grid,
   [switch]$debug,
   [switch]$pause
 )
@@ -41,15 +42,15 @@ load_shared_assemblies
 
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
   $selenium = launch_selenium -browser $browser -grid
-
+  start-sleep -millisecond 500
 } else {
   $selenium = launch_selenium -browser $browser
-
 }
 
 $selenium.Navigate().GoToUrl($base_url)
 
-
+# Method invocation failed because [OpenQA.Selenium.Remote.RemoteOptions] does not contain a method named 'deleteAllCookies'.
+# $selenium.manage().deleteAllCookies()
 
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
