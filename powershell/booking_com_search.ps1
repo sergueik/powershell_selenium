@@ -21,6 +21,8 @@
 param(
   [string]$browser = '',
   [string]$base_url = 'http://www.booking.com',
+  [string]$city = 'Flagstaff',
+  [string]$state = 'AZ',
   [switch]$grid,
   [switch]$debug,
   [switch]$pause
@@ -42,15 +44,13 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
 
 $selenium.Navigate().GoToUrl($base_url)
 
-
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-
 
 [string]$dates_selector = "div [class='b-form__dates b-form-group']"
 [object]$dates_element = find_element_new -css_selector $dates_selector
 highlight ([ref]$selenium) ([ref]$dates_element)
 
-# Select Checkin Month day
+Write-output 'Select Checkin Month day'
 [string]$checkin_day_selector = "form#frm div[data-type='checkin'] div[class *='b-date-selector__control-dayselector'] select[class='b-selectbox__element']"
 [object]$checkin_day_element = find_element_new -css_selector $checkin_day_selector
 highlight ([ref]$selenium) ([ref]$checkin_day_element)
@@ -69,28 +69,27 @@ foreach ($item in $availableOptions)
   if ($item.Text -match $target_input) {
     $found = $true
     $target_index = $index
-    $select_element.SelectByIndex($index)
-    # Start-Sleep -Milliseconds 100
+    # $select_element.SelectByIndex($index)
   } 
   $index++
 }
 $select_element.SelectByIndex($target_index)
 $select_element = $null
-Start-Sleep 1
+Start-Sleep -millisecond 300
 
-# Select Checkin  Year, Month
+Write-output 'Select Checkin Year, Month'
 [string]$checkin_month_selector = "form#frm div[data-type='checkin'] div[class *='b-date-selector__control-monthselector'] select[class='b-selectbox__element']"
 [object]$checkin_month_element = find_element_new -css_selector $checkin_month_selector
 highlight ([ref]$selenium) ([ref]$checkin_month_element)
-Start-Sleep 1
+
 [OpenQA.Selenium.Support.UI.SelectElement]$select_element = New-Object OpenQA.Selenium.Support.UI.SelectElement ($selenium.FindElement([OpenQA.Selenium.By]::CssSelector($checkin_month_selector)))
 $select_element.SelectByText('November 2015')
 $select_element = $null
 
-Start-Sleep 1
+Start-Sleep -millisecond 300
 
 
-# Select Checkout Month day
+Write-output 'Select Checkout Month day'
 [string]$checkout_day_selector = "form#frm div[data-type='checkout'] div[class *='b-date-selector__control-dayselector'] select[class='b-selectbox__element']"
 [object]$checkout_day_element = find_element_new -css_selector $checkout_day_selector
 highlight ([ref]$selenium) ([ref]$checkout_day_element)
@@ -112,46 +111,47 @@ foreach ($item in $availableOptions)
 }
 $select_element.SelectByIndex($target_index)
 $select_element = $null
+Start-Sleep -millisecond 300
 
-Start-Sleep 1
-
-# Select Checkout Year, Month
+Write-output 'Select Checkout Year, Month'
 [string]$checkout_month_selector = "form#frm div[data-type='checkout'] div[class *='b-date-selector__control-monthselector'] select[class='b-selectbox__element']"
 [object]$checkout_month_element = find_element_new -css_selector $checkout_month_selector
 highlight ([ref]$selenium) ([ref]$checkout_month_element)
 [OpenQA.Selenium.Support.UI.SelectElement]$select_element = New-Object OpenQA.Selenium.Support.UI.SelectElement ($selenium.FindElement([OpenQA.Selenium.By]::CssSelector($checkout_month_selector)))
 $select_element.SelectByText('November 2015')
 $select_element = $null
+Start-Sleep -millisecond 300
 
-Start-Sleep 1
+Write-output 'Select travelling type'
+[string]$travelling_type_selector = "form#frm input[class *='b-booker-type__input'][class *='b-booker-type__input_leisure-booker']"
+[object]$travelling_type_element = find_element_new -css_selector $travelling_type_selector
+highlight ([ref]$selenium) ([ref]$travelling_type_element)
+$travelling_type_element.Click()
+Start-Sleep -millisecond 300
 
-# Select City
+Write-output 'Select City'
 [string]$city_state_selector = "form#frm input#destination"
-[string]$city_state_data = 'Flagstaff, AZ'
+[string]$city_state_data = ('{0}, {1}' -f $city, $state)
 [object]$city_state_element = find_element_new -css_selector $city_state_selector
 highlight ([ref]$selenium) ([ref]$city_state_element)
 $city_state_element.Clear()
 $city_state_element.SendKeys($city_state_data)
 
-# TODO: Select travelling type
-# form#frm.flexible_group_searchbox_justbox fieldset div.b-form-group.b-form__booker-type.b-form__booker-type--index div.b-form-group__content div.b-form-group-content__container.b-travel-purpose.b-form__booker-type--emphasized label.b-booker-type.b-booker-type--leisure.b-travel-purpose__label.b-travel-purpose__label--inline.b-travel-purpose__label--spacing.tracked input.b-booker-type__input.b-booker-type__input_leisure-booker
-
+Write-Output 'Starting search for hotels'
 [string]$search_submit_selector = "form#frm button[class *='b-searchbox-button']"
 [object]$search_submit_element = find_element_new -css_selector $search_submit_selector
 highlight ([ref]$selenium) ([ref]$search_submit_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$search_submit_element).Click().Build().Perform()
-Start-Sleep 3
-Write-Output 'Starting search for hotels'
+Start-Sleep -millisecond 2000
 
-
-
-
-
+Write-Output 'Confirm the city'
+# TODO: iterate over cities selecting by the text
 [string]$destination_name_selector = "div#cityWrapper div[class *='disambitem'] div.disname a[class *='destination_name']"
 [object]$destination_name_element = find_element_new -css_selector $destination_name_selector
 highlight ([ref]$selenium) ([ref]$destination_name_element)
+[NUnit.Framework.StringAssert]::AreEqualIgnoringCase($city, $destination_name_element.Text)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$destination_name_element).Click().Build().Perform()
-Start-Sleep 10
+Start-Sleep -millisecond 1000
 
 # Cleanup
 cleanup ([ref]$selenium)
