@@ -108,7 +108,7 @@ Start-Sleep -Millisecond 1000
 
 $selenium.Navigate().GoToUrl(('{0}/jobs/myskills/1' -f $base_url))
 
-Write-Output '' | out-file 'freelancer_search.txt' -encoding 'ASCII'
+Write-Output '' | Out-File 'freelancer_search.txt' -Encoding 'ASCII'
 1..$max_pages | ForEach-Object {
   $page_count = $_
 
@@ -129,7 +129,7 @@ Write-Output '' | out-file 'freelancer_search.txt' -encoding 'ASCII'
   $project_elements = $project_table_element.FindElements([OpenQA.Selenium.By]::CssSelector($project_selector))
 
 
-  Write-host -ForegroundColor 'Blue' ('Collecting from {0} projects on page {1}' -f $project_elements.Count, $page_count)
+  Write-Host -ForegroundColor 'Blue' ('Collecting from {0} projects on page {1}' -f $project_elements.Count,$page_count)
   $project_elements | ForEach-Object {
     $project_element = $_
     [string]$project_synopsis_selector = 'div[class="project-synopsis"]'
@@ -137,7 +137,7 @@ Write-Output '' | out-file 'freelancer_search.txt' -encoding 'ASCII'
     $project_synopsis_text = ($project_synopsis_element.getAttribute('innerHTML') -join '')
     $project_synopsis_text = $project_synopsis_text -replace '<p>','' -replace '</p>','' -replace '<p class=".*" style=".*">','' -replace '\r?\n',' ' -replace ' +',' ' -replace '^ +',''
     Write-Host -ForegroundColor 'yellow' $project_synopsis_text
-    Write-Output $project_synopsis_text | out-file 'freelancer_search.txt' -encoding 'ASCII' -append 
+    Write-Output $project_synopsis_text | Out-File 'freelancer_search.txt' -Encoding 'ASCII' -Append
 
     # NOTE: next action makes browser unstable. Commented
     #  [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_synopsis_element).Build().Perform()
@@ -145,7 +145,7 @@ Write-Output '' | out-file 'freelancer_search.txt' -encoding 'ASCII'
     [string]$project_actions_selector = 'div[class="project-actions"] a'
     $project_actions_element = $project_element.FindElement([OpenQA.Selenium.By]::CssSelector($project_actions_selector))
     Write-Host -ForegroundColor 'green' $project_actions_element.getAttribute('href')
-    Write-Output $project_actions_element.getAttribute('href') | out-file 'freelancer_search.txt' -encoding 'ASCII' -append 
+    Write-Output $project_actions_element.getAttribute('href') | Out-File 'freelancer_search.txt' -Encoding 'ASCII' -Append
   }
 
   # next page
@@ -166,7 +166,42 @@ Write-Output '' | out-file 'freelancer_search.txt' -encoding 'ASCII'
   Start-Sleep -Millisecond 2000
 }
 
-Write-output 'Logging out'
+Write-Output 'To My Projects'
+
+[string]$primary_navigation_selector = "nav[class='primary-navigation']"
+[object]$primary_navigation_element = find_element_new -css_selector $primary_navigation_selector
+[void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$primary_navigation_element).Click().Build().Perform()
+highlight ([ref]$selenium) ([ref]$primary_navigation_element)
+
+Start-Sleep -Millisecond 1000
+
+$my_projects_link_text = 'My Projects'
+$my_projects_actions_element = $primary_navigation_element.FindElement([OpenQA.Selenium.By]::LinkText($my_projects_link_text))
+highlight ([ref]$selenium) ([ref]$my_projects_actions_element)
+Start-Sleep -Millisecond 100
+[void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$my_projects_actions_element).Click().Build().Perform()
+$my_projects_actions_element
+
+Write-Output 'To Dashboard'
+[string]$primary_navigation_selector = "nav[class='primary-navigation']"
+[object]$primary_navigation_element = find_element_new -css_selector $primary_navigation_selector
+[void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$primary_navigation_element).Click().Build().Perform()
+$primary_navigation_element
+Start-Sleep -Millisecond 1000
+
+
+$dashboard_link_text = 'Dashboard'
+$dashboard_actions_element = $primary_navigation_element.FindElement([OpenQA.Selenium.By]::LinkText($dashboard_link_text))
+highlight ([ref]$selenium) ([ref]$dashboard_actions_element)
+Start-Sleep -Millisecond 100
+[void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$dashboard_actions_element).Click().Build().Perform()
+
+custom_pause -fullstop $fullstop
+
+
+Write-Output 'Logging out'
+
+
 
 Start-Sleep -Millisecond 1000
 [string]$profile_figure_selector = "figure[id='profile-figure'][class='profile-img']"
