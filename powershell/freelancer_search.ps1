@@ -22,6 +22,7 @@ param(
   [string]$browser = '',
   [string]$base_url = 'https://www.freelancer.com',
   [string]$username = 'kouzmine_serguei@yahoo.com',
+  [int]$max_pages = 3,
   [string]$password,
   [string]$secret = 'moscow',
   [switch]$grid,
@@ -105,11 +106,13 @@ highlight ([ref]$selenium) ([ref]$profile_figure_element)
 [NUnit.Framework.StringAssert]::Contains('www.freelancer.com/dashboard/',$selenium.url,{})
 Start-Sleep -Millisecond 1000
 
-1..2 | ForEach-Object {
-  $page_count = $_
-  Write-Host "Page count: ${page_count}"
+$selenium.Navigate().GoToUrl(('{0}/jobs/myskills/1' -f $base_url))
 
-  $selenium.Navigate().GoToUrl(('{0}/jobs/myskills/{1}/' -f $base_url,$page_count))
+Write-Output '' | out-file 'freelancer_search.txt' -encoding 'ASCII'
+1..$max_pages | ForEach-Object {
+  $page_count = $_
+
+  # $selenium.Navigate().GoToUrl(('{0}/jobs/myskills/{1}/' -f $base_url,$page_count))
 
   [NUnit.Framework.StringAssert]::Contains(('{0}/jobs/myskills/{1}/' -f $base_url,$page_count),$selenium.url,{})
 
@@ -126,9 +129,7 @@ Start-Sleep -Millisecond 1000
   $project_elements = $project_table_element.FindElements([OpenQA.Selenium.By]::CssSelector($project_selector))
 
 
-  $project_elements.Count
-  # $project_elements[0].getAttribute('innerHTML')
-  # $project_elements[0]
+  Write-host -ForegroundColor 'Blue' ('Collecting from {0} projects on page {1}' -f $project_elements.Count, $page_count)
   $project_elements | ForEach-Object {
     $project_element = $_
     [string]$project_synopsis_selector = 'div[class="project-synopsis"]'
@@ -136,30 +137,36 @@ Start-Sleep -Millisecond 1000
     $project_synopsis_text = ($project_synopsis_element.getAttribute('innerHTML') -join '')
     $project_synopsis_text = $project_synopsis_text -replace '<p>','' -replace '</p>','' -replace '<p class=".*" style=".*">','' -replace '\r?\n',' ' -replace ' +',' ' -replace '^ +',''
     Write-Host -ForegroundColor 'yellow' $project_synopsis_text
-    # makes browser unstable
+    Write-Output $project_synopsis_text | out-file 'freelancer_search.txt' -encoding 'ASCII' -append 
+
+    # NOTE: next action makes browser unstable. Commented
     #  [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_synopsis_element).Build().Perform()
 
     [string]$project_actions_selector = 'div[class="project-actions"] a'
     $project_actions_element = $project_element.FindElement([OpenQA.Selenium.By]::CssSelector($project_actions_selector))
     Write-Host -ForegroundColor 'green' $project_actions_element.getAttribute('href')
-
+    Write-Output $project_actions_element.getAttribute('href') | out-file 'freelancer_search.txt' -encoding 'ASCII' -append 
   }
 
   # next page
 
-  [string]$pagination_selector = "div[class*='dataTables_paginate']"
+  [string]$pagination_selector = "div[id='browse-projects-pagination']"
   [object]$pagination_element = find_element_new -css_selector $pagination_selector
   highlight ([ref]$selenium) ([ref]$pagination_element)
-  Start-Sleep -Millisecond 1000
 
-  [string]$project_next_page_selector = "div[class*='dataTables_paginate'] li[class*='next']"
+  [string]$project_next_page_selector = ("{0} a[id='pagination_top_next']" -f $pagination_selector)
   [object]$project_next_page_element = find_element_new -css_selector $project_next_page_selector
   highlight ([ref]$selenium) ([ref]$project_next_page_element)
+  # $project_next_page_element
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_next_page_element).Click().Build().Perform()
-  Start-Sleep -Millisecond 1000
 
 
+  custom_pause -fullstop $fullstop
+
+  Start-Sleep -Millisecond 2000
 }
+
+Write-output 'Logging out'
 
 Start-Sleep -Millisecond 1000
 [string]$profile_figure_selector = "figure[id='profile-figure'][class='profile-img']"
@@ -179,9 +186,4 @@ highlight ([ref]$selenium) ([ref]$profile_figure_element)
 
 $selenium.Navigate().GoToUrl("{0}/users/onsignout.php" -f $base_url)
 Start-Sleep -Millisecond 1000
-
-# a class="primary-navigation-link is-active" ng-mouseenter="trackHover(navItem)" fl-analytics="MySkillsProjects" target="" ng-class="{ 'is-active': navItem.isCurrent }" ng-href="/jobs/myskills/1/" href="/jobs/myskills/1/"
-# g-include class="ng-scope" src="templateDir + '/' + subNavItem.id + '.html'">
-# <span class="ng-scope" i18n-id="3e50c7ab20ebe01229fc00e47250ca32" i18n-msg="Browse Projects">Browse Projects</span>
-# https://www.freelancer.com/jobs/myskills/1/
 cleanup ([ref]$selenium)
