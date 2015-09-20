@@ -173,6 +173,7 @@ function extract_match {
   $result_ref.Value = $local:results.Media
 }
 
+
 <#
 .SYNOPSIS
 	Highlights page element
@@ -198,6 +199,39 @@ function highlight {
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'color: yellow; border: 4px solid yellow;')
   Start-Sleep -Millisecond $delay
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
+}
+
+
+<#
+.SYNOPSIS
+	Highlights page element
+.DESCRIPTION
+	Highlights page element by executing Javascript through Selenium
+	
+.EXAMPLE
+        highlight_new -element ([ref]$element) -delay 1500 -color 'green'
+.LINK
+	
+.NOTES
+	VERSION HISTORY
+	2015/06/07 Initial Version
+#>
+
+function highlight_new {
+  param(
+    [OpenQA.Selenium.IWebElement]$element,
+    [string]$color = 'yellow',
+    [int]$delay = 300
+  )
+
+  # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
+  if ($selenium -eq $null) {
+     throw 'Selenium object must be defined to highight page element'
+  }
+  [string]$local:script =  ('color: {0}; border: 4px solid {0};' -f $color )
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,$local:script)
+  Start-Sleep -Millisecond $delay
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,'')
 }
 
 
