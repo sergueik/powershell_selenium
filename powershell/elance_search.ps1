@@ -125,7 +125,20 @@ $selenium.Navigate().GoToUrl(('{0}/r/jobs' -f $base_url))
     [NUnit.Framework.StringAssert]::Contains(('jobs/p-{0}' -f $page_count),$selenium.url,{})
   }
 
+  # div#jobSearchResults div.jobCard a.title
 
+  [string]$project_title_selector = "div#jobSearchResults div.jobCard a.title"
+
+  $project_title_elements = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($project_title_selector))
+
+  Write-Output $project_title_elements.Count
+  $project_title_elements | ForEach-Object {
+    $project_title_element = $_
+    $project_title_element.Text
+    $project_title_element.GetAttribute('href')
+    # div class="jobCard tracked" data-jobid="77882462" 
+    # div#jobSearchResults div.jobCard.tracked div#77882462Desc.desc.collapsed.descFull
+  }
 
   [string]$page_nav_selector = "div[id='search-pagination'] div.pagenavcommon"
   [object]$page_nav_element = find_element_new -css_selector $page_nav_selector
@@ -138,12 +151,6 @@ $selenium.Navigate().GoToUrl(('{0}/r/jobs' -f $base_url))
   highlight ([ref]$selenium) ([ref]$next_page_nav_element)
 
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$next_page_nav_element).Click().Build().Perform()
-
-
-
-
-
-
 }
 
 
