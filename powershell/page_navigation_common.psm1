@@ -456,7 +456,7 @@ function find_element_new {
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`ncss = '{1}'" -f (($_.Exception.Message) -split "`n")[0],$css)
+      Write-Debug ("Exception : {0} ...`ncss_selector='{1}'" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
 
@@ -469,7 +469,7 @@ function find_element_new {
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$xpath)
+      Write-Debug ("Exception : {0} ...`nxpath='{1}'" -f (($_.Exception.Message) -split "`n")[0],$xpath)
     }
 
     $element = $selenium.FindElement([OpenQA.Selenium.By]::XPath($xpath))
@@ -482,7 +482,7 @@ function find_element_new {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::LinkText($link_text)))
 
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$link_text)
+      Write-Debug ("Exception : {0} ...`nlink_te='{1}'" -f (($_.Exception.Message) -split "`n")[0],$link_text)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::LinkText($link_text))
   }
@@ -492,7 +492,7 @@ function find_element_new {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::TagName($tag_name)))
 
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$tag_name)
+      Write-Debug ("Exception : {0} ...`ntag_name='{1}'" -f (($_.Exception.Message) -split "`n")[0],$tag_name)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::TagName($tag_name))
   }
@@ -502,7 +502,7 @@ function find_element_new {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::PartialLinkText($partial_link_text)))
 
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$partial_link_text)
+      Write-Debug ("Exception : {0} ...`npartial_link_text='{1}'" -f (($_.Exception.Message) -split "`n")[0],$partial_link_text)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::PartialLinkText($partial_link_text))
   }
@@ -513,7 +513,7 @@ function find_element_new {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName($classname)))
 
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$classname)
+      Write-Debug ("Exception : {0} ...`nclassname='{1}'" -f (($_.Exception.Message) -split "`n")[0],$classname)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::ClassName($classname))
   }
@@ -524,7 +524,7 @@ function find_element_new {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id($id)))
 
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nxpath={1}" -f (($_.Exception.Message) -split "`n")[0],$id)
+      Write-Debug ("Exception : {0} ...`nid='{1}'" -f (($_.Exception.Message) -split "`n")[0],$id)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::Id($id))
   }
