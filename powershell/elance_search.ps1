@@ -42,7 +42,7 @@ load_shared_assemblies
 
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
   $selenium = launch_selenium -browser $browser -grid
-  start-sleep -millisecond 500
+  Start-Sleep -Millisecond 500
 } else {
   $selenium = launch_selenium -browser $browser
 }
@@ -104,6 +104,48 @@ highlight ([ref]$selenium) ([ref]$continue_login_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$continue_login_element).Click().Build().Perform()
 
 Start-Sleep 1
+Write-Output 'Jobs'
+
+$selenium.Navigate().GoToUrl(('{0}/r/jobs' -f $base_url))
+
+1..4 | ForEach-Object {
+  $page_count = $_
+
+  $current_page_number_selector = "div[id='search-pagination'] div.pagenavcommon span.pagenavselected"
+  try {
+    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($current_page_number_selector)))
+  } catch [exception]{
+    Write-Debug ("Exception : {0} ...`ncss_selector='{1}'" -f (($_.Exception.Message) -split "`n")[0],$current_page_number_selector)
+  }
+  $current_page_number_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($current_page_number_selector))
+
+  [NUnit.Framework.StringAssert]::Contains($page_count,$current_page_number_element.Text,{})
+
+  if ($page_count -gt 1) {
+    [NUnit.Framework.StringAssert]::Contains(('jobs/p-{0}' -f $page_count),$selenium.url,{})
+  }
+
+
+
+  [string]$page_nav_selector = "div[id='search-pagination'] div.pagenavcommon"
+  [object]$page_nav_element = find_element_new -css_selector $page_nav_selector
+  $page_nav_element.GetAttribute('href')
+  highlight ([ref]$selenium) ([ref]$page_nav_element)
+  [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$page_nav_element).Build().Perform()
+
+  [string]$next_page_nav_selector = ("{0} a#paginationNext" -f $page_nav_selector)
+  [object]$next_page_nav_element = find_element_new -css_selector $next_page_nav_selector
+  highlight ([ref]$selenium) ([ref]$next_page_nav_element)
+
+  [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$next_page_nav_element).Click().Build().Perform()
+
+
+
+
+
+
+}
+
 
 Write-Output 'Signoff'
 
@@ -121,7 +163,7 @@ highlight ([ref]$selenium) ([ref]$dialog_c_element)
 highlight ([ref]$selenium) ([ref]$signoff_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$signoff_element).Click().Build().Perform()
 
-Start-Sleep -millisecond 100
+Start-Sleep -Millisecond 100
 
 $selenium.Navigate().GoToUrl("{0}/logout" -f $base_url)
 
