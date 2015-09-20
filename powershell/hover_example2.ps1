@@ -257,7 +257,7 @@ $xpath_template = '//*[@id="ccl-refresh-header"]/DIV[2]/DIV[1]/DIV[1]/DIV[2]/UL[
 @( 1,2,3,4,5,6) | ForEach-Object { $link_count = $_;
 
   $image = $null
-  $image = find_element_new -xpath ($xpath_template -f $link_count)
+  $image = find_element -xpath ($xpath_template -f $link_count)
   # $image = $null
   # find_page_element_by_xpath ([ref]$selenium) ([ref]$image) ($xpath_template -f $link_count)
   highlight ([ref]$selenium) ([ref]$image)
@@ -277,7 +277,7 @@ $alt_texts | ForEach-Object { $link_alt_text = $_;
 #  find_page_element_by_css_selector ([ref]$selenium) ([ref]$image) $css_selector
 
   $image = $null
-  $image = find_element_new -css $css_selector
+  $image = find_element -css $css_selector
 
   highlight ([ref]$selenium) ([ref]$image)
   @( 'alt','src') | ForEach-Object {
@@ -311,7 +311,7 @@ $css_selector = ('img[alt="{0}"]' -f $link_alt_text)
 # find_page_element_by_css_selector ([ref]$selenium) ([ref]$value_element2) $css_selector
 
 $value_element2 = $null
-$value_element2 = find_element_new -css $css_selector
+$value_element2 = find_element -css $css_selector
 
 [OpenQA.Selenium.Interactions.Actions]$actions2 = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 $actions2.MoveToElement([OpenQA.Selenium.IWebElement]$value_element2).Click().Build().Perform()

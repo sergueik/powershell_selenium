@@ -53,7 +53,7 @@ $selenium.Navigate().GoToUrl($base_url)
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
 [string]$login_css_selector = "span[id='new-nav'] button[id='login-normal']"
-[object]$login_button_element = find_element_new -css_selector $login_css_selector
+[object]$login_button_element = find_element -css_selector $login_css_selector
 
 highlight ([ref]$selenium) ([ref]$login_button_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$login_button_element).Click().Build().Perform()
@@ -61,13 +61,13 @@ highlight ([ref]$selenium) ([ref]$login_button_element)
 Write-Output 'Log in'
 
 [string]$login_div_selector = "form[id='login-form']"
-[object]$login_div_element = find_element_new -css_selector $login_div_selector
+[object]$login_div_element = find_element -css_selector $login_div_selector
 highlight ([ref]$selenium) ([ref]$login_div_element)
 
 [string]$login_username_selector = "form[id='login-form'] input.username"
 [string]$login_username_data = $username
 
-[object]$login_username_element = find_element_new -css_selector $login_username_selector
+[object]$login_username_element = find_element -css_selector $login_username_selector
 highlight ([ref]$selenium) ([ref]$login_username_element)
 $login_username_element.Clear()
 $login_username_element.SendKeys($login_username_data)
@@ -76,7 +76,7 @@ $login_username_element.SendKeys($login_username_data)
 
 [string]$login_password_selector = "form[id='login-form'] input.password"
 [string]$login_password_data = $password
-[object]$login_password_element = find_element_new -css_selector $login_password_selector
+[object]$login_password_element = find_element -css_selector $login_password_selector
 highlight ([ref]$selenium) ([ref]$login_password_element)
 $login_password_element.Clear()
 
@@ -85,7 +85,7 @@ $login_password_element.SendKeys($login_password_data)
 
 
 [string]$login_submit_selector = "form[id='login-form'] button[id='login-bt']"
-[object]$login_submit_element = find_element_new -css_selector $login_submit_selector
+[object]$login_submit_element = find_element -css_selector $login_submit_selector
 highlight ([ref]$selenium) ([ref]$login_submit_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$login_submit_element).Click().Build().Perform()
 
@@ -100,7 +100,7 @@ try {
 } catch [exception]{
   Write-Debug ("Exception : {0} ...`ncss = '{1}'" -f (($_.Exception.Message) -split "`n")[0],$profile_figure_selector)
 }
-[object]$profile_figure_element = find_element_new -css_selector $profile_figure_selector
+[object]$profile_figure_element = find_element -css_selector $profile_figure_selector
 
 highlight ([ref]$selenium) ([ref]$profile_figure_element)
 [NUnit.Framework.StringAssert]::Contains('www.freelancer.com/dashboard/',$selenium.url,{})
@@ -117,7 +117,7 @@ Write-Output '' | Out-File 'freelancer_search.txt' -Encoding 'ASCII'
   [NUnit.Framework.StringAssert]::Contains(('{0}/jobs/myskills/{1}/' -f $base_url,$page_count),$selenium.url,{})
 
   [string]$project_table_selector = "table[id=project_table]"
-  [object]$project_table_element = find_element_new -css_selector $project_table_selector
+  [object]$project_table_element = find_element -css_selector $project_table_selector
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_table_element).Build().Perform()
 
   highlight ([ref]$selenium) ([ref]$project_table_element)
@@ -151,11 +151,11 @@ Write-Output '' | Out-File 'freelancer_search.txt' -Encoding 'ASCII'
   # next page
 
   [string]$pagination_selector = "div[id='browse-projects-pagination']"
-  [object]$pagination_element = find_element_new -css_selector $pagination_selector
+  [object]$pagination_element = find_element -css_selector $pagination_selector
   highlight ([ref]$selenium) ([ref]$pagination_element)
 
   [string]$project_next_page_selector = ("{0} a[id='pagination_top_next']" -f $pagination_selector)
-  [object]$project_next_page_element = find_element_new -css_selector $project_next_page_selector
+  [object]$project_next_page_element = find_element -css_selector $project_next_page_selector
   highlight ([ref]$selenium) ([ref]$project_next_page_element)
   # $project_next_page_element
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_next_page_element).Click().Build().Perform()
@@ -169,7 +169,7 @@ Write-Output '' | Out-File 'freelancer_search.txt' -Encoding 'ASCII'
 Write-Output 'To My Projects'
 
 [string]$primary_navigation_selector = "nav[class='primary-navigation']"
-[object]$primary_navigation_element = find_element_new -css_selector $primary_navigation_selector
+[object]$primary_navigation_element = find_element -css_selector $primary_navigation_selector
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$primary_navigation_element).Click().Build().Perform()
 highlight ([ref]$selenium) ([ref]$primary_navigation_element)
 
@@ -184,7 +184,7 @@ $my_projects_actions_element
 
 Write-Output 'To Dashboard'
 [string]$primary_navigation_selector = "nav[class='primary-navigation']"
-[object]$primary_navigation_element = find_element_new -css_selector $primary_navigation_selector
+[object]$primary_navigation_element = find_element -css_selector $primary_navigation_selector
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$primary_navigation_element).Click().Build().Perform()
 $primary_navigation_element
 Start-Sleep -Millisecond 1000
@@ -210,7 +210,7 @@ try {
 } catch [exception]{
   Write-Debug ("Exception : {0} ...`ncss = '{1}'" -f (($_.Exception.Message) -split "`n")[0],$profile_figure_selector)
 }
-[object]$profile_figure_element = find_element_new -css_selector $profile_figure_selector
+[object]$profile_figure_element = find_element -css_selector $profile_figure_selector
 
 highlight ([ref]$selenium) ([ref]$profile_figure_element)
 

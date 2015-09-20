@@ -50,7 +50,7 @@ try {
 
 
 $table_id = 'example';
-$table_element = find_element_new -Id $table_id
+$table_element = find_element -Id $table_id
 
 
 # two-step input

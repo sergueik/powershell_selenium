@@ -59,7 +59,7 @@ $table_id = 'example';
 $cell_text = 'Software Engineer'
 
 $matching_rows = @()
-$table_element = find_element_new -Id $table_id
+$table_element = find_element -Id $table_id
 $table_row_relative_xpath = 'tbody/tr'
 $row_cell_relative_xpath = 'td'
 

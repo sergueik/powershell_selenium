@@ -164,7 +164,7 @@ Start-Sleep 3
 
 
 $css_selector = 'div#chart svg'
-$element = find_element_new -css $css_selector
+$element = find_element -css $css_selector
 # fails in hext line ?
 $element
 # highlight ([ref]$selenium) ([ref]$element )
@@ -192,7 +192,7 @@ $paths | ForEach-Object {
   # CSS Selector can be used to locate the elements
   $css_selector_of_path_element = get_css_selector_of ([ref]$path_element)
   Write-Output ('CSS "{0}"' -f $css_selector_of_path_element)
-  $assert_element = find_element_new -css $css_selector_of_path_element
+  $assert_element = find_element -css $css_selector_of_path_element
   # -wait_seconds 2
 
   <#
@@ -207,7 +207,7 @@ $paths | ForEach-Object {
 
   try {
     # TODO - variable names
-    $assert_element = find_element_new -xpath $svg_xpath_of_element
+    $assert_element = find_element -xpath $svg_xpath_of_element
   } catch [exception]{
     Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
   }

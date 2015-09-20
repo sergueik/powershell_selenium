@@ -53,7 +53,7 @@ $selenium.Navigate().GoToUrl($base_url)
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
 [string]$login_css_selector = "div[class *='desktop-navbar'] a[class *='header-link-login']"
-[object]$login_button_element = find_element_new -css_selector $login_css_selector
+[object]$login_button_element = find_element -css_selector $login_css_selector
 
 highlight ([ref]$selenium) ([ref]$login_button_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$login_button_element).Click().Build().Perform()
@@ -63,19 +63,19 @@ Write-Output 'Log in'
 
 [string]$login_username_selector = "form#login input#username"
 [string]$login_username_data = $username
-[object]$login_username_element = find_element_new -css_selector $login_username_selector
+[object]$login_username_element = find_element -css_selector $login_username_selector
 highlight ([ref]$selenium) ([ref]$login_username_element)
 $login_username_element.SendKeys($login_username_data)
 
 [string]$login_password_selector = "form#login input#password"
 [string]$login_password_data = $password
-[object]$login_password_element = find_element_new -css_selector $login_password_selector
+[object]$login_password_element = find_element -css_selector $login_password_selector
 highlight ([ref]$selenium) ([ref]$login_password_element)
 $login_password_element.SendKeys($login_password_data)
 
 
 [string]$login_submit_selector = "form#login input#submit"
-[object]$login_submit_element = find_element_new -css_selector $login_submit_selector
+[object]$login_submit_element = find_element -css_selector $login_submit_selector
 highlight ([ref]$selenium) ([ref]$login_submit_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$login_submit_element).Click().Build().Perform()
 
@@ -84,7 +84,7 @@ Write-Output 'Starting search for jobs'
 [string]$search_for_jobs_selector = 'input#inMed'
 [string]$placeholder_attribute = 'Search for Jobs'
 [string]$search_for_jobs_keyword = 'Selenium'
-[object]$search_for_jobs_element = find_element_new -css_selector $search_for_jobs_selector
+[object]$search_for_jobs_element = find_element -css_selector $search_for_jobs_selector
 
 [NUnit.Framework.Assert]::IsTrue(($search_for_jobs_element.GetAttribute('type'),'text'))
 [NUnit.Framework.StringAssert]::Contains($search_for_jobs_element.GetAttribute('placeholder'),$placeholder_attribute)
@@ -96,7 +96,7 @@ $search_for_jobs_element.SendKeys($search_for_jobs_keyword)
 Write-Output 'Getting all jobs for keyword'
 
 [string]$search_button_selector = 'input[class*="oBtnPrimary"][type="submit"][value="Search"]'
-[object]$search_button_element = find_element_new -css_selector $search_button_selector
+[object]$search_button_element = find_element -css_selector $search_button_selector
 
 highlight ([ref]$selenium) ([ref]$search_for_jobs_element)
 $search_button_element.Click()
@@ -107,7 +107,7 @@ custom_pause -fullstop $fullstop
 
 
 $search_modifier1_selector = 'fieldset.oFormField.jsWorkloadFilter.jsShowOnlyAll input[id="wl-1"]'
-[object]$search_modifier1_element = find_element_new -css_selector $search_modifier1_selector
+[object]$search_modifier1_element = find_element -css_selector $search_modifier1_selector
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$search_modifier1_element).Build().Perform()
 Start-Sleep -Seconds 3
 $search_modifier1_element.Click()
@@ -118,7 +118,7 @@ Write-Output 'Continue modifying jobs selection'
 custom_pause -fullstop $fullstop
 
 $search_modifier2_selector = 'fieldset.oFormField.jsJobTypeFilter.jsShowOnlyAll input[id="t-1"]'
-[object]$search_modifier2_element = find_element_new -css_selector $search_modifier2_selector
+[object]$search_modifier2_element = find_element -css_selector $search_modifier2_selector
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$search_modifier2_element).Build().Perform()
 Start-Sleep -Seconds 3
 $search_modifier2_element.Click()
@@ -129,7 +129,7 @@ Start-Sleep -Seconds 3
 Write-Output 'Count jobs found'
 custom_pause -fullstop $fullstop
 $job_search_results_selector = 'section.oListLite.jsSearchResults header.oBreadcrumbBar > div.oLeft'
-[object]$job_search_results_element = find_element_new -css_selector $job_search_results_selector
+[object]$job_search_results_element = find_element -css_selector $job_search_results_selector
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$job_search_results_element).Build().Perform()
 Write-Output $job_search_results_element.Text
 highlight ([ref]$selenium) ([ref]$job_search_results_element)
@@ -141,12 +141,12 @@ custom_pause -fullstop $fullstop
 Start-Sleep -Seconds 10
 # log out
 [string]$avatar_selector = "#simpleCompanySelector > span > img.oNavAvatar[alt='Serguei Kouzmine']"
-[object]$avatar_element = find_element_new -css_selector $avatar_selector
+[object]$avatar_element = find_element -css_selector $avatar_selector
 highlight ([ref]$selenium) ([ref]$avatar_element)
 
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$avatar_element).Click().Build().Perform()
 [string]$logout_xpath = "//*[@id='simpleCompanySelector']/div/a[@title='Log out']"
-[object]$logout_element = find_element_new -XPath $logout_xpath
+[object]$logout_element = find_element -XPath $logout_xpath
 highlight ([ref]$selenium) ([ref]$logout_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$logout_element).Click().Build().Perform()
 

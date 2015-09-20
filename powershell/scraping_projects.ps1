@@ -53,7 +53,7 @@ $selenium.Navigate().GoToUrl($base_url)
   Write-Output ('{0} iteration' -f $_)
 
   $project_cards_selector = 'div[class="i-project-cards"]'
-  [object]$project_cards_containter_element = find_element_new -css_selector $project_cards_selector
+  [object]$project_cards_containter_element = find_element -css_selector $project_cards_selector
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_cards_containter_element).Build().Perform()
   highlight ([ref]$selenium) ([ref]$project_cards_containter_element)
 
@@ -71,7 +71,7 @@ $selenium.Navigate().GoToUrl($base_url)
 
   $project_show_more_selector = 'div[explore-show-more-www=""]'
 
-  [object]$project_show_more_element = find_element_new -css_selector $project_show_more_selector
+  [object]$project_show_more_element = find_element -css_selector $project_show_more_selector
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_show_more_element).Build().Perform()
   highlight ([ref]$selenium) ([ref]$project_show_more_element)
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_show_more_element).Click().Build().Perform()

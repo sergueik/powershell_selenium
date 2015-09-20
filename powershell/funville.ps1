@@ -1,4 +1,4 @@
-﻿#Copyright (c) 2015 Serguei Kouzmine
+#Copyright (c) 2015 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -57,14 +57,14 @@ $wait.PollingInterval = 150
 
 $selenium.Manage().Window.Maximize()
 $forum_search_css_selector = 'ul.ui-tabs-nav'
-$value_element1 = find_element_new -css $forum_search_css_selector
+$value_element1 = find_element -css $forum_search_css_selector
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element1).Build().Perform()
 $actions = $null
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$value_element1)
 
 $forum_tab_css_selector = 'a[href="#tab-hof"]'
-$value_element2 = find_element_new -css $forum_tab_css_selector
+$value_element2 = find_element -css $forum_tab_css_selector
 # -container_element_ref ([ref]$value_element1) is unused 
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element2).Click().Build().Perform()
@@ -210,7 +210,7 @@ Fir <a href="http://www.carnival.com/Funville/forums/thread/1651730.aspx">...rea
 #  NOTE: The actual forums is not well-formed.
 # 
 $forum_css_selector = 'div#tab-hof'
-$value_element3 =  find_element_new -css $forum_css_selector
+$value_element3 =  find_element -css $forum_css_selector
 
 $raw_data = '<rawdata>{0}</rawdata>' -f ($value_element3.GetAttribute('innerHTML') -join '')
 # Pruning the known bad syntax elements:
@@ -242,11 +242,11 @@ if ($forums.Count -gt 1) {
 
 <#
 $link_forums_xpath = '//a[@class="link-readcarnivalblog"]'
-$value_element3 = find_element_new -xpath $link_forums_xpath
+$value_element3 = find_element -xpath $link_forums_xpath
 #>
 <#
 $link_forums_css_selector = 'div[class="box-listblogs"] a[class="link-readcarnivalblog"]'
-$value_element3 = find_element_new -css $link_forums_css_selector
+$value_element3 = find_element -css $link_forums_css_selector
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$value_element3).Build().Perform()
 $actions = $null

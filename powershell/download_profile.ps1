@@ -63,7 +63,7 @@ $selenium.Navigate().GoToUrl($base_url)
 # Wait for page logo / title 
 $element_title = 'Translate text, documents and websites for free'
 $css_selector = 'a.brand'
-$element = find_element_new -css_selector $css_selector
+$element = find_element -css_selector $css_selector
 
 [NUnit.Framework.Assert]::IsTrue($element.GetAttribute('title') -match $element_title)
 $element.GetAttribute('title')
@@ -75,11 +75,11 @@ Write-Output $text | Out-File -FilePath $text_file -Encoding ascii
 
 $upload_button = $null
 $css_selector = ('div[id = "{0}"]' -f 'upload-button')
-$upload_button = find_element_new -css_selector $css_selector
+$upload_button = find_element -css_selector $css_selector
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$upload_button) -Delay 1500
 
 # Populate upload input
-$upload_element = find_element_new -classname 'ajaxupload-input'
+$upload_element = find_element -classname 'ajaxupload-input'
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$upload_element) -Delay 1500
 
 Write-Host ('Uploading the file "{0}".' -f $text_file)
@@ -89,7 +89,7 @@ Start-Sleep 10
 
 $element_text = 'Download'
 $classname = 'gw-download-link'
-$download_link_element = find_element_new -classname $classname
+$download_link_element = find_element -classname $classname
 [NUnit.Framework.Assert]::IsTrue($download_link_element.Text -match $element_text)
 highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$download_link_element) -Delay 1200
 

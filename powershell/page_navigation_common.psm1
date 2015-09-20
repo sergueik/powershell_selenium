@@ -131,7 +131,6 @@ return get_css_selector_of(arguments[0]);
 
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
 
-
   Write-Debug ('Javascript-generated CSS selector = "{0}"' -f $local:result)
   return $local:result
 
@@ -322,70 +321,6 @@ function sleep(milliseconds) {
 
 
 
-# http://stackoverflow.com/questions/1767219/mutually-exclusive-powershell-parameters
-# https://seleniumhq.github.io/selenium/docs/api/java/org/openqa/selenium/By.html
-
-function find_element {
-  param(
-    [Parameter(ParameterSetName = 'set_xpath')] $xpath,
-    [Parameter(ParameterSetName = 'set_css_locator')] $css,
-    [Parameter(ParameterSetName = 'set_id')] $id,
-    [Parameter(ParameterSetName = 'set_linktext')] $linktext,
-    [Parameter(ParameterSetName = 'set_partial_link_text')] $partial_link_text,
-    [Parameter(ParameterSetName = 'set_css_tagname')] $tagname
-  )
-
-
-  # guard
-  $implemented_options = @{
-    'xpath' = $true;
-    'css' = $true;
-    'id' = $false;
-    'linktext' = $false;
-    'partial_link_text' = $false;
-    'tagname' = $false;
-  }
-
-  $implemented.Keys | ForEach-Object { $option = $_
-    if ($psBoundParameters.ContainsKey($option)) {
-
-      if (-not $implemented_options[$option]) {
-
-        Write-Output ('Option {0} i not implemented' -f $option)
-
-
-
-      } else {
-
-      }
-    }
-  }
-  if ($false) {
-    Write-Output @psBoundParameters | Format-Table -AutoSize
-  }
-
-  # fall back to calling legacy implementation
-
-  if ($css -ne $null) {
-    $local:element = $null
-
-    find_page_element_by_css_selector ([ref]$selenium) ([ref]($local:element)) -css_selector $css
-    return $local:element
-
-  }
-
-
-  if ($xpath -ne $null) {
-
-    $local:element = $null
-    $xpath = ('img[@alt="{0}"]' -f $link_alt_text)
-    find_page_element_by_xpath ([ref]$selenium) ([ref]($local:element)) $xpath
-
-    return $local:element
-
-  }
-
-}
 
 <#
 .SYNOPSIS
@@ -393,18 +328,21 @@ function find_element {
 .DESCRIPTION
         Receives the 	
 .EXAMPLE
-	$element = find_element_new -classname $classname
+	$element = find_element -classname $classname
 
 .LINK
 	# https://chromium.googlesource.com/chromium/blink/+/master/Source/devtools/front_end/components/DOMPresentationUtils.js
+        # http://stackoverflow.com/questions/1767219/mutually-exclusive-powershell-parameters
+        # https://seleniumhq.github.io/selenium/docs/api/java/org/openqa/selenium/By.html
 	
 .NOTES
 	VERSION HISTORY
 	2015/07/03 Initial Version
+	2015/09/20 Removed old versions
 
 #>
 
-function find_element_new {
+function find_element {
   param(
     [Parameter(ParameterSetName = 'set_xpath')] $xpath,
     [Parameter(ParameterSetName = 'set_css_selector')] $css_selector,

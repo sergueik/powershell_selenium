@@ -55,7 +55,7 @@ $selenium.Navigate().GoToUrl($base_url)
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
 [string]$login_css_selector = "div[id='nav-v-csr'] a[class*='hpg-sign-in']"
-[object]$login_button_element = find_element_new -css_selector $login_css_selector
+[object]$login_button_element = find_element -css_selector $login_css_selector
 
 highlight ([ref]$selenium) ([ref]$login_button_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$login_button_element).Click().Build().Perform()
@@ -63,27 +63,27 @@ highlight ([ref]$selenium) ([ref]$login_button_element)
 Write-Output 'Log in'
 
 [string]$login_div_selector = "div[id = 'login-form']"
-[object]$login_div_element = find_element_new -css_selector $login_div_selector
+[object]$login_div_element = find_element -css_selector $login_div_selector
 highlight ([ref]$selenium) ([ref]$login_div_element)
 
 [string]$login_username_selector = "div[id = 'login-form'] form#loginForm input[id='login_name']"
 [string]$login_username_data = $username
 
-[object]$login_username_element = find_element_new -css_selector $login_username_selector
+[object]$login_username_element = find_element -css_selector $login_username_selector
 highlight ([ref]$selenium) ([ref]$login_username_element)
 $login_username_element.Clear()
 $login_username_element.SendKeys($login_username_data)
 
 [string]$login_password_selector = "div[id = 'login-form'] form#loginForm input#passwd"
 [string]$login_password_data = $password
-[object]$login_password_element = find_element_new -css_selector $login_password_selector
+[object]$login_password_element = find_element -css_selector $login_password_selector
 highlight ([ref]$selenium) ([ref]$login_password_element)
 $login_password_element.Clear()
 
 $login_password_element.SendKeys($login_password_data)
 
 [string]$login_submit_selector = "form#loginForm a[id='spr-sign-in-btn-standard']"
-[object]$login_submit_element = find_element_new -css_selector $login_submit_selector
+[object]$login_submit_element = find_element -css_selector $login_submit_selector
 highlight ([ref]$selenium) ([ref]$login_submit_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$login_submit_element).Click().Build().Perform()
 
@@ -94,12 +94,12 @@ Write-Output 'Secret question page'
 [string]$secret_answer_selector = "form[id ='sa-securityForm'] input#challengeAnswerId"
 $secret_answer = $secret
 [string]$secret_answer_data = $secret_answer
-[object]$secret_answer_element = find_element_new -css_selector $secret_answer_selector
+[object]$secret_answer_element = find_element -css_selector $secret_answer_selector
 highlight ([ref]$selenium) ([ref]$secret_answer_element)
 $secret_answer_element.SendKeys($secret_answer_data)
 
 [string]$continue_login_selector = "form[id ='sa-securityForm'] a#ContinueLogin"
-[object]$continue_login_element = find_element_new -css_selector $continue_login_selector
+[object]$continue_login_element = find_element -css_selector $continue_login_selector
 highlight ([ref]$selenium) ([ref]$continue_login_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$continue_login_element).Click().Build().Perform()
 
@@ -141,13 +141,13 @@ $selenium.Navigate().GoToUrl(('{0}/r/jobs' -f $base_url))
   }
 
   [string]$page_nav_selector = "div[id='search-pagination'] div.pagenavcommon"
-  [object]$page_nav_element = find_element_new -css_selector $page_nav_selector
+  [object]$page_nav_element = find_element -css_selector $page_nav_selector
   $page_nav_element.GetAttribute('href')
   highlight ([ref]$selenium) ([ref]$page_nav_element)
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$page_nav_element).Build().Perform()
 
   [string]$next_page_nav_selector = ("{0} a#paginationNext" -f $page_nav_selector)
-  [object]$next_page_nav_element = find_element_new -css_selector $next_page_nav_selector
+  [object]$next_page_nav_element = find_element -css_selector $next_page_nav_selector
   highlight ([ref]$selenium) ([ref]$next_page_nav_element)
 
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$next_page_nav_element).Click().Build().Perform()
@@ -157,12 +157,12 @@ $selenium.Navigate().GoToUrl(('{0}/r/jobs' -f $base_url))
 Write-Output 'Signoff'
 
 [string]$navigate_account_selector = "div[id='nav-account'] div[id='nav-account-menu'] a[class *='nav-account-tab']"
-[object]$navigate_account_element = find_element_new -css_selector $navigate_account_selector
+[object]$navigate_account_element = find_element -css_selector $navigate_account_selector
 highlight ([ref]$selenium) ([ref]$navigate_account_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$navigate_account_element).Click().Build().Perform()
 
 [string]$dialog_c_selector = "div[id='nav-myaccount']"
-[object]$dialog_c_element = find_element_new -css_selector $dialog_c_selector
+[object]$dialog_c_element = find_element -css_selector $dialog_c_selector
 highlight ([ref]$selenium) ([ref]$dialog_c_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$dialog_c_element).Build().Perform()
 
