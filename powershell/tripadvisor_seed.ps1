@@ -42,7 +42,7 @@ load_shared_assemblies -shared_assemblies $shared_assemblies
 
 function init_database {
   param(
-    [string]$database = "$(Get-ScriptDirectory)\tripadviror_seed.db"
+    [string]$database = "$(Get-ScriptDirectory)\tripadvisor_seed.db"
   )
   [int]$version = 3
   [System.Data.SQLite.SQLiteConnection]::CreateFile($database)
@@ -56,7 +56,7 @@ function init_database {
 
 function create_table {
   param(
-    [string]$database = "$(Get-ScriptDirectory)\tripadviror_seed.db",
+    [string]$database = "$(Get-ScriptDirectory)\tripadvisor_seed.db",
     [string]$create_table_query = @"
    CREATE TABLE IF NOT EXISTS [destinations]
       (
@@ -81,7 +81,7 @@ function create_table {
 
 function insert_database {
   param(
-    [string]$database = "$(Get-ScriptDirectory)\tripadviror_seed.db",
+    [string]$database = "$(Get-ScriptDirectory)\tripadvisor_seed.db",
     [string]$query = @"
 INSERT INTO [destinations] (CODE, CITY, COUNTRY, TITLE, URL, STATUS )  VALUES(?, ?, ?, ?, ?, ?)
 "@,
@@ -135,9 +135,9 @@ $selenium.Manage().Window.Maximize()
 $selenium.Navigate().GoToUrl($base_url)
 $script_directory = Get-ScriptDirectory
 
-init_database -database "$script_directory\tripadviror_seed.db"
+init_database -database "$script_directory\tripadvisor_seed.db"
 # full path  has to be provided
-create_table -database "$script_directory\tripadviror_seed.db"
+create_table -database "$script_directory\tripadvisor_seed.db"
 
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
@@ -281,7 +281,7 @@ $code_cnt = 0
   $o | Add-Member Noteproperty 'city' $row['city']
   $o | Add-Member Noteproperty 'country' $row['country']
   $o | Add-Member Noteproperty 'status' 0
-  insert_database -data $o -database "$script_directory\tripadviror_seed.db"
+  insert_database -data $o -database "$script_directory\tripadvisor_seed.db"
 
 }
 cleanup ([ref]$selenium)
