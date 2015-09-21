@@ -27,20 +27,117 @@ param(
   [switch]$pause
 )
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
+$shared_assemblies = @(
+  'WebDriver.dll',
+  'WebDriver.Support.dll',
+  'System.Data.SQLite.dll',
+  'nunit.framework.dll'
+)
+
 
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
-load_shared_assemblies
+load_shared_assemblies -shared_assemblies $shared_assemblies 
+
+
+function init_database {
+  param(
+    [string]$database = "$(Get-ScriptDirectory)\tripadviror_seed.db"
+  )
+  [int]$version = 3
+  [System.Data.SQLite.SQLiteConnection]::CreateFile($database)
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
+  $connection.Open()
+  $command = $connection.CreateCommand()
+  # $command.getType() | format-list
+  $connection.Close()
+}
+
+function create_table {
+  param(
+    [string]$database = "$(Get-ScriptDirectory)\tripadviror_seed.db",
+    [string]$create_table_query = @"
+   CREATE TABLE IF NOT EXISTS [destinations]
+      (
+         CODE      CHAR(16) PRIMARY KEY     NOT NULL,
+         URL       CHAR(1024),
+         CITY      CHAR(256),
+         COUNTRY   CHAR(256),
+         TITLE   CHAR(256),
+         STATUS    INTEGER   NOT NULL
+      );
+"@ # http://www.sqlite.org/datatype3.html
+  )
+  [int]$version = 3
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
+  $connection.Open()
+  Write-Debug $create_table_query
+  [System.Data.SQLite.SQLiteCommand]$sql_command = New-Object System.Data.SQLite.SQLiteCommand ($create_table_query,$connection)
+  $sql_command.ExecuteNonQuery()
+  $connection.Close()
+}
+
+function insert_database {
+  param(
+    [string]$database = "$(Get-ScriptDirectory)\tripadviror_seed.db",
+    [string]$query = @"
+INSERT INTO [destinations] (CODE, CITY, COUNTRY, TITLE, URL, STATUS )  VALUES(?, ?, ?, ?, ?, ?)
+"@,
+    [psobject]$data
+  )
+
+  [int]$version = 3
+  $connection_string = ('Data Source={0};Version={1};' -f $database,$version)
+  $connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
+  $connection.Open()
+  Write-Debug $query
+  $command = $connection.CreateCommand()
+  $command.CommandText = $query
+
+  $code = New-Object System.Data.SQLite.SQLiteParameter
+  $city = New-Object System.Data.SQLite.SQLiteParameter
+  $country = New-Object System.Data.SQLite.SQLiteParameter
+  $title = New-Object System.Data.SQLite.SQLiteParameter
+  $url = New-Object System.Data.SQLite.SQLiteParameter
+  $status = New-Object System.Data.SQLite.SQLiteParameter
+
+
+  [void]$command.Parameters.Add($code)
+  [void]$command.Parameters.Add($city)
+  [void]$command.Parameters.Add($country)
+  [void]$command.Parameters.Add($title)
+  [void]$command.Parameters.Add($url)
+  [void]$command.Parameters.Add($status)
+
+  $code.Value = $data.code
+  $city.Value = $data.city
+  $country.Value = $data.country
+  $title.Value = $data.title
+  $url.Value = $data.url
+  $status.Value = $data.status
+  $rows_inserted = $command.ExecuteNonQuery()
+  $command.Dispose()
+}
 
 
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
-  $selenium = launch_selenium -browser $browser -grid
+  $selenium = launch_selenium -browser $browser -grid -shared_assemblies $shared_assemblies
   Start-Sleep -Millisecond 500
+
 } else {
-  $selenium = launch_selenium -browser $browser
+  $selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
+
 }
+
 $selenium.Manage().Window.Maximize()
 $selenium.Navigate().GoToUrl($base_url)
+$script_directory = Get-ScriptDirectory
+
+init_database -database "$script_directory\tripadviror_seed.db"
+# full path  has to be provided
+create_table -database "$script_directory\tripadviror_seed.db"
 
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
@@ -112,10 +209,18 @@ Write-Output 'Search results'
 [NUnit.Framework.StringAssert]::Contains('/Restaurants',$selenium.url,{})
 [NUnit.Framework.StringAssert]::Contains('Bohemia',$selenium.url,{})
 
+$data = @( @{
+    'city' = $null;
+    'country' = $null;
+    'code' = '0';
+    'url' = $null;
+    'title' = $null;
+  })
 
-0..2 | ForEach-Object {
+$code_cnt = 0 
+0..3 | ForEach-Object {
   $page_count = $_
-
+  $code_cnt ++
   $search_results_css_selector = "div[id='EATERY_SEARCH_RESULTS'] a.property_title"
 
   $search_results_elements = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($search_results_css_selector))
@@ -125,6 +230,8 @@ Write-Output 'Search results'
   $max_count = 100
   $element_count = 0
   $search_results_elements | ForEach-Object {
+
+
     $element_count++
     if ($element_count -gt $max_count) {
       return
@@ -133,6 +240,15 @@ Write-Output 'Search results'
     $search_results_element = $_
     [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$search_results_element).Build().Perform()
     $search_results_element.Text
+      
+  $data += @{
+    'city' = 'Prague';
+    'country' = 'Czech Republic, Europe';
+    'code' = ('{0}' -f (Random));
+    'url' = $null;
+    'title' = $search_results_element.Text;
+  }
+
     highlight_new -element $search_results_element
   }
 
@@ -151,6 +267,21 @@ Write-Output 'Search results'
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$results_next_page_element).Click().Build().Perform()
 
   Start-Sleep -Millisecond 10000
+  # NOTE: tripadvisor opens new browser windows here. The script stays focused on the parent window
 }
 
+0..($data.Count - 1) | ForEach-Object {
+  $cnt = $_
+  $row = $data[$cnt]
+
+  $o = New-Object PSObject
+  $o | Add-Member Noteproperty 'code' $row['code']
+  $o | Add-Member Noteproperty 'url' $row['url']
+  $o | Add-Member Noteproperty 'title' $row['title']
+  $o | Add-Member Noteproperty 'city' $row['city']
+  $o | Add-Member Noteproperty 'country' $row['country']
+  $o | Add-Member Noteproperty 'status' 0
+  insert_database -data $o -database "$script_directory\tripadviror_seed.db"
+
+}
 cleanup ([ref]$selenium)
