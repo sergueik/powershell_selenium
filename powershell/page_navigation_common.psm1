@@ -18,9 +18,6 @@
 
 function get_xpath_of {
   param(
-    <# there is no need to explicitly pass the reference to selenium 
-    [System.Management.Automation.PSReference]$selenium_ref,
-    #>
     [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
   )
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
@@ -30,9 +27,9 @@ function get_xpath_of {
  function get_xpath_of(element) {
      var elementTagName = element.tagName.toLowerCase();
      if (element.id != '') {
-         return 'id("' + element.id + '")';
-         // alternative : 
-         // return '*[@id="' + element.id + '"]';
+         return '//' + elementTagName + '[@id="' + element.id + '"]';
+         // alternative ?
+         // return 'id("' + element.id + '")';
      } else if (element.name && document.getElementsByName(element.name).length === 1) {
          return '//' + elementTagName + '[@name="' + element.name + '"]';
      }
@@ -48,9 +45,9 @@ function get_xpath_of {
              continue;
          }
          if (sibling_element === element) {
-             return get_xpath_of(element.parentNode) + '/' + elementTagName + '[' + (sibling_count + 1) + ']';
+             return sibling_count > 0 ? get_xpath_of(element.parentNode) + '/' + elementTagName + '[' + (sibling_count + 1) + ']' : get_xpath_of(element.parentNode) + '/' + elementTagName;
          }
-         if (sibling_element.nodeType === 1 && sibling_element.tagName === elementTagName) {
+         if (sibling_element.nodeType === 1 && sibling_element.tagName.toLowerCase() === elementTagName) {
              sibling_count++;
          }
      }
@@ -87,9 +84,6 @@ function get_xpath_of {
 function get_css_selector_of {
 
   param(
-    <# there is no need to explicitly pass the reference to selenium 
-    [System.Management.Automation.PSReference]$selenium_ref,
-    #>
     [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
   )
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
