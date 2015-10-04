@@ -508,3 +508,101 @@ function find_element {
 
 
 
+<#
+.SYNOPSIS
+	Finds a collection of elements using speficic method of finding : xpath or css_selector
+.DESCRIPTION
+        Receives the 	
+.EXAMPLE
+	$elements = find_elements -css_selector $css_selector -parent $parent_element
+
+.LINK
+	
+.NOTES
+	VERSION HISTORY
+	2015/10/03 Initial Version
+
+#>
+
+function find_elements {
+  param(
+    [Parameter(ParameterSetName = 'set_xpath')] $xpath,
+    [Parameter(ParameterSetName = 'set_css_selector')] $css_selector,
+    [OpenQA.Selenium.IWebElement]$parent
+  )
+
+
+  # guard
+  $implemented_options = @{
+    'xpath' = $true;
+    'css_selector' = $true;
+  }
+
+  $implemented.Keys | ForEach-Object { $option = $_
+    if ($psBoundParameters.ContainsKey($option)) {
+
+      if (-not $implemented_options[$option]) {
+
+        Write-Output ('Option {0} i not implemented' -f $option)
+
+      } else {
+        # will find
+
+      }
+    }
+  }
+  if ($false) {
+    Write-Output @psBoundParameters | Format-Table -AutoSize
+  }
+  $elements = $null
+  $wait_seconds = 5
+  $wait_polling_interval = 50
+
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+  $wait.PollingInterval = $wait_polling_interval
+  if ($parent) {
+     $parent_css_selector = get_css_selector_of ([ref] $parent ) 
+     $parent_xpath = get_xpath_of([ref] $parent ) 
+
+  } else { 
+     $parent= $selenium
+     $parent_css_selector = '' 
+     $parent_xpath_selector = ''
+  }
+
+  if ($css_selector -ne $null) {
+    $extended_css_selector = ('{0} {1}' -f $parent_css_selector, $css_selector)
+    try {
+      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($extended_css_selector)))
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`ncss_selector='{1}'" -f (($_.Exception.Message) -split "`n")[0],$extended_css_selector )
+    }
+    $elements = $parent.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
+  }
+
+
+  if ($xpath -ne $null) {
+    if ($parent_xpath -ne '') {
+      $extended_xpath = $xpath
+    } else { 
+      $extended_xpath = ('{0}/{1}' -f $parent_xpath, $xpath)
+    }
+    try {
+      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($extended_xpath)))
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`nxpath='{1}'" -f (($_.Exception.Message) -split "`n")[0],$extended_xpath)
+    }
+
+    $elements = $parent.FindElements([OpenQA.Selenium.By]::XPath($xpath))
+
+
+  }
+
+  return $elements
+}
+
+
+
+
+
+

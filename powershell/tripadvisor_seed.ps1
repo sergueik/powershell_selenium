@@ -19,7 +19,7 @@
 #THE SOFTWARE.
 
 param(
-  [string]$browser = '',
+  [string]$browser = 'firefox', # selections code do not work properly in chrome browser
   [string]$base_url = 'http://www.tripadvisor.com/',
   [int]$max_pages = 3,
   [switch]$grid,
@@ -174,7 +174,7 @@ Start-Sleep -Millisecond 1000
 
 # $element_css_selector = "span[class='poi-name']"
 $element_css_selector = "li[class*='displayItem'][class *= 'result']"
-$elements = $div_geoscoped_element.FindElements([OpenQA.Selenium.By]::CssSelector($element_css_selector))
+$elements =  find_elements -css_selector $element_css_selector  -parent $div_geoscoped_element
 $elements.count
 $max_count = 10
 $element_count = 0
@@ -217,13 +217,17 @@ $data = @( @{
     'title' = $null;
   })
 
+
 $code_cnt = 0 
 0..3 | ForEach-Object {
   $page_count = $_
   $code_cnt ++
-  $search_results_css_selector = "div[id='EATERY_SEARCH_RESULTS'] a.property_title"
+  $results_parent_css_selector =  "div[id='EATERY_SEARCH_RESULTS']"
+  [object]$results_parent_element = find_element -css_selector $results_parent_css_selector
 
-  $search_results_elements = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($search_results_css_selector))
+  $search_results_css_selector = 'a.property_title'
+
+  $search_results_elements = $results_parent_element.FindElements([OpenQA.Selenium.By]::CssSelector($search_results_css_selector))
 
 
   $search_results_elements.count
@@ -249,7 +253,7 @@ $code_cnt = 0
     'title' = $search_results_element.Text;
   }
 
-    highlight_new -element $search_results_element
+    highlight_new -element $search_results_element -delay 50
   }
 
   custom_pause -fullstop $fullstop
@@ -266,7 +270,7 @@ $code_cnt = 0
 
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$results_next_page_element).Click().Build().Perform()
 
-  Start-Sleep -Millisecond 10000
+  Start-Sleep -Millisecond 3000
   # NOTE: tripadvisor opens new browser windows here. The script stays focused on the parent window
 }
 
