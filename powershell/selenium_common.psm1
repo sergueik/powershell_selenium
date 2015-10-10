@@ -64,6 +64,15 @@ function launch_selenium {
   )
   Write-Debug (Get-ScriptDirectory)
   $use_remote_driver = [bool]$PSBoundParameters['grid'].IsPresent
+  $phantomjs_path = 'C:\tools\phantomjs-2.0.0\bin'
+  if (($env:PHANTOMJS_PATH -ne $null) -and ($env:PHANTOMJS_PATH -ne '')) {
+    $phantomjs_path = $env:PHANTOMJS_PATH
+  }
+
+  $selenium_path =  'c:\java\selenium' 
+  if (($env:SELENIUM_PATH -ne $null) -and ($env:SELENIUM_PATH -ne '')) {
+    $selenium_path = $env:SELENIUM_PATH
+  }
 
   # SHARED_ASSEMBLIES_PATH environment overrides parameter, for Team City
   if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
@@ -108,8 +117,8 @@ function launch_selenium {
         $connection.Close()
       } catch {
         Write-Debug 'Launching grid'
-        Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
-        Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
+        Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -ArgumentList "start cmd.exe /c ${selenium_path}\hub.cmd"
+        Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -ArgumentList "start cmd.exe /c ${selenium_path}\node.cmd"
         Start-Sleep -Millisecond 5000
       }
 
@@ -239,17 +248,16 @@ New-Object : Exception calling ".ctor" with "1" argument(s): "Unexpected error l
     $phantomjs_useragent = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34'
     Write-Host 'Running on phantomjs'
     $headless = $true
-    $phantomjs_executable_folder = "C:\tools\phantomjs-2.0.0\bin"
-    if (-not (Test-Path -Path $phantomjs_executable_folder)) {
+    if (-not (Test-Path -Path $phantomjs_path)) {
       throw 'Missing PhantomJS'
     }
-    $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
+    $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_path)
     $selenium.Capabilities.setCapability('ssl-protocol','any')
     $selenium.Capabilities.setCapability('ignore-ssl-errors',$true)
     $selenium.Capabilities.setCapability('takesScreenshot',$true)
     $selenium.Capabilities.setCapability('userAgent',$phantomjs_useragent)
     $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-    $options.AddAdditionalCapability('phantomjs.executable.path',$phantomjs_executable_folder)
+    $options.AddAdditionalCapability('phantomjs.executable.path',$phantomjs_path)
   }
 
   return $selenium
