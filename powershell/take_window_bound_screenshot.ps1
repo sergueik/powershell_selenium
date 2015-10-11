@@ -1,5 +1,5 @@
 # origin : https://github.com/testingbot/Selenium-Screenshots
-Add-Type -TypeDefinition @"
+Add-Type -IgnoreWarnings -TypeDefinition @"
 
 using System;
 using System.Collections.Generic;
@@ -14,8 +14,23 @@ using System.IO;
 
 namespace ScreenShotter
 {
-    class Program
+    public class Program
     {
+
+        private string _fileName;
+        public string FileName
+        {
+            get { return _fileName; }
+            set { _fileName = value; }
+        }
+
+        private int _processID;
+        public int processID
+        {
+            get { return _processID; }
+            set { _processID = value; }
+        }
+
         public struct RECT
         {
             public int Left;
@@ -47,21 +62,8 @@ namespace ScreenShotter
         private delegate bool EnumThreadProc(IntPtr hwnd, IntPtr lParam);
 
         private static IntPtr hwndProgram;
-        private static int processID = 0;
-        private static String filename = "";
-        static void Main(string[] args)
+        public void Run()
         {
-            try
-            {
-                processID = Convert.ToInt32(args[0]);
-                filename = args[1];
-            }
-            catch (Exception ex)
-            {
-               // invalid args
-                Console.WriteLine("Invalid arguments: needs processID and filename");
-                Environment.Exit(0);
-            }
 
             try
             {
@@ -83,10 +85,9 @@ namespace ScreenShotter
             }
 
             Console.WriteLine("Screenshot saved");
-            Environment.Exit(0);
+            // Environment.Exit(0);
         }
-
-        private static void getWindowHandle()
+        public void getWindowHandle()
         {
             // loop all windows for this process
             foreach (ProcessThread t in observedProcess.Threads)
@@ -104,7 +105,7 @@ namespace ScreenShotter
             takeShot();
         }
 
-        private static void takeShot()
+        private void takeShot()
         {
             RECT srcRect;
             if (GetWindowRect(hwndProgram, out srcRect))
@@ -131,13 +132,13 @@ namespace ScreenShotter
                     g.Flush();
                 }
 
-               // Bitmap resized = ResizeImage(b, width, height);
-
-                b.Save(@"C:\test\recorder\" + filename + ".jpg");
+                // Bitmap resized = ResizeImage(b, width, height);
+                Console.WriteLine(String.Format("Saving to {0}", _fileName));
+                b.Save(_fileName);
             }
         }
 
-        private static bool MyEnumThreadWindowsProc(IntPtr hWnd, IntPtr lParam)
+        private bool MyEnumThreadWindowsProc(IntPtr hWnd, IntPtr lParam)
         {
             if (hwndProgram.ToInt32() != 0)
             {
@@ -157,7 +158,7 @@ namespace ScreenShotter
             return true;
         }
 
-        public static System.Drawing.Bitmap ResizeImage(Bitmap image, int width, int height)
+        public System.Drawing.Bitmap ResizeImage(Bitmap image, int width, int height)
         {
             //a holder for the result
             Bitmap result = new Bitmap(width, height);
@@ -176,6 +177,12 @@ namespace ScreenShotter
     }
 }
 
-"@ -ReferencedAssemblies 'System.Windows.Forms.dll'
+"@ -ReferencedAssemblies 'System.Windows.Forms.dll', 'System.Drawing.dll'
 
-$o = new-object -TypeName 'ScreenShotter'
+$o = new-object -TypeName 'ScreenShotter.Program'
+# http://stackoverflow.com/questions/10752512/get-pid-of-browser-launched-by-selenium
+# http://stackoverflow.com/questions/18686474/find-pid-of-browser-process-launched-by-selenium-webdriver
+$o.ProcessID = 1544
+$o.FileName = 'C:\developer\sergueik\powershell_selenium\powershell\test.jpg'
+
+$o.Run()
