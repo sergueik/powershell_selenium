@@ -19,98 +19,27 @@
 #THE SOFTWARE.
 
 param(
-  [string]$hub_host = '127.0.0.1',
-  [string]$browser,
   [string]$version,
-  [string]$profile = 'default'
-  #  [string]$profile = 'Selenium'
-)
-
-function set_timeouts {
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref,
-    [int]$explicit = 10,
-    [int]$page_load = 60,
-    [int]$script = 30
-  )
-
-  [void]($selenium_ref.Value.Manage().Timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))
-  [void]($selenium_ref.Value.Manage().Timeouts().SetPageLoadTimeout([System.TimeSpan]::FromSeconds($pageload)))
-  [void]($selenium_ref.Value.Manage().Timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script)))
-
-}
-
-
-# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
-function Get-ScriptDirectory
-{
-  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-  if ($Invocation.PSScriptRoot) {
-    $Invocation.PSScriptRoot
-  }
-  elseif ($Invocation.MyCommand.Path) {
-    Split-Path $Invocation.MyCommand.Path
-  } else {
-    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
-  }
-}
-
-function cleanup
-{
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref
-  )
-  try {
-    $selenium_ref.Value.Quit()
-  } catch [exception]{
-    # Ignore errors if unable to close the browser
-    Write-Output (($_.Exception.Message) -split "`n")[0]
-
-  }
-}
-
-
-$shared_assemblies = @(
-  "WebDriver.dll",
-  "WebDriver.Support.dll",
-  'nunit.core.dll',
-  'nunit.framework.dll'
-
+  [switch]$grid,
+  [switch]$debug,
+  [switch]$pause
 )
 
 
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
+[bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
-if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
-  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
+$MODULE_NAME = 'selenium_utils.psd1'
+Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
+load_shared_assemblies
+
+<#
+if ([bool]$PSBoundParameters['grid'].IsPresent) {
+  $selenium = launch_selenium -browser $browser -grid -version $version
+  Start-Sleep -Millisecond 500
+} else {
+  $selenium = launch_selenium -browser $browser -version $version
 }
-
-pushd $shared_assemblies_path
-$shared_assemblies | ForEach-Object {
-
-  if ($host.Version.Major -gt 2) {
-    Unblock-File -Path $_;
-  }
-  Write-Debug $_
-  Add-Type -Path $_
-}
-popd
-
-$verificationErrors = New-Object System.Text.StringBuilder
-
-$hub_port = '4444'
-$uri = [System.Uri](('http://{0}:{1}/wd/hub' -f $hub_host,$hub_port))
-
-try {
-  $connection = (New-Object Net.Sockets.TcpClient)
-  $connection.Connect($hub_host,[int]$hub_port)
-  $connection.Close()
-} catch {
-  Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\selenium.cmd"
-
-  Start-Sleep -Seconds 3
-}
-
+#>
 $options = New-Object OpenQA.Selenium.Chrome.ChromeOptions
 $options.AddArgument('--user-agent=Mozilla/5.0 (iPhone; U; CPU iPhone OS 3_0 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Version/4.0 Mobile/7A341 Safari/528.16')
 $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver ($options)
@@ -118,75 +47,58 @@ $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver ($options)
 $selenium.Manage().Window.Size = @{ 'Height' = 800; 'Width' = 600; }
 $selenium.Manage().Window.Position = @{ 'X' = 0; 'Y' = 0 }
 
+
+
 $base_url = 'http://www.expedia.com/'
 $selenium.Navigate().GoToUrl($base_url)
 $selenium.Navigate().Refresh()
-set_timeouts ([ref]$selenium)
+# set_timeouts ([ref]$selenium)
 
 
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
-$wait.PollingInterval = 100
+[string]$hotel_selector = 'li.hotels'
+[object]$hotel_element =  find_element -css_selector $hotel_selector
+highlight ([ref]$selenium) ([ref]$hotel_element)
+[NUnit.Framework.Assert]::AreEqual('Hotels',$hotel_element.Text)
 
-$csspath = 'li.hotels'
-
-try {
-  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($csspath)))
-} catch [exception]{
-  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
-}
-[OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($csspath))
-
+$hotel_element.Click()
 Start-Sleep -Seconds 3
 
-# $element.Text
-[NUnit.Framework.Assert]::AreEqual('Hotels',$element.Text)
-
-$element.Click()
 [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
 $wait.PollingInterval = 100
 
-$csspath = 'a.calendar-button'
 
-try {
-  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($csspath)))
-} catch [exception]{
-  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
-}
-[OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($csspath))
-[NUnit.Framework.StringAssert]::Contains('Today',$element.Text,{})
 
-$element.Click()
+[string]$calendar_selector = 'a.calendar-button'
+[object]$calendar_element =  find_element -css_selector $calendar_selector
+highlight ([ref]$selenium) ([ref]$calendar_element)
+
+
+[NUnit.Framework.StringAssert]::Contains('Today',$calendar_element.Text,{})
+
+$calendar_element.Click()
 
 Start-Sleep -Seconds 4
 
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
-$wait.PollingInterval = 100
 
-$csspath = 'td#a-calendar-today'
+[string]$calendar_today_selector = 'td#a-calendar-today'
+[object]$calendar_today_element =  find_element -css_selector $calendar_today_selector
+highlight ([ref]$selenium) ([ref]$calendar_today_element)
 
-try {
-  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($csspath)))
-} catch [exception]{
-  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
-}
-[OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($csspath))
-[NUnit.Framework.Assert]::IsTrue($element.Text -match 'Check-in')
-Write-Output ('Check-in = {0}' -f (($element.Text -split "`n")[0]))
+[NUnit.Framework.Assert]::IsTrue($calendar_today_element.Text -match 'Check-in')
+Write-Output ('Check-in = {0}' -f (($calendar_today_element.Text -split "`n")[0]))
 
 # Remember cell position 
-$data_id = $element.GetAttribute('data-id')
+$data_id = $calendar_today_element.GetAttribute('data-id')
 
 [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
 $wait.PollingInterval = 100
 
-$xpath = ("//td[@class= 'selected'][@data-id != '{0}']" -f $data_id)
-Write-Output ('Trying XPath "{0}"' -f $xpath)
 
-try {
-  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementIsVisible([OpenQA.Selenium.By]::XPath($xpath)))
-} catch [exception]{
-  Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
-}
+[string]$calendar_today_xpath = ("//td[@class= 'selected'][@data-id != '{0}']" -f $data_id)
+Write-Output ('Trying XPath "{0}"' -f $calendar_today_xpath)
+
+[object]$calendar_today_element =  find_element -xpath $calendar_today_xpath
+highlight ([ref]$selenium) ([ref]$calendar_today_element)
 
 $csspath = 'td.selected'
 [OpenQA.Selenium.IWebElement[]]$elements = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($csspath))
