@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Collections.Specialized;
 using System.Net;
+using System.Text;
 
 #region NT EventLog Logger
 
