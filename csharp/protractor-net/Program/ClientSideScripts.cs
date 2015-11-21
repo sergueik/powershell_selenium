@@ -12,70 +12,6 @@ namespace Protractor
      */
     internal class ClientSideScripts
     {
-  
- /**
-* Wait until Angular has finished rendering and has
-* no outstanding $http calls before continuing.
-*
-* arguments[0] {string} The selector housing an ng-app
-* arguments[1] {function} callback
-*/
-public const string WaitForAngular_orig = @"
-var el = document.querySelector(arguments[0]);
-var callback = arguments[1];
-try {
-if (!window.angular) {
-throw new Error('angular could not be found on the window');
-}
-if (angular.getTestability) {
-angular.getTestability(el).whenStable(callback);
-} else {
-if (!angular.element(el).injector()) {
-throw new Error('root element (' + rootSelector + ') has no injector.' +
-' this may mean it is not inside ng-app.');
-}
-angular.element(el).injector().get('$browser').
-notifyWhenNoOutstandingRequests(callback);
-}
-} catch (err) {
-callback(err.message);
-}";
-    	
-    	 /**
-* Wait until Angular has finished rendering and has
-* no outstanding $http calls before continuing.
-*
-* arguments[0] {string} The selector housing an ng-app
-* arguments[1] {function} callback
-*/
-public const string WaitForAngular_untested = @"
-function waitForAngular(rootSelector, callback) {
-    var el = document.querySelector(rootSelector);
-
-    try {
-        if (!window.angular) {
-            throw new Error('angular could not be found on the window');
-        }
-        if (angular.getTestability) {
-            angular.getTestability(el).whenStable(callback);
-        } else {
-            if (!angular.element(el).injector()) {
-                throw new Error('root element (' + rootSelector + ') has no injector.' +
-                    ' this may mean it is not inside ng-app.');
-            }
-            angular.element(el).injector().get('$browser').
-            notifyWhenNoOutstandingRequests(callback);
-        }
-    } catch (err) {
-        callback(err.message);
-    }
-}
-var rootSelector = arguments[0]);
-var callback = arguments[1];
-
-waitForAngular(rootSelector, callback);
-";
-
         /**
          * Wait until Angular has finished rendering and has
          * no outstanding $http calls before continuing.
@@ -85,7 +21,7 @@ waitForAngular(rootSelector, callback);
          */
         public const string WaitForAngular = @"
         
-        function waitForAngular(rootSelector, callback) {
+        var waitForAngular = function(rootSelector, callback) {
             var el = document.querySelector(rootSelector);
             try {
                 if (window.getAngularTestability) {
@@ -111,9 +47,9 @@ waitForAngular(rootSelector, callback);
             } catch (err) {
                 callback(err.message);
             }
-        }
+        };
 
-var rootSelector = arguments[0]);
+var rootSelector = arguments[0];
 var callback = arguments[1];
 
 waitForAngular(rootSelector, callback);
@@ -127,18 +63,19 @@ waitForAngular(rootSelector, callback);
          * arguments[0] {string} none.
          */
         public const string TestForAngular = @"
-var attempts = arguments[0];
-var callback = arguments[arguments.length - 1];
-var check = function(n) {
+        
+var TestForAngular = function(attempts, callback) {
     if (window.angular && window.angular.resumeBootstrap) {
         callback(true);
-    } else if (n < 1) {
+    } else if (attempts < 1) {
         callback(false);
     } else {
-        window.setTimeout(function() {check(n - 1)}, 1000);
+        window.setTimeout(function() {check(attempts - 1, callback )}, 1000);
     }
 };
-check(attempts);";
+var attempts = arguments[0];
+var callback = arguments[arguments.length - 1];
+TestForAngular(attempts, callback);";
 
         /**
          * Continue to bootstrap Angular. 
