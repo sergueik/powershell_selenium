@@ -14,7 +14,6 @@ namespace Protractor
     public class NgWebDriver : IWebDriver, IWrapsDriver
     {
         private const string AngularDeferBootstrap = "NG_DEFER_BOOTSTRAP!";
-
         private IWebDriver driver;
         private IJavaScriptExecutor jsExecutor;
         private string rootElement;

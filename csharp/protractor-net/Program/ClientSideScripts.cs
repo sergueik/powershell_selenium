@@ -62,37 +62,35 @@ waitForAngular(rootSelector, callback);
          *
          * arguments[0] {string} none.
          */
-        public const string TestForAngular = @"
-        
-var TestForAngular = function(attempts, callback) {
-    if (window.angular && window.angular.resumeBootstrap) {
-        callback(true);
-    } else if (attempts < 1) {
-        callback(false);
-    } else {
-        window.setTimeout(function() {check(attempts - 1, callback )}, 1000);
-    }
-};
+         public const string TestForAngular = @"
 var attempts = arguments[0];
 var callback = arguments[arguments.length - 1];
-TestForAngular(attempts, callback);";
-
+var TestForAngular = function(n) {
+    if (window.angular && window.angular.resumeBootstrap) {
+        callback(true);
+    } else if (n < 1) {
+        callback(false);
+    } else {
+        window.setTimeout(function() {
+            check(n - 1)
+        }, 1000);
+    }
+};
+TestForAngular(attempts);";
+         
         /**
          * Continue to bootstrap Angular. 
          * 
          * arguments[0] {array} The module names to load.
          */
-        public const string ResumeAngularBootstrap = @"
-angular.resumeBootstrap(arguments[0].length ? arguments[0].split(',') : []);";
+        public const string ResumeAngularBootstrap = "angular.resumeBootstrap(arguments[0].length ? arguments[0].split(',') : []);";
 
         /**
          * Return the current url using $location.absUrl().
          * 
          * arguments[0] {string} The selector housing an ng-app
          */
-        public const string GetLocationAbsUrl = @"
-var el = document.querySelector(arguments[0]);
-return angular.element(el).injector().get('$location').absUrl();";
+        public const string GetLocationAbsUrl = "var el = document.querySelector(arguments[0]);return angular.element(el).injector().get('$location').absUrl();";
 
         /**
          * Evaluate an Angular expression in the context of a given element.

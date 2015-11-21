@@ -52,7 +52,17 @@ namespace Protractor.Samples.Basic
             ngDriver.FindElement(NgBy.Model("yourName")).SendKeys("Julie");
             Assert.AreEqual("Hello Julie!", ngDriver.FindElement(NgBy.Binding("yourName")).Text);
         }
-
+        
+        /*
+        [Test]
+        public void ShouldTestForAngular()
+        {
+            var ngDriver = new NgWebDriver(driver);
+            object isAngularApp =  ngDriver.jsExecutor.ExecuteAsyncScript(ClientSideScripts.TestForAngular, 100);
+            Assert.AreEqual(true, isAngularApp);
+        }
+        */
+       
         [Test]
         public void ShouldListTodos()
         {
