@@ -65,14 +65,14 @@ waitForAngular(rootSelector, callback);
          public const string TestForAngular = @"
 var attempts = arguments[0];
 var callback = arguments[arguments.length - 1];
-var TestForAngular = function(n) {
+var TestForAngular = function(attempts) {
     if (window.angular && window.angular.resumeBootstrap) {
         callback(true);
-    } else if (n < 1) {
+    } else if (attempts < 1) {
         callback(false);
     } else {
         window.setTimeout(function() {
-            check(n - 1)
+            check(attempts - 1)
         }, 1000);
     }
 };
@@ -100,10 +100,7 @@ TestForAngular(attempts);";
          *
          * @return {?Object} The result of the evaluation.
          */
-        public const string Evaluate = @"
-var element = arguments[0];
-var expression = arguments[1];
-return angular.element(element).scope().$eval(expression);";
+        public const string Evaluate = "return angular.element(arguments[0]).scope().$eval(arguments[1]);";
 
         #region Locators
 
@@ -187,18 +184,29 @@ return matches; /* Return the whole array for webdriver.findElements. */
          * @return {Array.WebElement} The matching input elements.
          */
         public const string FindModel = @"
+var findByModel = function(model, using, rootSelector) {
+    var root = document.querySelector(rootSelector || 'body');
+    using = using || document;
+    if (angular.getTestability) {
+        return angular.getTestability(root).
+        findModels(using, model, true);
+    }
+    var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
+    for (var p = 0; p < prefixes.length; ++p) {
+        var selector = '[' + prefixes[p] + 'model=""' + model + '""]';
+        var elements = using.querySelectorAll(selector);
+        if (elements.length) {
+            return elements;
+        }
+    }
+};
 var using = arguments[0] || document;
 var model = arguments[1];
-var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-for (var p = 0; p < prefixes.length; ++p) {
-    var selector = '[' + prefixes[p] + 'model=""' + model + '""]';
-    var inputs = using.querySelectorAll(selector);
-    if (inputs.length) {
-        return inputs;
-    }
-}";
+var rootSelector = arguments[2];
+return findByModel(model, using, rootSelector);
+";
 
-        /**
+       /**
          * Find selected option elements by model name.
          *
          * arguments[0] {Element} The scope of the search.
