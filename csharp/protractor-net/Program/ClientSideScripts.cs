@@ -206,17 +206,21 @@ for (var p = 0; p < prefixes.length; ++p) {
          *
          * @return {Array.WebElement} The matching select elements.
          */
-        public const string FindSelectedOptions = @"
+        public const string FindSelectedOption = @"
+var findSelectedOption = function(model, using ) {
+    var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
+    for (var p = 0; p < prefixes.length; ++p) {
+        var selector = 'select[' + prefixes[p] + 'model=""' + model + '""] option:checked';
+        var inputs = using.querySelectorAll(selector);
+        if (inputs.length) {
+            return inputs;
+        }
+    }
+};
 var using = arguments[0] || document;
 var model = arguments[1];
-var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-for (var p = 0; p < prefixes.length; ++p) {
-    var selector = 'select[' + prefixes[p] + 'model=""' + model + '""] option:checked';
-    var inputs = using.querySelectorAll(selector);
-    if (inputs.length) {
-        return inputs;
-    }
-}";
+return findSelectedOption(model, using);
+";
         /**
          * Find buttons by textual content.
          *

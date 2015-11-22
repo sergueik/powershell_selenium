@@ -55,7 +55,7 @@ namespace Protractor
 
         public static By SelectedOption(string model)
         {
-            return new JavaScriptBy(ClientSideScripts.FindSelectedOptions, model);
+            return new JavaScriptBy(ClientSideScripts.FindSelectedOption , model);
         }
 
     }
