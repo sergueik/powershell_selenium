@@ -40,17 +40,17 @@ namespace Protractor
 
         public static By ButtonText(string repeat)
         {
-            return new JavaScriptBy(ClientSideScripts.findByButtonText, repeat);
+            return new JavaScriptBy(ClientSideScripts.FindByButtonText, repeat);
         }
 
         public static By PartialButtonText(string repeat)
         {
-            return new JavaScriptBy(ClientSideScripts.findByPartialButtonText, repeat);
+            return new JavaScriptBy(ClientSideScripts.FindByPartialButtonText, repeat);
         }
 
         public static By Options(string option)
         {
-            return new JavaScriptBy(ClientSideScripts.findByOptions, option);
+            return new JavaScriptBy(ClientSideScripts.FindByOptions, option);
         }
 
         public static By SelectedOption(string model)

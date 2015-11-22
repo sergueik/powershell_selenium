@@ -230,24 +230,28 @@ return findSelectedOption(model, using);
          * @return {Array.Element} The matching elements.
          */
 
-        public const string findByButtonText = @"
+        public const string FindByButtonText = @"
+var findByButtonText = function(searchText, using) {
+    using = using || document;
+    var elements = using.querySelectorAll('button, input[type=""button""], input[type=""submit""]');
+    var matches = [];
+    for (var i = 0; i < elements.length; ++i) {
+        var element = elements[i];
+        var elementText;
+        if (element.tagName.toLowerCase() == 'button') {
+            elementText = element.textContent || element.innerText || '';
+        } else {
+            elementText = element.value;
+        }
+        if (elementText.trim() === searchText) {
+            matches.push(element);
+        }
+    }
+    return matches;
+};
 var using = arguments[0] || document;
 var searchText = arguments[1];
-var elements = using.querySelectorAll('button, input[type=""button""], input[type=""submit""]');
-var matches = [];
-for (var i = 0; i < elements.length; ++i) {
-    var element = elements[i];
-    var elementText;
-    if (element.tagName.toLowerCase() == 'button') {
-        elementText = element.textContent || element.innerText || '';
-    } else {
-        elementText = element.value;
-    }
-    if (elementText.trim() === searchText) {
-        matches.push(element);
-    }
-}
-return matches;";
+return findByButtonText(searchText, using);";
 
         /**
          * Find buttons by textual content.
@@ -258,25 +262,28 @@ return matches;";
          * @return {Array.Element} The matching elements.
          */
 
-        public const string findByPartialButtonText = @"
+        public const string FindByPartialButtonText = @"
+var findByPartialButtonText = function(searchText, using) {
+    using = using || document;
+    var elements = using.querySelectorAll('button, input[type=""button""], input[type=""submit""]');
+    var matches = [];
+    for (var i = 0; i < elements.length; ++i) {
+        var element = elements[i];
+        var elementText;
+        if (element.tagName.toLowerCase() == 'button') {
+            elementText = element.textContent || element.innerText || '';
+        } else {
+            elementText = element.value;
+        }
+        if (elementText.indexOf(searchText) > -1) {
+            matches.push(element);
+        }
+    }
+    return matches;
+};
 var using = arguments[0] || document;
 var searchText = arguments[1];
-
-var elements = using.querySelectorAll('button, input[type=""button""], input[type=""submit""]');
-var matches = [];
-for (var i = 0; i < elements.length; ++i) {
-    var element = elements[i];
-    var elementText;
-    if (element.tagName.toLowerCase() == 'button') {
-        elementText = element.textContent || element.innerText || '';
-    } else {
-        elementText = element.value;
-    }
-    if (elementText.indexOf(searchText) > -1) {
-        matches.push(element);
-    }
-}
-return matches;";
+return findByPartialButtonText(searchText, using);";
 
         /**
          * Find buttons by textual content.
@@ -324,7 +331,7 @@ return matches;
          * @return {Array.WebElement} The matching elements.
          */
 
-        public const string findByOptions = @"
+        public const string FindByOptions = @"
 var findByOptions = function(options, using) {
     using = using || document;
     var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
