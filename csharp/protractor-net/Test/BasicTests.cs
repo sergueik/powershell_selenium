@@ -1,24 +1,28 @@
 ﻿using System;
+using System.Text;
 using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.IE;
 
-namespace Protractor.Samples.Basic
+namespace Protractor.Test
 {
     [TestFixture]
     public class BasicTests
     {
+        private StringBuilder verificationErrors = new StringBuilder();
         private IWebDriver driver;
+        private NgWebDriver ngDriver;
         private String base_url = "http://www.angularjs.org";
 
-        [SetUp]
+        
+                [SetUp]
         public void SetUp()
         {
-            // Using NuGet Package 'PhantomJS'
             driver = new PhantomJSDriver();
-
+            driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+        
             // Using NuGet Package 'WebDriver.ChromeDriver.win32'
             //driver = new ChromeDriver();
 
@@ -27,18 +31,23 @@ namespace Protractor.Samples.Basic
             //driver = new InternetExplorerDriver(options);
 
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+            ngDriver = new NgWebDriver(driver);
         }
 
         [TearDown]
         public void TearDown()
         {
-            driver.Quit();
+            try
+            {
+                driver.Quit();
+            }
+            catch (Exception){} /* Ignore cleanup errors */
+            Assert.AreEqual("", verificationErrors.ToString());
         }
 
         [Test]
         public void ShouldWaitForAngular()
         {
-            IWebDriver ngDriver = new NgWebDriver(driver);
             ngDriver.Navigate().GoToUrl(base_url);
             IWebElement element = ngDriver.FindElement(NgBy.Model("yourName"));
             Assert.IsTrue(((NgWebElement)element).Displayed);

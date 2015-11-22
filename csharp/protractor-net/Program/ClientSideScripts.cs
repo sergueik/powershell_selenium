@@ -226,7 +226,7 @@ for (var p = 0; p < prefixes.length; ++p) {
          * @return {Array.Element} The matching elements.
          */
 
-        public const string findByButtonText_untested = @"
+        public const string findByButtonText = @"
 var using = arguments[0] || document;
 var searchText = arguments[1];
 var elements = using.querySelectorAll('button, input[type=""button""], input[type=""submit""]');
@@ -254,7 +254,7 @@ return matches;";
          * @return {Array.Element} The matching elements.
          */
 
-        public const string findByPartialButtonText_untested = @"
+        public const string findByPartialButtonText = @"
 var using = arguments[0] || document;
 var searchText = arguments[1];
 
@@ -310,7 +310,7 @@ return matches;
          * @return {Array.WebElement} The matching elements.
          */
 
-        public const string findByOptions_untested = @"
+        public const string findByOptions = @"
 var using = arguments[0] || document;
 var optionsDescriptor = arguments[1];
 

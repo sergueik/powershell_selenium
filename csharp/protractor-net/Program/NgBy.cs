@@ -33,14 +33,30 @@ namespace Protractor
             return new JavaScriptBy(ClientSideScripts.FindModel, model);
         }
 
+        public static By Repeater(string repeat)
+        {
+            return new JavaScriptBy(ClientSideScripts.FindAllRepeaterRows, repeat);
+        }
+
+        public static By ButtonText(string repeat)
+        {
+            return new JavaScriptBy(ClientSideScripts.findByButtonText, repeat);
+        }
+
+        public static By PartialButtonText(string repeat)
+        {
+            return new JavaScriptBy(ClientSideScripts.findByPartialButtonText, repeat);
+        }
+
+        public static By Options(string option)
+        {
+            return new JavaScriptBy(ClientSideScripts.findByOptions, option);
+        }
+
         public static By SelectedOption(string model)
         {
             return new JavaScriptBy(ClientSideScripts.FindSelectedOptions, model);
         }
 
-        public static By Repeater(string repeat)
-        {
-            return new JavaScriptBy(ClientSideScripts.FindAllRepeaterRows, repeat);
-        }
     }
 }
