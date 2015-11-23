@@ -310,16 +310,6 @@ return matches;
          * @return {Array.WebElement} The matching elements.
          */
 
-        /**
-         * Find elements by options.
-         *
-         * arguments[0] {Element} The scope of the search.
-         * arguments[1] {string} The descriptor for the option
-         * (i.e. fruit for fruit in fruits).* arguments[1] {string} The text of the repeater, e.g. 'cat in cats'.
-         *
-         * @return {Array.WebElement} The matching elements.
-         */
-
         public const string FindByOptions = @"
 var findByOptions = function(options, using) {
     using = using || document;
