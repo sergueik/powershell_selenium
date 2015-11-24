@@ -161,7 +161,9 @@ namespace Protractor
                 }
 
                 // Make sure the page is an Angular page.
-                object isAngularApp = this.jsExecutor.ExecuteAsyncScript(ClientSideScripts.TestForAngular, 10);
+                object isAngularApp = this.jsExecutor.ExecuteAsyncScript(ClientSideScripts.TestForAngular, 60);
+                
+                
                 if (isAngularApp is bool && (bool)isAngularApp)
                 {
                     // At this point, Angular will pause for us, until angular.resumeBootstrap is called.
@@ -180,7 +182,9 @@ namespace Protractor
                     throw new InvalidOperationException(
                         String.Format("Angular could not be found on the page '{0}'", value));
                 }
+                
             }
+                 
         }
 
         /// <summary>
