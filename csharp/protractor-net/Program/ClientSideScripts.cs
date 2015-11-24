@@ -102,6 +102,34 @@ TestForAngular(attempts);";
          */
         public const string Evaluate = "return angular.element(arguments[0]).scope().$eval(arguments[1]);";
 
+                /**
+         * Browse to another page using in-page navigation.
+         *
+         * arguments[0]  {string} selector The selector housing an ng-app
+         * arguments[1]{string} url In page URL using the same syntax as $location.url(), e.g.
+         * /path?search=a&b=c#hash
+         */
+        public const string SetLocation = @"
+var setLocation = function(selector, url) {
+
+    var el = document.querySelector(selector || 'body');
+    if (angular.getTestability) {
+        return angular.getTestability(el).
+        setLocation(url);
+    }
+    var $injector = angular.element(el).injector();
+    var $location = $injector.get('$location');
+    var $rootScope = $injector.get('$rootScope');
+    if (url !== $location.url()) {
+        $location.url(url);
+        $rootScope.$digest();
+    }
+};
+var selector = arguments[0];
+var binding = arguments[1];
+
+setLocation(selector, binding);";
+        
         #region Locators
 
         /**

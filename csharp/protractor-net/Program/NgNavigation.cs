@@ -1,7 +1,7 @@
 ﻿using System;
 
 using OpenQA.Selenium;
-
+using OpenQA.Selenium.Internal;
 namespace Protractor
 {
     public class NgNavigation : INavigation
@@ -45,6 +45,16 @@ namespace Protractor
         {
             this.ngDriver.Url = url;
         }
+        
+        public void SetLocation(string selector, string url)
+        {
+            // Create script arguments
+            // Object[] scriptArgs = new Object[]{selector, url};
+            IJavaScriptExecutor jsExecutor = this.ngDriver.WrappedDriver as IJavaScriptExecutor;
+            jsExecutor.ExecuteScript(ClientSideScripts.SetLocation, new Object[]{selector, url});
+
+        }
+        	
 
         public void Refresh()
         {

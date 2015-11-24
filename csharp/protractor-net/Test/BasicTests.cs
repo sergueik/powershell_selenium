@@ -54,6 +54,17 @@ namespace Protractor.Test
         }
 
         [Test]
+        public void ShouldSetLocation()
+        {
+        	ngDriver.Navigate().GoToUrl(base_url );
+        	String loc = "misc/faq";
+        	NgNavigation nav = new NgNavigation(ngDriver, ngDriver.Navigate());
+            nav.SetLocation(null,loc);
+            Assert.IsTrue(ngDriver.Url.ToString().Contains(loc));
+        }
+
+        
+        [Test]
         public void ShouldGreetUsingBinding()
         {
             IWebDriver ngDriver = new NgWebDriver(driver);
