@@ -72,7 +72,7 @@ var TestForAngular = function(attempts) {
         callback(false);
     } else {
         window.setTimeout(function() {
-            check(attempts - 1)
+            TestForAngular(attempts - 1)
         }, 1000);
     }
 };
