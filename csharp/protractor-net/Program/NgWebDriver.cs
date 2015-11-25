@@ -301,5 +301,13 @@ namespace Protractor
                 this.jsExecutor.ExecuteAsyncScript(ClientSideScripts.WaitForAngular, this.rootElement);
             }
         }
+
+        internal void WaitForAllAngular2()
+        {
+            if (!this.IgnoreSynchronization)
+            {
+                this.jsExecutor.ExecuteAsyncScript(ClientSideScripts.WaitForAllAngular2);
+            }
+        }
     }
 }

@@ -55,6 +55,33 @@ var callback = arguments[1];
 waitForAngular(rootSelector, callback);
 
 ";
+        /**
+         * Wait until Angular has finished rendering and has
+         * no outstanding $http calls before continuing.
+         *
+         * arguments[0] {function} callback
+         */
+        public const string WaitForAllAngular2 = @"
+var waitForAllAngular2 = function(callback) {
+    try {
+        var testabilities = window.getAllAngularTestabilities();
+        var count = testabilities.length;
+        var decrement = function() {
+            count--;
+            if (count === 0) {
+                callback();
+            }
+        };
+        testabilities.forEach(function(testability) {
+            testability.whenStable(decrement);
+        });
+    } catch (err) {
+        callback(err.message);
+    }
+};
+var callback = arguments[0];
+waitForAllAngular2(callback);
+";
 
         /**
          * Tests whether the angular global variable is present on a page. 
