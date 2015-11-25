@@ -134,7 +134,7 @@ TestForAngular(attempts);";
          *
          * arguments[0]  {string} selector The selector housing an ng-app
          * arguments[1]{string} url In page URL using the same syntax as $location.url(), e.g.
-         * /path?search=a&b=c#hash
+         * 
          */
         public const string SetLocation = @"
 var setLocation = function(selector, url) {

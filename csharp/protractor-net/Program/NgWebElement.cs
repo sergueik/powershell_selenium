@@ -29,15 +29,21 @@ namespace Protractor
 
         #region IWebElement Members
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public bool Displayed
         {
-            get 
+            get
             {
                 this.ngDriver.WaitForAngular();
                 return this.element.Displayed;
             }
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public bool Enabled
         {
             get
@@ -47,6 +53,9 @@ namespace Protractor
             }
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public Point Location
         {
             get
@@ -56,6 +65,9 @@ namespace Protractor
             }
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public bool Selected
         {
             get
@@ -65,6 +77,9 @@ namespace Protractor
             }
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public Size Size
         {
             get
@@ -74,6 +89,9 @@ namespace Protractor
             }
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public string TagName
         {
             get
@@ -83,6 +101,9 @@ namespace Protractor
             }
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public string Text
         {
             get
@@ -92,42 +113,63 @@ namespace Protractor
             }
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public void Clear()
         {
             this.ngDriver.WaitForAngular();
             this.element.Clear();
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public void Click()
         {
             this.ngDriver.WaitForAngular();
             this.element.Click();
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public string GetAttribute(string attributeName)
         {
             this.ngDriver.WaitForAngular();
             return this.element.GetAttribute(attributeName);
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public string GetCssValue(string propertyName)
         {
             this.ngDriver.WaitForAngular();
             return this.element.GetCssValue(propertyName);
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public void SendKeys(string text)
         {
             this.ngDriver.WaitForAngular();
             this.element.SendKeys(text);
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public void Submit()
         {
             this.ngDriver.WaitForAngular();
             this.element.Submit();
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public NgWebElement FindElement(By by)
         {
             if (by is JavaScriptBy)
@@ -138,6 +180,9 @@ namespace Protractor
             return new NgWebElement(this.ngDriver, this.element.FindElement(by));
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public ReadOnlyCollection<NgWebElement> FindElements(By by)
         {
             if (by is JavaScriptBy)
@@ -148,11 +193,17 @@ namespace Protractor
             return new ReadOnlyCollection<NgWebElement>(this.element.FindElements(by).Select(e => new NgWebElement(this.ngDriver, e)).ToList());
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         IWebElement ISearchContext.FindElement(By by)
         {
             return this.FindElement(by);
         }
 
+        /// <summary>
+        ///
+        /// </summary>    	
         ReadOnlyCollection<IWebElement> ISearchContext.FindElements(By by)
         {
             if (by is JavaScriptBy)
@@ -165,6 +216,9 @@ namespace Protractor
 
         #endregion
 
+        /// <summary>
+        ///
+        /// </summary>    	
         public object Evaluate(string expression)
         {
             this.ngDriver.WaitForAngular();
