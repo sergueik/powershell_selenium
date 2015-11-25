@@ -6,6 +6,9 @@ using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.IE;
 using System.Collections.ObjectModel;
+
+// origin: https://github.com/anthonychu/Protractor-Net-Demo/tree/master/Protractor-Net-Demo
+
 namespace Protractor.Test
 {
     [TestFixture]
@@ -33,6 +36,15 @@ namespace Protractor.Test
             }
             catch (Exception) { } /* Ignore cleanup errors */
             Assert.AreEqual("", verificationErrors.ToString());
+        }
+
+        
+                    
+        [Test]
+        public void ShouldSetUrl()
+        {
+            ngDriver.Url = base_url;
+            StringAssert.AreEqualIgnoringCase(ngDriver.Title, "Super Calculator");
         }
 
         [Test]
@@ -73,5 +85,21 @@ namespace Protractor.Test
             IWebElement element = ngDriver.FindElement(NgBy.PartialButtonText("Go"));
             Assert.IsTrue(((NgWebElement)element).Displayed);
         }
+        [Test]
+        public void ShouldAdd()
+        {
+            ngDriver.Navigate().GoToUrl(base_url);
+            var first = ngDriver.FindElement(NgBy.Input("first"));
+            var second = ngDriver.FindElement(NgBy.Input("second"));
+            var goButton = ngDriver.FindElement(By.Id("gobutton"));
+
+            first.SendKeys("1");
+            second.SendKeys("2");
+            goButton.Click();
+            var latestResult = ngDriver.FindElement(NgBy.Binding("latest")).Text;
+
+            Assert.AreEqual(latestResult, "3");
+        }
+
     }
 }
