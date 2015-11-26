@@ -22,9 +22,9 @@ namespace Protractor.Test
         [SetUp]
         public void SetUp()
         {
-            // driver = new InternetExplorerDriver();
+            // driver = new FirefoxDriver();
             driver = new PhantomJSDriver();
-            driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
+            driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
             ngDriver = new NgWebDriver(driver);
         }
 
@@ -47,6 +47,15 @@ namespace Protractor.Test
             Assert.IsTrue(elements[0].Displayed);
             StringAssert.AreEqualIgnoringCase(elements[0].Text, "Foo");
         }
-
+        [Test]
+        public void ShouldFindAllRepeaterCells()
+        {   // base_url = "file:///C:/Users/sergueik/Desktop/ng_table1.html";
+        	// System.InvalidOperationException : Access to 'file:///C:/Users/sergueik/Desktop/ng_table1.html' from script denied (UnexpectedJavaScriptError)
+        	// base_url = "http://localhost/ng_table1.html";
+            ngDriver.Navigate().GoToUrl(base_url);
+            ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("definition in definitions", "definition.text"));
+            Assert.AreEqual(elements.Count, 2);
+            StringAssert.IsMatch("Lorem ipsum", elements[0].Text );
+        }
     }
 }

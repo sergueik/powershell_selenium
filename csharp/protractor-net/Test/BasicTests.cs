@@ -17,7 +17,7 @@ namespace Protractor.Test
         private String base_url = "http://www.angularjs.org";
 
         
-                [SetUp]
+        [SetUp]
         public void SetUp()
         {
             driver = new PhantomJSDriver();

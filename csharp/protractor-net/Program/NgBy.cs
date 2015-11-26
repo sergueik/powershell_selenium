@@ -48,6 +48,16 @@ namespace Protractor
             return new JavaScriptBy(ClientSideScripts.FindModel, model);
         }
 
+        
+        /// <summary>
+        ///
+        /// </summary>    	
+        public static By RepeaterColumn(string repeat, string binding)
+        {
+            return new JavaScriptBy(ClientSideScripts.FindRepeaterColumn, repeat, binding);
+        }
+
+
         /// <summary>
         ///
         /// </summary>    	
