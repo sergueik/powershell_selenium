@@ -17,7 +17,7 @@ namespace Protractor.Test
         private String base_url = "http://www.angularjs.org";
 
         
-        [SetUp]
+        [TestFixtureSetUp]
         public void SetUp()
         {
             driver = new PhantomJSDriver();
@@ -34,7 +34,7 @@ namespace Protractor.Test
             ngDriver = new NgWebDriver(driver);
         }
 
-        [TearDown]
+        [TestFixtureTearDown]
         public void TearDown()
         {
             try

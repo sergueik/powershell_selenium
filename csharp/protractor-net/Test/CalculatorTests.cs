@@ -19,7 +19,7 @@ namespace Protractor.Test
         private NgWebDriver ngDriver;
         private String base_url = "http://juliemr.github.io/protractor-demo/";
 
-        [SetUp]
+        [TestFixtureSetUp]
         public void SetUp()
         {
             driver = new PhantomJSDriver();
@@ -27,7 +27,7 @@ namespace Protractor.Test
             ngDriver = new NgWebDriver(driver);
         }
 
-        [TearDown]
+        [TestFixtureTearDown]
         public void TearDown()
         {
             try
@@ -78,6 +78,7 @@ namespace Protractor.Test
             IWebElement element = ngDriver.FindElement(NgBy.ButtonText("Go!"));
             Assert.IsTrue(((NgWebElement)element).Displayed);
         }
+        
         [Test]
         public void ShouldFindPartialButtonText()
         {
