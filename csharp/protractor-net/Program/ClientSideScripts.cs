@@ -360,7 +360,7 @@ return matches;
          *
          * arguments[0] {Element} The scope of the search.
          * arguments[1] {string} The descriptor for the option
-         * (i.e. fruit for fruit in fruits).* arguments[1] {string} The text of the repeater, e.g. 'cat in cats'.
+         * (i.e. fruit for fruit in fruits).
          *
          * @return {Array.WebElement} The matching elements.
          */

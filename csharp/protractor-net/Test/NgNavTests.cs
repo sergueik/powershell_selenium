@@ -12,7 +12,7 @@ using System.Collections.ObjectModel;
 namespace Protractor.Test
 {
 
-	[TestFixture]
+    [TestFixture]
     public class NgNavTests
     {
         private StringBuilder verificationErrors = new StringBuilder();
@@ -48,26 +48,37 @@ namespace Protractor.Test
             Assert.IsTrue(elements[0].Displayed);
             StringAssert.AreEqualIgnoringCase(elements[0].Text, "Foo");
         }
+
         [Test]
         public void ShouldFindCells()
-        {   
+        {
             ngDriver.Navigate().GoToUrl(base_url);
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("definition in definitions", "definition.text"));
             Assert.AreEqual(elements.Count, 2);
-            StringAssert.IsMatch("Lorem ipsum", elements[0].Text );
-             }
-        
+            StringAssert.IsMatch("Lorem ipsum", elements[0].Text);
+        }
+
         [Test]
         public void ShouldFindTokens()
-        {   
-        	base_url  = "http://localhost/ng_table1.html";
+        {
+            base_url = "http://localhost/ng_table1.html";
             ngDriver.Navigate().GoToUrl(base_url);
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("x in names", "Country"));
             Assert.AreNotEqual(0, elements.Count);
-            StringAssert.IsMatch("Germany", elements[0].Text );
-            StringAssert.IsMatch("Mexico", elements[1].Text );
-            
-             }
-        
+            StringAssert.IsMatch("Germany", elements[0].Text);
+            StringAssert.IsMatch("Mexico", elements[1].Text);
+        }
+
+        [Test]
+        public void ShouldFindOptions()
+        {
+            base_url = "http://www.java2s.com/Tutorials/AngularJSDemo/n/ng_options_with_object_example.htm";
+            ngDriver.Navigate().GoToUrl(base_url);
+            ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Options("c.name for c in colors"));
+            Assert.AreEqual(5, elements.Count);
+            StringAssert.IsMatch("black", elements[0].Text);
+            StringAssert.IsMatch("white", elements[1].Text);
+        }
+
     }
 }
