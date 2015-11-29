@@ -10,10 +10,11 @@ Testing
 
 Note: `base_url` of the schema `"file://"` only works with __PhantomJSDriver__. The error varies with the driver:
 
-| -------|-------------|
-| __Firefox Driver__ |`System.InvalidOperationException : Access to 'file:///...' from script denied (UnexpectedJavaScriptError)`|
-| __Chrome Driver__  |`System.Net.WebException Timeout exception`|
-| __InternetExplorer Driver__ | `System.InvalidOperationException : Page reload detected during async script (UnexpectedJavaScriptError)`|
+| __Firefox Driver__          | `System.InvalidOperationException : Access to 'file:///...' from script denied (UnexpectedJavaScriptError)` |
+|-----------------------------|-------------------------------------------------------------------------------------------------------------|
+| __Chrome Driver__           | `System.Net.WebException Timeout exception`                                                                 |
+| __InternetExplorer Driver__ | `System.InvalidOperationException : Page reload detected during async script (UnexpectedJavaScriptError)`   |
+
 
 For browsers-hosted tests, start a web server locally and point wwwroot to the `bin/Debug` directory of the `Test` project:
 then update the code to `base_url = "http://localhost/&lt;page&gt;.html";`
