@@ -7,20 +7,23 @@ Heavily modified copy of the [protractor-net](https://github.com/sergueik/protra
 
 Testing
 -------
+Local Angular files placed under `Samples` directory and copied into output directory of the `Test` project.
+Note:
+```
+base_url = new System.Uri(Path.Combine( Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
+ngDriver.Navigate().GoToUrl(base_url);
 
-Note: `base_url` of the schema `"file://"` only works with __PhantomJSDriver__. The error varies with the driver:
+```
+only works with __PhantomJSDriver__ - error varies with the driver:
 
 | __Firefox Driver__          | `System.InvalidOperationException : Access to 'file:///...' from script denied (UnexpectedJavaScriptError)` |
 |-----------------------------|-------------------------------------------------------------------------------------------------------------|
 | __Chrome Driver__           | `System.Net.WebException Timeout exception`                                                                 |
-| __InternetExplorer Driver__ | `System.InvalidOperationException : Page reload detected during async script (UnexpectedJavaScriptError)`   |
+| __InternetExplorer\ Driver__ | `System.InvalidOperationException : Page reload detected during async script (UnexpectedJavaScriptError)`  |
 
 
-For browsers-hosted tests, start a web server locally and point wwwroot to the `bin/Debug` directory of the `Test` project:
-then update the code to `base_url = "http://localhost/&lt;page&gt;.html";`
-
-
-[See also:](https://social.msdn.microsoft.com/Forums/silverlight/en-US/71937b5e-51f1-4d69-8e97-65ca2745b672/access-denied-exception-with-htmlpagewindownavigate-and-ie78)
+For browsers-hosted tests, start a web server locally and point web root to the `bin/Debug` directory of the `Test` project:
+then update the code to  use `base_url = String.Format("http://localhost/{0}", testpage);`
 
 
 Author

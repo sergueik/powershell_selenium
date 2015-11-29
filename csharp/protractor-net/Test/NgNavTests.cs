@@ -25,6 +25,7 @@ namespace Protractor.Test
         public void SetUp()
         {
             driver = new PhantomJSDriver();
+            // driver = new FirefoxDriver();
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
             ngDriver = new NgWebDriver(driver);
         }
@@ -44,7 +45,7 @@ namespace Protractor.Test
         public void ShouldFindRows()
         {
         	testpage = "ng_repeat_start_and_ng_repeat_end_example.htm";
-            base_url =  String.Format("file:///{0}", Path.Combine( Directory.GetCurrentDirectory(), testpage));
+            base_url = new System.Uri(Path.Combine( Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
             ngDriver.Navigate().GoToUrl(base_url);
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Repeater("definition in definitions"));
             Assert.IsTrue(elements[0].Displayed);
@@ -55,7 +56,7 @@ namespace Protractor.Test
         public void ShouldFindCells()
         {
         	testpage = "ng_repeat_start_and_ng_repeat_end_example.htm";
-            base_url =  String.Format("file:///{0}", Path.Combine( Directory.GetCurrentDirectory(), testpage));
+            base_url = new System.Uri(Path.Combine( Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
             ngDriver.Navigate().GoToUrl(base_url);
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("definition in definitions", "definition.text"));
             Assert.AreEqual(elements.Count, 2);
@@ -66,7 +67,7 @@ namespace Protractor.Test
         public void ShouldFindTokens()
         {
         	testpage = "ng_table1.html";
-            base_url =  String.Format("file:///{0}", Path.Combine( Directory.GetCurrentDirectory(), testpage));
+            base_url = new System.Uri(Path.Combine( Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
             ngDriver.Navigate().GoToUrl(base_url);
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("x in names", "Country"));
             Assert.AreNotEqual(0, elements.Count);
@@ -79,7 +80,7 @@ namespace Protractor.Test
         {
             // base_url = "http://www.java2s.com/Tutorials/AngularJSDemo/n/ng_options_with_object_example.htm";
         	testpage = "ng_options_with_object_example.htm";
-            base_url =  String.Format("file:///{0}", Path.Combine( Directory.GetCurrentDirectory(), testpage));            
+            base_url = new System.Uri(Path.Combine( Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
             ngDriver.Navigate().GoToUrl(base_url);
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Options("c.name for c in colors"));
             Assert.AreEqual(5, elements.Count);
