@@ -8,7 +8,7 @@ using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
 using OpenQA.Selenium.PhantomJS;
 using System.Collections.ObjectModel;
-
+using System.IO;
 namespace Protractor.Test
 {
 
@@ -18,12 +18,12 @@ namespace Protractor.Test
         private StringBuilder verificationErrors = new StringBuilder();
         private IWebDriver driver;
         private NgWebDriver ngDriver;
-        private String base_url = "http://www.java2s.com/Tutorials/AngularJSDemo/n/ng_repeat_start_and_ng_repeat_end_example.htm";
-
+        private String base_url ;
+        private String testpage;
+        
         [TestFixtureSetUp]
         public void SetUp()
         {
-            // driver = new FirefoxDriver();
             driver = new PhantomJSDriver();
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
             ngDriver = new NgWebDriver(driver);
@@ -43,6 +43,8 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindRows()
         {
+        	testpage = "ng_repeat_start_and_ng_repeat_end_example.htm";
+            base_url =  String.Format("file:///{0}", Path.Combine( Directory.GetCurrentDirectory(), testpage));
             ngDriver.Navigate().GoToUrl(base_url);
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Repeater("definition in definitions"));
             Assert.IsTrue(elements[0].Displayed);
@@ -52,6 +54,8 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindCells()
         {
+        	testpage = "ng_repeat_start_and_ng_repeat_end_example.htm";
+            base_url =  String.Format("file:///{0}", Path.Combine( Directory.GetCurrentDirectory(), testpage));
             ngDriver.Navigate().GoToUrl(base_url);
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("definition in definitions", "definition.text"));
             Assert.AreEqual(elements.Count, 2);
@@ -61,7 +65,8 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindTokens()
         {
-            base_url = "http://localhost/ng_table1.html";
+        	testpage = "ng_table1.html";
+            base_url =  String.Format("file:///{0}", Path.Combine( Directory.GetCurrentDirectory(), testpage));
             ngDriver.Navigate().GoToUrl(base_url);
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("x in names", "Country"));
             Assert.AreNotEqual(0, elements.Count);
@@ -72,7 +77,9 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindOptions()
         {
-            base_url = "http://www.java2s.com/Tutorials/AngularJSDemo/n/ng_options_with_object_example.htm";
+            // base_url = "http://www.java2s.com/Tutorials/AngularJSDemo/n/ng_options_with_object_example.htm";
+        	testpage = "ng_options_with_object_example.htm";
+            base_url =  String.Format("file:///{0}", Path.Combine( Directory.GetCurrentDirectory(), testpage));            
             ngDriver.Navigate().GoToUrl(base_url);
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Options("c.name for c in colors"));
             Assert.AreEqual(5, elements.Count);
