@@ -85,6 +85,7 @@
   <ItemGroup>
     <Compile Include="BasicTests.cs" />
     <Compile Include="CalculatorTests.cs" />
+    <Compile Include="ExceptionTests.cs" />
     <Compile Include="NgNavTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
