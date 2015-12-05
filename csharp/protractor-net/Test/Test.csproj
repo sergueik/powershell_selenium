@@ -87,6 +87,7 @@
     <Compile Include="CalculatorTests.cs" />
     <Compile Include="ExceptionTests.cs" />
     <Compile Include="NgNavTests.cs" />
+    <Compile Include="OptionTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
