@@ -44,6 +44,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Sample\bind_select_option_data_from_array_example.htm">
+      <Link>bind_select_option_data_from_array_example.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="..\Sample\ng_options_with_object_example.htm">
       <Link>ng_options_with_object_example.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
