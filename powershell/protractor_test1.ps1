@@ -125,6 +125,29 @@ $protractor_test_base_url = 'http://www.way2automation.com/protractor-angularjs-
 
 $selenium.Navigate().GoToUrl($protractor_test_base_url)
 
+
+[OpenQA.Selenium.Internal.ReturnedCookie[]]$cookies = $selenium.Manage().Cookies.AllCookies
+
+
+$cookie_data = @{}
+
+$cookies | ForEach-Object {
+  $cookie = $_
+  if ($cookie.Name -eq 'PHPSESSID') {
+    $cookie_data.Secure = $false
+    $cookie_data.Name = 'PHPSESSID'
+    $cookie_data.Value = $cookie.Value
+    $cookie_data.Domain = 'way2automation.com'
+    $cookie_data.Path = '/'
+    $cookie_data.IsHttpOnly = $false
+  }
+}
+if ($cookie_data.Value -ne $null) {
+  $selenium.Manage().Cookies.DeleteAllCookies()
+  $selenium.Manage().Cookies.AddCookie((New-Object -TypeName 'OpenQA.Selenium.Cookie' -ArgumentList ($cookie_data.Name,$cookie_data.Value,$cookie_data.Domain,$cookie_data.Path,$null)))
+}
+
+
 Write-Output 'Repeater Exercise Page'
 
 [string]$exercise_css_selector = "div.row div.linkbox ul.boxed_style li a[href='http://www.way2automation.com/angularjs-protractor/checkboxes']"
@@ -160,6 +183,3 @@ custom_pause -fullstop $fullstop
 
 # Cleanup
 cleanup ([ref]$selenium)
-
-
-
