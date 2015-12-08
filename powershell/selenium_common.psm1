@@ -62,7 +62,8 @@ function launch_selenium {
     [bool]$use_remote_driver = $false,
     [switch]$debug
   )
-  Write-Debug (Get-ScriptDirectory)
+
+  # Write-Debug (Get-ScriptDirectory)
   $use_remote_driver = [bool]$PSBoundParameters['grid'].IsPresent
   $phantomjs_path = 'C:\tools\phantomjs-2.0.0\bin'
   if (($env:PHANTOMJS_PATH -ne $null) -and ($env:PHANTOMJS_PATH -ne '')) {
@@ -84,7 +85,10 @@ function launch_selenium {
   if (($env:SELENIUM_DRIVERS_PATH -ne $null) -and ($env:SELENIUM_DRIVERS_PATH -ne '')) {
     $driver_folder_path = $env:SELENIUM_DRIVERS_PATH
   }
-
+  # write-Debug "load_shared_assemblies -shared_assemblies_path ${shared_assemblies_path} -shared_assemblies ${shared_assemblies}"
+  # start-sleep -milliseconds 1000
+  load_shared_assemblies -shared_assemblies_path $shared_assemblies_path -shared_assemblies $shared_assemblies
+<#
   pushd $shared_assemblies_path
 
   $shared_assemblies | ForEach-Object {
@@ -95,6 +99,7 @@ function launch_selenium {
     Add-Type -Path $_
   }
   popd
+#>
 
   $uri = [System.Uri](('http://{0}:{1}/wd/hub' -f $hub_host,$hub_port))
   if ($DebugPreference -eq 'Continue') {
