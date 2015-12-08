@@ -29,6 +29,13 @@ param(
   [switch]$pause
 )
 
+# Setup 
+$shared_assemblies = @(
+  'WebDriver.dll',
+  'WebDriver.Support.dll',
+  'Protractor.dll',
+  'nunit.framework.dll'
+)
 
 if ($password -eq '' -or $password -eq $null) {
   Write-Output 'Please specify password.'
@@ -38,17 +45,18 @@ if ($password -eq '' -or $password -eq $null) {
 
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
-load_shared_assemblies
-
 
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
-  $selenium = launch_selenium -browser $browser -grid
+  $selenium = launch_selenium -browser $browser -grid -shared_assemblies $shared_assemblies
 
 } else {
-  $selenium = launch_selenium -browser $browser
-  start-sleep -millisecond 500
+  $selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
+  Start-Sleep -Millisecond 500
 }
-write-output $base_url
+
+[Protractor.NgWebDriver]$ng_driver = New-Object Protractor.NgWebDriver ($selenium)
+
+Write-Output $base_url
 $selenium.Navigate().GoToUrl($base_url)
 [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
 
@@ -86,7 +94,7 @@ $selenium.Navigate().GoToUrl($login_url)
 [string]$signup_css_selector = 'div#load_box.popupbox form#load_form a.fancybox[href="#login"]'
 [object]$signup_button_element = find_element -css_selector $signup_css_selector
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$signup_button_element).Build().Perform()
-highlight ([ref]$selenium) ([ref]$signup_button_element) -delay 1200
+highlight ([ref]$selenium) ([ref]$signup_button_element) -Delay 1200
 
 $signup_button_element.Click()
 Write-Output 'Sign Up'
@@ -117,14 +125,36 @@ $protractor_test_base_url = 'http://www.way2automation.com/protractor-angularjs-
 
 $selenium.Navigate().GoToUrl($protractor_test_base_url)
 
+Write-Output 'Repeater Exercise Page'
 
 [string]$exercise_css_selector = "div.row div.linkbox ul.boxed_style li a[href='http://www.way2automation.com/angularjs-protractor/checkboxes']"
 [object]$exercise_button_element = find_element -css_selector $exercise_css_selector
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$exercise_button_element).Build().Perform()
 highlight ([ref]$selenium) ([ref]$exercise_button_element)
-[OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('target', '')",$exercise_button_element )
+[OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('target', '')",$exercise_button_element)
+
 
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$exercise_button_element).Click().Build().Perform()
+
+Write-Output 'Using Protractor'
+
+$ng_driver.Url = $selenium.Url
+
+$ng_elements = $ng_driver.FindElements([Protractor.NgBy]::Repeater('cat in division.categories'))
+$ng_elements | ForEach-Object {
+  $ng_element = $_
+  $element = $ng_element.WrappedElement
+
+  highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -Delay 150
+}
+
+$ng_elements = $ng_driver.FindElements([Protractor.NgBy]::Repeater('prod in cat.products'))
+$ng_elements | ForEach-Object {
+  $ng_element = $_
+  $element = $ng_element.WrappedElement
+
+  highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -Delay 150
+}
 
 custom_pause -fullstop $fullstop
 
