@@ -87,13 +87,21 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindCustomersButton()
         {
-            NgWebElement ng_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login"));
-            ng_login_button_element.Click();
+            ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();            
             NgWebElement ng_customers_button_element = ngDriver.FindElement(NgBy.PartialButtonText("Customers"));
-            StringAssert.IsMatch("Customers", ng_customers_button_element.Text);
-            
+            StringAssert.IsMatch("Customers", ng_customers_button_element.Text);    
         }
-        
+
+        [Test]
+        public void ShouldShowCustomersAccounts()
+        {
+        	string cust_repeater = "cust in Customers";
+            ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();
+            ngDriver.FindElement(NgBy.PartialButtonText("Customers")).Click();
+            ReadOnlyCollection<NgWebElement>ng_accounts = ngDriver.FindElements(NgBy.Repeater(cust_repeater));
+            Assert.IsTrue(ng_accounts[0].Displayed);
+            StringAssert.Contains("Granger", ng_accounts[0].Text);
+        }
         
         public void highlight(IWebElement element, int px = 3, string color = "yellow")
         {
