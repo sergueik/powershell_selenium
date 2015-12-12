@@ -175,7 +175,7 @@ function extract_match {
 	Highlights page element by executing Javascript through Selenium
 	
 .EXAMPLE
-        highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -delay 1500
+        highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) [ -delay 1500 ] [-color 'red']
 .LINK
 	
 .NOTES
@@ -187,10 +187,11 @@ function highlight {
   param(
     [System.Management.Automation.PSReference]$selenium_ref,
     [System.Management.Automation.PSReference]$element_ref,
+    [String]$color = 'yellow',
     [int]$delay = 300
   )
   # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'color: yellow; border: 4px solid yellow;')
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,"color: ${color}; border: 4px solid ${color};")
   Start-Sleep -Millisecond $delay
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
 }

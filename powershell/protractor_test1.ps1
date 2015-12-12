@@ -113,8 +113,8 @@ highlight ([ref]$selenium) ([ref]$login_password_element)
 $login_password_element.SendKeys($login_password_data)
 
 
-[string]$login_css_selector = "div#login.popupbox form#load_form [value='Submit']"
-[object]$login_button_element = find_element -css_selector $login_css_selector
+[string]$login_button_selector = "div#login.popupbox form#load_form [value='Submit']"
+[object]$login_button_element = find_element -css_selector $login_button_selector
 
 highlight ([ref]$selenium) ([ref]$login_button_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$login_button_element).Click().Build().Perform()
@@ -135,9 +135,9 @@ $cookies | ForEach-Object {
   $cookie = $_
   if ($cookie.Name -eq 'PHPSESSID') {
     $cookie_data.Secure = $false
-    $cookie_data.Name = 'PHPSESSID'
+    $cookie_data.Name = $cookie.Name
     $cookie_data.Value = $cookie.Value
-    $cookie_data.Domain = 'way2automation.com'
+    $cookie_data.Domain = $cookie.Domain
     $cookie_data.Path = '/'
     $cookie_data.IsHttpOnly = $false
   }
@@ -167,19 +167,44 @@ $ng_elements = $ng_driver.FindElements([Protractor.NgBy]::Repeater('cat in divis
 $ng_elements | ForEach-Object {
   $ng_element = $_
   $element = $ng_element.WrappedElement
-
-  highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -Delay 150
+  $actions.MoveToElement($element).Build().Perform()
+  highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -Delay 150 -color 'green'
+  $element.Text
 }
 
-$ng_elements = $ng_driver.FindElements([Protractor.NgBy]::Repeater('prod in cat.products'))
-$ng_elements | ForEach-Object {
+$ng_elements_collection = $ng_driver.FindElements([Protractor.NgBy]::Repeater('prod in cat.products'))
+$ng_elements_collection | ForEach-Object {
   $ng_element = $_
   $element = $ng_element.WrappedElement
+  $actions.MoveToElement($element).Build().Perform()
+  highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -Delay 150 -color 'green'
+  $element.Text
+}
+<#
+22:17:10.032 INFO - Executing: [execute script:
+var findAllRepeaterRows = function(using, repeater) {
+...
+};
+var using = arguments[0] || document;
+var repeater = arguments[1];
+return findAllRepeaterRows(using, repeater);, [null, prod in cat.products]])
+#>
+Write-Output 'Using plain Selenium'
+
+$elements_css_selector = 'li[ng-repeat="prod in cat.products"]'
+$elements_collection = find_elements -css_selector $elements_css_selector
+
+$elements_collection | ForEach-Object {
+  $element = $_
+  $actions.MoveToElement($element).Build().Perform()
 
   highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -Delay 150
+  $element.Text
 }
 
 custom_pause -fullstop $fullstop
-
+<#
+22:17:12.087 INFO - Executing: [find element: By.selector:  li[ng-repeat="prod in cat.products"]])
+#>
 # Cleanup
 cleanup ([ref]$selenium)
