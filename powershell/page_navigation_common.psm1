@@ -522,7 +522,7 @@ function find_elements {
   param(
     [Parameter(ParameterSetName = 'set_xpath')] $xpath,
     [Parameter(ParameterSetName = 'set_css_selector')] $css_selector,
-    [OpenQA.Selenium.IWebElement]$parent
+    [OpenQA.Selenium.ISearchContext]$parent
   )
 
 
