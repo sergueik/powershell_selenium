@@ -82,9 +82,19 @@ namespace Protractor.Test
         {
             NgWebElement ng_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login"));
             StringAssert.IsMatch("Bank Manager Login", ng_login_button_element.Text);
-            ng_login_button_element.Click();
         }
 
+        [Test]
+        public void ShouldFindCustomersButton()
+        {
+            NgWebElement ng_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login"));
+            ng_login_button_element.Click();
+            NgWebElement ng_customers_button_element = ngDriver.FindElement(NgBy.PartialButtonText("Customers"));
+            StringAssert.IsMatch("Customers", ng_customers_button_element.Text);
+            
+        }
+        
+        
         public void highlight(IWebElement element, int px = 3, string color = "yellow")
         {
             ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.border='" + px + "px solid " + color + "'", element);
