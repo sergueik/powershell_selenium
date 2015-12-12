@@ -150,7 +150,7 @@ if ($cookie_data.Value -ne $null) {
 
 Write-Output 'Protractor Exercise Page'
 
-[string]$exercise_css_selector = "div.row div.linkbox ul.boxed_style li a[href='http://www.way2automation.com/angularjs-protractor/checkboxes']"
+[string]$exercise_css_selector = "div.row div.linkbox ul.boxed_style li a[href='http://www.way2automation.com/angularjs-protractor/banking']"
 [object]$exercise_button_element = find_element -css_selector $exercise_css_selector
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$exercise_button_element).Build().Perform()
 highlight ([ref]$selenium) ([ref]$exercise_button_element)
@@ -162,51 +162,29 @@ highlight ([ref]$selenium) ([ref]$exercise_button_element)
 Write-Output 'Using Protractor'
 
 $ng_driver.Url = $selenium.Url
+Start-Sleep -Millisecond 3000
+$ng_login_button_element = $ng_driver.FindElement([Protractor.NgBy]::ButtonText('Bank Manager Login'))
+$ng_login_button_element.Click()
+$cusomers_button_css_selector = 'button[ng-class="btnClass3"]'
+$cusomers_button_element = find_element -css_selector $cusomers_button_css_selector
+$cusomers_button_element.Click()
 
-$ng_elements = $ng_driver.FindElements([Protractor.NgBy]::Repeater('cat in division.categories'))
-$ng_elements | ForEach-Object {
-  $ng_element = $_
-  $element = $ng_element.WrappedElement
-  $actions.MoveToElement($element).Build().Perform()
-  highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -Delay 150 -color 'green'
-  $element.Text
-}
+Start-Sleep -Millisecond 3000
+$ng_driver.Url = $selenium.Url
+$cust_repeater = "cust in Customers | orderBy:sortType:sortReverse | filter:searchCustomer"
 
-$ng_elements_collection = $ng_driver.FindElements([Protractor.NgBy]::Repeater('prod in cat.products'))
+Start-Sleep -Millisecond 3000
+$ng_elements_collection = $ng_driver.FindElements([Protractor.NgBy]::Repeater($cust_repeater))
 $ng_elements_collection | ForEach-Object {
   $ng_element = $_
   $element = $ng_element.WrappedElement
   $actions.MoveToElement($element).Build().Perform()
-  highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -Delay 150 -color 'green'
+  highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -Delay 150 -color 'gray'
   $element.Text
 }
-<#
-22:17:10.032 INFO - Executing: [execute script:
-var findAllRepeaterRows = function(using, repeater) {
-...
-};
-var using = arguments[0] || document;
-var repeater = arguments[1];
-return findAllRepeaterRows(using, repeater);, [null, prod in cat.products]])
-#>
-Write-Output 'Using plain Selenium'
-
-$elements_css_selector = 'li[ng-repeat="prod in cat.products"]'
-$elements_collection = find_elements -css_selector $elements_css_selector
-
-$elements_collection | ForEach-Object {
-  $element = $_
-  $actions.MoveToElement($element).Build().Perform()
-
-  highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -Delay 150
-  $element.Text
-}
-
-<#
-22:17:12.087 INFO - Executing: [find element: By.selector:  li[ng-repeat="prod in cat.products"]])
-#>
 
 custom_pause -fullstop $fullstop
+
 
 # Cleanup
 cleanup ([ref]$selenium)
