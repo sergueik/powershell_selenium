@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Collections.Generic;
 using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
@@ -32,7 +33,7 @@ namespace Protractor.Test
         }
 
         [SetUp]
-        public void LogintToWay2AutomationSite()
+        public void LogintToWay2AutomationSite( )
         {
             const string signup_css_selector = "div#load_box.popupbox form#load_form a.fancybox[href='#login']";
             const string login_username_css_selector = "div#login.popupbox form#load_form input[name='username']";
@@ -90,6 +91,42 @@ namespace Protractor.Test
             ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();            
             NgWebElement ng_customers_button_element = ngDriver.FindElement(NgBy.PartialButtonText("Customers"));
             StringAssert.IsMatch("Customers", ng_customers_button_element.Text);    
+        }
+
+        [Test]
+        public void ShouldFindAddCustomerForm()
+        {
+            ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();            
+            NgWebElement ng_add_customer_button_element = ngDriver.FindElement(NgBy.PartialButtonText("Add Customer"));
+            StringAssert.IsMatch("Add Customer", ng_add_customer_button_element.Text);
+            ng_add_customer_button_element.Click();
+            IWebElement ng_first_name_element = ngDriver.FindElement(NgBy.Model("fName"));
+            highlight(ng_first_name_element);
+            StringAssert.IsMatch("First Name", ng_first_name_element.GetAttribute("placeholder"));
+            IWebElement ng_last_name_element = ngDriver.FindElement(NgBy.Model("lName"));
+            highlight(ng_last_name_element);
+            StringAssert.IsMatch("Last Name", ng_last_name_element.GetAttribute("placeholder"));
+            IWebElement ng_post_code_element = ngDriver.FindElement(NgBy.Model("postCd"));
+            highlight(ng_post_code_element);
+            StringAssert.IsMatch("Post Code", ng_post_code_element.GetAttribute("placeholder"));
+            NgWebElement ng_add_dustomer_button_element = ngDriver.FindElement(NgBy.PartialButtonText("Add Customer"));
+            highlight(ng_add_dustomer_button_element);
+            StringAssert.IsMatch("Add Customer", ng_add_customer_button_element.Text);
+        }
+
+        [Test]
+        public void ShouldAddCustomer()
+        {
+            ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();            
+            ngDriver.FindElement(NgBy.PartialButtonText("Add Customer")).Click();
+            IWebElement ng_first_name_element = ngDriver.FindElement(NgBy.Model("fName"));
+            ng_first_name_element.SendKeys("John");
+            IWebElement ng_last_name_element = ngDriver.FindElement(NgBy.Model("lName"));
+            ng_last_name_element.SendKeys("Doe");
+            IWebElement ng_post_code_element = ngDriver.FindElement(NgBy.Model("postCd"));
+            ng_post_code_element.SendKeys("11011");
+            NgWebElement ng_add_dustomer_button_element = ngDriver.FindElement(NgBy.PartialButtonText("Add Customer"));
+            ng_add_dustomer_button_element.Click();
         }
 
         [Test]
