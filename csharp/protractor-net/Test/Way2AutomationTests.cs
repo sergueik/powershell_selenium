@@ -6,7 +6,6 @@ using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
-
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
@@ -85,6 +84,40 @@ namespace Protractor.Test
         {
             NgWebElement ng_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login"));
             StringAssert.IsMatch("Bank Manager Login", ng_login_button_element.Text);
+        }
+
+        [Test]
+        public void ShouldFindCustomerLoginButton()
+        {
+            NgWebElement ng_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Customer Login"));
+            highlight(ng_login_button_element);
+            StringAssert.IsMatch("Customer Login", ng_login_button_element.Text);
+        }
+
+        [Test]
+        public void ShouldLoginCustomer()
+        {
+            ngDriver.FindElement(NgBy.ButtonText("Customer Login")).Click();
+            NgWebElement ng_user_select_element = ngDriver.FindElement(NgBy.Model("custId"));
+            StringAssert.IsMatch("userSelect", ng_user_select_element.WrappedElement.GetAttribute("id"));
+            ReadOnlyCollection<NgWebElement> ng_customers = ng_user_select_element.FindElements(NgBy.Repeater("cust in Customers"));
+            // select customer to log in
+            Assert.IsTrue(ng_customers[0].Displayed);
+            StringAssert.Contains("Granger", ng_customers[0].Text);
+            ng_customers[0].WrappedElement.Click();
+            NgWebElement ng_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Login"));
+            // login button
+            Assert.IsTrue(ng_login_button_element.WrappedElement.Displayed);
+            Assert.IsTrue(ng_login_button_element.WrappedElement.Enabled);
+            highlight(ng_login_button_element);
+            ng_login_button_element.Click();
+            // use core Selenium 
+            int wait_seconds = 3;
+            WebDriverWait wait = new WebDriverWait(ngDriver.WrappedDriver, TimeSpan.FromSeconds(wait_seconds));
+            wait.Until(ExpectedConditions.ElementExists(By.CssSelector("div strong span.fontBig[class*='ng-binding']")));
+            IWebElement greeting_elemment = ngDriver.WrappedDriver.FindElement(By.CssSelector("div strong span.fontBig[class*='ng-binding']"));
+            StringAssert.IsMatch("Hermoine Granger", greeting_elemment.Text);
+            highlight(greeting_elemment);
         }
 
         [Test]
