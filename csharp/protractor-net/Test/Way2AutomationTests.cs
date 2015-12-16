@@ -51,29 +51,25 @@ namespace Protractor.Test
         {
 
             String login_url = "http://way2automation.com/way2auto_jquery/index.php";
-            const string signup_css_selector = "div#load_box.popupbox form#load_form a.fancybox[href='#login']";
-            const string login_username_css_selector = "div#login.popupbox form#load_form input[name='username']";
-            const string login_password_css_selector = "div#login.popupbox form#load_form input[type='password'][name='password']";
-            const string login_button_css_selector = "div#login.popupbox form#load_form [value='Submit']";
             string username = "sergueik";
             string password = "i011155";
 
             driver.Navigate().GoToUrl(login_url);
-
-            var signup_element = driver.FindElement(By.CssSelector(signup_css_selector));
+            // signup
+            var signup_element = driver.FindElement(By.CssSelector("div#load_box.popupbox form#load_form a.fancybox[href='#login']"));
             actions.MoveToElement(signup_element).Build().Perform();
             highlight(signup_element);
             signup_element.Click();
-
-            var login_username = driver.FindElement(By.CssSelector(login_username_css_selector));
+            // enter username
+            var login_username = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[name='username']"));
             highlight(login_username);
             login_username.SendKeys(username);
-
-            var login_password_element = driver.FindElement(By.CssSelector(login_password_css_selector));
+            // enter password
+            var login_password_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[type='password'][name='password']"));
             highlight(signup_element);
             login_password_element.SendKeys(password);
-
-            var login_button_element = driver.FindElement(By.CssSelector(login_button_css_selector));
+            // click "Login"
+            var login_button_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form [value='Submit']"));
             actions.MoveToElement(login_button_element).Build().Perform();
             highlight(login_button_element);
             login_button_element.Click();
