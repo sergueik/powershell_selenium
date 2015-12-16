@@ -22,8 +22,12 @@ namespace Protractor.Test
         private StringBuilder verificationErrors = new StringBuilder();
         private IWebDriver driver;
         private NgWebDriver ngDriver;
+        private WebDriverWait wait;
+        private int wait_seconds = 3;
+        private Actions actions;
         private String login_url = "http://way2automation.com/way2auto_jquery/index.php";
         private String base_url = "http://www.way2automation.com/angularjs-protractor/banking";
+
         [TestFixtureSetUp]
         public void SetUp()
         {
@@ -31,6 +35,8 @@ namespace Protractor.Test
             driver = new FirefoxDriver();
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
             ngDriver = new NgWebDriver(driver);
+            wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
+            actions = new Actions(driver);
         }
 
         [SetUp]
@@ -42,7 +48,6 @@ namespace Protractor.Test
             const string login_button_css_selector = "div#login.popupbox form#load_form [value='Submit']";
             string username = "sergueik";
             string password = "i011155";
-            Actions actions = new Actions(driver);
 
             driver.Navigate().GoToUrl(login_url);
 
@@ -112,8 +117,6 @@ namespace Protractor.Test
             highlight(ng_login_button_element);
             ng_login_button_element.Click();
             // use core Selenium 
-            int wait_seconds = 3;
-            WebDriverWait wait = new WebDriverWait(ngDriver.WrappedDriver, TimeSpan.FromSeconds(wait_seconds));
             wait.Until(ExpectedConditions.ElementExists(By.CssSelector("div strong span.fontBig[class*='ng-binding']")));
             IWebElement greeting_elemment = ngDriver.WrappedDriver.FindElement(By.CssSelector("div strong span.fontBig[class*='ng-binding']"));
             StringAssert.IsMatch("Hermoine Granger", greeting_elemment.Text);
@@ -161,7 +164,6 @@ namespace Protractor.Test
             ngDriver.FindElement(NgBy.Model("postCd")).SendKeys("11011");
             // NOTE: there are two 'Add Customer' buttons on this form
             NgWebElement ng_add_dustomer_button_element = ngDriver.FindElements(NgBy.PartialButtonText("Add Customer"))[1];
-            Actions actions = new Actions(ngDriver.WrappedDriver);
             actions.MoveToElement(ng_add_dustomer_button_element.WrappedElement).Build().Perform();
             highlight(ng_add_dustomer_button_element.WrappedElement);
             ng_add_dustomer_button_element.WrappedElement.Submit();
