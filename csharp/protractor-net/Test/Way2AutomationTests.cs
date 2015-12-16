@@ -37,11 +37,73 @@ namespace Protractor.Test
             ngDriver = new NgWebDriver(driver);
             wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
             actions = new Actions(driver);
+            
+            
+            const string signup_css_selector = "div#load_box.popupbox form#load_form a.fancybox[href='#login']";
+            const string login_username_css_selector = "div#login.popupbox form#load_form input[name='username']";
+            const string login_password_css_selector = "div#login.popupbox form#load_form input[type='password'][name='password']";
+            const string login_button_css_selector = "div#login.popupbox form#load_form [value='Submit']";
+            string username = "sergueik";
+            string password = "i011155";
+
+//            driver.Navigate().GoToUrl(login_url);
+//
+//            var signup_element = driver.FindElement(By.CssSelector(signup_css_selector));
+//            actions.MoveToElement(signup_element).Build().Perform();
+//            highlight(signup_element);
+//            signup_element.Click();
+//
+//            var login_username = driver.FindElement(By.CssSelector(login_username_css_selector));
+//            highlight(login_username);
+//            login_username.SendKeys(username);
+//
+//            var login_password_element = driver.FindElement(By.CssSelector(login_password_css_selector));
+//            highlight(signup_element);
+//            login_password_element.SendKeys(password);
+//
+//            var login_button_element = driver.FindElement(By.CssSelector(login_button_css_selector));
+//            actions.MoveToElement(login_button_element).Build().Perform();
+//            highlight(login_button_element);
+//            login_button_element.Click();
+//            driver.Navigate().GoToUrl(base_url);
+//            ngDriver.Url = driver.Url;
         }
 
         [SetUp]
         public void LogintToWay2AutomationSite()
         {
+//            const string signup_css_selector = "div#load_box.popupbox form#load_form a.fancybox[href='#login']";
+//            const string login_username_css_selector = "div#login.popupbox form#load_form input[name='username']";
+//            const string login_password_css_selector = "div#login.popupbox form#load_form input[type='password'][name='password']";
+//            const string login_button_css_selector = "div#login.popupbox form#load_form [value='Submit']";
+//            string username = "sergueik";
+//            string password = "i011155";
+//
+//            driver.Navigate().GoToUrl(login_url);
+//
+//            var signup_element = driver.FindElement(By.CssSelector(signup_css_selector));
+//            actions.MoveToElement(signup_element).Build().Perform();
+//            highlight(signup_element);
+//            signup_element.Click();
+//
+//            var login_username = driver.FindElement(By.CssSelector(login_username_css_selector));
+//            highlight(login_username);
+//            login_username.SendKeys(username);
+//
+//            var login_password_element = driver.FindElement(By.CssSelector(login_password_css_selector));
+//            highlight(signup_element);
+//            login_password_element.SendKeys(password);
+//
+//            var login_button_element = driver.FindElement(By.CssSelector(login_button_css_selector));
+//            actions.MoveToElement(login_button_element).Build().Perform();
+//            highlight(login_button_element);
+//            login_button_element.Click();
+            driver.Navigate().GoToUrl(base_url);
+            ngDriver.Url = driver.Url;
+        }
+        
+        [Test]
+        public void ShouldLogintToWay2AutomationSite(){
             const string signup_css_selector = "div#load_box.popupbox form#load_form a.fancybox[href='#login']";
             const string login_username_css_selector = "div#login.popupbox form#load_form input[name='username']";
             const string login_password_css_selector = "div#login.popupbox form#load_form input[type='password'][name='password']";
@@ -68,8 +130,7 @@ namespace Protractor.Test
             actions.MoveToElement(login_button_element).Build().Perform();
             highlight(login_button_element);
             login_button_element.Click();
-            driver.Navigate().GoToUrl(base_url);
-            ngDriver.Url = driver.Url;
+
         }
 
         [TestFixtureTearDown]
