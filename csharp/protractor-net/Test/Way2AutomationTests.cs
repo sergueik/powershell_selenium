@@ -13,7 +13,7 @@ using OpenQA.Selenium.PhantomJS;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;
-
+using System.Linq;
 
 namespace Protractor.Test
 {
@@ -113,9 +113,10 @@ namespace Protractor.Test
             StringAssert.IsMatch("userSelect", ng_user_select_element.WrappedElement.GetAttribute("id"));
             ReadOnlyCollection<NgWebElement> ng_customers = ng_user_select_element.FindElements(NgBy.Repeater("cust in Customers"));
             // select customer to log in
-            Assert.IsTrue(ng_customers[0].Displayed);
-            StringAssert.Contains("Granger", ng_customers[0].Text);
-            ng_customers[0].WrappedElement.Click();
+            NgWebElement first_customer = ng_customers.First();
+            Assert.IsTrue(first_customer.Displayed);
+            StringAssert.Contains("Granger", first_customer.Text);
+            first_customer.WrappedElement.Click();
             NgWebElement ng_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Login"));
             // login button
             Assert.IsTrue(ng_login_button_element.WrappedElement.Displayed);
@@ -255,8 +256,9 @@ namespace Protractor.Test
             ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();
             ngDriver.FindElement(NgBy.PartialButtonText("Customers")).Click();
             ReadOnlyCollection<NgWebElement> ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
-            Assert.IsTrue(ng_accounts[0].Displayed);
-            StringAssert.Contains("Granger", ng_accounts[0].Text);
+            NgWebElement first_customer = ng_accounts.First();
+            Assert.IsTrue(first_customer.Displayed);
+            StringAssert.Contains("Granger", first_customer.Text);
         }
 
         [Test]
@@ -273,13 +275,13 @@ namespace Protractor.Test
             sort_first_name_element.Click() ;
             
             ReadOnlyCollection<NgWebElement> ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
-            Assert.IsTrue(ng_accounts[0].Displayed);
-            StringAssert.Contains("Ron", ng_accounts[0].Text);
+            NgWebElement first_customer = ng_accounts.First(); 
+            StringAssert.Contains("Ron", first_customer.Text);
             sort_first_name_element.Click() ;
             
             ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
-            Assert.IsTrue(ng_accounts[0].Displayed);
-            StringAssert.Contains("Albus", ng_accounts[0].Text);
+            first_customer = ng_accounts.First();
+            StringAssert.Contains("Albus", first_customer.Text);
         }
 
         public void highlight(IWebElement element, int px = 3, string color = "yellow")
