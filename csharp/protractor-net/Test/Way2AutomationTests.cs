@@ -13,6 +13,8 @@ using OpenQA.Selenium.PhantomJS;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;
+
+
 namespace Protractor.Test
 {
 
@@ -255,6 +257,29 @@ namespace Protractor.Test
             ReadOnlyCollection<NgWebElement> ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
             Assert.IsTrue(ng_accounts[0].Displayed);
             StringAssert.Contains("Granger", ng_accounts[0].Text);
+        }
+
+        [Test]
+        public void ShouldSortCustomersAccounts()
+        {
+            
+            ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();
+            ngDriver.FindElement(NgBy.PartialButtonText("Customers")).Click();
+            // core Selenium
+            wait.Until(ExpectedConditions.ElementExists(By.CssSelector("a[ng-click*='sortType'][ng-click*= 'fName']")));
+            IWebElement sort_first_name_element = ngDriver.WrappedDriver.FindElement(By.CssSelector("a[ng-click*='sortType'][ng-click*= 'fName']"));
+            StringAssert.Contains("First Name", sort_first_name_element.Text);
+            highlight(sort_first_name_element);
+            sort_first_name_element.Click() ;
+            
+            ReadOnlyCollection<NgWebElement> ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
+            Assert.IsTrue(ng_accounts[0].Displayed);
+            StringAssert.Contains("Ron", ng_accounts[0].Text);
+            sort_first_name_element.Click() ;
+            
+            ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
+            Assert.IsTrue(ng_accounts[0].Displayed);
+            StringAssert.Contains("Albus", ng_accounts[0].Text);
         }
 
         public void highlight(IWebElement element, int px = 3, string color = "yellow")
