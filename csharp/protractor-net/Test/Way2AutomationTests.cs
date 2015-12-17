@@ -179,21 +179,11 @@ namespace Protractor.Test
             // switch to "Customers" screen
             ngDriver.FindElement(NgBy.PartialButtonText("Customers")).Click();
 
-            // find customers
+            // customers
             ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
-            // discover newly added customer 
-            var ng_customers_enumerator = ng_customers.GetEnumerator();
-            var status = false;
-            ng_customers_enumerator.Reset();
-            while (ng_customers_enumerator.MoveNext())
-            {
-                NgWebElement ng_customer = (NgWebElement)ng_customers_enumerator.Current;
-                if (Regex.IsMatch(ng_customer.Text, "John Doe.*"))
-                {
-                    status = true;
-                }
-            }
-            Assert.IsTrue(status);
+            // discover newly added customer            
+            NgWebElement newly_added_customer = ng_customers.First(cust => Regex.IsMatch(cust.Text, "John Doe.*"));
+            Assert.IsNotNull(newly_added_customer);
         }
 
         [Test]
@@ -216,43 +206,31 @@ namespace Protractor.Test
             // switch to "Home" screen
 
             ngDriver.FindElement(NgBy.ButtonText("Home")).Click();
-            // find customers
-
             ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();
             ngDriver.FindElement(NgBy.PartialButtonText("Customers")).Click();
+            // customers
             ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
 
-            int cnt = 0;
-            var ng_customers_enumerator = ng_customers.GetEnumerator();
-            var status = false;
-            ng_customers_enumerator.Reset();
-            while (ng_customers_enumerator.MoveNext())
-            {
-                NgWebElement ng_customer = (NgWebElement)ng_customers_enumerator.Current;
-                actions.MoveToElement(ng_customer.WrappedElement);
-                highlight(ng_customer.WrappedElement);
-                if (Regex.IsMatch(ng_customer.Text, "John Doe.*"))
-                {
-                    status = true;
-                    break;
-                }
-                cnt++;
-            }
-            Assert.IsTrue(status);
-            if (status)
-            {
-                Assert.IsTrue(ng_customers[cnt].Displayed);
-                NgWebElement ng_delete_customer_button_element = ng_customers[cnt].FindElement(NgBy.ButtonText("Delete"));
-                StringAssert.IsMatch("Delete", ng_delete_customer_button_element.Text);
-                actions.MoveToElement(ng_delete_customer_button_element.WrappedElement).Build().Perform();
-                ng_delete_customer_button_element.Click();
-            }
+            NgWebElement newly_added_customer = ng_customers.Single(cust => Regex.IsMatch(cust.Text, "John Doe.*"));
+
+            Assert.IsNotNull(newly_added_customer);
+            NgWebElement ng_delete_customer_button_element = newly_added_customer.FindElement(NgBy.ButtonText("Delete"));
+            StringAssert.IsMatch("Delete", ng_delete_customer_button_element.Text);
+            actions.MoveToElement(ng_delete_customer_button_element.WrappedElement).Build().Perform();
+            ng_delete_customer_button_element.Click();
+            
+            ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
+
+            IEnumerable<NgWebElement>  removed_customer = ng_customers.TakeWhile(cust => Regex.IsMatch(cust.Text, "John Doe.*"));
+            
+            Assert.IsEmpty(removed_customer);
+
         }
 
         [Test]
         public void ShouldShowCustomersAccounts()
         {
-            
+
             ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();
             ngDriver.FindElement(NgBy.PartialButtonText("Customers")).Click();
             ReadOnlyCollection<NgWebElement> ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
@@ -264,7 +242,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldSortCustomersAccounts()
         {
-            
+
             ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();
             ngDriver.FindElement(NgBy.PartialButtonText("Customers")).Click();
             // core Selenium
@@ -272,13 +250,13 @@ namespace Protractor.Test
             IWebElement sort_first_name_element = ngDriver.WrappedDriver.FindElement(By.CssSelector("a[ng-click*='sortType'][ng-click*= 'fName']"));
             StringAssert.Contains("First Name", sort_first_name_element.Text);
             highlight(sort_first_name_element);
-            sort_first_name_element.Click() ;
-            
+            sort_first_name_element.Click();
+
             ReadOnlyCollection<NgWebElement> ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
-            NgWebElement first_customer = ng_accounts.First(); 
+            NgWebElement first_customer = ng_accounts.First();
             StringAssert.Contains("Ron", first_customer.Text);
-            sort_first_name_element.Click() ;
-            
+            sort_first_name_element.Click();
+
             ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
             first_customer = ng_accounts.First();
             StringAssert.Contains("Albus", first_customer.Text);
