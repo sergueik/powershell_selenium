@@ -120,42 +120,38 @@ namespace Protractor.Test
         }
 
         [Test]
-        public void ShouldFindAddCustomerForm()
-        {
-            ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();
-            NgWebElement ng_add_customer_button_element = ngDriver.FindElement(NgBy.PartialButtonText("Add Customer"));
-            StringAssert.IsMatch("Add Customer", ng_add_customer_button_element.Text);
-            ng_add_customer_button_element.Click();
-            IWebElement ng_first_name_element = ngDriver.FindElement(NgBy.Model("fName"));
-            highlight(ng_first_name_element);
-            StringAssert.IsMatch("First Name", ng_first_name_element.GetAttribute("placeholder"));
-            IWebElement ng_last_name_element = ngDriver.FindElement(NgBy.Model("lName"));
-            highlight(ng_last_name_element);
-            StringAssert.IsMatch("Last Name", ng_last_name_element.GetAttribute("placeholder"));
-            IWebElement ng_post_code_element = ngDriver.FindElement(NgBy.Model("postCd"));
-            highlight(ng_post_code_element);
-            StringAssert.IsMatch("Post Code", ng_post_code_element.GetAttribute("placeholder"));
-            NgWebElement ng_add_dustomer_button_element = ngDriver.FindElement(NgBy.PartialButtonText("Add Customer"));
-            highlight(ng_add_dustomer_button_element);
-            StringAssert.IsMatch("Add Customer", ng_add_customer_button_element.Text);
-        }
-
-        [Test]
         public void ShouldAddCustomer()
         {
             // switch to "Add Customer" screen
             ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();
             ngDriver.FindElement(NgBy.PartialButtonText("Add Customer")).Click();
-            // fill new Customer data 
-            ngDriver.FindElement(NgBy.Model("fName")).SendKeys("John");
-            ngDriver.FindElement(NgBy.Model("lName")).SendKeys("Doe");
-            ngDriver.FindElement(NgBy.Model("postCd")).SendKeys("11011");
+
+            // fill new Customer data            
+            IWebElement ng_first_name_element = ngDriver.FindElement(NgBy.Model("fName"));
+            highlight(ng_first_name_element);
+            StringAssert.IsMatch("First Name", ng_first_name_element.GetAttribute("placeholder"));
+            ng_first_name_element.SendKeys("John");
+
+            IWebElement ng_last_name_element = ngDriver.FindElement(NgBy.Model("lName"));
+            highlight(ng_last_name_element);
+            StringAssert.IsMatch("Last Name", ng_last_name_element.GetAttribute("placeholder"));
+            ng_last_name_element.SendKeys("Doe");
+
+
+            IWebElement ng_post_code_element = ngDriver.FindElement(NgBy.Model("postCd"));
+            highlight(ng_post_code_element);
+            StringAssert.IsMatch("Post Code", ng_post_code_element.GetAttribute("placeholder"));
+            ng_post_code_element.SendKeys("11011");
+            
             // NOTE: there are two 'Add Customer' buttons on this form
             NgWebElement ng_add_dustomer_button_element = ngDriver.FindElements(NgBy.PartialButtonText("Add Customer"))[1];
             actions.MoveToElement(ng_add_dustomer_button_element.WrappedElement).Build().Perform();
             highlight(ng_add_dustomer_button_element.WrappedElement);
             ng_add_dustomer_button_element.WrappedElement.Submit();
+
             // confirm
+            try
+            {
             ngDriver.WrappedDriver.SwitchTo().Alert().Accept();
             // switch to "Customers" screen
             ngDriver.FindElement(NgBy.PartialButtonText("Customers")).Click();
@@ -165,6 +161,17 @@ namespace Protractor.Test
             // discover newly added customer            
             NgWebElement newly_added_customer = ng_customers.First(cust => Regex.IsMatch(cust.Text, "John Doe.*"));
             Assert.IsNotNull(newly_added_customer);
+            }
+            catch (NoAlertPresentException ex)
+            {
+                // Alert not present
+                verificationErrors.Append(ex.StackTrace);
+            }
+            catch (WebDriverException ex)
+            {
+                // Alert not handled by PhantomJS
+                verificationErrors.Append(ex.StackTrace);
+            }
         }
 
         [Test]
@@ -239,6 +246,11 @@ namespace Protractor.Test
             catch (NoAlertPresentException ex)
             {
                 // Alert not present
+                verificationErrors.Append(ex.StackTrace);
+            }
+            catch (WebDriverException ex)
+            {
+                // Alert not handled by PhantomJS
                 verificationErrors.Append(ex.StackTrace);
             }
         }
