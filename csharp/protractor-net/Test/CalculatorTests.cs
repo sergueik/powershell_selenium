@@ -8,6 +8,7 @@ using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
 using System.Collections.ObjectModel;
 using System.Collections;
+using System.Linq;
 
 // origin: https://github.com/anthonychu/Protractor-Net-Demo/tree/master/Protractor-Net-Demo
 
@@ -24,10 +25,11 @@ namespace Protractor.Test
         [TestFixtureSetUp]
         public void SetUp()
         {
-            driver = new PhantomJSDriver();
-            // driver = new FirefoxDriver();
+            // driver = new PhantomJSDriver();
+            driver = new FirefoxDriver();
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
             ngDriver = new NgWebDriver(driver);
+            ngDriver.Navigate().GoToUrl(base_url);
         }
 
         [TestFixtureTearDown]
@@ -42,70 +44,29 @@ namespace Protractor.Test
         }
 
 
-
-        [Test]
-        public void ShouldSetUrl()
-        {
-            ngDriver.Url = base_url;
-            StringAssert.AreEqualIgnoringCase(ngDriver.Title, "Super Calculator");
-        }
-
-        [Test]
-        public void ShouldFindModel()
-        {
-            ngDriver.Navigate().GoToUrl(base_url);
-            IWebElement element = ngDriver.FindElement(NgBy.Model("first"));
-            Assert.IsTrue(((NgWebElement)element).Displayed);
-        }
-
-        [Test]
-        public void ShouldFindByOptions()
-        {
-            ngDriver.Navigate().GoToUrl(base_url);
-            ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Options("value for (key, value) in operators"));
-            Assert.AreEqual(((NgWebElement)elements[0]).Text, "+");
-        }
-
-        [Test]
-        public void ShouldFindBySelectedOption()
-        {
-            ngDriver.Navigate().GoToUrl(base_url);
-            IWebElement element = ngDriver.FindElement(NgBy.SelectedOption("operator"));
-            Assert.AreEqual(((NgWebElement)element).Text, "+");
-        }
-
-        [Test]
-        public void ShouldFindButtonText()
-        {
-            ngDriver.Navigate().GoToUrl(base_url);
-            IWebElement element = ngDriver.FindElement(NgBy.ButtonText("Go!"));
-            Assert.IsTrue(((NgWebElement)element).Displayed);
-        }
-
-        [Test]
-        public void ShouldFindPartialButtonText()
-        {
-            ngDriver.Navigate().GoToUrl(base_url);
-            IWebElement element = ngDriver.FindElement(NgBy.PartialButtonText("Go"));
-            Assert.IsTrue(((NgWebElement)element).Displayed);
-        }
-
         [Test]
         public void ShouldAdd()
         {
-            ngDriver.Navigate().GoToUrl(base_url);
             
-            var first = ngDriver.FindElement(NgBy.Input("first"));
-            first.SendKeys("1");
+            StringAssert.AreEqualIgnoringCase(ngDriver.Title, "Super Calculator");
             
-            var second = ngDriver.FindElement(NgBy.Input("second"));
-            second.SendKeys("2");
+            var ng_first_operand = ngDriver.FindElement(NgBy.Model("first"));
+            ng_first_operand.SendKeys("1");
+            
+            NgWebElement ng_second_operand = ngDriver.FindElement(NgBy.Input("second"));
+            ng_second_operand.SendKeys("2");
 
-            NgWebElement math_operator = ngDriver.FindElement(NgBy.Options("value for (key, value) in operators"));
-            Assert.AreEqual(math_operator.Text, "+");
+            NgWebElement ng_math_operator_element = ngDriver.FindElement(NgBy.Options("value for (key, value) in operators"));
+            Assert.AreEqual(ng_math_operator_element.Text, "+");
+            
+            IWebElement math_operator_element = ngDriver.FindElement(NgBy.SelectedOption("operator"));
+            Assert.AreEqual(math_operator_element.Text, "+");
+            
+            IWebElement go_button_element = ngDriver.FindElement(NgBy.PartialButtonText("Go"));
+            Assert.IsTrue(go_button_element.Displayed);
 
-            var goButton = ngDriver.FindElement(By.Id("gobutton"));
-            goButton.Click();
+            var ng_go_button_element = ngDriver.FindElement(By.Id("gobutton"));
+            ng_go_button_element.Click();
             
             var result = ngDriver.FindElement(NgBy.Binding("latest")).Text;
             Assert.AreEqual("3", result);
@@ -114,26 +75,16 @@ namespace Protractor.Test
         [Test]
         public void ShouldSubstract()
         {
-            ngDriver.Navigate().GoToUrl(base_url);
-            
             var first = ngDriver.FindElement(NgBy.Input("first"));
             first.SendKeys("10");
             
             var second = ngDriver.FindElement(NgBy.Input("second"));
             second.SendKeys("2");
 
-            ReadOnlyCollection<NgWebElement> math_operators = ngDriver.FindElements(NgBy.Options("value for (key, value) in operators"));
-
-            var math_operators_enumerator = math_operators.GetEnumerator();
-            math_operators_enumerator.Reset();
-            while (math_operators_enumerator.MoveNext())
-            {
-                NgWebElement math_operator = (NgWebElement)math_operators_enumerator.Current;
-                if (math_operator.Text.Equals("-", StringComparison.Ordinal))
-                {
-                    math_operator.Click();
-                }
-            }
+            ReadOnlyCollection<NgWebElement> ng_math_operators = ngDriver.FindElements(NgBy.Options("value for (key, value) in operators"));
+            NgWebElement ng_substract_math_operator = ng_math_operators.First(op => op.Text.Equals("-", StringComparison.Ordinal));
+            Assert.IsNotNull(ng_substract_math_operator);
+            ng_substract_math_operator.Click();
 
             var goButton = ngDriver.FindElement(By.Id("gobutton"));
             goButton.Click();
