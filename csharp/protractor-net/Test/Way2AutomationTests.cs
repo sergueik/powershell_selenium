@@ -41,6 +41,10 @@ namespace Protractor.Test
         {
             // driver = new PhantomJSDriver();
             driver = new FirefoxDriver();
+            //driver = new ChromeDriver();
+            //var options = new InternetExplorerOptions() { IntroduceInstabilityByIgnoringProtectedModeSettings = true };
+            //driver = new InternetExplorerDriver(options);
+
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
             ngDriver = new NgWebDriver(driver);
             wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));

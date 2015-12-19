@@ -47,26 +47,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Samples\bind_select_option_data_from_array_example.htm">
-      <Link>bind_select_option_data_from_array_example.htm</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Samples\ng_options_with_object_example.htm">
-      <Link>ng_options_with_object_example.htm</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Samples\ng_repeat_example.htm">
-      <Link>ng_repeat_example.htm</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Samples\ng_repeat_start_and_ng_repeat_end_example.htm">
-      <Link>ng_repeat_start_and_ng_repeat_end_example.htm</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Samples\ng_table1.html">
-      <Link>ng_table1.html</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -90,11 +70,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BasicTests.cs" />
     <Compile Include="CalculatorTests.cs" />
-    <Compile Include="ExceptionTests.cs" />
-    <Compile Include="NgNavTests.cs" />
-    <Compile Include="OptionTests.cs" />
     <Compile Include="Way2AutomationTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
