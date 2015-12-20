@@ -8,6 +8,7 @@ using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
 using System.Collections.ObjectModel;
 using System.Collections;
+using System.Threading;
 using System.Linq;
 
 // origin: https://github.com/anthonychu/Protractor-Net-Demo/tree/master/Protractor-Net-Demo
@@ -68,8 +69,9 @@ namespace Protractor.Test
             var ng_go_button_element = ngDriver.FindElement(By.Id("gobutton"));
             ng_go_button_element.Click();
             
-            var result = ngDriver.FindElement(NgBy.Binding("latest")).Text;
-            Assert.AreEqual("3", result);
+            NgWebElement result_element = ngDriver.FindElement(NgBy.Binding("latest"));
+            Assert.AreEqual("3", result_element.Text);
+            highlight(result_element.WrappedElement,1000);
         }
         
         [Test]
@@ -88,8 +90,15 @@ namespace Protractor.Test
 
             var goButton = ngDriver.FindElement(By.Id("gobutton"));
             goButton.Click();
-            var result = ngDriver.FindElement(NgBy.Binding("latest")).Text;
-            Assert.AreEqual("8", result);
+            NgWebElement result_element = ngDriver.FindElement(NgBy.Binding("latest"));
+            Assert.AreEqual("8", result_element.Text);
+            highlight(result_element.WrappedElement,1000);
+        }
+        public void highlight(IWebElement element, int highlight_timeout, int px = 3, string color = "yellow")
+        {
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.border='" + px + "px solid " + color + "'", element);
+            Thread.Sleep(highlight_timeout);
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.border=''", element);
         }
 
     }
