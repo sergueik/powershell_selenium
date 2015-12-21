@@ -204,8 +204,8 @@ var findBindings = function(binding, exactMatch, using, rootSelector) {
 
 var using = arguments[0] || document;
 var binding = arguments[1];
-var exactMatch = arguments[2] || false;
-var rootSelector = arguments[3] || 'body';
+var rootSelector = arguments[2];
+var exactMatch = arguments[3] || true;
 return findBindings(binding, exactMatch, using, rootSelector);
 ";
 

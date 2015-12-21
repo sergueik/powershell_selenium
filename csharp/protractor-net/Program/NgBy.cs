@@ -8,9 +8,9 @@ namespace Protractor
         /// <summary>
         ///
         /// </summary>    	
-        public static By Binding(string binding)
+        public static By Binding(string binding, bool exactMatch = true)
         {
-            return new JavaScriptBy(ClientSideScripts.FindBindings, binding);
+            return new JavaScriptBy(ClientSideScripts.FindBindings, binding, null, exactMatch);
         }
 
         /// <summary>
