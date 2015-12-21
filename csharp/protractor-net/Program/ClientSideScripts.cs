@@ -205,9 +205,13 @@ var findBindings = function(binding, exactMatch, using, rootSelector) {
 var using = arguments[0] || document;
 var binding = arguments[1];
 var rootSelector = arguments[2];
-var exactMatch = arguments[3] || true;
-return findBindings(binding, exactMatch, using, rootSelector);
-";
+
+var exactMatch = arguments[3];
+if (typeof exactMatch === 'undefined') {
+    exactMatch = true;
+}
+
+return findBindings(binding, exactMatch, using, rootSelector);";
 
 
 
