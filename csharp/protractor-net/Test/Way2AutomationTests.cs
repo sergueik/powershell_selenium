@@ -14,6 +14,8 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;
 using System.Linq;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace Protractor.Test
 {
@@ -44,7 +46,7 @@ namespace Protractor.Test
             //driver = new ChromeDriver();
             //var options = new InternetExplorerOptions() { IntroduceInstabilityByIgnoringProtectedModeSettings = true };
             //driver = new InternetExplorerDriver(options);
-
+            driver.Manage().Window.Size = new System.Drawing.Size(600, 400);
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
             ngDriver = new NgWebDriver(driver);
             wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
@@ -70,35 +72,35 @@ namespace Protractor.Test
             Assert.IsEmpty(verificationErrors.ToString());
         }
 
-        //
-        //        [Test]
-        //        public void ShouldLogintToWay2AutomationSite()
-        //        {
-        //
-        //            String login_url = "http://way2automation.com/way2auto_jquery/index.php";
-        //            string username = "sergueik";
-        //            string password = "i011155";
-        //
-        //            driver.Navigate().GoToUrl(login_url);
-        //            // signup
-        //            var signup_element = driver.FindElement(By.CssSelector("div#load_box.popupbox form#load_form a.fancybox[href='#login']"));
-        //            actions.MoveToElement(signup_element).Build().Perform();
-        //            highlight(signup_element);
-        //            signup_element.Click();
-        //            // enter username
-        //            var login_username = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[name='username']"));
-        //            highlight(login_username);
-        //            login_username.SendKeys(username);
-        //            // enter password
-        //            var login_password_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[type='password'][name='password']"));
-        //            highlight(signup_element);
-        //            login_password_element.SendKeys(password);
-        //            // click "Login"
-        //            var login_button_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form [value='Submit']"));
-        //            actions.MoveToElement(login_button_element).Build().Perform();
-        //            highlight(login_button_element);
-        //            login_button_element.Click();
-        //        }
+        
+                [Test]
+                public void ShouldLogintToWay2AutomationSite()
+                {
+        
+                    String login_url = "http://way2automation.com/way2auto_jquery/index.php";
+                    string username = "sergueik";
+                    string password = "i011155";
+        
+                    driver.Navigate().GoToUrl(login_url);
+                    // signup
+                    var signup_element = driver.FindElement(By.CssSelector("div#load_box.popupbox form#load_form a.fancybox[href='#login']"));
+                    actions.MoveToElement(signup_element).Build().Perform();
+                    highlight(signup_element);
+                    signup_element.Click();
+                    // enter username
+                    var login_username = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[name='username']"));
+                    highlight(login_username);
+                    login_username.SendKeys(username);
+                    // enter password
+                    var login_password_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[type='password'][name='password']"));
+                    highlight(signup_element);
+                    login_password_element.SendKeys(password);
+                    // click "Login"
+                    var login_button_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form [value='Submit']"));
+                    actions.MoveToElement(login_button_element).Build().Perform();
+                    highlight(login_button_element);
+                    login_button_element.Click();
+                }
 
 
         [Test]
