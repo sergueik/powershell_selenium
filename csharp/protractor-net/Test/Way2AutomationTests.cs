@@ -70,34 +70,114 @@ namespace Protractor.Test
             Assert.IsEmpty(verificationErrors.ToString());
         }
 
+        //
+        //        [Test]
+        //        public void ShouldLogintToWay2AutomationSite()
+        //        {
+        //
+        //            String login_url = "http://way2automation.com/way2auto_jquery/index.php";
+        //            string username = "sergueik";
+        //            string password = "i011155";
+        //
+        //            driver.Navigate().GoToUrl(login_url);
+        //            // signup
+        //            var signup_element = driver.FindElement(By.CssSelector("div#load_box.popupbox form#load_form a.fancybox[href='#login']"));
+        //            actions.MoveToElement(signup_element).Build().Perform();
+        //            highlight(signup_element);
+        //            signup_element.Click();
+        //            // enter username
+        //            var login_username = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[name='username']"));
+        //            highlight(login_username);
+        //            login_username.SendKeys(username);
+        //            // enter password
+        //            var login_password_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[type='password'][name='password']"));
+        //            highlight(signup_element);
+        //            login_password_element.SendKeys(password);
+        //            // click "Login"
+        //            var login_button_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form [value='Submit']"));
+        //            actions.MoveToElement(login_button_element).Build().Perform();
+        //            highlight(login_button_element);
+        //            login_button_element.Click();
+        //        }
+
 
         [Test]
-        public void ShouldLogintToWay2AutomationSite()
+        public void ShouldDeposit()
         {
+            ngDriver.FindElement(NgBy.ButtonText("Customer Login")).Click();
+            ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElement(NgBy.Model("custId")).FindElements(NgBy.Repeater("cust in Customers"));
+            // select customer to log in
+            ng_customers.First(cust => Regex.IsMatch(cust.Text, "Harry Potter")).Click();
 
-            String login_url = "http://way2automation.com/way2auto_jquery/index.php";
-            string username = "sergueik";
-            string password = "i011155";
+            ngDriver.FindElement(NgBy.ButtonText("Login")).Click();
+            ngDriver.FindElement(NgBy.Options("account for account in Accounts")).Click();
 
-            driver.Navigate().GoToUrl(login_url);
-            // signup
-            var signup_element = driver.FindElement(By.CssSelector("div#load_box.popupbox form#load_form a.fancybox[href='#login']"));
-            actions.MoveToElement(signup_element).Build().Perform();
-            highlight(signup_element);
-            signup_element.Click();
-            // enter username
-            var login_username = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[name='username']"));
-            highlight(login_username);
-            login_username.SendKeys(username);
-            // enter password
-            var login_password_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[type='password'][name='password']"));
-            highlight(signup_element);
-            login_password_element.SendKeys(password);
-            // click "Login"
-            var login_button_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form [value='Submit']"));
-            actions.MoveToElement(login_button_element).Build().Perform();
-            highlight(login_button_element);
-            login_button_element.Click();
+            NgWebElement ng_account_number_element = ngDriver.FindElement(NgBy.Binding("accountNo"));
+            theReg = new Regex(@"(?<account_id>\d+)$");
+            int account_id = 0;
+            theMatches = theReg.Matches(ng_account_number_element.Text);
+            foreach (Match theMatch in theMatches)
+            {
+                if (theMatch.Length != 0)
+                {
+
+                    foreach (Capture theCapture in theMatch.Groups["account_id"].Captures)
+                    {
+                    	int.TryParse(theCapture.ToString(), out account_id);
+                    }
+                }
+            }
+            Assert.AreNotEqual(0, account_id);
+
+
+            NgWebElement ng_account_amount_element = ngDriver.FindElement(NgBy.Binding("amount"));
+            int account_amount = -1;
+            theReg = new Regex(@"(?<account_amount>\d+)$");
+            theMatches = theReg.Matches(ng_account_amount_element.Text);
+            foreach (Match theMatch in theMatches)
+            {
+                if (theMatch.Length != 0)
+                {
+
+                    foreach (Capture theCapture in theMatch.Groups["account_amount"].Captures)
+                    {
+                    	int.TryParse(theCapture.ToString(), out account_amount);
+                    }
+                }
+            }
+            Assert.AreNotEqual(-1, account_amount);
+                        
+            ngDriver.FindElement(NgBy.PartialButtonText("Deposit")).Click();
+            
+            NgWebElement ng_deposit_amount_element = ngDriver.FindElement(NgBy.Model("amount"));
+            ng_deposit_amount_element.SendKeys("100");
+            // body > div.ng-scope > div > div.ng-scope > div > div.container-fluid.mainBox.ng-scope > div > form
+            
+            IWebElement form_element = driver.FindElement(By.CssSelector("form[name='myForm']"));
+            Assert.IsNotNull(form_element );
+            NgWebElement ng_form_element = new NgWebElement(ngDriver, form_element);
+            	
+            NgWebElement ng_deposit_button_element = ng_form_element.FindElement(NgBy.ButtonText("Deposit"));
+            highlight(	ng_deposit_button_element.WrappedElement);
+            ng_deposit_button_element.Click();
+            // re-read the amount 
+            ng_account_amount_element = ngDriver.FindElement(NgBy.Binding("amount"));
+            int updated_account_amount = -1;
+            theReg = new Regex(@"(?<account_amount>\d+)$");
+            theMatches = theReg.Matches(ng_account_amount_element.Text);
+            foreach (Match theMatch in theMatches)
+            {
+                if (theMatch.Length != 0)
+                {
+
+                    foreach (Capture theCapture in theMatch.Groups["account_amount"].Captures)
+                    {
+                    	int.TryParse(theCapture.ToString(), out updated_account_amount);
+                    }
+                }
+            }
+            Assert.AreEqual(updated_account_amount, account_amount + 100);
+
         }
 
         [Test]
@@ -107,7 +187,7 @@ namespace Protractor.Test
             NgWebElement ng_customer_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Customer Login"));
             StringAssert.IsMatch("Customer Login", ng_customer_login_button_element.Text);
             highlight(ng_customer_login_button_element);
-
+            // core Selenium
             IWebElement customer_login_button_element = driver.FindElement(By.XPath("//button[contains(.,'Customer Login')]"));
             StringAssert.IsMatch("Customer Login", customer_login_button_element.Text);
             highlight(customer_login_button_element);
@@ -302,7 +382,7 @@ namespace Protractor.Test
             // customers
             ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
             // discover customer            
-            NgWebElement ng_customer_element = ng_customers.First(cust => Regex.IsMatch(cust.Text, "Harry Potter.*"));
+            NgWebElement ng_customer_element = ng_customers.First(cust => Regex.IsMatch(cust.Text, "Harry Potter"));
             Assert.IsNotNull(ng_customer_element);
 
             // extract the account id from the alert message            
