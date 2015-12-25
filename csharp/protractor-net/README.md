@@ -46,7 +46,6 @@ ngDriver.Navigate().GoToUrl(base_url);
 ```
 However, local files work only  with __PhantomJSDriver__ - error varies with the browser:
 
-|-----------------------------|--------------------------------------------------------------------------|
 | __Firefox Driver__          | `System.InvalidOperationException` : Access to 'file:///...' from script |
 | __Chrome Driver__           | `System.Net.WebException` Timeout exception                              |
 | __InternetExplorer Driver__ | `System.InvalidOperationException` : Page reload detected                |
