@@ -1,9 +1,12 @@
 Protractor for .NET
 ===================
-Heavily modified copy of the [protractor-net](https://github.com/sergueik/protractor-net) project created to temporarily simplify project structure and do some experiments.
+This is a fork of [protractor-net](https://github.com/bbaia/protractor-net) project with slightly more complete and up-to-date Javascript code (PR pending).
 
 Example
 -------
+
+![Screen Recording](https://github.com/sergueik/powershell_selenium/blob/master/csharp/protractor-net/Screenshots/3.gif?)
+
 ```
 IWebDriver driver = new FirefoxDriver();
 NgWebDriver ngDriver = new NgWebDriver(driver);
@@ -33,8 +36,8 @@ highlight(result_element.WrappedElement);
 ```
 
 
-Testing
--------
+Note
+----
 Local Angular files may be placed under `Samples` directory and copied into output directory of the `Test` project.
 Note:
 ```
@@ -57,3 +60,8 @@ then update the code to  use `base_url = String.Format("http://localhost/{0}", t
 Author
 ------
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
+
+Screen Recording converted to gif via [convert-to-gif](http://image.online-convert.com/convert-to-gif)
+
+
+
