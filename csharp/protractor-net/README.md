@@ -38,19 +38,18 @@ highlight(result_element.WrappedElement);
 
 Note
 ----
-Local Angular files may be placed under `Samples` directory and copied into output directory of the `Test` project.
-Note:
+Local Angular files may be placed under `Samples` directory and copied into output directory of the `Test`
 ```
 base_url = new System.Uri(Path.Combine( Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
 ngDriver.Navigate().GoToUrl(base_url);
 
 ```
-only works with __PhantomJSDriver__ - error varies with the driver:
+However, local files work only  with __PhantomJSDriver__ - error varies with the browser:
 
-| __Firefox Driver__          | `System.InvalidOperationException : Access to 'file:///...' from script denied (UnexpectedJavaScriptError)` |
-|-----------------------------|-------------------------------------------------------------------------------------------------------------|
-| __Chrome Driver__           | `System.Net.WebException Timeout exception`                                                                 |
-| __InternetExplorer\ Driver__ | `System.InvalidOperationException : Page reload detected during async script (UnexpectedJavaScriptError)`  |
+|-----------------------------|--------------------------------------------------------------------------|
+| __Firefox Driver__          | `System.InvalidOperationException` : Access to 'file:///...' from script |
+| __Chrome Driver__           | `System.Net.WebException` Timeout exception                              |
+| __InternetExplorer Driver__ | `System.InvalidOperationException` : Page reload detected                |
 
 
 For desktop browser-hosted tests, start a web server locally and point web root to the `bin/Debug` directory of the `Test` project:
