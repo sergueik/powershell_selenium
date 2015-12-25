@@ -10,6 +10,8 @@ using System.Collections.ObjectModel;
 using System.Collections;
 using System.Threading;
 using System.Linq;
+//using System.Drawing;
+//using System.Windows.Forms;
 
 // origin: https://github.com/anthonychu/Protractor-Net-Demo/tree/master/Protractor-Net-Demo
 
@@ -29,6 +31,7 @@ namespace Protractor.Test
             // driver = new PhantomJSDriver();
             driver = new FirefoxDriver();
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+            // driver.Manage().Window.Size = new System.Drawing.Size(700, 400);
             ngDriver = new NgWebDriver(driver);
             ngDriver.Navigate().GoToUrl(base_url);
         }

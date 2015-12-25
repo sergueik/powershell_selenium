@@ -89,7 +89,7 @@ waitForAllAngular2(callback);
          *
          * arguments[0] {string} none.
          */
-         public const string TestForAngular = @"
+        public const string TestForAngular = @"
 var attempts = arguments[0];
 var callback = arguments[arguments.length - 1];
 var TestForAngular = function(attempts) {
