@@ -29,8 +29,8 @@ namespace Protractor.Test
         [TestFixtureSetUp]
         public void SetUp()
         {
-            // driver = new PhantomJSDriver();
-            driver = new FirefoxDriver();
+            driver = new PhantomJSDriver();
+            // driver = new FirefoxDriver();
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
             // driver.Manage().Window.Size = new System.Drawing.Size(700, 400);
             ngDriver = new NgWebDriver(driver);
@@ -72,6 +72,8 @@ namespace Protractor.Test
 
             var ng_go_button_element = ngDriver.FindElement(By.Id("gobutton"));
             ng_go_button_element.Click();
+            string ng_go_button_element_css_selector = ng_go_button_element.CssSelectorOf();
+            string ng_go_button_element_xpath = ng_go_button_element.XPathOf();
 
             NgWebElement result_element = ngDriver.FindElement(NgBy.Binding("latest"));
             Assert.AreEqual("3", result_element.Text);
