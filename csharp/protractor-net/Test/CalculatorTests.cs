@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Collections;
 using System.Threading;
 using System.Linq;
+using Protractor.Extensions;
 //using System.Drawing;
 //using System.Windows.Forms;
 
@@ -74,7 +75,7 @@ namespace Protractor.Test
 
             NgWebElement result_element = ngDriver.FindElement(NgBy.Binding("latest"));
             Assert.AreEqual("3", result_element.Text);
-            highlight(result_element, 1000);
+            ngDriver.Highlight(result_element, 1000);
         }
 
         [Test]
@@ -95,13 +96,7 @@ namespace Protractor.Test
             goButton.Click();
             NgWebElement result_element = ngDriver.FindElement(NgBy.Binding("latest"));
             Assert.AreEqual("8", result_element.Text);
-            highlight(result_element, 1000);
-        }
-        public void highlight(IWebElement element, int highlight_timeout, int px = 3, string color = "yellow")
-        {
-            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.border='" + px + "px solid " + color + "'", element);
-            Thread.Sleep(highlight_timeout);
-            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.border=''", element);
+            ngDriver.Highlight(result_element, 1000);
         }
 
     }
