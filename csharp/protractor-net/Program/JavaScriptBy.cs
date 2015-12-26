@@ -20,12 +20,14 @@ namespace Protractor
 
         public IWebElement RootElement { get; set; }
 
+        // Find a single element.
         public override IWebElement FindElement(ISearchContext context)
         {
             ReadOnlyCollection<IWebElement> elements = this.FindElements(context);
             return elements.Count > 0 ? elements[0] : null;
         }
 
+        // Find many elements
         public override ReadOnlyCollection<IWebElement> FindElements(ISearchContext context)
         {
             // Create script arguments
@@ -33,6 +35,7 @@ namespace Protractor
             scriptArgs[0] = this.RootElement;
             Array.Copy(this.args, 0, scriptArgs, 1, this.args.Length);
 
+            // Get JS executor
             IJavaScriptExecutor jsExecutor = context as IJavaScriptExecutor;
             if (jsExecutor == null)
             {
@@ -47,6 +50,7 @@ namespace Protractor
                 throw new NotSupportedException("Could not get an IJavaScriptExecutor instance from the context.");
             }
 
+            // Send script, arguments array over the wire https://code.google.com/p/selenium/wiki/JsonWireProtocol#/session/:sessionId/execute
             ReadOnlyCollection<IWebElement> elements = jsExecutor.ExecuteScript(this.script, scriptArgs) as ReadOnlyCollection<IWebElement>;
             if (elements == null)
             {

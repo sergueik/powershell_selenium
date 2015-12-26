@@ -104,7 +104,7 @@ var TestForAngular = function(attempts) {
     }
 };
 TestForAngular(attempts);";
-         
+
         /**
          * Continue to bootstrap Angular. 
          * 
@@ -129,13 +129,13 @@ TestForAngular(attempts);";
          */
         public const string Evaluate = "return angular.element(arguments[0]).scope().$eval(arguments[1]);";
 
-                /**
-         * Browse to another page using in-page navigation.
-         *
-         * arguments[0]  {string} selector The selector housing an ng-app
-         * arguments[1]{string} url In page URL using the same syntax as $location.url(), e.g.
-         * 
-         */
+        /**
+ * Browse to another page using in-page navigation.
+ *
+ * arguments[0]  {string} selector The selector housing an ng-app
+ * arguments[1]{string} url In page URL using the same syntax as $location.url(), e.g.
+ * 
+ */
         public const string SetLocation = @"
 var setLocation = function(selector, url) {
 
@@ -156,7 +156,7 @@ var selector = arguments[0];
 var binding = arguments[1];
 
 setLocation(selector, binding);";
-        
+
         #region Locators
 
         /**
@@ -246,14 +246,14 @@ var rootSelector = arguments[2];
 return findByModel(model, using, rootSelector);
 ";
 
-       /**
-         * Find selected option elements by model name.
-         *
-         * arguments[0] {Element} The scope of the search.
-         * arguments[1] {string} The model name.
-         *
-         * @return {Array.WebElement} The matching select elements.
-         */
+        /**
+          * Find selected option elements by model name.
+          *
+          * arguments[0] {Element} The scope of the search.
+          * arguments[1] {string} The model name.
+          *
+          * @return {Array.WebElement} The matching select elements.
+          */
         public const string FindSelectedOption = @"
 var findSelectedOption = function(model, using ) {
     var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
@@ -432,8 +432,19 @@ var using = arguments[0] || document;
 var repeater = arguments[1];
 return findAllRepeaterRows(using, repeater);";
 
-        
-        
+        /**
+        * Find the elements in a column of an ng-repeat.
+        *
+        * @param {string} repeater The text of the repeater, e.g. 'cat in cats'.
+        * @param {boolean} exact Whether the repeater needs to be matched exactly
+        * @param {string} binding The column binding, e.g. '{{cat.name}}'.
+        * @param {Element} using The scope of the search.
+        * @param {string} rootSelector The selector to use for the root app element.
+        *
+        * @return {Array.WebElement} The elements in the column.
+        */
+
+
         public const string FindRepeaterColumn = @"
 var repeaterMatch = function(ngRepeat, repeater, exact) {
     if (exact) {
