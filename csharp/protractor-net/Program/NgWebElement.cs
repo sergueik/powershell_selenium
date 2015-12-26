@@ -126,6 +126,15 @@ namespace Protractor
         }
 
         /// <summary>
+        /// gets the instance of <see cref="NgWebDriver"/>
+        /// </summary>
+        /// <returns>A <see cref="NgWebDriver"/> object the to manipulate this element.</returns>
+        public NgWebDriver NgDriver
+        {
+            get { return ngDriver; }
+        }
+
+        /// <summary>
         /// Clears the content of this element.
         /// </summary>
         public void Clear()
