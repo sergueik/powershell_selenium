@@ -208,7 +208,7 @@ namespace Protractor.Test
             ngDriver.Highlight(customer_login_button_element);
 
             ng_customer_login_button_element.Click();
-            NgWebElement ng_user_select_element = ngDriver.FindElement(NgBy.Model("custId"));
+            NgWebElement ng_user_select_element = ngDriver.FindElement(NgBy.Input("custId"));
             StringAssert.IsMatch("userSelect", ng_user_select_element.GetAttribute("id"));
             ReadOnlyCollection<NgWebElement> ng_customers = ng_user_select_element.FindElements(NgBy.Repeater("cust in Customers"));
             // select customer to log in
