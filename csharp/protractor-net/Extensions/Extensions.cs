@@ -13,26 +13,62 @@ namespace Protractor.Extensions
 {
     public static class Extensions
     {
-        public static string FindMatch(this string element_text, string match_string = "(?<result>.+)$", string match_name = "result")
+    	
+        private static string result = null; 
+        private static Regex Reg; 
+        private static MatchCollection Matches; 
+        
+        public static string FindMatch(this string element_text, string match_string, string match_name )
         {
-            string result = "";
-            Regex theReg = new Regex(match_string,
+            result = null;
+            Reg = new Regex(match_string,
                                    RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
 
-            MatchCollection theMatches = theReg.Matches(element_text);
-            foreach (Match theMatch in theMatches)
+            Matches = Reg.Matches(element_text);
+            foreach (Match Match in Matches)
             {
-                if (theMatch.Length != 0)
+                if (Match.Length != 0)
                 {
 
-                    foreach (Capture theCapture in theMatch.Groups[match_name].Captures)
+                    foreach (Capture Capture in Match.Groups[match_name].Captures)
                     {
-                        result = theCapture.ToString();
+                        if (result == null) {
+                            result = Capture.ToString();
+                        }
                     }
                 }
             }
             return result;
         }
+
+        public static string FindMatch(this string element_text, string match_string )
+        {
+
+            string match_name = match_string.FindMatch("(?:<(?<result>[^>]+)>)", "result");
+            result = null;
+            Reg = new Regex(match_string,
+                                   RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
+
+            Matches = Reg.Matches(element_text);
+
+            foreach (Match Match in Matches)
+            {
+                if (Match.Length != 0)
+                {
+
+                    foreach (Capture Capture in Match.Groups[match_name].Captures)
+                    {
+                        if (result == null) {
+                            result = Capture.ToString();
+                        }
+                    }
+                }
+            }
+
+            return result;
+
+        }
+
         public static void Highlight(this NgWebDriver driver, IWebElement element, int highlight_timeout = 1000, int px = 3, string color = "yellow")
         {
             IWebDriver context = driver.WrappedDriver;

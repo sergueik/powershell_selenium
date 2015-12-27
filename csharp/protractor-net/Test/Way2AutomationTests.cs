@@ -112,11 +112,11 @@ namespace Protractor.Test
             // inspect the account
             NgWebElement ng_account_number_element = ngDriver.FindElement(NgBy.Binding("accountNo"));
             int account_id = 0;
-            int.TryParse(ng_account_number_element.Text.FindMatch(@"(?<result>\d+)$"), out account_id);
+            int.TryParse(ng_account_number_element.Text.FindMatch(@"(?<account_number>\d+)$"), out account_id);
             Assert.AreNotEqual(0, account_id);
 
             int account_amount = -1;
-            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<result>\d+)$"), out account_amount);
+            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_amount>\d+)$"), out account_amount);
             Assert.AreNotEqual(-1, account_amount);
             NgWebElement ng_deposit_button_element = ngDriver.FindElement(NgBy.PartialButtonText("Deposit"));
             Assert.IsTrue(ng_deposit_button_element.Displayed);
@@ -143,7 +143,7 @@ namespace Protractor.Test
 
             // re-read the amount
             int updated_account_amount = -1;
-            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<result>\d+)$"), out updated_account_amount);
+            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_amount>\d+)$"), out updated_account_amount);
             Assert.AreEqual(updated_account_amount, account_amount + 100);
         }
 
@@ -153,7 +153,7 @@ namespace Protractor.Test
         {
             ShouldDeposit();
             int account_amount = -1;
-            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<result>\d+)$"), out account_amount);
+            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_amount>\d+)$"), out account_amount);
             Assert.AreNotEqual(-1, account_amount);
 
             ngDriver.FindElement(NgBy.PartialButtonText("Withdrawl")).Click();
@@ -176,7 +176,7 @@ namespace Protractor.Test
 
             // re-read the amount
             int updated_account_amount = -1;
-            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<result>\d+)$"), out updated_account_amount);
+            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_amount>\d+)$"), out updated_account_amount);
             Assert.AreEqual(account_amount, updated_account_amount);
 
 
@@ -192,7 +192,7 @@ namespace Protractor.Test
             ngDriver.Highlight(ng_message_element);
 
             // re-read the amount
-            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<result>\d+)$"), out updated_account_amount);
+            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_amount>\d+)$"), out updated_account_amount);
             Assert.AreEqual(10, updated_account_amount);
 
         }
@@ -415,7 +415,7 @@ namespace Protractor.Test
             Assert.IsNotNull(ng_customer_element);
 
             // extract the account id from the alert message
-            string account_id = alert_text.FindMatch(@"(?<result>\d+)$");
+            string account_id = alert_text.FindMatch(@"(?<account_id>\d+)$");
             Assert.IsNotNullOrEmpty(account_id);
             // search accounts of specific customer
             ReadOnlyCollection<NgWebElement> ng_customer_accounts = ng_customer_element.FindElements(NgBy.Repeater("account in cust.accountNo"));
