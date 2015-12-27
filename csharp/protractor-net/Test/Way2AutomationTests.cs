@@ -89,13 +89,13 @@ namespace Protractor.Test
             login_username.SendKeys(username);
             // enter password
             var login_password_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[type='password'][name='password']"));
-            ngDriver.Highlight(signup_element);
+            ngDriver.Highlight(login_password_element);
             login_password_element.SendKeys(password);
             // click "Login"
-            var login_button_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form [value='Submit']"));
-            actions.MoveToElement(login_button_element).Build().Perform();
-            ngDriver.Highlight(login_button_element);
-            login_button_element.Click();
+            actions.MoveToElement(driver.FindElement(By.CssSelector("div#login.popupbox form#load_form [value='Submit']"))).Click().Build().Perform();
+            // block until the login popup box disappears
+            wait.IgnoreExceptionTypes( new[] { typeof(NoSuchElementException) } );
+            wait.Until(d => { ReadOnlyCollection<IWebElement> elements = d.FindElements(By.CssSelector("div#login.popupbox"));  return(elements.Count == 0 ) ;} );
         }
 
         [Test]
