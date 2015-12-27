@@ -72,7 +72,6 @@ namespace Protractor.Test
         [Test]
         public void ShouldLogintToWay2AutomationSite()
         {
-
             String login_url = "http://way2automation.com/way2auto_jquery/index.php";
             string username = "sergueik";
             string password = "i011155";
@@ -94,8 +93,7 @@ namespace Protractor.Test
             // click "Login"
             actions.MoveToElement(driver.FindElement(By.CssSelector("div#login.popupbox form#load_form [value='Submit']"))).Click().Build().Perform();
             // block until the login popup box disappears
-            wait.IgnoreExceptionTypes( new[] { typeof(NoSuchElementException) } );
-            wait.Until(d => { ReadOnlyCollection<IWebElement> elements = d.FindElements(By.CssSelector("div#login.popupbox"));  return(elements.Count == 0 ) ;} );
+            wait.Until(d => (d.FindElements(By.CssSelector("div#login.popupbox")).Count == 0));
         }
 
         [Test]
@@ -301,15 +299,15 @@ namespace Protractor.Test
             ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
             NgWebElement newly_added_customer = ng_customers.First(cust => Regex.IsMatch(cust.Text, "John Doe"));
             Assert.IsNotNull(newly_added_customer);
-            
+
             actions.MoveToElement(newly_added_customer.WrappedElement).Build().Perform();
             ngDriver.Highlight(newly_added_customer);
-            
+
             // confirm searching for the customer name
             ngDriver.FindElement(NgBy.Model("searchCustomer")).SendKeys("John");
             ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
             Assert.AreEqual(1, ng_customers.Count);
-            
+
         }
 
         [Test]
