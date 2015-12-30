@@ -277,9 +277,13 @@ namespace Protractor.Test
             ng_add_dustomer_button_element.Submit();
 
             // confirm
+            string alert_text = null;
             try
             {
-                ngDriver.WrappedDriver.SwitchTo().Alert().Accept();
+                alert = ngDriver.WrappedDriver.SwitchTo().Alert();
+                alert_text = alert.Text;
+                StringAssert.StartsWith("Customer added successfully with customer id :", alert_text);
+                alert.Accept();
             }
             catch (NoAlertPresentException ex)
             {
@@ -291,6 +295,10 @@ namespace Protractor.Test
                 // Alert not handled by PhantomJS
                 verificationErrors.Append(ex.StackTrace);
             }
+
+            int customer_id = 0;
+            int.TryParse(alert_text.FindMatch(@"(?<customer_id>\d+)$"), out customer_id);
+            Assert.AreNotEqual(0, customer_id);
 
             // switch to "Customers" screen
             ngDriver.FindElement(NgBy.PartialButtonText("Customers")).Click();
@@ -337,10 +345,16 @@ namespace Protractor.Test
 
             // found new customer
             ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
+            // collect all usernames -  
+            ReadOnlyCollection<NgWebElement> ng_users = ngDriver.FindElements(NgBy.RepeaterColumn("cust in Customers", "user"));
+
             NgWebElement newly_added_customer = ng_customers.Single(cust => Regex.IsMatch(cust.Text, "John Doe"));
             Assert.IsNotNull(newly_added_customer);
 
-            // remove 
+
+
+
+            // remove button
             NgWebElement ng_delete_customer_button_element = newly_added_customer.FindElement(NgBy.ButtonText("Delete"));
             StringAssert.IsMatch("Delete", ng_delete_customer_button_element.Text);
             actions.MoveToElement(ng_delete_customer_button_element.WrappedElement).Build().Perform();
