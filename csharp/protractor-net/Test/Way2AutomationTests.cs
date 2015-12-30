@@ -69,32 +69,32 @@ namespace Protractor.Test
             Assert.IsEmpty(verificationErrors.ToString());
         }
 
-        [Test]
-        public void ShouldLogintToWay2AutomationSite()
-        {
-            String login_url = "http://way2automation.com/way2auto_jquery/index.php";
-            string username = "sergueik";
-            string password = "i011155";
-
-            driver.Navigate().GoToUrl(login_url);
-            // signup
-            var signup_element = driver.FindElement(By.CssSelector("div#load_box.popupbox form#load_form a.fancybox[href='#login']"));
-            actions.MoveToElement(signup_element).Build().Perform();
-            ngDriver.Highlight(signup_element);
-            signup_element.Click();
-            // enter username
-            var login_username = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[name='username']"));
-            ngDriver.Highlight(login_username);
-            login_username.SendKeys(username);
-            // enter password
-            var login_password_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[type='password'][name='password']"));
-            ngDriver.Highlight(login_password_element);
-            login_password_element.SendKeys(password);
-            // click "Login"
-            actions.MoveToElement(driver.FindElement(By.CssSelector("div#login.popupbox form#load_form [value='Submit']"))).Click().Build().Perform();
-            // block until the login popup box disappears
-            wait.Until(d => (d.FindElements(By.CssSelector("div#login.popupbox")).Count == 0));
-        }
+        //        [Test]
+        //        public void ShouldLogintToWay2AutomationSite()
+        //        {
+        //            String login_url = "http://way2automation.com/way2auto_jquery/index.php";
+        //            string username = "sergueik";
+        //            string password = "i011155";
+        //
+        //            driver.Navigate().GoToUrl(login_url);
+        //            // signup
+        //            var signup_element = driver.FindElement(By.CssSelector("div#load_box.popupbox form#load_form a.fancybox[href='#login']"));
+        //            actions.MoveToElement(signup_element).Build().Perform();
+        //            ngDriver.Highlight(signup_element);
+        //            signup_element.Click();
+        //            // enter username
+        //            var login_username = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[name='username']"));
+        //            ngDriver.Highlight(login_username);
+        //            login_username.SendKeys(username);
+        //            // enter password
+        //            var login_password_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[type='password'][name='password']"));
+        //            ngDriver.Highlight(login_password_element);
+        //            login_password_element.SendKeys(password);
+        //            // click "Login"
+        //            actions.MoveToElement(driver.FindElement(By.CssSelector("div#login.popupbox form#load_form [value='Submit']"))).Click().Build().Perform();
+        //            // block until the login popup box disappears
+        //            wait.Until(d => (d.FindElements(By.CssSelector("div#login.popupbox")).Count == 0));
+        //        }
 
         [Test]
         public void ShouldDeposit()
@@ -214,12 +214,12 @@ namespace Protractor.Test
             // pick a customer
             NgWebElement first_customer = ng_customers.First();
             Assert.IsTrue(first_customer.Displayed);
-            
+
             // the {{user}} is composed from first and last name
-            StringAssert.IsMatch("(?:[^ ]+) +(?:[^ ]+)", first_customer.Text);            
+            StringAssert.IsMatch("(?:[^ ]+) +(?:[^ ]+)", first_customer.Text);
             string user = first_customer.Text;
             first_customer.Click();
-            
+
             // login button
             NgWebElement ng_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Login"));
             Assert.IsTrue(ng_login_button_element.Displayed && ng_login_button_element.Enabled);
@@ -445,21 +445,27 @@ namespace Protractor.Test
         {
             ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();
             ngDriver.FindElement(NgBy.PartialButtonText("Customers")).Click();
-            // core Selenium
-            wait.Until(ExpectedConditions.ElementExists(By.CssSelector("a[ng-click*='sortType'][ng-click*= 'fName']")));
-            IWebElement sort_first_name_element = ngDriver.WrappedDriver.FindElement(By.CssSelector("a[ng-click*='sortType'][ng-click*= 'fName']"));
-            StringAssert.Contains("First Name", sort_first_name_element.Text);
-            ngDriver.Highlight(sort_first_name_element);
-            sort_first_name_element.Click();
 
+            wait.Until(ExpectedConditions.ElementExists(NgBy.Repeater("cust in Customers")));
+            // alterntive locator using core selenium
+            wait.Until(ExpectedConditions.ElementExists(By.CssSelector("tr[ng-repeat*='cust in Customers']")));
+
+
+            IWebElement sort_link = ngDriver.WrappedDriver.FindElement(By.CssSelector("a[ng-click*='sortType'][ng-click*= 'fName']"));
+            StringAssert.Contains("First Name", sort_link.Text);
+            ngDriver.Highlight(sort_link);
+            sort_link.Click();
+
+
+            // TODO: utilize NgBy.RepeaterColumn
             ReadOnlyCollection<NgWebElement> ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
-            NgWebElement first_customer = ng_accounts.First();
-            StringAssert.Contains("Ron", first_customer.Text);
-            sort_first_name_element.Click();
-
-            ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
-            first_customer = ng_accounts.First();
-            StringAssert.Contains("Albus", first_customer.Text);
+            // inspect first and last elements 
+            List<String> ng_account_names = ng_accounts.Select(element => element.Text).ToList();
+            String last_customer_name = ng_account_names.FindLast(element => true);
+            ngDriver.Highlight(sort_link);
+            sort_link.Click();
+            // confirm the customers are sorted in reverse order now            
+            StringAssert.Contains(last_customer_name, ngDriver.FindElements(NgBy.Repeater("cust in Customers")).First().Text);
         }
     }
 }
