@@ -198,7 +198,6 @@ namespace Protractor.Test
         [Test]
         public void ShouldLoginCustomer()
         {
-
             NgWebElement ng_customer_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Customer Login"));
             StringAssert.IsMatch("Customer Login", ng_customer_login_button_element.Text);
             ngDriver.Highlight(ng_customer_login_button_element);
@@ -211,21 +210,25 @@ namespace Protractor.Test
             NgWebElement ng_user_select_element = ngDriver.FindElement(NgBy.Input("custId"));
             StringAssert.IsMatch("userSelect", ng_user_select_element.GetAttribute("id"));
             ReadOnlyCollection<NgWebElement> ng_customers = ng_user_select_element.FindElements(NgBy.Repeater("cust in Customers"));
-            // select customer to log in
+            Assert.AreNotEqual(0, ng_customers.Count);
+            // pick a customer
             NgWebElement first_customer = ng_customers.First();
             Assert.IsTrue(first_customer.Displayed);
-            StringAssert.Contains("Granger", first_customer.Text);
+            
+            // the {{user}} is composed from first and last name
+            StringAssert.IsMatch("(?:[^ ]+) +(?:[^ ]+)", first_customer.Text);            
+            string user = first_customer.Text;
             first_customer.Click();
-            NgWebElement ng_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Login"));
+            
             // login button
-            Assert.IsTrue(ng_login_button_element.Displayed);
-            Assert.IsTrue(ng_login_button_element.Enabled);
+            NgWebElement ng_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Login"));
+            Assert.IsTrue(ng_login_button_element.Displayed && ng_login_button_element.Enabled);
             ngDriver.Highlight(ng_login_button_element);
             ng_login_button_element.Click();
 
             NgWebElement ng_greeting_element = ngDriver.FindElement(NgBy.Binding("user"));
             Assert.IsNotNull(ng_greeting_element);
-            StringAssert.IsMatch("Hermoine Granger", ng_greeting_element.Text);
+            StringAssert.IsMatch(user, ng_greeting_element.Text);
             ngDriver.Highlight(ng_greeting_element);
 
             NgWebElement ng_account_number_element = ngDriver.FindElement(NgBy.Binding("accountNo"));
