@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-# SharpDevelop 5.1
+# SharpDevelop 5.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SwdPageRecorder.WebDriver", "SwdPageRecorder.WebDriver\SwdPageRecorder.WebDriver.csproj", "{DC2EC3C9-DC4F-430A-BBA7-7F04B9C215EB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SwdPageRecorder.UI", "SwdPageRecorder.UI\SwdPageRecorder.UI.csproj", "{F0246C75-182B-4305-8649-C9185BF886E1}"

@@ -1,6 +1,7 @@
 build/SwdPageRecorder_Latest
 SwdPageRecorder*.zip
 build/SwdPageRecorder_v*
+vendor/*
 build.log
 
 # driver executables may be copied into project

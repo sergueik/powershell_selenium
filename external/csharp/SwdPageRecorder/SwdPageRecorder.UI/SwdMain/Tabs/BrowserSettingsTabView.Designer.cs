@@ -42,25 +42,15 @@
             this.btnStartWebDriver = new System.Windows.Forms.Button();
             this.ddlBrowserToStart = new System.Windows.Forms.ComboBox();
             this.grdDesiredCapabilities = new System.Windows.Forms.PropertyGrid();
-            
             this.grpDesiredCaps = new System.Windows.Forms.GroupBox();
-            this.tabControl10 = new System.Windows.Forms.TabControl();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.btnLoadCapabilities = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.label5 = new System.Windows.Forms.Label();
             this.lnkSeleniumDownloadPage = new System.Windows.Forms.LinkLabel();
             this.chkMaximizeBrowserWindow = new System.Windows.Forms.CheckBox();
-            
             this.grpRemoteConnection.SuspendLayout();
-            this.dtAdditonalCapabilities = new CapabilitiesDataGridView();
-            this.dtAdditonalCapabilities.parent = this;
-            this.dtAdditonalCapabilities.SuspendLayout();
             this.grpDesiredCaps.SuspendLayout();
-            this.tabControl10.SuspendLayout();
-            this.tabPage2.SuspendLayout();
-            this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.SuspendLayout();
             // 
@@ -193,64 +183,37 @@
             // 
             // grdDesiredCapabilities
             // 
-            this.grdDesiredCapabilities.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grdDesiredCapabilities.Location = new System.Drawing.Point(3, 3);
+            this.grdDesiredCapabilities.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grdDesiredCapabilities.Location = new System.Drawing.Point(6, 49);
             this.grdDesiredCapabilities.Name = "grdDesiredCapabilities";
-            this.grdDesiredCapabilities.Size = new System.Drawing.Size(659, 181);
-            this.grdDesiredCapabilities.TabIndex = 14;
-            
-            
+            this.grdDesiredCapabilities.Size = new System.Drawing.Size(667, 177);
+            this.grdDesiredCapabilities.TabIndex = 10;
             // 
             // grpDesiredCaps
             // 
             this.grpDesiredCaps.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.grpDesiredCaps.Controls.Add(this.tabControl10);
+            this.grpDesiredCaps.Controls.Add(this.btnLoadCapabilities);
+            this.grpDesiredCaps.Controls.Add(this.grdDesiredCapabilities);
             this.grpDesiredCaps.Location = new System.Drawing.Point(6, 191);
             this.grpDesiredCaps.Name = "grpDesiredCaps";
             this.grpDesiredCaps.Size = new System.Drawing.Size(679, 232);
-            this.grpDesiredCaps.TabIndex = 13;
+            this.grpDesiredCaps.TabIndex = 11;
             this.grpDesiredCaps.TabStop = false;
             this.grpDesiredCaps.Text = "Capabilities";
             // 
-            // tabControl10
+            // btnLoadCapabilities
             // 
-            this.tabControl10.Controls.Add(this.tabPage2);
-            this.tabControl10.Controls.Add(this.tabPage1);
-            this.tabControl10.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl10.Location = new System.Drawing.Point(3, 16);
-            this.tabControl10.Name = "tabControl10";
-            this.tabControl10.Padding = new System.Drawing.Point(3, 3);
-            this.tabControl10.SelectedIndex = 0;
-            this.tabControl10.Size = new System.Drawing.Size(673, 213);
-            this.tabControl10.TabIndex = 17;
-            // 
-            // tabPage2
-            // 
-            
-            this.tabPage2.Controls.Add(this.dtAdditonalCapabilities);
-            this.tabPage2.Location = new System.Drawing.Point(4, 22);
-            this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage2.Size = new System.Drawing.Size(665, 187);
-            this.tabPage2.TabIndex = 1;
-            this.tabPage2.Text = "Add Capabilities";
-            this.tabPage2.UseVisualStyleBackColor = true;
-            this.tabPage2.Enter += new System.EventHandler(this.tabPage2_Enter);
-            // 
-            // tabPage1
-            // 
-            
-            this.tabPage1.Controls.Add(this.grdDesiredCapabilities);
-            this.tabPage1.Location = new System.Drawing.Point(4, 22);
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPage1.Size = new System.Drawing.Size(665, 187);
-            this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "Load Capabilities";
-            this.tabPage1.UseVisualStyleBackColor = true;
-            this.tabPage1.Enter += new System.EventHandler(this.tabPage1_Enter);
+            this.btnLoadCapabilities.Location = new System.Drawing.Point(7, 20);
+            this.btnLoadCapabilities.Name = "btnLoadCapabilities";
+            this.btnLoadCapabilities.Size = new System.Drawing.Size(124, 23);
+            this.btnLoadCapabilities.TabIndex = 11;
+            this.btnLoadCapabilities.Text = "Load Capabilities";
+            this.btnLoadCapabilities.UseVisualStyleBackColor = true;
+            this.btnLoadCapabilities.Click += new System.EventHandler(this.btnLoadCapabilities_Click);
             // 
             // label4
             // 
@@ -303,7 +266,6 @@
             this.chkMaximizeBrowserWindow.TabIndex = 16;
             this.chkMaximizeBrowserWindow.Text = "Maximize browser window";
             this.chkMaximizeBrowserWindow.UseVisualStyleBackColor = true;
-
             // 
             // BrowserSettingsTabView
             // 
@@ -325,15 +287,12 @@
             this.grpRemoteConnection.ResumeLayout(false);
             this.grpRemoteConnection.PerformLayout();
             this.grpDesiredCaps.ResumeLayout(false);
-            this.tabControl10.ResumeLayout(false);
-            this.tabPage2.ResumeLayout(false);
-            this.tabPage1.ResumeLayout(false);
-            this.dtAdditonalCapabilities.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
+
         #endregion
 
         public System.Windows.Forms.Label label3;
@@ -349,17 +308,12 @@
         private System.Windows.Forms.Button btnTestRemoteHub;
         private System.Windows.Forms.GroupBox grpDesiredCaps;
         public System.Windows.Forms.PropertyGrid grdDesiredCapabilities;
-        
+        private System.Windows.Forms.Button btnLoadCapabilities;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.CheckBox chkAutomaticallyStartServer;
         private System.Windows.Forms.PictureBox pictureBox2;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.LinkLabel lnkSeleniumDownloadPage;
         private System.Windows.Forms.CheckBox chkMaximizeBrowserWindow;
-
-        private System.Windows.Forms.TabControl tabControl10;
-        private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.TabPage tabPage2;
-        private CapabilitiesDataGridView dtAdditonalCapabilities;
     }
 }

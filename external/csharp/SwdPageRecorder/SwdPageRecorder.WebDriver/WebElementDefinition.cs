@@ -116,6 +116,7 @@ namespace SwdPageRecorder.WebDriver
             List<WebElementLocator> clonedfindBys = new List<WebElementLocator>();
             foreach (var entry in AlternativeFindBys)
             {
+                // TODO: Replace properties initializer with constructor to handle data structure change in compile time
                 clonedfindBys.Add(new WebElementLocator() 
                                       { 
                                           HowToSearch = entry.HowToSearch, 

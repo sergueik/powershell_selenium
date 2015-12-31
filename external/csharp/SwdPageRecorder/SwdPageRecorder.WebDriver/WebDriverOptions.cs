@@ -46,8 +46,6 @@ namespace SwdPageRecorder.WebDriver
         };
 
         public string BrowserName { get; set; }
-        public string BrowserPlatform { get; set; }
-        public string BrowserVersion { get; set; }
 
         public bool IsRemote { get; set; }
 
