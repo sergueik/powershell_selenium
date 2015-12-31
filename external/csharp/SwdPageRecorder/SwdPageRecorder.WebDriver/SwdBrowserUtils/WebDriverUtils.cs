@@ -22,6 +22,12 @@ namespace SwdPageRecorder.WebDriver.SwdBrowserUtils
 {
     public static class WebDriverUtils
     {
+        private static string path_to_binary;
+        private static string path_to_driver;
+        private static string binary_path_propery;
+        private static string driver_path_propery;
+
+
         public static IWebDriver Initialize(WebDriverOptions browserOptions, out bool isRemote)
         {
             IWebDriver driver = null;
@@ -46,14 +52,28 @@ namespace SwdPageRecorder.WebDriver.SwdBrowserUtils
             switch (browserOptions.BrowserName)
             {
 
+                /* 
+                 http://stackoverflow.com/questions/17398896/how-to-use-different-version-of-firefox-using-webdriver
+                 https://code.google.com/p/selenium/wiki/FirefoxDriver
+                 https://code.google.com/p/selenium/wiki/InternetExplorerDriver
+                 https://code.google.com/p/selenium/wiki/ChromeDriver#Overriding_the_Chrome_binary_location
+ 
+                 */
+
                 case WebDriverOptions.browser_Firefox:
+                    path_to_binary = @"C:\Program Files\Mozilla Firefox\firefox.exe";
+                    binary_path_propery = "webdriver.firefox.bin";
                     caps = DesiredCapabilities.Firefox();
                     break;
                 case WebDriverOptions.browser_Chrome:
+                    path_to_driver = @"C:\Program Files\Mozilla Firefox\firefox.exe";
+                    driver_path_propery = "webdriver.chrome.driver";
                     caps = DesiredCapabilities.Chrome();
                     break;
                 case WebDriverOptions.browser_InternetExplorer:
                     caps = DesiredCapabilities.InternetExplorer();
+                    path_to_driver = @"C:\Program Files\Mozilla Firefox\firefox.exe";
+                    driver_path_propery = "webdriver.ie.driver";
                     break;
                 case WebDriverOptions.browser_PhantomJS:
                     caps = DesiredCapabilities.PhantomJS();
@@ -93,7 +113,13 @@ namespace SwdPageRecorder.WebDriver.SwdBrowserUtils
             {
 
                 case WebDriverOptions.browser_Firefox:
-                    return new FirefoxDriver();
+                    path_to_binary = @"C:\Program Files\Mozilla Firefox\firefox.exe";
+                    binary_path_propery = "webdriver.firefox.bin";
+                    FirefoxProfile profile = new FirefoxProfile();
+                    profile.SetPreference(binary_path_propery, path_to_binary);
+                    FirefoxBinary binary = new FirefoxBinary(path_to_binary);
+                    //return new FirefoxDriver(profile);
+                    return new FirefoxDriver(binary, profile);
                 case WebDriverOptions.browser_Chrome:
                     return new ChromeDriver();
                 case WebDriverOptions.browser_InternetExplorer:
@@ -103,7 +129,7 @@ namespace SwdPageRecorder.WebDriver.SwdBrowserUtils
                 case WebDriverOptions.browser_Safari:
                     return new SafariDriver();
                 default:
-                    throw new ArgumentException(String.Format(@"<{0}> was not recognized as supported browser. This parameter is case sensitive", browserOptions.BrowserName),   
+                    throw new ArgumentException(String.Format(@"<{0}> was not recognized as supported browser. This parameter is case sensitive", browserOptions.BrowserName),
                                                 "WebDriverOptions.BrowserName");
             }
         }
