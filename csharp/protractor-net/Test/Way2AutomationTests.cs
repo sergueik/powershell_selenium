@@ -128,10 +128,11 @@ namespace Protractor.Test
             NgWebElement ng_deposit_amount_element = ng_form_element.FindElement(NgBy.Model("amount"));
             ng_deposit_amount_element.SendKeys("100");
 
+            wait.Until(ExpectedConditions.ElementIsVisible(NgBy.ButtonText("Deposit")));
             ng_deposit_button_element = ng_form_element.FindElement(NgBy.ButtonText("Deposit"));
             actions.MoveToElement(ng_deposit_button_element.WrappedElement).Build().Perform();
             ngDriver.Highlight(ng_deposit_button_element);
-            Thread.Sleep(1000);
+
             ng_deposit_button_element.Click();
             // http://www.way2automation.com/angularjs-protractor/banking/depositTx.html
 
@@ -178,7 +179,7 @@ namespace Protractor.Test
             int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_amount>\d+)$"), out updated_account_amount);
             Assert.AreEqual(account_amount, updated_account_amount);
 
-
+            // core Selenium
             Thread.Sleep(1000);
             wait.Until(ExpectedConditions.ElementExists(By.CssSelector("form[name='myForm']")));
             ng_form_element = new NgWebElement(ngDriver, driver.FindElement(By.CssSelector("form[name='myForm']")));
