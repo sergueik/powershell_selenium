@@ -349,7 +349,7 @@ namespace Protractor.Test
 
             // found new customer
             ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
-            // collect all usernames -  
+            // collect all usernames -
             ReadOnlyCollection<NgWebElement> ng_users = ngDriver.FindElements(NgBy.RepeaterColumn("cust in Customers", "user"));
 
             NgWebElement newly_added_customer = ng_customers.Single(cust => Regex.IsMatch(cust.Text, "John Doe"));
@@ -455,12 +455,12 @@ namespace Protractor.Test
             sort_link.Click();
 
             ReadOnlyCollection<NgWebElement> ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
-            // inspect first and last elements 
+            // inspect first and last elements
             List<String> ng_account_names = ng_accounts.Select(element => element.Text).ToList();
             String last_customer_name = ng_account_names.FindLast(element => true);
             ngDriver.Highlight(sort_link);
             sort_link.Click();
-            // confirm the customers are sorted in reverse order now            
+            // confirm the customers are sorted in reverse order now
             StringAssert.Contains(last_customer_name, ngDriver.FindElements(NgBy.Repeater("cust in Customers")).First().Text);
         }
 
@@ -481,12 +481,19 @@ namespace Protractor.Test
             ng_transactions_element.Click();
             // http://www.way2automation.com/angularjs-protractor/banking/listTx.html
 
-            // find specific column
+            // wait until transaction information gets loaded and rendered
+            wait.Until(ExpectedConditions.ElementExists(NgBy.Repeater("tx in transactions")));
+
+            // examine Credit/Debit column
             ReadOnlyCollection<NgWebElement> ng_transaction_type_columns = ngDriver.FindElements(NgBy.RepeaterColumn("tx in transactions", "tx.type"));
             Assert.IsNotEmpty(ng_transaction_type_columns);
+
             // highlight certain cells
             foreach (NgWebElement ng_transaction_type_element in ng_transaction_type_columns)
             {
+                if (String.IsNullOrEmpty( ng_transaction_type_element.Text)){
+                   break;
+            	}
                 if (ng_transaction_type_element.Text.Equals("Credit"))
                 {
                     ngDriver.Highlight(ng_transaction_type_element, 1000, 3, "green");
