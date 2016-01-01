@@ -43,7 +43,7 @@ namespace Protractor.Test
             //driver = new ChromeDriver();
             //var options = new InternetExplorerOptions() { IntroduceInstabilityByIgnoringProtectedModeSettings = true };
             //driver = new InternetExplorerDriver(options);
-            driver.Manage().Window.Size = new System.Drawing.Size(1200, 500);
+            driver.Manage().Window.Size = new System.Drawing.Size(600, 400);
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
             ngDriver = new NgWebDriver(driver);
             wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
@@ -310,6 +310,7 @@ namespace Protractor.Test
 
             // discover newly added customer
             ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
+            int customer_count = ng_customers.Count;
             NgWebElement newly_added_customer = ng_customers.First(cust => Regex.IsMatch(cust.Text, "John Doe"));
             Assert.IsNotNull(newly_added_customer);
 
@@ -320,6 +321,34 @@ namespace Protractor.Test
             ngDriver.FindElement(NgBy.Model("searchCustomer")).SendKeys("John");
             ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
             Assert.AreEqual(1, ng_customers.Count);
+            
+            // show all customers again
+            ngDriver.FindElement(NgBy.Model("searchCustomer")).Clear();
+            
+            Thread.Sleep(500);
+            wait.Until(ExpectedConditions.ElementIsVisible(NgBy.Repeater("cust in Customers")));
+            // discover newly added customer again
+            ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
+            newly_added_customer = ng_customers.First(cust => Regex.IsMatch(cust.Text, "John Doe"));
+            // delete new customer
+            NgWebElement delete_button = newly_added_customer.FindElement(NgBy.ButtonText("Delete"));
+            Assert.IsNotNull(delete_button);
+            actions.MoveToElement(delete_button.WrappedElement).Build().Perform();
+            ngDriver.Highlight(delete_button, 1000);
+            // in slow motion
+            actions.MoveToElement(delete_button.WrappedElement).ClickAndHold().Build().Perform();
+            Thread.Sleep(1000);
+            actions.Release();
+            // sometimes actions do not work - for example in this test 
+            delete_button.Click();
+            // wait for customer list to reload
+			Thread.Sleep(1000);
+            wait.Until(ExpectedConditions.ElementIsVisible(NgBy.Repeater("cust in Customers")));
+			// count the remaining customers            
+            ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
+            int new_customer_count = ng_customers.Count;
+            // conrirm the customer count changed
+            Assert.IsTrue(customer_count - 1 == new_customer_count);
 
         }
 
