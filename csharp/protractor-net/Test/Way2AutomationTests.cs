@@ -118,7 +118,7 @@ namespace Protractor.Test
             Assert.AreNotEqual(-1, account_balance);
             NgWebElement ng_deposit_button = ngDriver.FindElement(NgBy.PartialButtonText("Deposit"));
             Assert.IsTrue(ng_deposit_button.Displayed);
-            
+
             actions.MoveToElement(ng_deposit_button.WrappedElement).Build().Perform();
             Thread.Sleep(500);
             ng_deposit_button.Click();
@@ -165,7 +165,7 @@ namespace Protractor.Test
             Thread.Sleep(1000);
             wait.Until(ExpectedConditions.ElementExists(By.CssSelector("form[name='myForm']")));
             NgWebElement ng_form_element = new NgWebElement(ngDriver, driver.FindElement(By.CssSelector("form[name='myForm']")));
-            NgWebElement ng_withdrawl_amount= ng_form_element.FindElement(NgBy.Model("amount"));
+            NgWebElement ng_withdrawl_amount = ng_form_element.FindElement(NgBy.Model("amount"));
             ng_withdrawl_amount.SendKeys((account_balance + 100).ToString());
 
             NgWebElement ng_withdrawl_button = ng_form_element.FindElement(NgBy.ButtonText("Withdraw"));
@@ -352,7 +352,6 @@ namespace Protractor.Test
             int new_customer_count = ng_customers.Count;
             // conrirm the customer count changed
             Assert.IsTrue(customer_count - 1 == new_customer_count);
-
         }
 
         [Test]
@@ -481,14 +480,13 @@ namespace Protractor.Test
             // alterntive locator using core selenium
             wait.Until(ExpectedConditions.ElementExists(By.CssSelector("tr[ng-repeat*='cust in Customers']")));
 
-
             IWebElement sort_link = ngDriver.WrappedDriver.FindElement(By.CssSelector("a[ng-click*='sortType'][ng-click*= 'fName']"));
             StringAssert.Contains("First Name", sort_link.Text);
             ngDriver.Highlight(sort_link);
             sort_link.Click();
 
             ReadOnlyCollection<NgWebElement> ng_accounts = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
-            // inspect first and last elements
+            // inspect first and last customers
             List<String> ng_account_names = ng_accounts.Select(element => element.Text).ToList();
             String last_customer_name = ng_account_names.FindLast(element => true);
             ngDriver.Highlight(sort_link);
@@ -497,6 +495,37 @@ namespace Protractor.Test
             StringAssert.Contains(last_customer_name, ngDriver.FindElements(NgBy.Repeater("cust in Customers")).First().Text);
         }
 
+        [Test]
+        public void ShouldEvaluateTransactionDetails()
+        {
+            ngDriver.FindElement(NgBy.ButtonText("Customer Login")).Click();
+            // select customer/account with transactions
+            ngDriver.FindElement(NgBy.Model("custId")).FindElements(NgBy.Repeater("cust in Customers")).First(cust => Regex.IsMatch(cust.Text, "Hermoine Granger")).Click();
+            ngDriver.FindElement(NgBy.ButtonText("Login")).Click();
+            ngDriver.FindElements(NgBy.Options("account for account in Accounts")).First(account => Regex.IsMatch(account.Text, "1001")).Click();
+
+            // switch to transactions
+            NgWebElement ng_transaction_list_button = ngDriver.FindElement(NgBy.PartialButtonText("Transactions"));
+            StringAssert.Contains("Transactions", ng_transaction_list_button.Text);
+            ngDriver.Highlight(ng_transaction_list_button);
+            ng_transaction_list_button.Click();
+
+            // wait for transaction information to be loaded and rendered
+            wait.Until(ExpectedConditions.ElementExists(NgBy.Repeater("tx in transactions")));
+
+            // examine first few transactions using Evaluate            
+            ReadOnlyCollection<NgWebElement> ng_transactions = ngDriver.FindElements(NgBy.Repeater("tx in transactions"));
+            int cnt = 0;
+            foreach (NgWebElement ng_current_transaction in ng_transactions)
+            {
+                if (cnt++ > 5) { break; }
+                StringAssert.IsMatch("(?i:credit|debit)", ng_current_transaction.Evaluate("tx.type").ToString());
+                StringAssert.IsMatch(@"(?:\d+)", ng_current_transaction.Evaluate("tx.amount").ToString());
+                // 'tx.date' is in Javascript UTC format similar to UniversalSorta­bleDateTimePat­tern in C# 
+                var transaction_date = ng_current_transaction.Evaluate("tx.date");
+                StringAssert.IsMatch(@"(?:\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z)", transaction_date.ToString());
+            }
+        }
 
         [Test]
         public void ShouldListTransactions()
@@ -507,31 +536,27 @@ namespace Protractor.Test
             ngDriver.FindElement(NgBy.ButtonText("Login")).Click();
             ngDriver.FindElements(NgBy.Options("account for account in Accounts")).First(account => Regex.IsMatch(account.Text, "1001")).Click();
 
-            // inspect transactions
-            NgWebElement ng_transactions = ngDriver.FindElement(NgBy.PartialButtonText("Transactions"));
-            StringAssert.Contains("Transactions", ng_transactions.Text);
-            ngDriver.Highlight(ng_transactions);
-            ng_transactions.Click();
+            // switch to transactions
+            NgWebElement ng_transaction_list_button = ngDriver.FindElement(NgBy.PartialButtonText("Transactions"));
+            StringAssert.Contains("Transactions", ng_transaction_list_button.Text);
+            ngDriver.Highlight(ng_transaction_list_button);
+            ng_transaction_list_button.Click();
             // http://www.way2automation.com/angularjs-protractor/banking/listTx.html
 
-            // wait until transaction information gets loaded and rendered
+            // wait for transaction information to be loaded and rendered
             wait.Until(ExpectedConditions.ElementExists(NgBy.Repeater("tx in transactions")));
 
-            // examine Credit/Debit column
+            // highlight transaction type cells in the page differently for Credit or Debit using RepeaterColumn            
             ReadOnlyCollection<NgWebElement> ng_transaction_type_columns = ngDriver.FindElements(NgBy.RepeaterColumn("tx in transactions", "tx.type"));
             Assert.IsNotEmpty(ng_transaction_type_columns);
 
-            // highlight certain cells
             foreach (NgWebElement ng_current_transaction_type in ng_transaction_type_columns)
             {
                 if (String.IsNullOrEmpty(ng_current_transaction_type.Text))
                 {
                     break;
                 }
-                if (ng_current_transaction_type.Text.Equals("Credit"))
-                {
-                    ngDriver.Highlight(ng_current_transaction_type, 1000, 3, "green");
-                }
+                ngDriver.Highlight(ng_current_transaction_type, 1000, 3, ng_current_transaction_type.Text.Equals("Credit") ? "green" : "blue");
             }
         }
     }
