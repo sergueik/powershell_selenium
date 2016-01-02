@@ -43,7 +43,7 @@ namespace Protractor.Test
             //driver = new ChromeDriver();
             //var options = new InternetExplorerOptions() { IntroduceInstabilityByIgnoringProtectedModeSettings = true };
             //driver = new InternetExplorerDriver(options);
-            driver.Manage().Window.Size = new System.Drawing.Size(1200, 500);
+            driver.Manage().Window.Size = new System.Drawing.Size(800, 600);
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
             ngDriver = new NgWebDriver(driver);
             wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
@@ -78,18 +78,18 @@ namespace Protractor.Test
         //
         //            driver.Navigate().GoToUrl(login_url);
         //            // signup
-        //            var signup_element = driver.FindElement(By.CssSelector("div#load_box.popupbox form#load_form a.fancybox[href='#login']"));
-        //            actions.MoveToElement(signup_element).Build().Perform();
-        //            ngDriver.Highlight(signup_element);
-        //            signup_element.Click();
+        //            var signup_link = driver.FindElement(By.CssSelector("div#load_box.popupbox form#load_form a.fancybox[href='#login']"));
+        //            actions.MoveToElement(signup_link).Build().Perform();
+        //            ngDriver.Highlight(signup_link);
+        //            signup_link.Click();
         //            // enter username
         //            var login_username = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[name='username']"));
         //            ngDriver.Highlight(login_username);
         //            login_username.SendKeys(username);
         //            // enter password
-        //            var login_password_element = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[type='password'][name='password']"));
-        //            ngDriver.Highlight(login_password_element);
-        //            login_password_element.SendKeys(password);
+        //            var login_password = driver.FindElement(By.CssSelector("div#login.popupbox form#load_form input[type='password'][name='password']"));
+        //            ngDriver.Highlight(login_password);
+        //            login_password.SendKeys(password);
         //            // click "Login"
         //            actions.MoveToElement(driver.FindElement(By.CssSelector("div#login.popupbox form#load_form [value='Submit']"))).Click().Build().Perform();
         //            // block until the login popup box disappears
@@ -108,43 +108,46 @@ namespace Protractor.Test
             ngDriver.FindElement(NgBy.Options("account for account in Accounts")).Click();
 
             // inspect the account
-            NgWebElement ng_account_number_element = ngDriver.FindElement(NgBy.Binding("accountNo"));
+            NgWebElement ng_account_number = ngDriver.FindElement(NgBy.Binding("accountNo"));
             int account_id = 0;
-            int.TryParse(ng_account_number_element.Text.FindMatch(@"(?<account_number>\d+)$"), out account_id);
+            int.TryParse(ng_account_number.Text.FindMatch(@"(?<account_number>\d+)$"), out account_id);
             Assert.AreNotEqual(0, account_id);
 
-            int account_amount = -1;
-            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_amount>\d+)$"), out account_amount);
-            Assert.AreNotEqual(-1, account_amount);
-            NgWebElement ng_deposit_button_element = ngDriver.FindElement(NgBy.PartialButtonText("Deposit"));
-            Assert.IsTrue(ng_deposit_button_element.Displayed);
-            ng_deposit_button_element.Click();
+            int account_balance = -1;
+            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_balance>\d+)$"), out account_balance);
+            Assert.AreNotEqual(-1, account_balance);
+            NgWebElement ng_deposit_button = ngDriver.FindElement(NgBy.PartialButtonText("Deposit"));
+            Assert.IsTrue(ng_deposit_button.Displayed);
+            
+            actions.MoveToElement(ng_deposit_button.WrappedElement).Build().Perform();
+            Thread.Sleep(500);
+            ng_deposit_button.Click();
 
             // core Selenium
             wait.Until(ExpectedConditions.ElementExists(By.CssSelector("form[name='myForm']")));
             NgWebElement ng_form_element = new NgWebElement(ngDriver, driver.FindElement(By.CssSelector("form[name='myForm']")));
 
             // deposit amount
-            NgWebElement ng_deposit_amount_element = ng_form_element.FindElement(NgBy.Model("amount"));
-            ng_deposit_amount_element.SendKeys("100");
+            NgWebElement ng_deposit_amount = ng_form_element.FindElement(NgBy.Model("amount"));
+            ng_deposit_amount.SendKeys("100");
 
             wait.Until(ExpectedConditions.ElementIsVisible(NgBy.ButtonText("Deposit")));
-            ng_deposit_button_element = ng_form_element.FindElement(NgBy.ButtonText("Deposit"));
-            actions.MoveToElement(ng_deposit_button_element.WrappedElement).Build().Perform();
-            ngDriver.Highlight(ng_deposit_button_element);
+            ng_deposit_button = ng_form_element.FindElement(NgBy.ButtonText("Deposit"));
+            actions.MoveToElement(ng_deposit_button.WrappedElement).Build().Perform();
+            ngDriver.Highlight(ng_deposit_button);
 
-            ng_deposit_button_element.Click();
+            ng_deposit_button.Click();
             // http://www.way2automation.com/angularjs-protractor/banking/depositTx.html
 
             // inspect message
-            var ng_message_element = ngDriver.FindElement(NgBy.Binding("message"));
-            StringAssert.Contains("Deposit Successful", ng_message_element.Text);
-            ngDriver.Highlight(ng_message_element);
+            var ng_message = ngDriver.FindElement(NgBy.Binding("message"));
+            StringAssert.Contains("Deposit Successful", ng_message.Text);
+            ngDriver.Highlight(ng_message);
 
             // re-read the amount
-            int updated_account_amount = -1;
-            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_amount>\d+)$"), out updated_account_amount);
-            Assert.AreEqual(updated_account_amount, account_amount + 100);
+            int updated_account_balance = -1;
+            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_balance>\d+)$"), out updated_account_balance);
+            Assert.AreEqual(updated_account_balance, account_balance + 100);
         }
 
 
@@ -152,9 +155,9 @@ namespace Protractor.Test
         public void ShouldWithdraw()
         {
             ShouldDeposit();
-            int account_amount = -1;
-            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_amount>\d+)$"), out account_amount);
-            Assert.AreNotEqual(-1, account_amount);
+            int account_balance = -1;
+            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_balance>\d+)$"), out account_balance);
+            Assert.AreNotEqual(-1, account_balance);
 
             ngDriver.FindElement(NgBy.PartialButtonText("Withdrawl")).Click();
 
@@ -162,56 +165,56 @@ namespace Protractor.Test
             Thread.Sleep(1000);
             wait.Until(ExpectedConditions.ElementExists(By.CssSelector("form[name='myForm']")));
             NgWebElement ng_form_element = new NgWebElement(ngDriver, driver.FindElement(By.CssSelector("form[name='myForm']")));
-            NgWebElement ng_withdrawl_amount_element = ng_form_element.FindElement(NgBy.Model("amount"));
-            ng_withdrawl_amount_element.SendKeys((account_amount + 100).ToString());
+            NgWebElement ng_withdrawl_amount= ng_form_element.FindElement(NgBy.Model("amount"));
+            ng_withdrawl_amount.SendKeys((account_balance + 100).ToString());
 
-            NgWebElement ng_withdrawl_button_element = ng_form_element.FindElement(NgBy.ButtonText("Withdraw"));
-            ngDriver.Highlight(ng_withdrawl_button_element);
-            ng_withdrawl_button_element.Click();
+            NgWebElement ng_withdrawl_button = ng_form_element.FindElement(NgBy.ButtonText("Withdraw"));
+            ngDriver.Highlight(ng_withdrawl_button);
+            ng_withdrawl_button.Click();
 
             // inspect message
-            var ng_message_element = ngDriver.FindElement(NgBy.Binding("message"));
-            StringAssert.Contains("Transaction Failed. You can not withdraw amount more than the balance.", ng_message_element.Text);
-            ngDriver.Highlight(ng_message_element);
+            var ng_message = ngDriver.FindElement(NgBy.Binding("message"));
+            StringAssert.Contains("Transaction Failed. You can not withdraw amount more than the balance.", ng_message.Text);
+            ngDriver.Highlight(ng_message);
 
             // re-read the amount
-            int updated_account_amount = -1;
-            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_amount>\d+)$"), out updated_account_amount);
-            Assert.AreEqual(account_amount, updated_account_amount);
+            int updated_account_balance = -1;
+            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_balance>\d+)$"), out updated_account_balance);
+            Assert.AreEqual(account_balance, updated_account_balance);
 
             // core Selenium
             Thread.Sleep(1000);
             wait.Until(ExpectedConditions.ElementExists(By.CssSelector("form[name='myForm']")));
             ng_form_element = new NgWebElement(ngDriver, driver.FindElement(By.CssSelector("form[name='myForm']")));
 
-            ng_form_element.FindElement(NgBy.Model("amount")).SendKeys((account_amount - 10).ToString());
+            ng_form_element.FindElement(NgBy.Model("amount")).SendKeys((account_balance - 10).ToString());
             ng_form_element.FindElement(NgBy.ButtonText("Withdraw")).Click();
             // inspect message
-            ng_message_element = ngDriver.FindElement(NgBy.Binding("message"));
-            StringAssert.Contains("Transaction successful", ng_message_element.Text);
-            ngDriver.Highlight(ng_message_element);
+            ng_message = ngDriver.FindElement(NgBy.Binding("message"));
+            StringAssert.Contains("Transaction successful", ng_message.Text);
+            ngDriver.Highlight(ng_message);
 
             // re-read the amount
-            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_amount>\d+)$"), out updated_account_amount);
-            Assert.AreEqual(10, updated_account_amount);
+            int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_balance>\d+)$"), out updated_account_balance);
+            Assert.AreEqual(10, updated_account_balance);
 
         }
 
         [Test]
         public void ShouldLoginCustomer()
         {
-            NgWebElement ng_customer_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Customer Login"));
-            StringAssert.IsMatch("Customer Login", ng_customer_login_button_element.Text);
-            ngDriver.Highlight(ng_customer_login_button_element);
+            NgWebElement ng_customer_login_button = ngDriver.FindElement(NgBy.ButtonText("Customer Login"));
+            StringAssert.IsMatch("Customer Login", ng_customer_login_button.Text);
+            ngDriver.Highlight(ng_customer_login_button);
             // core Selenium
-            IWebElement customer_login_button_element = driver.FindElement(By.XPath("//button[contains(.,'Customer Login')]"));
-            StringAssert.IsMatch("Customer Login", customer_login_button_element.Text);
-            ngDriver.Highlight(customer_login_button_element);
+            IWebElement customer_login_button = driver.FindElement(By.XPath("//button[contains(.,'Customer Login')]"));
+            StringAssert.IsMatch("Customer Login", customer_login_button.Text);
+            ngDriver.Highlight(customer_login_button);
 
-            ng_customer_login_button_element.Click();
-            NgWebElement ng_user_select_element = ngDriver.FindElement(NgBy.Input("custId"));
-            StringAssert.IsMatch("userSelect", ng_user_select_element.GetAttribute("id"));
-            ReadOnlyCollection<NgWebElement> ng_customers = ng_user_select_element.FindElements(NgBy.Repeater("cust in Customers"));
+            ng_customer_login_button.Click();
+            NgWebElement ng_user_select = ngDriver.FindElement(NgBy.Input("custId"));
+            StringAssert.IsMatch("userSelect", ng_user_select.GetAttribute("id"));
+            ReadOnlyCollection<NgWebElement> ng_customers = ng_user_select.FindElements(NgBy.Repeater("cust in Customers"));
             Assert.AreNotEqual(0, ng_customers.Count);
             // pick a customer
             NgWebElement first_customer = ng_customers.First();
@@ -223,33 +226,33 @@ namespace Protractor.Test
             first_customer.Click();
 
             // login button
-            NgWebElement ng_login_button_element = ngDriver.FindElement(NgBy.ButtonText("Login"));
-            Assert.IsTrue(ng_login_button_element.Displayed && ng_login_button_element.Enabled);
-            ngDriver.Highlight(ng_login_button_element);
-            ng_login_button_element.Click();
+            NgWebElement ng_login_button = ngDriver.FindElement(NgBy.ButtonText("Login"));
+            Assert.IsTrue(ng_login_button.Displayed && ng_login_button.Enabled);
+            ngDriver.Highlight(ng_login_button);
+            ng_login_button.Click();
 
-            NgWebElement ng_greeting_element = ngDriver.FindElement(NgBy.Binding("user"));
-            Assert.IsNotNull(ng_greeting_element);
-            StringAssert.IsMatch(user, ng_greeting_element.Text);
-            ngDriver.Highlight(ng_greeting_element);
+            NgWebElement ng_greeting = ngDriver.FindElement(NgBy.Binding("user"));
+            Assert.IsNotNull(ng_greeting);
+            StringAssert.IsMatch(user, ng_greeting.Text);
+            ngDriver.Highlight(ng_greeting);
 
-            NgWebElement ng_account_number_element = ngDriver.FindElement(NgBy.Binding("accountNo"));
-            Assert.IsNotNull(ng_account_number_element);
+            NgWebElement ng_account_number = ngDriver.FindElement(NgBy.Binding("accountNo"));
+            Assert.IsNotNull(ng_account_number);
             theReg = new Regex(@"(?<account_id>\d+)$");
-            Assert.IsTrue(theReg.IsMatch(ng_account_number_element.Text));
-            ngDriver.Highlight(ng_account_number_element);
+            Assert.IsTrue(theReg.IsMatch(ng_account_number.Text));
+            ngDriver.Highlight(ng_account_number);
 
-            NgWebElement ng_account_amount_element = ngDriver.FindElement(NgBy.Binding("amount"));
-            Assert.IsNotNull(ng_account_amount_element);
-            theReg = new Regex(@"(?<account_amount>\d+)$");
-            Assert.IsTrue(theReg.IsMatch(ng_account_amount_element.Text));
-            ngDriver.Highlight(ng_account_amount_element);
+            NgWebElement ng_account_balance = ngDriver.FindElement(NgBy.Binding("amount"));
+            Assert.IsNotNull(ng_account_balance);
+            theReg = new Regex(@"(?<account_balance>\d+)$");
+            Assert.IsTrue(theReg.IsMatch(ng_account_balance.Text));
+            ngDriver.Highlight(ng_account_balance);
 
-            NgWebElement ng_account_currency_element = ngDriver.FindElement(NgBy.Binding("currency"));
-            Assert.IsNotNull(ng_account_currency_element);
+            NgWebElement ng_account_currency = ngDriver.FindElement(NgBy.Binding("currency"));
+            Assert.IsNotNull(ng_account_currency);
             theReg = new Regex(@"(?<account_currency>(?:Dollar|Pound|Rupee))$");
-            Assert.IsTrue(theReg.IsMatch(ng_account_currency_element.Text));
-            ngDriver.Highlight(ng_account_currency_element);
+            Assert.IsTrue(theReg.IsMatch(ng_account_currency.Text));
+            ngDriver.Highlight(ng_account_currency);
         }
 
         [Test]
@@ -260,26 +263,26 @@ namespace Protractor.Test
             ngDriver.FindElement(NgBy.PartialButtonText("Add Customer")).Click();
 
             // fill new Customer data
-            IWebElement ng_first_name_element = ngDriver.FindElement(NgBy.Model("fName"));
-            ngDriver.Highlight(ng_first_name_element);
-            StringAssert.IsMatch("First Name", ng_first_name_element.GetAttribute("placeholder"));
-            ng_first_name_element.SendKeys("John");
+            IWebElement ng_first_name = ngDriver.FindElement(NgBy.Model("fName"));
+            ngDriver.Highlight(ng_first_name);
+            StringAssert.IsMatch("First Name", ng_first_name.GetAttribute("placeholder"));
+            ng_first_name.SendKeys("John");
 
-            IWebElement ng_last_name_element = ngDriver.FindElement(NgBy.Model("lName"));
-            ngDriver.Highlight(ng_last_name_element);
-            StringAssert.IsMatch("Last Name", ng_last_name_element.GetAttribute("placeholder"));
-            ng_last_name_element.SendKeys("Doe");
+            IWebElement ng_last_name = ngDriver.FindElement(NgBy.Model("lName"));
+            ngDriver.Highlight(ng_last_name);
+            StringAssert.IsMatch("Last Name", ng_last_name.GetAttribute("placeholder"));
+            ng_last_name.SendKeys("Doe");
 
-            IWebElement ng_post_code_element = ngDriver.FindElement(NgBy.Model("postCd"));
-            ngDriver.Highlight(ng_post_code_element);
-            StringAssert.IsMatch("Post Code", ng_post_code_element.GetAttribute("placeholder"));
-            ng_post_code_element.SendKeys("11011");
+            IWebElement ng_post_code = ngDriver.FindElement(NgBy.Model("postCd"));
+            ngDriver.Highlight(ng_post_code);
+            StringAssert.IsMatch("Post Code", ng_post_code.GetAttribute("placeholder"));
+            ng_post_code.SendKeys("11011");
 
             // NOTE: there are two 'Add Customer' buttons on this form
-            NgWebElement ng_add_dustomer_button_element = ngDriver.FindElements(NgBy.PartialButtonText("Add Customer"))[1];
-            actions.MoveToElement(ng_add_dustomer_button_element.WrappedElement).Build().Perform();
-            ngDriver.Highlight(ng_add_dustomer_button_element);
-            ng_add_dustomer_button_element.Submit();
+            NgWebElement ng_add_customer_button = ngDriver.FindElements(NgBy.PartialButtonText("Add Customer"))[1];
+            actions.MoveToElement(ng_add_customer_button.WrappedElement).Build().Perform();
+            ngDriver.Highlight(ng_add_customer_button);
+            ng_add_customer_button.Submit();
 
             // confirm
             string alert_text = null;
@@ -310,16 +313,45 @@ namespace Protractor.Test
 
             // discover newly added customer
             ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
-            NgWebElement newly_added_customer = ng_customers.First(cust => Regex.IsMatch(cust.Text, "John Doe"));
-            Assert.IsNotNull(newly_added_customer);
+            int customer_count = ng_customers.Count;
+            NgWebElement ng_new_customer = ng_customers.First(cust => Regex.IsMatch(cust.Text, "John Doe"));
+            Assert.IsNotNull(ng_new_customer);
 
-            actions.MoveToElement(newly_added_customer.WrappedElement).Build().Perform();
-            ngDriver.Highlight(newly_added_customer);
+            actions.MoveToElement(ng_new_customer.WrappedElement).Build().Perform();
+            ngDriver.Highlight(ng_new_customer);
 
             // confirm searching for the customer name
             ngDriver.FindElement(NgBy.Model("searchCustomer")).SendKeys("John");
             ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
             Assert.AreEqual(1, ng_customers.Count);
+
+            // show all customers again
+            ngDriver.FindElement(NgBy.Model("searchCustomer")).Clear();
+
+            Thread.Sleep(500);
+            wait.Until(ExpectedConditions.ElementIsVisible(NgBy.Repeater("cust in Customers")));
+            // discover newly added customer again
+            ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
+            ng_new_customer = ng_customers.First(cust => Regex.IsMatch(cust.Text, "John Doe"));
+            // delete new customer
+            NgWebElement ng_delete_button = ng_new_customer.FindElement(NgBy.ButtonText("Delete"));
+            Assert.IsNotNull(ng_delete_button);
+            actions.MoveToElement(ng_delete_button.WrappedElement).Build().Perform();
+            ngDriver.Highlight(ng_delete_button, 1000);
+            // in slow motion
+            actions.MoveToElement(ng_delete_button.WrappedElement).ClickAndHold().Build().Perform();
+            Thread.Sleep(1000);
+            actions.Release();
+            // sometimes actions do not work - for example in this test 
+            ng_delete_button.Click();
+            // wait for customer list to reload
+            Thread.Sleep(1000);
+            wait.Until(ExpectedConditions.ElementIsVisible(NgBy.Repeater("cust in Customers")));
+            // count the remaining customers            
+            ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
+            int new_customer_count = ng_customers.Count;
+            // conrirm the customer count changed
+            Assert.IsTrue(customer_count - 1 == new_customer_count);
 
         }
 
@@ -336,10 +368,10 @@ namespace Protractor.Test
             ngDriver.FindElement(NgBy.Model("postCd")).SendKeys("11011");
 
             // NOTE: there are two 'Add Customer' buttons on this form
-            NgWebElement ng_add_dustomer_button_element = ngDriver.FindElements(NgBy.PartialButtonText("Add Customer"))[1];
-            actions.MoveToElement(ng_add_dustomer_button_element.WrappedElement).Build().Perform();
-            ngDriver.Highlight(ng_add_dustomer_button_element);
-            ng_add_dustomer_button_element.Submit();
+            NgWebElement ng_add_customer_button = ngDriver.FindElements(NgBy.PartialButtonText("Add Customer"))[1];
+            actions.MoveToElement(ng_add_customer_button.WrappedElement).Build().Perform();
+            ngDriver.Highlight(ng_add_customer_button);
+            ng_add_customer_button.Submit();
             // confirm
             ngDriver.WrappedDriver.SwitchTo().Alert().Accept();
 
@@ -350,17 +382,17 @@ namespace Protractor.Test
 
             // found new customer
             ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
-            // collect all usernames -
+            // collect all customers
             ReadOnlyCollection<NgWebElement> ng_users = ngDriver.FindElements(NgBy.RepeaterColumn("cust in Customers", "user"));
 
-            NgWebElement newly_added_customer = ng_customers.Single(cust => Regex.IsMatch(cust.Text, "John Doe"));
-            Assert.IsNotNull(newly_added_customer);
+            NgWebElement new_customer = ng_customers.Single(cust => Regex.IsMatch(cust.Text, "John Doe"));
+            Assert.IsNotNull(new_customer);
 
             // remove button
-            NgWebElement ng_delete_customer_button_element = newly_added_customer.FindElement(NgBy.ButtonText("Delete"));
-            StringAssert.IsMatch("Delete", ng_delete_customer_button_element.Text);
-            actions.MoveToElement(ng_delete_customer_button_element.WrappedElement).Build().Perform();
-            ng_delete_customer_button_element.Click();
+            NgWebElement ng_delete_customer_button = new_customer.FindElement(NgBy.ButtonText("Delete"));
+            StringAssert.IsMatch("Delete", ng_delete_customer_button.Text);
+            actions.MoveToElement(ng_delete_customer_button.WrappedElement).Build().Perform();
+            ng_delete_customer_button.Click();
 
             // confirm the cusomer is no loger present
             ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
@@ -376,27 +408,27 @@ namespace Protractor.Test
             ngDriver.FindElement(NgBy.PartialButtonText("Open Account")).Click();
 
             // fill new Account data
-            NgWebElement ng_customer_select_element = ngDriver.FindElement(NgBy.Model("custId"));
-            StringAssert.IsMatch("userSelect", ng_customer_select_element.GetAttribute("id"));
-            ReadOnlyCollection<NgWebElement> ng_customers = ng_customer_select_element.FindElements(NgBy.Repeater("cust in Customers"));
+            NgWebElement ng_customer_select = ngDriver.FindElement(NgBy.Model("custId"));
+            StringAssert.IsMatch("userSelect", ng_customer_select.GetAttribute("id"));
+            ReadOnlyCollection<NgWebElement> ng_customers = ng_customer_select.FindElements(NgBy.Repeater("cust in Customers"));
 
             // select customer to log in
             NgWebElement account_customer = ng_customers.First(cust => Regex.IsMatch(cust.Text, "Harry Potter*"));
             Assert.IsNotNull(account_customer);
             account_customer.Click();
 
-            NgWebElement ng_currencies_select_element = ngDriver.FindElement(NgBy.Model("currency"));
+            NgWebElement ng_currencies_select = ngDriver.FindElement(NgBy.Model("currency"));
             // use core Selenium
-            SelectElement currencies_select_element = new SelectElement(ng_currencies_select_element.WrappedElement);
-            IList<IWebElement> account_currencies = currencies_select_element.Options;
+            SelectElement currencies_select = new SelectElement(ng_currencies_select.WrappedElement);
+            IList<IWebElement> account_currencies = currencies_select.Options;
             IWebElement account_currency = account_currencies.First(cust => Regex.IsMatch(cust.Text, "Dollar"));
             Assert.IsNotNull(account_currency);
-            currencies_select_element.SelectByText("Dollar");
+            currencies_select.SelectByText("Dollar");
 
             // add the account
-            var submit_button_element = ngDriver.WrappedDriver.FindElement(By.XPath("/html/body//form/button[@type='submit']"));
-            StringAssert.IsMatch("Process", submit_button_element.Text);
-            submit_button_element.Click();
+            var submit_button = ngDriver.WrappedDriver.FindElement(By.XPath("/html/body//form/button[@type='submit']"));
+            StringAssert.IsMatch("Process", submit_button.Text);
+            submit_button.Click();
 
             try
             {
@@ -425,14 +457,14 @@ namespace Protractor.Test
             // get customers
             ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
             // discover customer
-            NgWebElement ng_customer_element = ng_customers.First(cust => Regex.IsMatch(cust.Text, "Harry Potter"));
-            Assert.IsNotNull(ng_customer_element);
+            NgWebElement ng_customer = ng_customers.First(cust => Regex.IsMatch(cust.Text, "Harry Potter"));
+            Assert.IsNotNull(ng_customer);
 
             // extract the account id from the alert message
             string account_id = alert_text.FindMatch(@"(?<account_id>\d+)$");
             Assert.IsNotNullOrEmpty(account_id);
             // search accounts of specific customer
-            ReadOnlyCollection<NgWebElement> ng_customer_accounts = ng_customer_element.FindElements(NgBy.Repeater("account in cust.accountNo"));
+            ReadOnlyCollection<NgWebElement> ng_customer_accounts = ng_customer.FindElements(NgBy.Repeater("account in cust.accountNo"));
 
             NgWebElement account_matching = ng_customer_accounts.First(acc => String.Equals(acc.Text, account_id));
             Assert.IsNotNull(account_matching);
@@ -476,10 +508,10 @@ namespace Protractor.Test
             ngDriver.FindElements(NgBy.Options("account for account in Accounts")).First(account => Regex.IsMatch(account.Text, "1001")).Click();
 
             // inspect transactions
-            NgWebElement ng_transactions_element = ngDriver.FindElement(NgBy.PartialButtonText("Transactions"));
-            StringAssert.Contains("Transactions", ng_transactions_element.Text);
-            ngDriver.Highlight(ng_transactions_element);
-            ng_transactions_element.Click();
+            NgWebElement ng_transactions = ngDriver.FindElement(NgBy.PartialButtonText("Transactions"));
+            StringAssert.Contains("Transactions", ng_transactions.Text);
+            ngDriver.Highlight(ng_transactions);
+            ng_transactions.Click();
             // http://www.way2automation.com/angularjs-protractor/banking/listTx.html
 
             // wait until transaction information gets loaded and rendered
@@ -490,14 +522,15 @@ namespace Protractor.Test
             Assert.IsNotEmpty(ng_transaction_type_columns);
 
             // highlight certain cells
-            foreach (NgWebElement ng_transaction_type_element in ng_transaction_type_columns)
+            foreach (NgWebElement ng_current_transaction_type in ng_transaction_type_columns)
             {
-                if (String.IsNullOrEmpty( ng_transaction_type_element.Text)){
-                   break;
-            	}
-                if (ng_transaction_type_element.Text.Equals("Credit"))
+                if (String.IsNullOrEmpty(ng_current_transaction_type.Text))
                 {
-                    ngDriver.Highlight(ng_transaction_type_element, 1000, 3, "green");
+                    break;
+                }
+                if (ng_current_transaction_type.Text.Equals("Credit"))
+                {
+                    ngDriver.Highlight(ng_current_transaction_type, 1000, 3, "green");
                 }
             }
         }
