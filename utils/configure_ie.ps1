@@ -1,4 +1,4 @@
-#Copyright (c) 2014,2015 Serguei Kouzmine
+#Copyright (c) 2014,2015,2016 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,37 @@ param(
   [switch]$all # for degrade6_ie.ps1
 )
 
+
+function change_registry_setting {
+
+  param(
+    [string]$hive,
+    [string]$path,
+    [string]$name,
+    [string]$value,
+    [string]$propertyType,
+    # will be converted to 'Microsoft.Win32.RegistryValueKind' enumeration
+    # 'String', 'ExpandString', 'Binary', 'DWord', 'MultiString', 'QWord'
+    [switch]$debug
+
+  )
+  pushd $hive
+  cd $path
+  $local:setting = Get-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -ErrorAction 'SilentlyContinue'
+  if ($local:setting -ne $null) {
+    if ([bool]$PSBoundParameters['debug'].IsPresent) {
+      Select-Object -ExpandProperty $name -InputObject $local:setting
+    }
+    Set-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value
+  } else {
+    New-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value -PropertyType $propertyType
+  }
+
+  popd
+
+
+}
+
 # Step 1  :  degrade1_ie.ps1  
 
 
@@ -42,6 +73,17 @@ $hives = @( 'HKCU:','HKLM:')
 $path = '/Software/Microsoft/Internet Explorer/Main'
 $name = 'EnableAutoUpgrade'
 $value = '0'
+$propertyType = 'Dword'
+
+$hives | ForEach-Object {
+  $hive = $_
+  change_registry_setting -hive $hive -Name $name -Value $value -propertyType $propertyType # -debug
+}
+<#
+$hives = @( 'HKCU:','HKLM:')
+$path = '/Software/Microsoft/Internet Explorer/Main'
+$name = 'EnableAutoUpgrade'
+$value = '0'
 $hives | ForEach-Object {
   $hive = $_
   pushd $hive
@@ -55,7 +97,7 @@ $hives | ForEach-Object {
   popd
 }
 
-
+#>
 
 # Step 2   degrade2_ie.ps1  
 Write-Host -ForegroundColor 'green' @"
@@ -66,6 +108,9 @@ $path = '/Software/Microsoft/Internet Explorer/Main'
 $name = 'Check_Associations'
 $value = 'no'
 $hive = 'HKCU:'
+$propertyType = 'String'
+change_registry_setting -hive $hive -Name $name -Value $value -propertyType $propertyType # -debug
+<#
 pushd $hive
 cd $path
 $setting = Get-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -ErrorAction 'SilentlyContinue'
@@ -77,9 +122,9 @@ if ($setting -ne $null) {
   }
 }
 popd
+#>
 
 
- 
 # Step 3  degrade3_ie.ps1  
 Write-Host -ForegroundColor 'green' @"
 This call clears "Display intranet sites in compatibility view" checkbox.
@@ -89,7 +134,11 @@ $hive = 'HKCU:'
 $path = '/Software/Microsoft/Internet Explorer/BrowserEmulation'
 $name = 'IntranetCompatibilityMode'
 $value = '0'
+$propertyType = 'Dword'
 
+change_registry_setting -hive $hive -Name $name -Value $value -propertyType $propertyType # -debug
+
+<#
 pushd $hive
 cd $path
 $setting = Get-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -ErrorAction 'SilentlyContinue'
@@ -102,6 +151,7 @@ if ($setting -ne $null) {
   }
 }
 popd
+#>
 
 # Step 5 degrade5_ie.ps1  
 Write-Host -ForegroundColor 'green' @"
@@ -142,7 +192,11 @@ $hive = 'HKCU:'
 $path = '/Software/Microsoft/Internet Explorer/Privacy'
 $name = 'ClearBrowsingHistoryOnExit'
 $value = '1'
+$propertyType = 'Dword'
 
+change_registry_setting -hive $hive -Name $name -Value $value -propertyType $propertyType # -debug
+
+<#
 pushd $hive
 $registry_path_status = Test-Path -Path $path -ErrorAction 'SilentlyContinue'
 if ($registry_path_status -eq $true) {
@@ -158,11 +212,12 @@ if ($registry_path_status -eq $true) {
   }
 }
 popd
+#>
 
-# TODO Ensure the subkeys under the following key are excpected to be destroyed:
-# [HKEY_CURRENT_USER/Software/Microsoft/Internet Explorer/DOMStorage]
+# TODO Ensure the subkeys under the following key are expected to be destroyed:
+# [/Software/Microsoft/Internet Explorer/DOMStorage]
 
- 
+
 # Step 6 degrade6_ie.ps1  
 Write-Host -ForegroundColor 'green' @"
 This call clears "Enable Protected Mode" - checkboxes - for specific internet "Zones" 
@@ -221,7 +276,7 @@ $zones | ForEach-Object {
   popd
 
 }
- 
+
 
 # Step 7 degrade7_ie.ps1  
 Write-Host -ForegroundColor 'green' @"
@@ -232,7 +287,10 @@ $hive = 'HKCU:'
 $path = '/Software/Microsoft/Internet Explorer/Main'
 $name = 'NoProtectedModeBanner'
 $value = '1'
+$propertyType = 'Dword'
 
+change_registry_setting -hive $hive -Name $name -Value $value -propertyType $propertyType # -debug
+<#
 pushd $hive
 cd $path
 $setting = Get-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -ErrorAction 'SilentlyContinue'
@@ -245,6 +303,7 @@ if ($setting -ne $null) {
   }
 }
 popd
+#>
 
 # Step 7 degrade8_ie.ps1  
 Write-Host -ForegroundColor 'green' @"
@@ -282,25 +341,24 @@ Write-Host -ForegroundColor 'green' @"
 This call Enalbes full SSL / TLS  support.
 "@
 
-$hive  = 'HKCU:'
-$path  ='/Software/Microsoft/Windows/CurrentVersion/Internet Settings'
-$name  = 'SecureProtocols'
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings'
+$name = 'SecureProtocols'
 $value = '2728'
-
+<#
 pushd $hive
 cd $path
 $setting = Get-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -ErrorAction 'SilentlyContinue'
 
-  if ($setting -ne $null) {
-    write-output $setting.SecureProtocols 
-
-    Set-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value
-  } else {
-    New-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value -PropertyType DWORD
-  }
+if ($setting -ne $null) {
+  # write-output $setting.SecureProtocols 
+  Set-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value
+} else {
+  New-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value -PropertyType DWORD
+}
 
 popd
-
+#>
 <#
  
 all: 2728
@@ -311,3 +369,31 @@ Use SSL 2.0 8
 Use SSL 3.0 32 
  
 #>
+
+$propertyType = 'Dword'
+
+change_registry_setting -hive $hive -Name $name -Value $value -propertyType $propertyType # -debug
+
+
+# http://www.sevenforums.com/tutorials/112232-internet-explorer-change-default-download-location.html
+$download_directory = 'C:\windows\temp'
+Write-Host -ForegroundColor 'green' @"
+This call sets default IE download location to ${download_directory}
+"@
+
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Internet Explorer/Main'
+$name = 'Default Download Directory'
+$value = $download_directory
+change_registry_setting -hive $hive -Name $name -Value $value -propertyType 'String' # -debug
+
+# http://www.sevenforums.com/tutorials/271795-internet-explorer-notify-when-downloads-complete-turn-off.html?filter=&#91;2]=Networking%20Internet
+Write-Host -ForegroundColor 'green' @"
+This call suppresses IE download notifications
+"@
+
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Internet Explorer/Main'
+$name = 'NotifyDownloadComplete'
+$value = 'no'
+change_registry_setting -hive $hive -Name $name -Value $value -propertyType 'String' # -debug
