@@ -505,10 +505,10 @@ namespace Protractor.Test
             ngDriver.FindElements(NgBy.Options("account for account in Accounts")).First(account => Regex.IsMatch(account.Text, "1001")).Click();
 
             // switch to transactions
-            NgWebElement ng_transaction_list_button = ngDriver.FindElement(NgBy.PartialButtonText("Transactions"));
-            StringAssert.Contains("Transactions", ng_transaction_list_button.Text);
-            ngDriver.Highlight(ng_transaction_list_button);
-            ng_transaction_list_button.Click();
+            NgWebElement ng_transaction_button = ngDriver.FindElement(NgBy.PartialButtonText("Transactions"));
+            StringAssert.Contains("Transactions", ng_transaction_button.Text);
+            ngDriver.Highlight(ng_transaction_button);
+            ng_transaction_button.Click();
 
             // wait for transaction information to be loaded and rendered
             wait.Until(ExpectedConditions.ElementExists(NgBy.Repeater("tx in transactions")));
@@ -537,10 +537,10 @@ namespace Protractor.Test
             ngDriver.FindElements(NgBy.Options("account for account in Accounts")).First(account => Regex.IsMatch(account.Text, "1001")).Click();
 
             // switch to transactions
-            NgWebElement ng_transaction_list_button = ngDriver.FindElement(NgBy.PartialButtonText("Transactions"));
-            StringAssert.Contains("Transactions", ng_transaction_list_button.Text);
-            ngDriver.Highlight(ng_transaction_list_button);
-            ng_transaction_list_button.Click();
+            NgWebElement ng_transaction_button = ngDriver.FindElement(NgBy.PartialButtonText("Transactions"));
+            StringAssert.Contains("Transactions", ng_transaction_button.Text);
+            ngDriver.Highlight(ng_transaction_button);
+            ng_transaction_button.Click();
             // http://www.way2automation.com/angularjs-protractor/banking/listTx.html
 
             // wait for transaction information to be loaded and rendered
