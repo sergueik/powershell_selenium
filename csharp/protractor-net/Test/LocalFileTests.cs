@@ -9,6 +9,7 @@ using OpenQA.Selenium.IE;
 using OpenQA.Selenium.PhantomJS;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 namespace Protractor.Test
 {
 
@@ -71,6 +72,17 @@ namespace Protractor.Test
                 }
             }
         }
+        
+        [Test]
+        public void ShouldFindElementByRepeaterColumn()
+        {
+            GetPageContent("ng_service_example.htm");
+            ReadOnlyCollection<NgWebElement> ng_countries = ngDriver.FindElements(NgBy.RepeaterColumn("person in people", "person.Country"));
+            
+            Assert.AreEqual(3, ng_countries.Count(o => String.Compare("Mexico", o.Text,
+                                                              StringComparison.InvariantCulture) == 0) );
+        }
+        
 
         [Test]
         public void ShouldFindRows()
