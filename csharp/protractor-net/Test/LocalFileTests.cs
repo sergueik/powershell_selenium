@@ -18,9 +18,9 @@ namespace Protractor.Test
         private StringBuilder verificationErrors = new StringBuilder();
         private IWebDriver driver;
         private NgWebDriver ngDriver;
-        
+
         private String testpage;
-        
+
         [TestFixtureSetUp]
         public void SetUp()
         {
@@ -41,20 +41,41 @@ namespace Protractor.Test
             catch (Exception) { } /* Ignore cleanup errors */
             Assert.IsEmpty(verificationErrors.ToString());
         }
-        private void GetPageContent(string testpage ){
-            String base_url = new System.Uri(Path.Combine( Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
-            ngDriver.Navigate().GoToUrl(base_url );
+        private void GetPageContent(string testpage)
+        {
+            String base_url = new System.Uri(Path.Combine(Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
+            ngDriver.Navigate().GoToUrl(base_url);
 
         }
         [Test]
         public void ShouldEvaluate()
         {
-       testpage = "ng_service_example.htm";
+            GetPageContent("ng_service_example.htm");
+            ReadOnlyCollection<NgWebElement> ng_people = ngDriver.FindElements(NgBy.Repeater("person in people"));
+            var ng_people_enumerator = ng_people.GetEnumerator();
+            ng_people_enumerator.Reset();
+            while (ng_people_enumerator.MoveNext())
+            {
+                NgWebElement ng_person = (NgWebElement)ng_people_enumerator.Current;
+                if (ng_person.Text == null)
+                {
+                    break;
+                }
+                NgWebElement ng_name = ng_person.FindElement(NgBy.Binding("person.Name"));
+                Assert.IsNotNull(ng_name.WrappedElement);
+                Object obj_country = ng_person.Evaluate("person.Country");
+                Assert.IsNotNull(obj_country);
+                if (String.Compare("Around the Horn", ng_name.Text) == 0)
+                {
+                	StringAssert.IsMatch("UK", obj_country.ToString());
+                }
+            }
         }
+
         [Test]
         public void ShouldFindRows()
         {
-            GetPageContent("ng_repeat_start_and_ng_repeat_end_example.htm" );
+            GetPageContent("ng_repeat_start_and_ng_repeat_end_example.htm");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Repeater("definition in definitions"));
             Assert.IsTrue(elements[0].Displayed);
             StringAssert.AreEqualIgnoringCase(elements[0].Text, "Foo");
@@ -63,7 +84,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindCells()
         {
-        	GetPageContent("ng_repeat_start_and_ng_repeat_end_example.htm");
+            GetPageContent("ng_repeat_start_and_ng_repeat_end_example.htm");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("definition in definitions", "definition.text"));
             Assert.AreEqual(elements.Count, 2);
             StringAssert.IsMatch("Lorem ipsum", elements[0].Text);
@@ -72,7 +93,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindTokens()
         {
-        	GetPageContent("ng_table1.html");
+            GetPageContent("ng_table1.html");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("x in names", "Country"));
             Assert.AreNotEqual(0, elements.Count);
             StringAssert.IsMatch("Germany", elements[0].Text);
