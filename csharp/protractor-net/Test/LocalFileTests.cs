@@ -48,6 +48,33 @@ namespace Protractor.Test
             ngDriver.Navigate().GoToUrl(base_url);
 
         }
+        [Test] 
+        public void ShouldFindElementByModel() {
+        	GetPageContent("use_ng_pattern_to_validate_example.htm");
+        	NgWebElement ng_input = ngDriver.FindElement(NgBy.Model("myVal"));
+        	ng_input.Clear();
+        	NgWebElement ng_valid = ngDriver.FindElement(NgBy.Binding("form.value.$valid"));
+        	StringAssert.IsMatch("false", ng_valid.Text);
+        	
+        	NgWebElement ng_pattern = ngDriver.FindElement(NgBy.Binding("form.value.$error.pattern"));
+        	StringAssert.IsMatch("false", ng_pattern.Text);
+        	
+        	NgWebElement ng_required = ngDriver.FindElement(NgBy.Binding("!!form.value.$error.required"));
+        	StringAssert.IsMatch("true", ng_required.Text);
+        	
+        	ng_input.SendKeys("42");
+        	Assert.IsTrue(ng_input.Displayed);
+        	ng_valid = ngDriver.FindElement(NgBy.Binding("form.value.$valid"));
+        	StringAssert.IsMatch("true", ng_valid.Text);
+        	
+        	ng_pattern = ngDriver.FindElement(NgBy.Binding("form.value.$error.pattern"));
+        	StringAssert.IsMatch("false", ng_pattern.Text);
+        	
+        	ng_required = ngDriver.FindElement(NgBy.Binding("!!form.value.$error.required"));
+        	StringAssert.IsMatch("false", ng_required.Text);
+        	
+        }
+        
         [Test]
         public void ShouldEvaluate()
         {
