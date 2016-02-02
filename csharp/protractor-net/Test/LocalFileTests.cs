@@ -83,6 +83,32 @@ namespace Protractor.Test
                                                               StringComparison.InvariantCulture) == 0) );
         }
         
+        [Test] 
+        public void ShouldFindSelectedtOption(){
+        	
+        	GetPageContent("bind_select_option_data_from_array_example.htm");
+        	NgWebElement ng_element = ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
+        	StringAssert.IsMatch("three", ng_element.Text);
+        	Assert.IsTrue(ng_element.Displayed);
+        }
+        
+        [Test] 
+        public void ShouldChangeSelectedtOption(){
+        	
+        	GetPageContent("bind_select_option_data_from_array_example.htm");
+        	
+        	ReadOnlyCollection<NgWebElement> ng_elements = ngDriver.FindElements(NgBy.Repeater("option in options"));
+        	NgWebElement ng_element = ng_elements.First(o => String.Compare("two", o.Text,
+        	                                                        StringComparison.InvariantCulture) == 0);
+        	ng_element.Click();
+        	string text = ng_element.Text;
+        	// Trigger WaitForAngular()
+        	Assert.IsTrue(ng_element.Displayed); 
+        	ng_element = ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
+        	StringAssert.IsMatch(text, ng_element.Text);
+        	// Assert.IsTrue(ng_element.Displayed);
+        }
+        
 
         [Test]
         public void ShouldFindRows()
