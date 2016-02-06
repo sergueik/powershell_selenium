@@ -1,5 +1,14 @@
-﻿using System;
+﻿
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+
+using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading;
+
 using NUnit.Framework;
 using OpenQA.Selenium;
 
@@ -8,10 +17,8 @@ using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
 using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Support.UI;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Threading;
+using Protractor.Extensions;
+
 namespace Protractor.Test
 {
 
@@ -126,7 +133,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindElementByModel()
         {
-        	//  NOTE: works with Angular 1.2.13, fails withAngular 1.4.9
+        	//  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
             GetPageContent("use_ng_pattern_to_validate_example.htm");
             NgWebElement ng_input = ngDriver.FindElement(NgBy.Model("myVal"));
             ng_input.Clear();
@@ -167,7 +174,7 @@ namespace Protractor.Test
         {
 
             GetPageContent("bind_select_option_data_from_array_example.htm");
-            //  NOTE: works with Angular 1.2.13, fails withAngular 1.4.9
+            //  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
             NgWebElement ng_element = ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
             StringAssert.IsMatch("three", ng_element.Text);
             Assert.IsTrue(ng_element.Displayed);
@@ -194,7 +201,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindCells()
         {
-        	//  NOTE: works with Angular 1.2.13, fails withAngular 1.4.9
+        	//  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
             GetPageContent("ng_repeat_start_and_ng_repeat_end_example.htm");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("definition in definitions", "definition.text"));
             Assert.AreEqual(2, elements.Count );
@@ -207,7 +214,13 @@ namespace Protractor.Test
             // base_url = "http://www.java2s.com/Tutorials/AngularJSDemo/n/ng_options_with_object_example.htm";
             GetPageContent("ng_options_with_object_example.htm");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Options("c.name for c in colors"));
-            Assert.AreEqual(5, elements.Count);
+            Assert.AreEqual(5, elements.Count); 
+            try {
+            	List<Dictionary<String, String>> result = elements[0].ScopeOf();
+            } catch (InvalidOperationException e){
+				// Maximum call stack size exceeded.            
+            	// TODO
+            }
             StringAssert.IsMatch("black", elements[0].Text);
             StringAssert.IsMatch("white", elements[1].Text);
         }
@@ -218,17 +231,8 @@ namespace Protractor.Test
             GetPageContent("ng_repeat_start_and_ng_repeat_end_example.htm");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Repeater("definition in definitions"));
             Assert.IsTrue(elements[0].Displayed);
+            
             StringAssert.AreEqualIgnoringCase(elements[0].Text, "Foo");
-        }
-
-        [Test]
-        public void ShouldFindTokens()
-        {
-            GetPageContent("ng_table1.html");
-            ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("x in names", "Country"));
-            Assert.AreNotEqual(0, elements.Count);
-            StringAssert.IsMatch("Germany", elements[0].Text);
-            StringAssert.IsMatch("Mexico", elements[1].Text);
         }
 
     }

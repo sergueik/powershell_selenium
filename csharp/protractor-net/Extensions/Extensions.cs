@@ -1,24 +1,25 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Collections.Generic;
+using System.Threading;
+
 using NUnit.Framework;
 using OpenQA.Selenium;
-using System.Collections.ObjectModel;
-using System.Collections;
-using System.Threading;
-using System.Linq;
 
 namespace Protractor.Extensions
 {
     public static class Extensions
     {
-    	
-        private static string result = null; 
-        private static Regex Reg; 
-        private static MatchCollection Matches; 
-        
-        public static string FindMatch(this string element_text, string match_string, string match_name )
+
+        private static string result = null;
+        private static Regex Reg;
+        private static MatchCollection Matches;
+
+        public static string FindMatch(this string element_text, string match_string, string match_name)
         {
             result = null;
             Reg = new Regex(match_string,
@@ -32,7 +33,8 @@ namespace Protractor.Extensions
 
                     foreach (Capture Capture in Match.Groups[match_name].Captures)
                     {
-                        if (result == null) {
+                        if (result == null)
+                        {
                             result = Capture.ToString();
                         }
                     }
@@ -41,7 +43,7 @@ namespace Protractor.Extensions
             return result;
         }
 
-        public static string FindMatch(this string element_text, string match_string )
+        public static string FindMatch(this string element_text, string match_string)
         {
 
             string match_name = match_string.FindMatch("(?:<(?<result>[^>]+)>)", "result");
@@ -58,7 +60,8 @@ namespace Protractor.Extensions
 
                     foreach (Capture Capture in Match.Groups[match_name].Captures)
                     {
-                        if (result == null) {
+                        if (result == null)
+                        {
                             result = Capture.ToString();
                         }
                     }
@@ -69,7 +72,7 @@ namespace Protractor.Extensions
 
         }
 
-        public static void Highlight(this NgWebDriver driver, IWebElement element, int highlight_timeout = 1000, int px = 3, string color = "yellow")
+        public static void Highlight(this NgWebDriver driver, IWebElement element, int highlight_timeout = 100, int px = 3, string color = "yellow")
         {
             IWebDriver context = driver.WrappedDriver;
             ((IJavaScriptExecutor)context).ExecuteScript("arguments[0].style.border='" + px + "px solid " + color + "'", element);
@@ -77,7 +80,7 @@ namespace Protractor.Extensions
             ((IJavaScriptExecutor)context).ExecuteScript("arguments[0].style.border=''", element);
         }
 
-        public static string CssSelectorOf(this NgWebElement element)
+        public static string CssSelectorOf(this NgWebElement ngWebElement)
         {
             string getCssSelectorOfElement = @"
 		var get_css_selector_of = function(element) {
@@ -112,10 +115,10 @@ namespace Protractor.Extensions
 return get_css_selector_of(arguments[0]);
 
 			";
-            return ((IJavaScriptExecutor)element.NgDriver.WrappedDriver).ExecuteScript(getCssSelectorOfElement, element.WrappedElement).ToString();
+            return ((IJavaScriptExecutor)ngWebElement.NgDriver.WrappedDriver).ExecuteScript(getCssSelectorOfElement, ngWebElement.WrappedElement).ToString();
         }
 
-        public static string XPathOf(this NgWebElement element)
+        public static string XPathOf(this NgWebElement ngWebElement)
         {
             string getXpathOfElement = @"
 		var get_xpath_of = function(element) {
@@ -147,7 +150,42 @@ return get_css_selector_of(arguments[0]);
 };
 return get_xpath_of(arguments[0]);
 			";
-            return ((IJavaScriptExecutor)element.NgDriver.WrappedDriver).ExecuteScript(getXpathOfElement, element.WrappedElement).ToString();
+            return ((IJavaScriptExecutor)ngWebElement.NgDriver.WrappedDriver).ExecuteScript(getXpathOfElement, ngWebElement.WrappedElement).ToString();
+        }
+
+
+        public static T Execute<T>(this IWebDriver driver, string script, params Object[] args)
+        {
+            return (T)((IJavaScriptExecutor)driver).ExecuteScript(script,args);
+        }
+
+        public static List<Dictionary<String, String>> ScopeOf(this NgWebElement ngWebElement)
+        {
+            string getScopeOfElement = "return angular.element(arguments[0]).scope();";
+            IWebDriver driver = ngWebElement.NgDriver.WrappedDriver;
+            List<Dictionary<String, String>> result = new List<Dictionary<string, string>>();
+            IEnumerable<Object> raw_data = driver.Execute<IEnumerable<Object>>(getScopeOfElement, ngWebElement.WrappedElement);
+            foreach (var element in (IEnumerable<Object>)raw_data)
+            {
+                Dictionary<String, String> row = new Dictionary<String, String>();
+                Dictionary<String, Object> dic = (Dictionary<String, Object>)element;
+                foreach (object key in dic.Keys)
+                {
+                    Object val = null;
+                    if (!dic.TryGetValue(key.ToString(), out val)) { val = ""; }
+                    row.Add(key.ToString(), val.ToString());
+                }
+                result.Add(row);
+            }
+            return result;
+
+        }
+        public static String IdentityOf(this NgWebElement ngWebElement)
+        {
+            string getIdentityOfElement = "return angular.identity(angular.element(arguments[0])).html();";
+            return ((IJavaScriptExecutor)ngWebElement.NgDriver.WrappedDriver).ExecuteScript(getIdentityOfElement, ngWebElement.WrappedElement).ToString();
         }
     }
+
+
 }
