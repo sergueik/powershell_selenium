@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <html ng-app="myApp">
-  <head>
+<head>
 <style>
 td { padding: 5px; }
 </style>
-
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.13/angular.js"></script>
-    <script>
-var myApp = angular.module('myApp', []);
-
-function MyCtrl($scope) {
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.js">
+</script>
+<script type="text/javascript">
+angular.module('myApp', []).controller('MyCtrl', function($scope) {
     $scope.items = [ {
         a: "A1",
         b: "B1",
@@ -31,8 +29,9 @@ function MyCtrl($scope) {
         b: "B5",
         c: "C5"
     } ];
-}  </script>
-  </head>
+});
+</script>
+</head>
   <body ng-controller="MyCtrl">
     <table>
       <tr ng-repeat="item in items">

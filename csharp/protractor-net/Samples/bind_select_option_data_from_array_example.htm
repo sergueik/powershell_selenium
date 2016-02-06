@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html ng-app="myApp">
 <head>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.13/angular.js"></script>
-  <script>
-var app = angular.module('myApp', []);
-
-app.controller('MainCtrl', function($scope) {
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.13/angular.js">
+</script>
+<script type='text/javascript'>
+angular.module('myApp', []).controller('myCtrl', function($scope) {
   $scope.myChoice = 3;
   $scope.options = [
     { name: 'one', value: 1},
@@ -16,7 +15,7 @@ app.controller('MainCtrl', function($scope) {
   
   </script>
 </head>
-<body ng-controller="MainCtrl">
+<body ng-controller="myCtrl">
   <select ng-model="myChoice">
     <option ng-repeat="option in options" 
             value="{{option.value}}" 

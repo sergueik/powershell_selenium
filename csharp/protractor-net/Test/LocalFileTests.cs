@@ -126,6 +126,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindElementByModel()
         {
+        	//  NOTE: works with Angular 1.2.13, fails withAngular 1.4.9
             GetPageContent("use_ng_pattern_to_validate_example.htm");
             NgWebElement ng_input = ngDriver.FindElement(NgBy.Model("myVal"));
             ng_input.Clear();
@@ -166,6 +167,7 @@ namespace Protractor.Test
         {
 
             GetPageContent("bind_select_option_data_from_array_example.htm");
+            //  NOTE: works with Angular 1.2.13, fails withAngular 1.4.9
             NgWebElement ng_element = ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
             StringAssert.IsMatch("three", ng_element.Text);
             Assert.IsTrue(ng_element.Displayed);
@@ -192,9 +194,10 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindCells()
         {
+        	//  NOTE: works with Angular 1.2.13, fails withAngular 1.4.9
             GetPageContent("ng_repeat_start_and_ng_repeat_end_example.htm");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("definition in definitions", "definition.text"));
-            Assert.AreEqual(elements.Count, 2);
+            Assert.AreEqual(2, elements.Count );
             StringAssert.IsMatch("Lorem ipsum", elements[0].Text);
         }
 

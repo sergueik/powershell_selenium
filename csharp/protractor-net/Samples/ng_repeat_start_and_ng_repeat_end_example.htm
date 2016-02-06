@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <!-- http://www.java2s.com/Tutorials/AngularJSDemo/n/ng_repeat_start_and_ng_repeat_end_example.htm -->
-<html ng-app>
+<html ng-app='myApp'>
 <head>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.13/angular.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.13/angular.js">
+</script>
 <script type='text/javascript'>
-function DemoCtrl($scope) {
+angular.module('myApp', []).controller('myCtrl', function($scope) {
     $scope.definitions = [{
         title: 'Foo',
         text: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit.'
@@ -12,13 +13,13 @@ function DemoCtrl($scope) {
         title: 'Bar',
         text: 'Iste aperiam nesciunt enim dolorum dolores labore necessitatibus dolor?'
     }]
-}
+})
 </script>
 </head>
 <body>
-  <dl ng-app="" ng-controller="DemoCtrl">
-  <dt ng-repeat-start="definition in definitions" ng-bind="definition.title"></dt>
-  <dd ng-repeat-end="" ng-bind="definition.text"></dd>
+  <dl ng-app='' ng-controller='myCtrl'>
+  <dt ng-repeat-start='definition in definitions' ng-bind='definition.title'></dt>
+  <dd ng-repeat-end='' ng-bind='definition.text'></dd>
 </dl>
 </body>
 </html>
