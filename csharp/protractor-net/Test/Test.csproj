@@ -75,6 +75,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Samples\angularjs_todo_examle.htm">
+      <Link>angularjs_todo_examle.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="..\Samples\bind_select_option_data_from_array_example.htm">
       <Link>bind_select_option_data_from_array_example.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

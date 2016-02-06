@@ -235,5 +235,13 @@ namespace Protractor.Test
             StringAssert.AreEqualIgnoringCase(elements[0].Text, "Foo");
         }
 
+        [Test]
+        public void ShouldAngularTodoApp()
+        {
+            GetPageContent("angularjs_todo_examle.htm");
+            ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Repeater("todo in todoList.todos"));
+            String test = elements[0].IdentityOf();
+        }
+
     }
 }
