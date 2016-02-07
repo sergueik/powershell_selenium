@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -133,7 +132,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindElementByModel()
         {
-        	//  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
+            //  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
             GetPageContent("use_ng_pattern_to_validate_example.htm");
             NgWebElement ng_input = ngDriver.FindElement(NgBy.Model("myVal"));
             ng_input.Clear();
@@ -201,10 +200,10 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindCells()
         {
-        	//  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
+            //  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
             GetPageContent("ng_repeat_start_and_ng_repeat_end_example.htm");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("definition in definitions", "definition.text"));
-            Assert.AreEqual(2, elements.Count );
+            Assert.AreEqual(2, elements.Count);
             StringAssert.IsMatch("Lorem ipsum", elements[0].Text);
         }
 
@@ -214,12 +213,15 @@ namespace Protractor.Test
             // base_url = "http://www.java2s.com/Tutorials/AngularJSDemo/n/ng_options_with_object_example.htm";
             GetPageContent("ng_options_with_object_example.htm");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Options("c.name for c in colors"));
-            Assert.AreEqual(5, elements.Count); 
-            try {
-            	List<Dictionary<String, String>> result = elements[0].ScopeOf();
-            } catch (InvalidOperationException e){
-				// Maximum call stack size exceeded.            
-            	// TODO
+            Assert.AreEqual(5, elements.Count);
+            try
+            {
+                List<Dictionary<String, String>> result = elements[0].ScopeOf();
+            }
+            catch (InvalidOperationException e)
+            {
+                // Maximum call stack size exceeded.            
+                // TODO
             }
             StringAssert.IsMatch("black", elements[0].Text);
             StringAssert.IsMatch("white", elements[1].Text);
@@ -231,7 +233,7 @@ namespace Protractor.Test
             GetPageContent("ng_repeat_start_and_ng_repeat_end_example.htm");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Repeater("definition in definitions"));
             Assert.IsTrue(elements[0].Displayed);
-            
+
             StringAssert.AreEqualIgnoringCase(elements[0].Text, "Foo");
         }
 
@@ -239,9 +241,20 @@ namespace Protractor.Test
         public void ShouldAngularTodoApp()
         {
             GetPageContent("angularjs_todo_examle.htm");
-            ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Repeater("todo in todoList.todos"));
-            String test = elements[0].IdentityOf();
+            ReadOnlyCollection<NgWebElement> ng_todo_elements = ngDriver.FindElements(NgBy.Repeater("todo in todoList.todos"));
+            String ng_identity = ng_todo_elements[0].IdentityOf();
+            // <input type="checkbox" ng-model="todo.done" class="ng-pristine ng-untouched ng-valid">
+            // <span class="done-true">learn angular</span>
+            List<Dictionary<String, String>> todo_scope_data = ng_todo_elements[0].ScopeDataOf("todoList.todos");
+            int todo_index = todo_scope_data.FindIndex(o => String.Equals(o["text"], "build an angular app"));
+            Assert.AreEqual(1, todo_index);
+            //foreach (var row in todo_scope_data)
+            //{
+            //    foreach (string key in row.Keys)
+            //    {
+            //        Console.Error.WriteLine(key + " " + row[key]);
+            //    }
+            //}
         }
-
     }
 }

@@ -45,7 +45,6 @@ namespace Protractor.Extensions
 
         public static string FindMatch(this string element_text, string match_string)
         {
-
             string match_name = match_string.FindMatch("(?:<(?<result>[^>]+)>)", "result");
             result = null;
             Reg = new Regex(match_string,
@@ -113,7 +112,6 @@ namespace Protractor.Extensions
     return path.join(' > ');
 }
 return get_css_selector_of(arguments[0]);
-
 			";
             return ((IJavaScriptExecutor)ngWebElement.NgDriver.WrappedDriver).ExecuteScript(getCssSelectorOfElement, ngWebElement.WrappedElement).ToString();
         }
@@ -156,7 +154,7 @@ return get_xpath_of(arguments[0]);
 
         public static T Execute<T>(this IWebDriver driver, string script, params Object[] args)
         {
-            return (T)((IJavaScriptExecutor)driver).ExecuteScript(script,args);
+            return (T)((IJavaScriptExecutor)driver).ExecuteScript(script, args);
         }
 
         public static List<Dictionary<String, String>> ScopeOf(this NgWebElement ngWebElement)
@@ -178,14 +176,33 @@ return get_xpath_of(arguments[0]);
                 result.Add(row);
             }
             return result;
-
         }
+
+        public static List<Dictionary<String, String>> ScopeDataOf(this NgWebElement ngWebElement, string scopeData)
+        {
+            string getScopeData = String.Format("return angular.element(arguments[0]).scope().{0};", scopeData);
+            IWebDriver driver = ngWebElement.NgDriver.WrappedDriver;
+            List<Dictionary<String, String>> result = new List<Dictionary<string, string>>();
+            IEnumerable<Object> raw_data = driver.Execute<IEnumerable<Object>>(getScopeData, ngWebElement.WrappedElement);
+            foreach (var element in (IEnumerable<Object>)raw_data)
+            {
+                Dictionary<String, String> row = new Dictionary<String, String>();
+                Dictionary<String, Object> dic = (Dictionary<String, Object>)element;
+                foreach (object key in dic.Keys)
+                {
+                    Object val = null;
+                    if (!dic.TryGetValue(key.ToString(), out val)) { val = ""; }
+                    row.Add(key.ToString(), val.ToString());
+                }
+                result.Add(row);
+            }
+            return result;
+        }
+
         public static String IdentityOf(this NgWebElement ngWebElement)
         {
             string getIdentityOfElement = "return angular.identity(angular.element(arguments[0])).html();";
             return ((IJavaScriptExecutor)ngWebElement.NgDriver.WrappedDriver).ExecuteScript(getIdentityOfElement, ngWebElement.WrappedElement).ToString();
         }
     }
-
-
 }
