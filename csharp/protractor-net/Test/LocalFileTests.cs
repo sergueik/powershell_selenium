@@ -107,7 +107,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldEvaluate()
         {
-            GetPageContent("ng_service_example.htm");
+            GetPageContent("ng_service.htm");
             ReadOnlyCollection<NgWebElement> ng_people = ngDriver.FindElements(NgBy.Repeater("person in people"));
             var ng_people_enumerator = ng_people.GetEnumerator();
             ng_people_enumerator.Reset();
@@ -133,7 +133,7 @@ namespace Protractor.Test
         public void ShouldFindElementByModel()
         {
             //  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
-            GetPageContent("use_ng_pattern_to_validate_example.htm");
+            GetPageContent("ng_pattern_validate.htm");
             NgWebElement ng_input = ngDriver.FindElement(NgBy.Model("myVal"));
             ng_input.Clear();
             NgWebElement ng_valid = ngDriver.FindElement(NgBy.Binding("form.value.$valid"));
@@ -161,7 +161,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindElementByRepeaterColumn()
         {
-            GetPageContent("ng_service_example.htm");
+            GetPageContent("ng_service.htm");
             ReadOnlyCollection<NgWebElement> ng_countries = ngDriver.FindElements(NgBy.RepeaterColumn("person in people", "person.Country"));
 
             Assert.AreEqual(3, ng_countries.Count(o => String.Compare("Mexico", o.Text,
@@ -172,7 +172,7 @@ namespace Protractor.Test
         public void ShouldFindSelectedtOption()
         {
 
-            GetPageContent("bind_select_option_data_from_array_example.htm");
+            GetPageContent("ng_select_array.htm");
             //  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
             NgWebElement ng_element = ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
             StringAssert.IsMatch("three", ng_element.Text);
@@ -183,7 +183,7 @@ namespace Protractor.Test
         public void ShouldChangeSelectedtOption()
         {
 
-            GetPageContent("bind_select_option_data_from_array_example.htm");
+            GetPageContent("ng_select_array.htm");
 
             ReadOnlyCollection<NgWebElement> ng_elements = ngDriver.FindElements(NgBy.Repeater("option in options"));
             NgWebElement ng_element = ng_elements.First(o => String.Compare("two", o.Text,
@@ -201,7 +201,7 @@ namespace Protractor.Test
         public void ShouldFindCells()
         {
             //  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
-            GetPageContent("ng_repeat_start_and_ng_repeat_end_example.htm");
+            GetPageContent("ng_repeat_start_end.htm");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("definition in definitions", "definition.text"));
             Assert.AreEqual(2, elements.Count);
             StringAssert.IsMatch("Lorem ipsum", elements[0].Text);
@@ -211,7 +211,7 @@ namespace Protractor.Test
         public void ShouldFindOptions()
         {
             // base_url = "http://www.java2s.com/Tutorials/AngularJSDemo/n/ng_options_with_object_example.htm";
-            GetPageContent("ng_options_with_object_example.htm");
+            GetPageContent("ng_options_with_object.htm");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Options("c.name for c in colors"));
             Assert.AreEqual(5, elements.Count);
             try
@@ -230,7 +230,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldFindRows()
         {
-            GetPageContent("ng_repeat_start_and_ng_repeat_end_example.htm");
+            GetPageContent("ng_repeat_start_end.htm");
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Repeater("definition in definitions"));
             Assert.IsTrue(elements[0].Displayed);
 
@@ -240,7 +240,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldAngularTodoApp()
         {
-            GetPageContent("angularjs_todo_examle.htm");
+            GetPageContent("ng_todo.htm");
             ReadOnlyCollection<NgWebElement> ng_todo_elements = ngDriver.FindElements(NgBy.Repeater("todo in todoList.todos"));
             String ng_identity = ng_todo_elements[0].IdentityOf();
             // <input type="checkbox" ng-model="todo.done" class="ng-pristine ng-untouched ng-valid">

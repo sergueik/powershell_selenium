@@ -75,12 +75,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Samples\angularjs_todo_examle.htm">
-      <Link>angularjs_todo_examle.htm</Link>
+    <None Include="..\Samples\ng_todo.htm">
+      <Link>ng_todo.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\Samples\bind_select_option_data_from_array_example.htm">
-      <Link>bind_select_option_data_from_array_example.htm</Link>
+    <None Include="..\Samples\ng_select_array.htm">
+      <Link>ng_select_array.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="..\Samples\ng_basic.htm">
@@ -95,20 +95,20 @@
       <Link>ng_dropdown_watch.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\Samples\ng_options_with_object_example.htm">
-      <Link>ng_options_with_object_example.htm</Link>
+    <None Include="..\Samples\ng_options_with_object.htm">
+      <Link>ng_options_with_object.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\Samples\ng_repeat_example.htm">
-      <Link>ng_repeat_example.htm</Link>
+    <None Include="..\Samples\ng_repeat.htm">
+      <Link>ng_repeat.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\Samples\ng_repeat_start_and_ng_repeat_end_example.htm">
-      <Link>ng_repeat_start_and_ng_repeat_end_example.htm</Link>
+    <None Include="..\Samples\ng_repeat_start_end.htm">
+      <Link>ng_repeat_start_end.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\Samples\ng_service_example.htm">
-      <Link>ng_service_example.htm</Link>
+    <None Include="..\Samples\ng_service.htm">
+      <Link>ng_service.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="..\Samples\ng_table1.html">
@@ -119,8 +119,8 @@
       <Link>ng_th.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\Samples\use_ng_pattern_to_validate_example.htm">
-      <Link>use_ng_pattern_to_validate_example.htm</Link>
+    <None Include="..\Samples\ng_pattern_validate.htm">
+      <Link>ng_pattern_validate.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
