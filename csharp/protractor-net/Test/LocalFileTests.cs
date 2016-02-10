@@ -238,6 +238,22 @@ namespace Protractor.Test
         }
 
         [Test]
+        public void ShouldFindAllBindings()
+        {
+            GetPageContent("ng_directive_binding.htm");
+            IWebElement container = ngDriver.WrappedDriver.FindElement(By.CssSelector("body div"));
+            Console.Error.WriteLine(container.GetAttribute("innerHTML"));
+            ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Binding("name"));
+            Assert.AreEqual(5,elements.Count);
+            foreach (NgWebElement element in elements) { 
+				Console.Error.WriteLine(element.WrappedElement.GetAttribute("outerHTML"));
+				Console.Error.WriteLine(String.Format("Identity: {0}" , element.IdentityOf()));
+				Console.Error.WriteLine(String.Format("Text: {0}" ,element.Text));
+				
+            }
+        }
+
+        [Test]
         public void ShouldAngularTodoApp()
         {
             GetPageContent("ng_todo.htm");

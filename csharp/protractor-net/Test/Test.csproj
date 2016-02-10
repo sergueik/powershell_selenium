@@ -75,6 +75,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Samples\ng_directive_binding.htm">
+      <Link>ng_directive_binding.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="..\Samples\ng_todo.htm">
       <Link>ng_todo.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
