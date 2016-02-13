@@ -38,7 +38,7 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
 
 } else {
   $selenium = launch_selenium -browser $browser
-  start-sleep -millisecond 500
+  Start-Sleep -Millisecond 500
 }
 
 $selenium.Navigate().GoToUrl($base_url)
@@ -59,42 +59,58 @@ highlight ([ref]$selenium) ([ref]$searchicon_button_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$searchicon_button_element).Click().Build().Perform()
 
 
-  $project_cards_selector = 'body.search.desktop.list section#pagecontainer form#searchform'
-  [object]$project_cards_containter_element = find_element -css_selector $project_cards_selector
-  [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_cards_containter_element).Build().Perform()
-  highlight ([ref]$selenium) ([ref]$project_cards_containter_element)
+$project_cards_selector = 'body.search.desktop.list section#pagecontainer form#searchform'
+[object]$project_cards_containter_element = find_element -css_selector $project_cards_selector
+[void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_cards_containter_element).Build().Perform()
+highlight ([ref]$selenium) ([ref]$project_cards_containter_element)
 
 
-  $project_card_selector = 'div.content a.hdrlnk'
-  [object[]]$project_card_elements = $project_cards_containter_element.FindElements([OpenQA.Selenium.By]::CssSelector($project_card_selector))
-  $projects = @()
-  $max_count = 3 
-  $count = 0
-  Write-Output ('{0} project card found' -f $project_card_elements.count)
-  $project_card_elements | ForEach-Object {
-    $count ++ 
-    if ($count -gt $max_count ) { return }
-    $project_card_element = $_
-    [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_card_element).Build().Perform()
-    Write-Output $project_card_element.Text
-    Write-Output $project_card_element.GetAttribute('href')
-    Write-Output '----'
-    highlight ([ref]$selenium) ([ref]$project_card_element)
-    $projects += @{'title' = $project_card_element.Text ; 'url' = $project_card_element.GetAttribute('href') }
-  }
+$project_card_selector = 'div.content a.hdrlnk'
+[object[]]$project_card_elements = $project_cards_containter_element.FindElements([OpenQA.Selenium.By]::CssSelector($project_card_selector))
+$projects = @()
+$max_count = 3
+$count = 0
+Write-Output ('{0} project card found' -f $project_card_elements.count)
+$project_card_elements | ForEach-Object {
+  $count++
+  if ($count -gt $max_count) { return }
+  $project_card_element = $_
+  [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_card_element).Build().Perform()
+  Write-Output $project_card_element.Text
+  Write-Output $project_card_element.GetAttribute('href')
+  Write-Output '----'
+  highlight ([ref]$selenium) ([ref]$project_card_element)
+  $projects += @{ 'title' = $project_card_element.Text; 'url' = $project_card_element.GetAttribute('href') }
+}
 
 
-$projects | foreach-object { 
+$projects | ForEach-Object {
 
-$project = $_ 
+  $project = $_
 
-    Write-Output $project['title']
-    Write-Output $project['url']
-    $selenium.Navigate().GoToUrl($project['url'])
+  Write-Output $project['title']
+  Write-Output $project['url']
+  # random wait ...
 
-    'section#pagecontainer section.body header.dateReplyBar button.reply_button'
-    # wait
- }
+  $selenium.Navigate().GoToUrl($project['url'])
+
+
+  [string]$reply_css_selector = 'section#pagecontainer section.body header.dateReplyBar button.reply_button'
+  [object]$reply_button_element = find_element -css_selector $reply_css_selector
+
+  highlight ([ref]$selenium) ([ref]$reply_button_element)
+  [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$reply_button_element).Click().Build().Perform()
+
+  Write-Output 'reply'
+  // recaptcha comes here after certain  number of iteractions or time spent browsing the craigslist
+  Start-Sleep -Millisecond 1000
+
+  [string]$login_username_selector = "section#pagecontainer section.body header.dateReplyBar div.returnemail div.reply_options ul.pad a.mailapp"
+  [object]$login_username_element = find_element -css_selector $login_username_selector
+  highlight ([ref]$selenium) ([ref]$login_username_element)
+  Write-Output $login_username_element.Text
+
+}
 # https://miami.craigslist.org/mdc/cps/5386568039.html
 custom_pause -fullstop $fullstop
 # Cleanup
