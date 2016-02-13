@@ -68,7 +68,7 @@ highlight ([ref]$selenium) ([ref]$project_cards_containter_element)
 $project_card_selector = 'div.content a.hdrlnk'
 [object[]]$project_card_elements = $project_cards_containter_element.FindElements([OpenQA.Selenium.By]::CssSelector($project_card_selector))
 $projects = @()
-$max_count = 3
+$max_count = 100
 $count = 0
 Write-Output ('{0} project card found' -f $project_card_elements.count)
 $project_card_elements | ForEach-Object {
@@ -102,8 +102,31 @@ $projects | ForEach-Object {
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$reply_button_element).Click().Build().Perform()
 
   Write-Output 'reply'
-  // recaptcha comes here after certain  number of iteractions or time spent browsing the craigslist
+  # recaptcha comes here after certain  number of iteractions or time spent browsing the craigslist
   Start-Sleep -Millisecond 1000
+  $recaptcha_found = $false
+  $recaptcha_selector = "div[id='g-recaptcha']"
+  [object[]]$recaptcha_elements = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($recaptcha_selector))
+  if ($recaptcha_elements.count -gt 0) {
+
+    Write-Output 'Recaptcha'
+    $recaptcha_found = $true
+  }
+  while ($recaptcha_found) {
+    # block  
+    try {
+      [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($recaptcha_selector)))
+      Write-Output 'Recaptcha still present'
+    } catch [exception]{
+      Write-Debug ("Exception : {0} ...`nxpath='{1}'" -f (($_.Exception.Message) -split "`n")[0],$extended_xpath)
+      Write-Output 'Recaptcha no longer visible'
+      $recaptcha_found = $false
+    }
+    Start-Sleep 10
+    Write-Output 'Waiting for recaptcha to be filled'
+    $recaptcha_found = $true
+  }
+    Write-Output 'After recaptcha'
 
   [string]$login_username_selector = "section#pagecontainer section.body header.dateReplyBar div.returnemail div.reply_options ul.pad a.mailapp"
   [object]$login_username_element = find_element -css_selector $login_username_selector
@@ -115,3 +138,23 @@ $projects | ForEach-Object {
 custom_pause -fullstop $fullstop
 # Cleanup
 cleanup ([ref]$selenium)
+
+
+
+<#
+"invisibilityOfElementLocated"
+WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+wait.Until<IWebElement>((d) =>
+{
+    IWebElement element = driver.FindElement(By.Id("myid"));
+    if (element.Displayed &&
+        element.Enabled &&
+        element.GetAttribute("aria-disabled") == null)
+    {
+        return element;
+    }
+
+    return null;
+});
+http://stackoverflow.com/questions/22646031/selenium-wait-until-element-is-not-visible
+#>
