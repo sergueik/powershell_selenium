@@ -105,6 +105,21 @@ namespace Protractor.Test
         }
 
         [Test]
+        public void ShouldEvaluateIf()
+        {
+            GetPageContent("ng_watch_ng_if.htm");
+            IWebElement button = ngDriver.WrappedDriver.FindElement(By.CssSelector("button.btn"));
+            NgWebElement ng_button = new NgWebElement(ngDriver,button);
+            Object state = ng_button.Evaluate("!house.frontDoor.isOpen");
+            Assert.IsTrue(Convert.ToBoolean(state));
+            StringAssert.IsMatch("house.frontDoor.open()", button.GetAttribute("ng-click"));
+            StringAssert.IsMatch("Open Door", button.Text);
+            button.Click();
+            
+            	
+        }
+        
+        [Test]
         public void ShouldEvaluate()
         {
             GetPageContent("ng_service.htm");
