@@ -32,6 +32,8 @@ namespace PopupHandler
             
             if (browser.Equals("ie", StringComparison.InvariantCultureIgnoreCase))
             {
+
+/*
                 if (executionmode.Equals("cancel", StringComparison.InvariantCultureIgnoreCase))
                 {
                     // retrieve Windows Security main window handle
@@ -50,8 +52,12 @@ namespace PopupHandler
                     if (hWnd.Equals(IntPtr.Zero)) {
                         Console.WriteLine("Dialog with title Security Popup not found");
                     }
+                    return;
                 }
-                else (executionmode.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
+                else
+*/
+
+				if (executionmode.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
                 {
                     string[] data = { uid, pwd };
                     // retrieve Windows Security main window handle
@@ -107,7 +113,7 @@ namespace PopupHandler
                     {
                         Console.WriteLine("Dialog Handle not present");
                     }
- 
+                    return; 
                 }           
             } 
         }
