@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Collections;
- 
+
 namespace PopupHandler
 {
- 
+
     class Program
     {
         private const int WM_SETTEXT = 0x000C;
@@ -17,7 +17,7 @@ namespace PopupHandler
         public const int SC_CLOSE = 0xF060;
         public const int BM_CLICK = 0x00F5;
         public const int EM_SETPASSWORDCHAR = 0X00CC;
- 
+
         [DllImport("user32.dll")]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
         [DllImport("User32.dll")]
@@ -26,14 +26,13 @@ namespace PopupHandler
         private static extern Int32 SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, StringBuilder lParam);
         [DllImport("user32.dll")]
         public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
- 
+
         private void HandlePopUp(string browser, string executionmode, string uid, string pwd)
         {
-            
+
             if (browser.Equals("ie", StringComparison.InvariantCultureIgnoreCase))
             {
 
-/*
                 if (executionmode.Equals("cancel", StringComparison.InvariantCultureIgnoreCase))
                 {
                     // retrieve Windows Security main window handle
@@ -49,22 +48,21 @@ namespace PopupHandler
                         }
                         System.Threading.Thread.Sleep(1000);
                     }
-                    if (hWnd.Equals(IntPtr.Zero)) {
+                    if (hWnd.Equals(IntPtr.Zero))
+                    {
                         Console.WriteLine("Dialog with title Security Popup not found");
                     }
                     return;
                 }
-                else
-*/
 
-				if (executionmode.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
+                if (executionmode.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
                 {
                     string[] data = { uid, pwd };
                     // retrieve Windows Security main window handle
                     IntPtr hWnd = FindWindow("#32770", "Windows Security");
                     int iterateForSecurityPopup = 0;
                     IntPtr duihWnd;
- 
+
                     for (iterateForSecurityPopup = 0; iterateForSecurityPopup < 25; iterateForSecurityPopup++)
                     {
                         hWnd = FindWindow("#32770", "Windows Security");
@@ -89,13 +87,13 @@ namespace PopupHandler
                                     }
                                     i++;
                                 }
- 
+
                                 i = 0;
                                 while (i <= childs.Count)
                                 {
                                     //Click on ok
                                     IntPtr btnOkhWnd = FindWindowEx((IntPtr)childs[i], IntPtr.Zero, "Button", "OK");
- 
+
                                     if (!btnOkhWnd.Equals(IntPtr.Zero))
                                     {
                                         SendMessage(btnOkhWnd, BM_CLICK, 0, 0);
@@ -105,19 +103,19 @@ namespace PopupHandler
                                 }
                             }
                         }
- 
-                       System.Threading.Thread.Sleep(750);
+
+                        System.Threading.Thread.Sleep(750);
                     }
- 
+
                     if (hWnd.Equals(IntPtr.Zero))
                     {
                         Console.WriteLine("Dialog Handle not present");
                     }
-                    return; 
-                }           
-            } 
+                    return;
+                }
+            }
         }
- 
+
         static ArrayList GetAllChildrenWindowHandles(IntPtr hParent, int maxCount)
         {
             ArrayList result = new ArrayList();
@@ -141,18 +139,18 @@ namespace PopupHandler
 
         static void Main(string[] args)
         {
- 
+
             string browser = args[0];
             string mode = args[1];
             string uid = "";
             string pwd = "";
- 
-                uid = args[2];
-                pwd = args[3];
- 
+
+            uid = args[2];
+            pwd = args[3];
+
             new Program().HandlePopUp(browser, mode, uid, pwd);
- 
- 
+
+
         }
     }
 }
