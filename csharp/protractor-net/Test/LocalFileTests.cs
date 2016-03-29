@@ -119,16 +119,50 @@ namespace Protractor.Test
 
 
         [Test]
-        public void testPrintOrderByFieldColumn()
+        public void ShouldPrintOrderByFieldColumn()
         {
-            GetPageContent("ng_watch_ng_if.htm");
-            IWebElement button = ngDriver.FindElement(By.CssSelector("button.btn"));
-            NgWebElement ng_button = new NgWebElement(ngDriver, button);
-            Object state = ng_button.Evaluate("!house.frontDoor.isOpen");
-            Assert.IsTrue(Convert.ToBoolean(state));
-            StringAssert.IsMatch("house.frontDoor.open()", button.GetAttribute("ng-click"));
-            StringAssert.IsMatch("Open Door", button.Text);
-            button.Click();
+            GetPageContent("ng_headers_sort_example2.htm");
+            String[] headers = new String[] { "First Name", "Last Name", "Age" };
+            foreach (String header in headers)
+            {
+                for (int cnt = 0; cnt != 2; cnt++)
+                {
+                    IWebElement headerElement = ngDriver.FindElement(By.XPath("//th/a[contains(text(),'" + header + "')]"));
+                    Console.Error.WriteLine("Clicking on header: " + header);
+                    headerElement.Click();
+                    // Trigger ngDriver.WaitForAngular()
+                    Assert.IsNotEmpty(ngDriver.Url);
+                    ReadOnlyCollection<NgWebElement> ng_emps = ngDriver.FindElements(NgBy.Repeater("emp in data.employees"));
+                    NgWebElement ng_emp = ng_emps[0];
+                    String field = ng_emp.GetAttribute("ng-order-by");
+                    Console.Error.WriteLine(field + ": " + ng_emp.Evaluate(field).ToString());
+                    String empField = "emp." + ng_emp.Evaluate(field);
+                    Console.Error.WriteLine(empField + ":");
+                    var ng_emp_enumerator = ng_emps.GetEnumerator();
+                    ng_emp_enumerator.Reset();
+                    while (ng_emp_enumerator.MoveNext())
+                    {
+                        ng_emp = (NgWebElement)ng_emp_enumerator.Current;
+                        if (ng_emp.Text == null)
+                        {
+                            break;
+                        }
+                        Assert.IsNotNull(ng_emp.WrappedElement);
+
+                        // Console.Error.WriteLine(ngEmp.getAttribute("innerHTML"));
+                        try
+                        {
+                            NgWebElement ng_column = ng_emp.FindElement(NgBy.Binding(empField));
+                            Assert.IsNotNull(ng_column);
+                            Console.Error.WriteLine(ng_column.Text);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine(ex.ToString());
+                        }
+                    }
+                }
+            }
         }
 
 
