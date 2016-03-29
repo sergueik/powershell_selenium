@@ -28,7 +28,7 @@ namespace Protractor.Test
         private IWebDriver driver;
         private NgWebDriver ngDriver;
 
-        private String testpage;
+        // private String testpage;
 
         [TestFixtureSetUp]
         public void SetUp()
@@ -109,20 +109,49 @@ namespace Protractor.Test
         {
             GetPageContent("ng_watch_ng_if.htm");
             IWebElement button = ngDriver.WrappedDriver.FindElement(By.CssSelector("button.btn"));
-            NgWebElement ng_button = new NgWebElement(ngDriver,button);
+            NgWebElement ng_button = new NgWebElement(ngDriver, button);
             Object state = ng_button.Evaluate("!house.frontDoor.isOpen");
             Assert.IsTrue(Convert.ToBoolean(state));
             StringAssert.IsMatch("house.frontDoor.open()", button.GetAttribute("ng-click"));
             StringAssert.IsMatch("Open Door", button.Text);
             button.Click();
-            
-            	
         }
-        
+
+
         [Test]
-        public void ShouldEvaluate()
+        public void testPrintOrderByFieldColumn()
         {
-            GetPageContent("ng_service.htm");
+            GetPageContent("ng_watch_ng_if.htm");
+            IWebElement button = ngDriver.FindElement(By.CssSelector("button.btn"));
+            NgWebElement ng_button = new NgWebElement(ngDriver, button);
+            Object state = ng_button.Evaluate("!house.frontDoor.isOpen");
+            Assert.IsTrue(Convert.ToBoolean(state));
+            StringAssert.IsMatch("house.frontDoor.open()", button.GetAttribute("ng-click"));
+            StringAssert.IsMatch("Open Door", button.Text);
+            button.Click();
+        }
+
+
+        [Test]
+        public void ShouldFindOrderByField()
+        {
+            GetPageContent("ng_headers_sort_example1.htm");
+
+            String[] headers = new String[] { "First Name", "Last Name", "Age" };
+            foreach (String header in headers)
+            {
+                IWebElement headerelement = ngDriver.FindElement(By.XPath(String.Format("//th/a[contains(text(),'{0}')]", header)));
+                Console.Error.WriteLine(header);
+                headerelement.Click();
+                // Trigger ngDriver.WaitForAngular()
+                Assert.IsNotEmpty(ngDriver.Title);
+                IWebElement emp = ngDriver.FindElement(NgBy.Repeater("emp in data.employees"));
+                NgWebElement ngRow = new NgWebElement(ngDriver, emp);
+                String orderByField = emp.GetAttribute("ng-order-by");
+                Console.Error.WriteLine(orderByField + ": " + ngRow.Evaluate(orderByField).ToString());
+            }
+
+
             ReadOnlyCollection<NgWebElement> ng_people = ngDriver.FindElements(NgBy.Repeater("person in people"));
             var ng_people_enumerator = ng_people.GetEnumerator();
             ng_people_enumerator.Reset();
@@ -233,7 +262,7 @@ namespace Protractor.Test
             {
                 List<Dictionary<String, String>> result = elements[0].ScopeOf();
             }
-            catch (InvalidOperationException e)
+            catch (InvalidOperationException)
             {
                 // Maximum call stack size exceeded.            
                 // TODO
@@ -259,12 +288,13 @@ namespace Protractor.Test
             IWebElement container = ngDriver.WrappedDriver.FindElement(By.CssSelector("body div"));
             Console.Error.WriteLine(container.GetAttribute("innerHTML"));
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Binding("name"));
-            Assert.AreEqual(5,elements.Count);
-            foreach (NgWebElement element in elements) { 
-				Console.Error.WriteLine(element.WrappedElement.GetAttribute("outerHTML"));
-				Console.Error.WriteLine(String.Format("Identity: {0}" , element.IdentityOf()));
-				Console.Error.WriteLine(String.Format("Text: {0}" ,element.Text));
-				
+            Assert.AreEqual(5, elements.Count);
+            foreach (NgWebElement element in elements)
+            {
+                Console.Error.WriteLine(element.WrappedElement.GetAttribute("outerHTML"));
+                Console.Error.WriteLine(String.Format("Identity: {0}", element.IdentityOf()));
+                Console.Error.WriteLine(String.Format("Text: {0}", element.Text));
+
             }
         }
 

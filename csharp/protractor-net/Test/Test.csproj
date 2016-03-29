@@ -131,6 +131,22 @@
       <Link>ng_pattern_validate.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="..\Samples\ng_headers_sort_example1.htm">
+      <Link>ng_headers_sort_example1.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_headers_sort_example2.htm">
+      <Link>ng_headers_sort_example2.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_multi_select.htm">
+      <Link>ng_multi_select.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_repeat_selected.htm">
+      <Link>ng_repeat_selected.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CalculatorTests.cs" />
