@@ -59,7 +59,6 @@ namespace Protractor.Test
         [Test]
         public void ShouldDropDown()
         {
-
             GetPageContent("ng_dropdown.htm");
             string optionsCountry = "country for (country, states) in countries";
             ReadOnlyCollection<NgWebElement> ng_countries = ngDriver.FindElements(NgBy.Options(optionsCountry));
@@ -116,6 +115,22 @@ namespace Protractor.Test
             StringAssert.IsMatch("Open Door", button.Text);
             button.Click();
         }
+
+        [Test]
+        public void ShouldHandleMultiSelect()
+        {
+            GetPageContent("ng_multi_select.htm");
+            IWebElement element = ngDriver.FindElement(NgBy.Model("selectedValues"));
+            // use core Selenium
+            IList<IWebElement> options = new SelectElement(element).Options;
+			IEnumerator<IWebElement> etr = options.Where(o => Convert.ToBoolean(o.GetAttribute("selected"))).GetEnumerator();
+            while (etr.MoveNext())
+            {
+                Console.Error.Write(etr.Current.Text);
+            }
+
+        }
+
 
 
         [Test]
