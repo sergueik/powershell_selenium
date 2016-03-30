@@ -119,7 +119,9 @@ namespace Protractor.Test
 
         [Test]
         public void ShouldHandleMultiSelect()
+        // appears to be broken in PahtomJS / working in desktop browsers
         {
+            Actions actions = new Actions(ngDriver.WrappedDriver);
             GetPageContent("ng_multi_select.htm");
             IWebElement element = ngDriver.FindElement(NgBy.Model("selectedValues"));
             // use core Selenium
@@ -127,9 +129,23 @@ namespace Protractor.Test
             IEnumerator<IWebElement> etr = options.Where(o => Convert.ToBoolean(o.GetAttribute("selected"))).GetEnumerator();
             while (etr.MoveNext())
             {
-                Console.Error.Write(etr.Current.Text);
+                Console.Error.WriteLine(etr.Current.Text);
             }
-
+            foreach (IWebElement option in options)
+            {
+                // http://selenium.googlecode.com/svn/trunk/docs/api/dotnet/html/AllMembers_T_OpenQA_Selenium_Keys.htm
+                actions.KeyDown(Keys.Control).Click(option).KeyUp(Keys.Control).Build().Perform();
+                // triggers ngDriver.WaitForAngular()
+                Assert.IsNotEmpty(ngDriver.Url);
+            }
+            // re-read select options
+            element = ngDriver.FindElement(NgBy.Model("selectedValues"));
+            options = new SelectElement(element).Options;
+            etr = options.Where(o => Convert.ToBoolean(o.GetAttribute("selected"))).GetEnumerator();
+            while (etr.MoveNext())
+            {
+                Console.Error.WriteLine(etr.Current.Text);
+            }
         }
 
         [Test]
@@ -178,7 +194,6 @@ namespace Protractor.Test
                 }
             }
         }
-
 
         [Test]
         public void ShouldFindOrderByField()
@@ -247,7 +262,6 @@ namespace Protractor.Test
 
             ng_required = ngDriver.FindElement(NgBy.Binding("!!form.value.$error.required"));
             StringAssert.IsMatch("false", ng_required.Text);
-
         }
 
         [Test]
@@ -257,13 +271,12 @@ namespace Protractor.Test
             ReadOnlyCollection<NgWebElement> ng_countries = ngDriver.FindElements(NgBy.RepeaterColumn("person in people", "person.Country"));
 
             Assert.AreEqual(3, ng_countries.Count(o => String.Compare("Mexico", o.Text,
-                                                              StringComparison.InvariantCulture) == 0));
+                                                     StringComparison.InvariantCulture) == 0));
         }
 
         [Test]
         public void ShouldFindSelectedtOption()
         {
-
             GetPageContent("ng_select_array.htm");
             //  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
             NgWebElement ng_element = ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
@@ -274,9 +287,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldChangeSelectedtOption()
         {
-
             GetPageContent("ng_select_array.htm");
-
             ReadOnlyCollection<NgWebElement> ng_elements = ngDriver.FindElements(NgBy.Repeater("option in options"));
             NgWebElement ng_element = ng_elements.First(o => String.Compare("two", o.Text,
                                                                     StringComparison.InvariantCulture) == 0);
@@ -342,7 +353,6 @@ namespace Protractor.Test
                 Console.Error.WriteLine(element.GetAttribute("outerHTML"));
                 Console.Error.WriteLine(String.Format("Identity: {0}", element.IdentityOf()));
                 Console.Error.WriteLine(String.Format("Text: {0}", element.Text));
-
             }
         }
 
