@@ -425,7 +425,7 @@ namespace Protractor.Test
             currencies_select.SelectByText("Dollar");
 
             // add the account
-            var submit_button = ngDriver.WrappedDriver.FindElement(By.XPath("/html/body//form/button[@type='submit']"));
+            var submit_button = ngDriver.FindElement(By.XPath("/html/body//form/button[@type='submit']"));
             StringAssert.IsMatch("Process", submit_button.Text);
             submit_button.Click();
 
@@ -480,7 +480,7 @@ namespace Protractor.Test
             // alterntive locator using core selenium
             wait.Until(ExpectedConditions.ElementExists(By.CssSelector("tr[ng-repeat*='cust in Customers']")));
 
-            IWebElement sort_link = ngDriver.WrappedDriver.FindElement(By.CssSelector("a[ng-click*='sortType'][ng-click*= 'fName']"));
+            IWebElement sort_link = ngDriver.FindElement(By.CssSelector("a[ng-click*='sortType'][ng-click*= 'fName']"));
             StringAssert.Contains("First Name", sort_link.Text);
             ngDriver.Highlight(sort_link);
             sort_link.Click();

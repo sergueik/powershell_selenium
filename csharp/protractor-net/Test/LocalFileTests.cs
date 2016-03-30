@@ -10,6 +10,7 @@ using System.Threading;
 
 using NUnit.Framework;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Interactions;
 
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
@@ -76,7 +77,7 @@ namespace Protractor.Test
             // TODO:debug (works in Java client)
             // Assert.IsNotNull(ng_selected_country.WrappedElement);
             // ng_countries = ngDriver.FindElements(NgBy.Options(optionsCountry));
-            NgWebElement ng_country = ng_countries.First(o => o.WrappedElement.Selected);
+            NgWebElement ng_country = ng_countries.First(o => o.Selected);
             StringAssert.IsMatch("Australia", ng_country.Text);
         }
 
@@ -98,7 +99,7 @@ namespace Protractor.Test
             Assert.IsTrue(ng_state.Enabled);
             NgWebElement ng_selected_country = ngDriver.FindElement(NgBy.SelectedOption("country"));
             Assert.IsNotNull(ng_selected_country.WrappedElement);
-            NgWebElement ng_country = ng_countries.First(o => o.WrappedElement.Selected);
+            NgWebElement ng_country = ng_countries.First(o => o.Selected);
             StringAssert.IsMatch("china", ng_country.Text);
 
         }
@@ -107,7 +108,7 @@ namespace Protractor.Test
         public void ShouldEvaluateIf()
         {
             GetPageContent("ng_watch_ng_if.htm");
-            IWebElement button = ngDriver.WrappedDriver.FindElement(By.CssSelector("button.btn"));
+            IWebElement button = ngDriver.FindElement(By.CssSelector("button.btn"));
             NgWebElement ng_button = new NgWebElement(ngDriver, button);
             Object state = ng_button.Evaluate("!house.frontDoor.isOpen");
             Assert.IsTrue(Convert.ToBoolean(state));
@@ -123,15 +124,13 @@ namespace Protractor.Test
             IWebElement element = ngDriver.FindElement(NgBy.Model("selectedValues"));
             // use core Selenium
             IList<IWebElement> options = new SelectElement(element).Options;
-			IEnumerator<IWebElement> etr = options.Where(o => Convert.ToBoolean(o.GetAttribute("selected"))).GetEnumerator();
+            IEnumerator<IWebElement> etr = options.Where(o => Convert.ToBoolean(o.GetAttribute("selected"))).GetEnumerator();
             while (etr.MoveNext())
             {
                 Console.Error.Write(etr.Current.Text);
             }
 
         }
-
-
 
         [Test]
         public void ShouldPrintOrderByFieldColumn()
@@ -145,7 +144,7 @@ namespace Protractor.Test
                     IWebElement headerElement = ngDriver.FindElement(By.XPath("//th/a[contains(text(),'" + header + "')]"));
                     Console.Error.WriteLine("Clicking on header: " + header);
                     headerElement.Click();
-                    // Trigger ngDriver.WaitForAngular()
+                    // triggers ngDriver.WaitForAngular()
                     Assert.IsNotEmpty(ngDriver.Url);
                     ReadOnlyCollection<NgWebElement> ng_emps = ngDriver.FindElements(NgBy.Repeater("emp in data.employees"));
                     NgWebElement ng_emp = ng_emps[0];
@@ -334,13 +333,13 @@ namespace Protractor.Test
         public void ShouldFindAllBindings()
         {
             GetPageContent("ng_directive_binding.htm");
-            IWebElement container = ngDriver.WrappedDriver.FindElement(By.CssSelector("body div"));
+            IWebElement container = ngDriver.FindElement(By.CssSelector("body div"));
             Console.Error.WriteLine(container.GetAttribute("innerHTML"));
             ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Binding("name"));
             Assert.AreEqual(5, elements.Count);
             foreach (NgWebElement element in elements)
             {
-                Console.Error.WriteLine(element.WrappedElement.GetAttribute("outerHTML"));
+                Console.Error.WriteLine(element.GetAttribute("outerHTML"));
                 Console.Error.WriteLine(String.Format("Identity: {0}", element.IdentityOf()));
                 Console.Error.WriteLine(String.Format("Text: {0}", element.Text));
 
