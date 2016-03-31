@@ -116,6 +116,17 @@ namespace Protractor
         }
 
         /// <summary>
+        /// Gets a mechanism to find selected option elements in the select element
+        /// implemented via repeater without a model, by the repeater attribute.
+        /// </summary>
+        /// <param name="repeater">The repeater attribute.</param>
+        /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
+        public static By SelectedRepeaterOption(string repeater)
+        {
+            return new JavaScriptBy(ClientSideScripts.FindSelectedRepeaterOption, repeater);
+        }
+
+        /// <summary>
         /// Gets a mechanism to find select option elements by their model name.
         /// </summary>
         /// <param name="model">The model name.</param>
