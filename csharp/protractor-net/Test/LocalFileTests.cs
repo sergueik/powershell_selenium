@@ -118,6 +118,14 @@ namespace Protractor.Test
         }
 
         [Test]
+        public void ShouldFindRepeaterSelectedtOption()
+        {
+            GetPageContent("ng_repeat_selected.htm");
+            NgWebElement ng_element = ngDriver.FindElement(NgBy.SelectedRepeaterOption("fruit in Fruits"));
+            StringAssert.IsMatch("Mango", ng_element.Text);
+        }
+
+        [Test]
         public void ShouldHandleMultiSelect()
         // appears to be broken in PahtomJS / working in desktop browsers
         {
