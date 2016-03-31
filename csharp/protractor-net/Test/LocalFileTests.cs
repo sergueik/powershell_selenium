@@ -125,6 +125,27 @@ namespace Protractor.Test
             StringAssert.IsMatch("Mango", ng_element.Text);
         }
 
+        
+        [Test]
+        public void ShouldChangeRepeaterSelectedtOption()
+        {
+            GetPageContent("ng_repeat_selected.htm");
+            NgWebElement ng_element = ngDriver.FindElement(NgBy.SelectedRepeaterOption("fruit in Fruits"));
+            StringAssert.IsMatch("Mango", ng_element.Text);
+            ReadOnlyCollection<NgWebElement> ng_elements = ngDriver.FindElements(NgBy.Repeater("fruit in Fruits"));
+            ng_element = ng_elements.First(o => String.Compare("Orange", o.Text,
+                                                                    StringComparison.InvariantCulture) == 0);
+            ng_element.Click();
+            string text = ng_element.Text;
+            // to trigger WaitForAngular
+            Assert.IsTrue(ng_element.Displayed);
+            // reload
+            ng_element = ngDriver.FindElement(NgBy.SelectedRepeaterOption("fruit in Fruits"));
+            StringAssert.IsMatch("Orange", ng_element.Text);
+   
+        }
+
+
         [Test]
         public void ShouldHandleMultiSelect()
         // appears to be broken in PahtomJS / working in desktop browsers
@@ -214,8 +235,8 @@ namespace Protractor.Test
                 IWebElement headerelement = ngDriver.FindElement(By.XPath(String.Format("//th/a[contains(text(),'{0}')]", header)));
                 Console.Error.WriteLine(header);
                 headerelement.Click();
-                // Trigger ngDriver.WaitForAngular()
-                Assert.IsNotEmpty(ngDriver.Title);
+                // to trigger WaitForAngular
+                Assert.IsNotEmpty(ngDriver.Url);
                 IWebElement emp = ngDriver.FindElement(NgBy.Repeater("emp in data.employees"));
                 NgWebElement ngRow = new NgWebElement(ngDriver, emp);
                 String orderByField = emp.GetAttribute("ng-order-by");
@@ -301,8 +322,9 @@ namespace Protractor.Test
                                                                     StringComparison.InvariantCulture) == 0);
             ng_element.Click();
             string text = ng_element.Text;
-            // Trigger WaitForAngular()
+            // to trigger WaitForAngular
             Assert.IsTrue(ng_element.Displayed);
+            
             ng_element = ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
             StringAssert.IsMatch(text, ng_element.Text);
             // Assert.IsTrue(ng_element.Displayed);
