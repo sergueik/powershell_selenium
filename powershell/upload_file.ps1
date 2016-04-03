@@ -24,13 +24,22 @@
 param(
   [string]$browser,
   [string]$hub_host = '127.0.0.1',
-  [string]$hub_port = '4444'
+  [string]$hub_port = '4444',
+  [switch]$grid,
+  [switch]$pause
+
 )
 
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 load_shared_assemblies
-$selenium = launch_selenium -browser $browser -hub_host $hub_host -hub_port $hub_port
+# $selenium = launch_selenium -browser $browser -hub_host $hub_host -hub_port $hub_port
+if ([bool]$PSBoundParameters['grid'].IsPresent) {
+  $selenium = launch_selenium -browser $browser -grid
+  Start-Sleep -Millisecond 500
+} else {
+  $selenium = launch_selenium -browser $browser
+}
 
 $base_url = 'http://www.freetranslation.com/'
 $selenium.Navigate().GoToUrl($base_url)
@@ -60,6 +69,13 @@ $upload_element = find_element -classname 'ajaxupload-input'
 highlight_new -element $upload_element -Delay 1500
 
 Write-Host ('Uploading the file "{0}".' -f $text_file)
+# https://searchcode.com/codesearch/view/51339609/
+# https://selenium.googlecode.com/git/docs/api/dotnet/html/T_OpenQA_Selenium_Remote_LocalFileDetector.htm
+# http://www.whatisthis.top/questions/3270474/how-to-upload-image-to-web-page-in-saucelabs-test-by-selenium-in-c
+# use Vagrant box-hosted Selenium for testing this feature
+[OpenQA.Selenium.Remote.LocalFileDetector]$local_file_detector = new-object OpenQA.Selenium.Remote.LocalFileDetector
+# parenthesis required
+([OpenQA.Selenium.IAllowsFileDetection]$selenium).FileDetector  = $local_file_detector
 $upload_element.SendKeys($text_file)
 # hard wait
 Start-Sleep 2
