@@ -79,6 +79,10 @@
       <Link>ng_directive_binding.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="..\Samples\ng_upload1.htm">
+      <Link>ng_upload1.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="..\Samples\ng_watch_ng_if.htm">
       <Link>ng_watch_ng_if.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

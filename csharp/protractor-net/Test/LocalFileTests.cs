@@ -125,7 +125,7 @@ namespace Protractor.Test
             StringAssert.IsMatch("Mango", ng_element.Text);
         }
 
-        
+
         [Test]
         public void ShouldChangeRepeaterSelectedtOption()
         {
@@ -142,7 +142,7 @@ namespace Protractor.Test
             // reload
             ng_element = ngDriver.FindElement(NgBy.SelectedRepeaterOption("fruit in Fruits"));
             StringAssert.IsMatch("Orange", ng_element.Text);
-   
+
         }
 
 
@@ -324,7 +324,7 @@ namespace Protractor.Test
             string text = ng_element.Text;
             // to trigger WaitForAngular
             Assert.IsTrue(ng_element.Displayed);
-            
+
             ng_element = ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
             StringAssert.IsMatch(text, ng_element.Text);
             // Assert.IsTrue(ng_element.Displayed);
@@ -368,6 +368,21 @@ namespace Protractor.Test
             Assert.IsTrue(elements[0].Displayed);
 
             StringAssert.AreEqualIgnoringCase(elements[0].Text, "Foo");
+        }
+
+        [Test]
+        public void ShouldUpload()
+        {
+            // This example tries to interact with custom 'fileModel' directive 
+            GetPageContent("ng_upload1.htm");
+            NgWebElement ng_file = ngDriver.FindElement(By.CssSelector("div[ng-controller = 'myCtrl'] > input[type='file']"));
+            Assert.IsNotNull(ng_file.WrappedElement);
+            String localPath = "C:/developer/sergueik/powershell_selenium/powershell/testfile.txt";
+            ng_file.WrappedElement.SendKeys(localPath);
+        	String myFile = ng_file.Evaluate("myFile").ToString();
+            // String script = "var e = angular.element(arguments[0]); var f = e.scope().myFile; return f.name";
+            // Object result = CommonFunctions.executeScript(script,file);
+            // assertThat(result, notNullValue());
         }
 
         [Test]
