@@ -1,5 +1,10 @@
-HostMe/bin/*
-HostMe/obj/*
-packages/*
-*.suo
-.vs/*
+build.log
+**/*.exe
+**/*.zip
+**/*jar
+**/bin
+**/obj
+**/*.suo
+**/.nuget
+vendor/*
+**/packages/**
