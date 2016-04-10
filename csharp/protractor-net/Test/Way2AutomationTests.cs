@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Globalization;
 using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
@@ -43,6 +44,9 @@ namespace Protractor.Test
             driver = new ChromeDriver();
             // var options = new InternetExplorerOptions() { IntroduceInstabilityByIgnoringProtectedModeSettings = true };
             // driver = new InternetExplorerDriver(options);
+            // Thread.Sleep(1000);
+            // with InternetExplorerDriver
+            // SetUp : OpenQA.Selenium.NoSuchWindowException : Unable to get browser
             driver.Manage().Window.Size = new System.Drawing.Size(800, 600);
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
             ngDriver = new NgWebDriver(driver);
@@ -212,6 +216,7 @@ namespace Protractor.Test
             ngDriver.Highlight(customer_login_button);
 
             ng_customer_login_button.Click();
+            // 
             NgWebElement ng_user_select = ngDriver.FindElement(NgBy.Input("custId"));
             StringAssert.IsMatch("userSelect", ng_user_select.GetAttribute("id"));
             ReadOnlyCollection<NgWebElement> ng_customers = ng_user_select.FindElements(NgBy.Repeater("cust in Customers"));
@@ -521,9 +526,20 @@ namespace Protractor.Test
                 if (cnt++ > 5) { break; }
                 StringAssert.IsMatch("(?i:credit|debit)", ng_current_transaction.Evaluate("tx.type").ToString());
                 StringAssert.IsMatch(@"(?:\d+)", ng_current_transaction.Evaluate("tx.amount").ToString());
-                // 'tx.date' is in Javascript UTC format similar to UniversalSorta­bleDateTimePat­tern in C# 
-                var transaction_date = ng_current_transaction.Evaluate("tx.date");
-                StringAssert.IsMatch(@"(?:\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z)", transaction_date.ToString());
+                // NOTE: need to evaluate full expression - Evaluate("tx.date") returns an empty Dictionary
+                string transaction_datetime = ng_current_transaction.Evaluate(" tx.date | date:'medium'").ToString();
+                DateTime dt;
+                try
+                {
+                    CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
+                    DateTimeStyles styles = DateTimeStyles.AllowWhiteSpaces;
+                    dt = DateTime.Parse(transaction_datetime, culture, styles);
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine("Unable to parse datetime '{0}'.", transaction_datetime);
+                    throw;
+                }
             }
         }
 

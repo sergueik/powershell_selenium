@@ -35,10 +35,10 @@ namespace Protractor.Test
         [TestFixtureSetUp]
         public void SetUp()
         {
-        	// driver = new FirefoxDriver();
-        	// System.InvalidOperationException : Access to 'file:///...' from script denied (UnexpectedJavaScriptError) 
-			driver = new ChromeDriver();
-            // driver = new PhantomJSDriver();
+            // driver = new FirefoxDriver();
+            // System.InvalidOperationException : Access to 'file:///...' from script denied (UnexpectedJavaScriptError) 
+            // driver = new ChromeDriver();
+            driver = new PhantomJSDriver();
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
             ngDriver = new NgWebDriver(driver);
         }
@@ -378,13 +378,13 @@ namespace Protractor.Test
             // GetPageContent("ng_upload1.htm");
             //  need to run 
             ngDriver.Navigate().GoToUrl("http://localhost:8080/ng_upload1.htm");
-            
+
             IWebElement file = driver.FindElement(By.CssSelector("div[ng-controller = 'myCtrl'] > input[type='file']"));
             Assert.IsNotNull(file);
             StringAssert.AreEqualIgnoringCase(file.GetAttribute("file-model"), "myFile");
             String localPath = CreateTempFile("lorem ipsum dolor sit amet");
-            
-            
+
+
             IAllowsFileDetection fileDetectionDriver = driver as IAllowsFileDetection;
             if (fileDetectionDriver == null)
             {
@@ -408,8 +408,7 @@ namespace Protractor.Test
             Object myFile = ng_file.Evaluate("myFile");
             if (myFile != null)
             {
-                Console.Error.WriteLine(myFile.ToString());
-                Dictionary<String,Object> result = (Dictionary<String,Object>) myFile;
+                Dictionary<String, Object> result = (Dictionary<String, Object>)myFile;
                 Assert.IsTrue(result.Keys.Contains("name"));
                 Assert.IsTrue(result.Keys.Contains("type"));
                 Assert.IsTrue(result.Keys.Contains("size"));
@@ -472,7 +471,7 @@ namespace Protractor.Test
             //    }
             //}
         }
-        
+
         private string CreateTempFile(string content)
         {
             FileInfo testFile = new FileInfo("webdriver.tmp");
