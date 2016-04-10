@@ -39,31 +39,30 @@
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="WebDriver, Version=2.46.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Selenium.WebDriver.2.46.0\lib\net40\WebDriver.dll</HintPath>
+    <Reference Include="WebDriver">
+      <HintPath>..\packages\Selenium.WebDriver.2.53.0\lib\net40\WebDriver.dll</HintPath>
     </Reference>
     <Reference Include="WebDriver.Support">
-      <HintPath>..\packages\Selenium.Support.2.46.0\lib\net40\WebDriver.Support.dll</HintPath>
+      <HintPath>..\packages\Selenium.Support.2.53.0\lib\net40\WebDriver.Support.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\packages\PhantomJS.2.0.0\tools\phantomjs\phantomjs.exe">
-      <Link>phantomjs.exe</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\packages\WebDriver.IEDriverServer.win32.2.44\content\IEDriverServer.exe">
-      <Link>IEDriverServer.exe</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\packages\WebDriver.ChromeDriver.win32.2.16.0.0\content\chromedriver.exe">
-      <Link>chromedriver.exe</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+   <Content Include="..\packages\PhantomJS.2.1.1\tools\phantomjs\phantomjs.exe">
+     <Link>phantomjs.exe</Link>
+     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </Content>
+   <Content Include="..\packages\WebDriver.IEDriverServer.win32.2.53\content\IEDriverServer.exe">
+     <Link>IEDriverServer.exe</Link>
+     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </Content>
+   <Content Include="..\packages\WebDriver.ChromeDriver.win32.2.21.0.0\content\chromedriver.exe">
+     <Link>chromedriver.exe</Link>
+     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+   </Content>
+</ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Extensions\Extensions.csproj">
       <Project>{D83DFE64-32B2-406E-A9A2-E2AE61777C80}</Project>
