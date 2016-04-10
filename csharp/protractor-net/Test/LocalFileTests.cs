@@ -16,6 +16,7 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
 using OpenQA.Selenium.PhantomJS;
+using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
 using Protractor.Extensions;
 
@@ -34,9 +35,10 @@ namespace Protractor.Test
         [TestFixtureSetUp]
         public void SetUp()
         {
-            driver = new PhantomJSDriver();
-            // .net does not seem to allow running local files in the desktop browser
-            // driver = new FirefoxDriver();
+        	// driver = new FirefoxDriver();
+        	// System.InvalidOperationException : Access to 'file:///...' from script denied (UnexpectedJavaScriptError) 
+			driver = new ChromeDriver();
+            // driver = new PhantomJSDriver();
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
             ngDriver = new NgWebDriver(driver);
         }
@@ -373,12 +375,24 @@ namespace Protractor.Test
         [Test]
         public void ShouldUpload()
         {
-            // This example tries to interact with custom 'fileModel' directive 
-            GetPageContent("ng_upload1.htm");
+            // GetPageContent("ng_upload1.htm");
+            //  need to run 
+            ngDriver.Navigate().GoToUrl("http://localhost:8080/ng_upload1.htm");
+            
             IWebElement file = driver.FindElement(By.CssSelector("div[ng-controller = 'myCtrl'] > input[type='file']"));
             Assert.IsNotNull(file);
             StringAssert.AreEqualIgnoringCase(file.GetAttribute("file-model"), "myFile");
-            String localPath = @"C:\developer\sergueik\powershell_selenium\powershell\testfile.txt";
+            String localPath = CreateTempFile("lorem ipsum dolor sit amet");
+            
+            
+            IAllowsFileDetection fileDetectionDriver = driver as IAllowsFileDetection;
+            if (fileDetectionDriver == null)
+            {
+                Assert.Fail("driver does not support file detection. This should not be");
+            }
+
+            fileDetectionDriver.FileDetector = new LocalFileDetector();
+
             try
             {
                 file.SendKeys(localPath);
@@ -395,6 +409,10 @@ namespace Protractor.Test
             if (myFile != null)
             {
                 Console.Error.WriteLine(myFile.ToString());
+                Dictionary<String,Object> result = (Dictionary<String,Object>) myFile;
+                Assert.IsTrue(result.Keys.Contains("name"));
+                Assert.IsTrue(result.Keys.Contains("type"));
+                Assert.IsTrue(result.Keys.Contains("size"));
             }
             else
             {
@@ -454,5 +472,19 @@ namespace Protractor.Test
             //    }
             //}
         }
+        
+        private string CreateTempFile(string content)
+        {
+            FileInfo testFile = new FileInfo("webdriver.tmp");
+            if (testFile.Exists)
+            {
+                testFile.Delete();
+            }
+            StreamWriter testFileWriter = testFile.CreateText();
+            testFileWriter.WriteLine(content);
+            testFileWriter.Close();
+            return testFile.FullName;
+        }
+
     }
 }
