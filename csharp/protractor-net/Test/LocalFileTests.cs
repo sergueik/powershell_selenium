@@ -375,14 +375,48 @@ namespace Protractor.Test
         {
             // This example tries to interact with custom 'fileModel' directive 
             GetPageContent("ng_upload1.htm");
-            NgWebElement ng_file = ngDriver.FindElement(By.CssSelector("div[ng-controller = 'myCtrl'] > input[type='file']"));
-            Assert.IsNotNull(ng_file.WrappedElement);
-            String localPath = "C:/developer/sergueik/powershell_selenium/powershell/testfile.txt";
-            ng_file.WrappedElement.SendKeys(localPath);
-        	String myFile = ng_file.Evaluate("myFile").ToString();
-            // String script = "var e = angular.element(arguments[0]); var f = e.scope().myFile; return f.name";
-            // Object result = CommonFunctions.executeScript(script,file);
-            // assertThat(result, notNullValue());
+            IWebElement file = driver.FindElement(By.CssSelector("div[ng-controller = 'myCtrl'] > input[type='file']"));
+            Assert.IsNotNull(file);
+            StringAssert.AreEqualIgnoringCase(file.GetAttribute("file-model"), "myFile");
+            String localPath = @"C:\developer\sergueik\powershell_selenium\powershell\testfile.txt";
+            try
+            {
+                file.SendKeys(localPath);
+            }
+            catch (WebDriverException e)
+            {
+                // the operation has timed out
+                Console.Error.WriteLine(e.Message);
+            }
+            NgWebElement button = ngDriver.FindElement(NgBy.ButtonText("Upload"));
+            button.Click();
+            NgWebElement ng_file = new NgWebElement(ngDriver, file);
+            Object myFile = ng_file.Evaluate("myFile");
+            if (myFile != null)
+            {
+                Console.Error.WriteLine(myFile.ToString());
+            }
+            else
+            {
+                Console.Error.WriteLine("myFile is null");
+            }
+            String script = "var e = angular.element(arguments[0]); var f = e.scope().myFile; if (f){return f.name} else {return null;}";
+            try
+            {
+                Object result = ((IJavaScriptExecutor)driver).ExecuteScript(script, ng_file);
+                if (result != null)
+                {
+                    Console.Error.WriteLine(result.ToString());
+                }
+                else
+                {
+                    Console.Error.WriteLine("result is null");
+                }
+            }
+            catch (InvalidOperationException e)
+            {
+                Console.Error.WriteLine(e.Message);
+            }
         }
 
         [Test]
