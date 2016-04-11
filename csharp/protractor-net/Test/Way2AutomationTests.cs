@@ -39,14 +39,16 @@ namespace Protractor.Test
         [TestFixtureSetUp]
         public void SetUp()
         {
+            // NOTE: OpenQA.Selenium.NoSuchWindowException : Unable to get browser with vanilla Internet ExplorerIE 11 without FEATURE_BFCACHE set
+            // with  https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/6511#issuecomment-192149755
+            // registry hack applied, is unstable - 
+            // sporadic timeouts in ExecuteAsyncScript 
+            // use at your own risk
+            // var options = new InternetExplorerOptions() { IntroduceInstabilityByIgnoringProtectedModeSettings = true };
+            // driver = new InternetExplorerDriver(options);
             // driver = new PhantomJSDriver();
             // driver = new FirefoxDriver();
             driver = new ChromeDriver();
-            // var options = new InternetExplorerOptions() { IntroduceInstabilityByIgnoringProtectedModeSettings = true };
-            // driver = new InternetExplorerDriver(options);
-            // Thread.Sleep(1000);
-            // with InternetExplorerDriver
-            // SetUp : OpenQA.Selenium.NoSuchWindowException : Unable to get browser
             driver.Manage().Window.Size = new System.Drawing.Size(800, 600);
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
             ngDriver = new NgWebDriver(driver);
@@ -57,7 +59,15 @@ namespace Protractor.Test
         [SetUp]
         public void NavigateToBankingExamplePage()
         {
-            driver.Navigate().GoToUrl(base_url);
+        	try {
+            	driver.Navigate().GoToUrl(base_url);
+        	} catch (NoSuchWindowException e) {
+        	}
+        	try {
+            	driver.Navigate().GoToUrl(base_url);
+        	} catch (NoSuchWindowException e) {
+        	}
+        	
             ngDriver.Url = driver.Url;
         }
 
