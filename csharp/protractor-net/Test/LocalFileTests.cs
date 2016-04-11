@@ -296,6 +296,45 @@ namespace Protractor.Test
         }
 
         [Test]
+        public void ShouldHandleAngularUISelect()
+        {
+            GetPageContent("ng_ui_select_example.htm");
+            ReadOnlyCollection<NgWebElement> ng_selected_colors = ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
+            Assert.IsTrue(2 == ng_selected_colors.Count);
+            foreach (NgWebElement ng_selected_color in ng_selected_colors)
+            {
+                ngDriver.Highlight(ng_selected_color);
+                Object selected_color_item = ng_selected_color.Evaluate("$item");
+                Console.Error.WriteLine(String.Format("selected color: {0}", selected_color_item.ToString()));
+            }
+            // IWebElement search = ngDriver.FindElement(By.CssSelector("input[type='search']"));
+            // same element
+            NgWebElement ng_search = ngDriver.FindElement(NgBy.Model("$select.search"));
+            ng_search.Click();
+            int wait_seconds = 3;
+            WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
+            wait.Until(d => (d.FindElements(By.CssSelector("div[role='option']"))).Count > 0 );
+            ReadOnlyCollection<NgWebElement> ng_available_colors = ngDriver.FindElements(By.CssSelector("div[role='option']"));
+            Assert.IsTrue(6 == ng_available_colors.Count);
+            foreach (NgWebElement ng_available_color in ng_available_colors)
+            {
+                ngDriver.Highlight(ng_available_color);
+                int available_color_index = -1;
+                try
+                {
+                    available_color_index = Int32.Parse(ng_available_color.Evaluate("$index").ToString());
+                }
+                catch (Exception e)
+                {
+                	// ignore
+                }
+                Console.Error.WriteLine(String.Format("available color [{1}]:{0}", ng_available_color.Text, available_color_index));
+            }
+        }
+
+
+
+        [Test]
         public void ShouldFindElementByRepeaterColumn()
         {
             GetPageContent("ng_service.htm");

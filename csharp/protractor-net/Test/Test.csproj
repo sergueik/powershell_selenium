@@ -74,6 +74,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Samples\ng_ui_select_example.htm">
+      <Link>ng_ui_select_example.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+
     <None Include="..\Samples\ng_directive_binding.htm">
       <Link>ng_directive_binding.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
