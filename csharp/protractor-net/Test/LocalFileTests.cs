@@ -298,7 +298,7 @@ namespace Protractor.Test
         [Test]
         public void ShouldHandleAngularUISelect()
         {
-            GetPageContent("ng_ui_select_example.htm");
+            GetPageContent("ng_ui_select_example1.htm");
             ReadOnlyCollection<NgWebElement> ng_selected_colors = ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
             Assert.IsTrue(2 == ng_selected_colors.Count);
             foreach (NgWebElement ng_selected_color in ng_selected_colors)
