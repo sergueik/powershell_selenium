@@ -296,6 +296,29 @@ namespace Protractor.Test
         }
 
         [Test]
+        public void ShouldHandleSearchAngularUISelect()
+        {
+            GetPageContent("ng_ui_select_example1.htm");
+            String searchText = "Ma";
+            IWebElement search = ngDriver.FindElement(By.CssSelector("input[type='search']"));
+            search.SendKeys(searchText);
+            NgWebElement ng_search = new NgWebElement(ngDriver, search);
+
+            StringAssert.IsMatch(@"input", ng_search.TagName); // triggers  ngDriver.waitForAngular();
+            ReadOnlyCollection<IWebElement> available_colors = ngDriver.WrappedDriver.FindElements(By.CssSelector("div[role='option']"));
+
+            var matching_colors = available_colors.Where(color => color.Text.Contains(searchText));
+            foreach (IWebElement matching_color in matching_colors)
+            {
+
+                ngDriver.Highlight(matching_color);
+                Console.Error.WriteLine(String.Format("Matched color: {0}", matching_color.Text));
+            }
+
+
+        }
+
+        [Test]
         public void ShouldHandleAngularUISelect()
         {
             GetPageContent("ng_ui_select_example1.htm");
@@ -313,7 +336,7 @@ namespace Protractor.Test
             ng_search.Click();
             int wait_seconds = 3;
             WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
-            wait.Until(d => (d.FindElements(By.CssSelector("div[role='option']"))).Count > 0 );
+            wait.Until(d => (d.FindElements(By.CssSelector("div[role='option']"))).Count > 0);
             ReadOnlyCollection<NgWebElement> ng_available_colors = ngDriver.FindElements(By.CssSelector("div[role='option']"));
             Assert.IsTrue(6 == ng_available_colors.Count);
             foreach (NgWebElement ng_available_color in ng_available_colors)
@@ -326,7 +349,7 @@ namespace Protractor.Test
                 }
                 catch (Exception e)
                 {
-                	// ignore
+                    // ignore
                 }
                 Console.Error.WriteLine(String.Format("available color [{1}]:{0}", ng_available_color.Text, available_color_index));
             }
