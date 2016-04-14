@@ -319,6 +319,35 @@ namespace Protractor.Test
         }
 
         [Test]
+        public void ShouldHandleDeselectAngularUISelect()
+        {
+            GetPageContent("ng_ui_select_example1.htm");
+            ReadOnlyCollection<NgWebElement> ng_selected_colors = ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
+            while (true)
+            {
+                ng_selected_colors = ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
+                if (ng_selected_colors.Count == 0)
+                {
+                    break;
+                }
+                NgWebElement ng_deselect_color = ng_selected_colors.Last();
+                Object itemColor = ng_deselect_color.Evaluate("$item");
+                Console.Error.WriteLine(String.Format("Deselecting color: {0}", itemColor.ToString()));
+                IWebElement ng_close = ng_deselect_color.FindElement(By.CssSelector("span[class *='close']"));
+                Assert.IsNotNull(ng_close);
+                Assert.IsNotNull(ng_close.GetAttribute("ng-click"));
+                StringAssert.IsMatch(@"removeChoice", ng_close.GetAttribute("ng-click"));
+
+                ngDriver.Highlight(ng_close);
+                ng_close.Click();
+                // ngDriver.waitForAngular();
+
+            }
+            Console.Error.WriteLine("Nothing is selected");
+
+        }
+
+        [Test]
         public void ShouldHandleAngularUISelect()
         {
             GetPageContent("ng_ui_select_example1.htm");
