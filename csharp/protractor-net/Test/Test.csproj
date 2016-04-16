@@ -50,19 +50,19 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-   <Content Include="..\packages\PhantomJS.2.1.1\tools\phantomjs\phantomjs.exe">
-     <Link>phantomjs.exe</Link>
-     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-   </Content>
-   <Content Include="..\packages\WebDriver.IEDriverServer.win32.2.53\content\IEDriverServer.exe">
-     <Link>IEDriverServer.exe</Link>
-     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-   </Content>
-   <Content Include="..\packages\WebDriver.ChromeDriver.win32.2.21.0.0\content\chromedriver.exe">
-     <Link>chromedriver.exe</Link>
-     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-   </Content>
-</ItemGroup>
+    <Content Include="..\packages\PhantomJS.2.1.1\tools\phantomjs\phantomjs.exe">
+      <Link>phantomjs.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\packages\WebDriver.IEDriverServer.win32.2.53\content\IEDriverServer.exe">
+      <Link>IEDriverServer.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\packages\WebDriver.ChromeDriver.win32.2.21.0.0\content\chromedriver.exe">
+      <Link>chromedriver.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Extensions\Extensions.csproj">
       <Project>{D83DFE64-32B2-406E-A9A2-E2AE61777C80}</Project>
@@ -82,7 +82,6 @@
       <Link>ng_ui_select_example2.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-
     <None Include="..\Samples\ng_directive_binding.htm">
       <Link>ng_directive_binding.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -163,6 +162,7 @@
   <ItemGroup>
     <Compile Include="CalculatorTests.cs" />
     <Compile Include="LocalFileTests.cs" />
+    <Compile Include="MultiSelectTests.cs" />
     <Compile Include="Way2AutomationTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
