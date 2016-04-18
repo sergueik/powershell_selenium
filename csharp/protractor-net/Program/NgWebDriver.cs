@@ -143,6 +143,8 @@ namespace Protractor
             }
             set
             {
+            	// Reset URL
+                this.driver.Url = "about:blank";
                 // TODO: test Safari & Android
                 IHasCapabilities hcDriver = this.driver as IHasCapabilities;
                 if (hcDriver != null && 
@@ -156,7 +158,6 @@ namespace Protractor
                 else
                 {
                     // Chrome & Firefox
-                    this.driver.Url = "about:blank";
                     this.jsExecutor.ExecuteScript("window.name += '" + AngularDeferBootstrap + "'; window.location.href = '" + value + "';");
                 }
 
