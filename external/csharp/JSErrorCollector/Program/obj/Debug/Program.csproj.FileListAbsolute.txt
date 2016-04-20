@@ -1,0 +1,14 @@
+C:\developer\sergueik\external\JSErrorCollector.NET\Program\obj\Debug\Program.csprojResolveAssemblyReference.cache
+C:\developer\sergueik\external\JSErrorCollector.NET\Program\bin\Debug\JSErrorCollector.dll
+C:\developer\sergueik\external\JSErrorCollector.NET\Program\bin\Debug\JSErrorCollector.pdb
+C:\developer\sergueik\external\JSErrorCollector.NET\Program\bin\Debug\WebDriver.dll
+C:\developer\sergueik\external\JSErrorCollector.NET\Program\bin\Debug\WebDriver.xml
+C:\developer\sergueik\external\JSErrorCollector.NET\Program\obj\Debug\JSErrorCollector.dll
+C:\developer\sergueik\external\JSErrorCollector.NET\Program\obj\Debug\JSErrorCollector.pdb
+C:\developer\sergueik\powershell_selenium\external\csharp\JSErrorCollector\Program\bin\Debug\JSErrorCollector.dll
+C:\developer\sergueik\powershell_selenium\external\csharp\JSErrorCollector\Program\bin\Debug\JSErrorCollector.pdb
+C:\developer\sergueik\powershell_selenium\external\csharp\JSErrorCollector\Program\bin\Debug\WebDriver.dll
+C:\developer\sergueik\powershell_selenium\external\csharp\JSErrorCollector\Program\bin\Debug\WebDriver.xml
+C:\developer\sergueik\powershell_selenium\external\csharp\JSErrorCollector\Program\obj\Debug\Program.csprojResolveAssemblyReference.cache
+C:\developer\sergueik\powershell_selenium\external\csharp\JSErrorCollector\Program\obj\Debug\JSErrorCollector.dll
+C:\developer\sergueik\powershell_selenium\external\csharp\JSErrorCollector\Program\obj\Debug\JSErrorCollector.pdb
