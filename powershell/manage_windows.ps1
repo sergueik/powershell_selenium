@@ -24,13 +24,15 @@ param(
   [string]$hub_port = '4444'
 )
 
-# Convertfrom-JSON applies To: Windows PowerShell 3.0 and above
-[NUnit.Framework.Assert]::IsTrue($host.Version.Major -gt 2)
 
 $MODULE_NAME = 'selenium_utils.psd1'
 import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
 
-$selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
+$selenium = launch_selenium -browser $browser
+
+
+# Convertfrom-JSON applies To: Windows PowerShell 3.0 and above
+[NUnit.Framework.Assert]::IsTrue($host.Version.Major -gt 2)
 
 [void]$selenium.Manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds(60))
 

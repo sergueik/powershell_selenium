@@ -55,6 +55,7 @@ function launch_selenium {
     [string[]]$shared_assemblies = @(
       'WebDriver.dll',
       'WebDriver.Support.dll',
+      'nunit.core.dll',
       'nunit.framework.dll'
     ),
     [string]$hub_host = '127.0.0.1',
@@ -397,13 +398,15 @@ function load_shared_assemblies {
       'WebDriver.Support.dll',
       'nunit.core.dll',
       'nunit.framework.dll'
-    )
+      )
   )
+
+
   pushd $shared_assemblies_path
 
   $shared_assemblies | ForEach-Object {
+    Write-Debug $_
     Unblock-File -Path $_;
-    # Write-Debug $_
     Add-Type -Path $_ }
   popd
 }
