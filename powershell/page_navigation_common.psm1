@@ -378,8 +378,8 @@ function find_element {
     [Parameter(ParameterSetName = 'set_id')] $id,
     [Parameter(ParameterSetName = 'set_linktext')] $link_text,
     [Parameter(ParameterSetName = 'set_partial_link_text')] $partial_link_text,
-    [Parameter(ParameterSetName = 'set_css_tagname')] $tag_name,
-    [Parameter(ParameterSetName = 'set_css_classname')] $classname
+    [Parameter(ParameterSetName = 'set_tagname')] $tag_name,
+    [Parameter(ParameterSetName = 'set_classname')] $classname
   )
 
 
