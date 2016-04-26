@@ -117,6 +117,7 @@ Sat Mar 28 16:24:58 2015 extracted selenium scripts of [powershell_ui_samples](h
 
 
 
+![Selenium Execution Pipeline](https://raw.githubusercontent.com/sergueik/powershell_selenium/master/screenshots/selenium_execution_pipeline.png)
 
 Author
 ------
