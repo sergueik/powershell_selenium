@@ -405,7 +405,7 @@ function load_shared_assemblies {
   pushd $shared_assemblies_path
 
   $shared_assemblies | ForEach-Object {
-    Write-Debug $_
+    Write-Debug ('Loading {0} ' -f $_)
     Unblock-File -Path $_;
     Add-Type -Path $_ }
   popd
