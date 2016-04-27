@@ -52,7 +52,7 @@ load_shared_assemblies -shared_assemblies $shared_assemblies
 
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
   $selenium = launch_selenium -browser $browser -grid
-  Start-Sleep -Millisecond 5000
+  Start-Sleep -Millisecond 10000
 } else {
   $selenium = launch_selenium -browser $browser
   Start-Sleep -Millisecond 500
@@ -62,12 +62,16 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
 
 # no about:blank for chrome
 $selenium.Navigate().GoToUrl('http://www.google.com')
-
+start-sleep -millisecond 1000
 [object]$body = find_element -tag_name 'body'
+
 Write-Output '--'
 $body
 Write-Output '--'
 $urls = @()
+
+$username_urlencoded = [System.Uri]::EscapeDataString($username)
+$password_urlencoded = [System.Uri]::EscapeDataString($password)
 
 @( 0..5) | ForEach-Object {
   $count = $_

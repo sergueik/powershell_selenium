@@ -61,21 +61,32 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
 $selenium.Navigate().GoToUrl($base_url)
+# NOTE - the following will fail with 
+# Method invocation failed because [System.Web.HttpServerUtility] does not contain a method named 'UrlEncode'.
+# or 
+# Method invocation failed because [System.Web.WebUtility] does not contain a method named 'UrlEncode'.
+
+try {
+  $username_urlencoded = [System.Web.HttpServerUtility]::UrlEncode($username)
+  $password_urlencoded = [System.Web.WebUtility]::UrlEncode($password)
+} catch [exception]{
+
+}
+
+$username_urlencoded = [System.Uri]::EscapeDataString($username)
+$password_urlencoded = [System.Uri]::EscapeDataString($password)
 
 if (-not ([bool]$PSBoundParameters['new'].IsPresent)) {
   # Do it the old style
 
-  $url = ('{0}/basic-auth/{1}/{2}' -f ($base_url -replace 'http:\/\/',('http://{0}:{1}@' -f $username,$password)),$username,$password)
+  $url = ('{0}/basic-auth/{1}/{2}' -f ($base_url -replace 'http:\/\/',('http://{0}:{1}@' -f $username_urlencoded,$password_urlencoded)),$username_urlencoded,$password_urlencoded)
   Write-Output $url
   $selenium.Navigate().GoToUrl($url)
   Start-Sleep -Millisecond 1000
-  $page_source = (($selenium.PageSource) -join '')
-  Write-Output $page_source
-  $selenium.Navigate().back()
 
 } else {
   # Try newly added API 
-  $url = ('{0}/basic-auth/{1}/{2}' -f $base_url,$username,$password)
+  $url = ('{0}/basic-auth/{1}/{2}' -f $base_url,$username_urlencoded,$password_urlencoded)
   Write-Output $url
   $selenium.Navigate().GoToUrl($url)
   # appears to be failing
@@ -92,12 +103,15 @@ if (-not ([bool]$PSBoundParameters['new'].IsPresent)) {
   # the rest is not tested, program is failing and the code below is not reached 
   Write-Output 'Trying to SendKeys(..)'
   $alert.SendKeys("tes{TAB}pass")
-  Start-Sleep -Millisecond 1000
-  $page_source = (($selenium.PageSource) -join '')
-  Write-Output $page_source
-  $selenium.Navigate().back()
 }
 
+$page_source = (($selenium.PageSource) -join '')
+Write-Output $page_source
+
+@( '"authenticated": true','"user": "sergueik"') | ForEach-Object { $line = $_
+  [NUnit.Framework.Assert]::IsTrue(($page_source -match $line))
+}
+$selenium.Navigate().back()
 
 custom_pause -fullstop $fullstop
 
