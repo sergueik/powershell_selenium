@@ -72,7 +72,7 @@ try {
 } catch [exception]{
 
 }
-
+# System.Uri.EscapeUriString() can be problematic with certain characters, for me it was a number / pound '#' sign in the string.
 $username_urlencoded = [System.Uri]::EscapeDataString($username)
 $password_urlencoded = [System.Uri]::EscapeDataString($password)
 
