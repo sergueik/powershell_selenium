@@ -14,7 +14,7 @@ namespace Tests.SeleniumHelpers
             // inject jquery if required
             if ((bool)js.ExecuteScript("return typeof jQuery == 'undefined'"))
             {
-                js.ExecuteScript("var jq = document.createElement('script');jq.src = '//code.jquery.com/jquery-latest.min.js';document.getElementsByTagName('head')[0].appendChild(jq);");
+                js.ExecuteScript("var jq = document.createElement('script');jq.src = 'http://code.jquery.com/jquery-latest.min.js';document.getElementsByTagName('head')[0].appendChild(jq);");
                 Thread.Sleep(300);
             }
             var formattedSelector = selector.IndexOf("$(", StringComparison.InvariantCultureIgnoreCase) == -1 ? string.Format("$(\"{0}\")", selector.Replace('\"', '\'')) : selector;
