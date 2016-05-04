@@ -134,6 +134,10 @@
       <Link>ng_table1.html</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="..\Samples\angular.js">
+      <Link>angular.js</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="..\Samples\ng_th.htm">
       <Link>ng_th.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

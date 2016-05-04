@@ -3,7 +3,14 @@
 <html ng-app='myApp'>
 <head>
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.13/angular.js">
+</script> 
+<!-- 
+ NOTE: works with Angular 1.2.13, fails with Angular 1.4.9 
+
+<script src="angular.js">
 </script>
+-->
+
 <script type='text/javascript'>
 angular.module('myApp', []).controller('myCtrl', function($scope) {
     $scope.definitions = [{

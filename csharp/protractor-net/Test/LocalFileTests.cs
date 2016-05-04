@@ -400,7 +400,6 @@ namespace Protractor.Test
         public void ShouldFindSelectedtOption()
         {
             GetPageContent("ng_select_array.htm");
-            //  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
             NgWebElement ng_element = ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
             StringAssert.IsMatch("three", ng_element.Text);
             Assert.IsTrue(ng_element.Displayed);
