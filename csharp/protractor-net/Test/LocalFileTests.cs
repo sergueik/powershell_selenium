@@ -18,6 +18,8 @@ using OpenQA.Selenium.IE;
 using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
+
+using FluentAssertions;
 using Protractor.Extensions;
 
 namespace Protractor.Test
@@ -460,6 +462,20 @@ namespace Protractor.Test
             Assert.IsTrue(elements[0].Displayed);
 
             StringAssert.AreEqualIgnoringCase(elements[0].Text, "Foo");
+        }
+
+        [Test]
+        public void ShouldThrowfluentExceptions()
+        {
+            GetPageContent("ng_repeat_start_end.htm");
+            
+            // Potentially a useful Assert for Page Object - heavy projects. Does not work very well with Protractor
+            Action a = () =>
+            {
+            	var displayed = ngDriver.FindElement(NgBy.Repeater("this is not going to be found")).Displayed;
+            };
+            a.ShouldThrow<NoSuchElementException>().WithMessage("Could not find element by: NgBy.Repeater:");
+
         }
 
         [Test]
