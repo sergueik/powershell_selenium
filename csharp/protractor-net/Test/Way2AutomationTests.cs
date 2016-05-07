@@ -217,21 +217,26 @@ namespace Protractor.Test
         [Test]
         public void ShouldLoginCustomer()
         {
-            NgWebElement ng_customer_login_button = ngDriver.FindElement(NgBy.ButtonText("Customer Login"));
-            StringAssert.IsMatch("Customer Login", ng_customer_login_button.Text);
-            ngDriver.Highlight(ng_customer_login_button);
+            NgWebElement ng_customer_button = ngDriver.FindElement(NgBy.ButtonText("Customer Login"));
+            StringAssert.IsMatch("Customer Login", ng_customer_button.Text);
+            ngDriver.Highlight(ng_customer_button);
             // core Selenium
-            IWebElement customer_login_button = driver.FindElement(By.XPath("//button[contains(.,'Customer Login')]"));
-            StringAssert.IsMatch("Customer Login", customer_login_button.Text);
-            ngDriver.Highlight(customer_login_button);
+            IWebElement customer_button = driver.FindElement(By.XPath("//button[contains(.,'Customer Login')]"));
+            StringAssert.IsMatch("Customer Login", customer_button.Text);
+            ngDriver.Highlight(customer_button);
 
-            ng_customer_login_button.Click();
+            ng_customer_button.Click();
             // 
             NgWebElement ng_user_select = ngDriver.FindElement(NgBy.Input("custId"));
             StringAssert.IsMatch("userSelect", ng_user_select.GetAttribute("id"));
             ReadOnlyCollection<NgWebElement> ng_customers = ng_user_select.FindElements(NgBy.Repeater("cust in Customers"));
             Assert.AreNotEqual(0, ng_customers.Count);
-            // pick a customer
+            // won't move to or highlight select options
+            foreach (NgWebElement ng_customer in ng_customers){
+            	actions.MoveToElement(ng_customer);
+            	ngDriver.Highlight(ng_customer);
+            }
+            // pick first customer
             NgWebElement first_customer = ng_customers.First();
             Assert.IsTrue(first_customer.Displayed);
 
