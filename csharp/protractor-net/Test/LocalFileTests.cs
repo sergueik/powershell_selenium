@@ -6,6 +6,8 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+
 using System.Threading;
 
 using NUnit.Framework;
@@ -434,6 +436,46 @@ namespace Protractor.Test
         }
 
         [Test]
+        public void ShouldNavigateDatesInDatePicker()
+        {
+            GetPageContent("ng_datepicker.htm");
+            NgWebElement ng_result = ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet"));
+            ng_result.Clear();
+            ngDriver.Highlight(ng_result);
+            IWebElement calendar = ngDriver.FindElement(By.CssSelector(".input-group-addon"));
+            ngDriver.Highlight(calendar);
+            Actions actions = new Actions(ngDriver.WrappedDriver);
+            actions.MoveToElement(calendar).Click().Build().Perform();
+
+            IWebElement dropdown = driver.FindElement(By.CssSelector("div.dropdown.open ul.dropdown-menu"));
+            NgWebElement ng_dropdown = new NgWebElement(ngDriver, dropdown);
+            Assert.IsNotNull(ng_dropdown);
+            NgWebElement ng_display = ngDriver.FindElement(NgBy.Binding("data.previousViewDate.display"));
+            Assert.IsNotNull(ng_display);
+            String dateDattern = @"\d{4}\-(?<month>\w{3})";
+
+            Regex dateDatternReg = new Regex(dateDattern);
+
+            Assert.IsTrue(dateDatternReg.IsMatch(ng_display.Text));
+            ngDriver.Highlight(ng_display);
+            String display_month = ng_display.Text.FindMatch(dateDattern);
+            // Console.Error.WriteLine("Current month: " + ng_display.Text);
+            String[] months = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Dec", "Jan" };
+
+            String next_month = months[Array.IndexOf(months, display_month) + 1];
+
+            Console.Error.WriteLine("Current month: " + display_month);
+            Console.Error.WriteLine("Next month: " + next_month);
+            IWebElement ng_right = ng_display.FindElement(By.XPath("..")).FindElement(By.ClassName("right"));
+            Assert.IsNotNull(ng_right);
+            ngDriver.Highlight(ng_right, 100);
+            ng_right.Click();
+            Assert.IsTrue(ng_display.Text.Contains(next_month));
+            ngDriver.Highlight(ng_display);
+            Console.Error.WriteLine("Next month: " + ng_display.Text);
+        }
+
+        [Test]
         public void ShouldDirectSelectFromDatePicker()
         {
             GetPageContent("ng_datepicker.htm");
@@ -473,6 +515,8 @@ namespace Protractor.Test
             String specificMinute = "6:35 PM";
 
             // reload
+            // dropdown = driver.FindElement(By.CssSelector("div.dropdown.open ul.dropdown-menu"));
+            // ng_dropdown = new NgWebElement(ngDriver, dropdown);
             ng_element = ng_dropdown.FindElement(NgBy.Model("data.inputOnTimeSet"));
             Assert.IsNotNull(ng_element);
             ngDriver.Highlight(ng_element);
