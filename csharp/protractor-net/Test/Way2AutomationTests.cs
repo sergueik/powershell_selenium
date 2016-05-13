@@ -227,9 +227,9 @@ namespace Protractor.Test
 
             ng_customer_button.Click();
             // 
-            NgWebElement ng_user_select = ngDriver.FindElement(NgBy.Input("custId"));
-            StringAssert.IsMatch("userSelect", ng_user_select.GetAttribute("id"));
-            ReadOnlyCollection<NgWebElement> ng_customers = ng_user_select.FindElements(NgBy.Repeater("cust in Customers"));
+            NgWebElement ng_customer_select = ngDriver.FindElement(NgBy.Input("custId"));
+            StringAssert.IsMatch("userSelect", ng_customer_select.GetAttribute("id"));
+            ReadOnlyCollection<NgWebElement> ng_customers = ng_customer_select.FindElements(NgBy.Repeater("cust in Customers"));
             Assert.AreNotEqual(0, ng_customers.Count);
             // won't move to or highlight select options
             foreach (NgWebElement ng_customer in ng_customers){
@@ -273,6 +273,9 @@ namespace Protractor.Test
             theReg = new Regex(@"(?<account_currency>(?:Dollar|Pound|Rupee))$");
             Assert.IsTrue(theReg.IsMatch(ng_account_currency.Text));
             ngDriver.Highlight(ng_account_currency);
+            NgWebElement ng_logout_botton = ngDriver.FindElement(NgBy.ButtonText("Logout"));
+            ngDriver.Highlight(ng_logout_botton);
+            ng_logout_botton.Click();
         }
 
         [Test]

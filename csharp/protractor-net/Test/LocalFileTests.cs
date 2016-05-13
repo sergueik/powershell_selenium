@@ -312,7 +312,6 @@ namespace Protractor.Test
             var matching_colors = available_colors.Where(color => color.Text.Contains(searchText));
             foreach (IWebElement matching_color in matching_colors)
             {
-
                 ngDriver.Highlight(matching_color);
                 Console.Error.WriteLine(String.Format("Matched color: {0}", matching_color.Text));
             }
@@ -435,6 +434,61 @@ namespace Protractor.Test
         }
 
         [Test]
+        public void ShouldDirectSelectFromDatePicker()
+        {
+            GetPageContent("ng_datepicker.htm");
+            NgWebElement ng_result = ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet"));
+            ng_result.Clear();
+            ngDriver.Highlight(ng_result);
+            IWebElement calendar = ngDriver.FindElement(By.CssSelector(".input-group-addon"));
+            ngDriver.Highlight(calendar);
+            Actions actions = new Actions(ngDriver.WrappedDriver);
+            actions.MoveToElement(calendar).Click().Build().Perform();
+
+            int datepicker_width = 900;
+            int datepicker_heght = 800;
+            driver.Manage().Window.Size = new System.Drawing.Size(datepicker_width, datepicker_heght);
+            IWebElement dropdown = driver.FindElement(By.CssSelector("div.dropdown.open ul.dropdown-menu"));
+            NgWebElement ng_dropdown = new NgWebElement(ngDriver, dropdown);
+            Assert.IsNotNull(ng_dropdown);
+            ReadOnlyCollection<NgWebElement> elements = ng_dropdown.FindElements(NgBy.Repeater("dateObject in week.dates"));
+            Assert.IsTrue(28 <= elements.Count);
+
+            String monthDate = "12";
+            IWebElement dateElement = ng_dropdown.FindElements(NgBy.CssContainingText("td.ng-binding", monthDate)).First();
+            Console.Error.WriteLine("Mondh Date: " + dateElement.Text);
+            dateElement.Click();
+            NgWebElement ng_element = ng_dropdown.FindElement(NgBy.Model("data.inputOnTimeSet"));
+            Assert.IsNotNull(ng_element);
+            ngDriver.Highlight(ng_element);
+            ReadOnlyCollection<NgWebElement> ng_dataDates = ng_element.FindElements(NgBy.Repeater("dateObject in data.dates"));
+            Assert.AreEqual(24, ng_dataDates.Count);
+
+            String timeOfDay = "6:00 PM";
+            NgWebElement ng_hour = ng_element.FindElements(NgBy.CssContainingText("span.hour", timeOfDay)).First();
+            Assert.IsNotNull(ng_hour);
+            ngDriver.Highlight(ng_hour);
+            Console.Error.WriteLine("Hour of the day: " + ng_hour.Text);
+            ng_hour.Click();
+            String specificMinute = "6:35 PM";
+
+            // reload
+            ng_element = ng_dropdown.FindElement(NgBy.Model("data.inputOnTimeSet"));
+            Assert.IsNotNull(ng_element);
+            ngDriver.Highlight(ng_element);
+            NgWebElement ng_minute = ng_element.FindElements(NgBy.CssContainingText("span.minute", specificMinute)).First();
+            Assert.IsNotNull(ng_minute);
+            ngDriver.Highlight(ng_minute);
+            Console.Error.WriteLine("Time of the day: " + ng_minute.Text);
+            ng_minute.Click();
+            ng_result = ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet"));
+            ngDriver.Highlight(ng_result, 100);
+            Console.Error.WriteLine("Selected Date/time: " + ng_result.GetAttribute("value"));
+
+
+        }
+
+        [Test]
         public void ShouldFindOptions()
         {
             // base_url = "http://www.java2s.com/Tutorials/AngularJSDemo/n/ng_options_with_object_example.htm";
@@ -468,11 +522,11 @@ namespace Protractor.Test
         public void ShouldThrowfluentExceptions()
         {
             GetPageContent("ng_repeat_start_end.htm");
-            
+
             // Potentially a useful Assert for Page Object - heavy projects. Does not work very well with Protractor
             Action a = () =>
             {
-            	var displayed = ngDriver.FindElement(NgBy.Repeater("this is not going to be found")).Displayed;
+                var displayed = ngDriver.FindElement(NgBy.Repeater("this is not going to be found")).Displayed;
             };
             a.ShouldThrow<NoSuchElementException>().WithMessage("Could not find element by: NgBy.Repeater:");
 

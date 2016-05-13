@@ -84,6 +84,10 @@
       <Link>ng_ui_select_example1.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="..\Samples\ng_datepicker.htm">
+      <Link>ng_datepicker.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="..\Samples\ng_ui_select_example2.htm">
       <Link>ng_ui_select_example2.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
