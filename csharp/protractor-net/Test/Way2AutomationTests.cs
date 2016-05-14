@@ -61,11 +61,11 @@ namespace Protractor.Test
         {
         	try {
             	driver.Navigate().GoToUrl(base_url);
-        	} catch (NoSuchWindowException e) {
+        	} catch (NoSuchWindowException ) {
         	}
         	try {
             	driver.Navigate().GoToUrl(base_url);
-        	} catch (NoSuchWindowException e) {
+        	} catch (NoSuchWindowException) {
         	}
         	
             ngDriver.Url = driver.Url;

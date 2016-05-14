@@ -379,14 +379,13 @@ namespace Protractor.Test
                 {
                     available_color_index = Int32.Parse(ng_available_color.Evaluate("$index").ToString());
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // ignore
                 }
                 Console.Error.WriteLine(String.Format("available color [{1}]:{0}", ng_available_color.Text, available_color_index));
             }
         }
-
 
 
         [Test]
