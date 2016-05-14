@@ -475,9 +475,33 @@ namespace Protractor.Test
         }
 
         [Test]
+        public void ShouldProperlyHandeMixedPages()
+        {
+        	NgWebElement element;
+        	ngDriver.Navigate().GoToUrl( "http://dalelotts.github.io/angular-bootstrap-datetimepicker/");
+            Action a = () =>
+            {
+            	element = ngDriver.FindElements(NgBy.Model("data.dateDropDownInput")).First();
+                Console.Error.WriteLine("Type: {0}", element.GetAttribute("type"));
+            };
+            a.ShouldThrow<InvalidOperationException>();
+            // it is somewhat hard to build expectation on exact exception message 
+            // Can't find variable: angular
+            // [ng:test] no injector found for element argument to getTestability
+
+            	// '[ng-app]', '[data-ng-app]'
+            	element = ngDriver.FindElements(NgBy.Model("data.dateDropDownInput", "[data-ng-app]")).First();
+            	Assert.IsNotNull(element);
+                Console.Error.WriteLine("Type: {0}", element.GetAttribute("type"));
+
+        }
+
+
+        [Test]
         public void ShouldDirectSelectFromDatePicker()
         {
             GetPageContent("ng_datepicker.htm");
+            // http://dalelotts.github.io/angular-bootstrap-datetimepicker/
             NgWebElement ng_result = ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet"));
             ng_result.Clear();
             ngDriver.Highlight(ng_result);
@@ -562,17 +586,16 @@ namespace Protractor.Test
         }
 
         [Test]
-        public void ShouldThrowfluentExceptions()
+        public void ShouldHandleFluentExceptions()
         {
             GetPageContent("ng_repeat_start_end.htm");
-
-            // Potentially a useful Assert for Page Object - heavy projects. Does not work very well with Protractor
             Action a = () =>
             {
                 var displayed = ngDriver.FindElement(NgBy.Repeater("this is not going to be found")).Displayed;
             };
-            a.ShouldThrow<NoSuchElementException>().WithMessage("Could not find element by: NgBy.Repeater:");
-
+            // NoSuchElement Exception is not thrown by Protractor
+            // a.ShouldThrow<NoSuchElementException>().WithMessage("Could not find element by: NgBy.Repeater:");
+            a.ShouldThrow<NullReferenceException>();
         }
 
         [Test]

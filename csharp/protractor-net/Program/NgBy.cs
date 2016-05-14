@@ -13,54 +13,58 @@ namespace Protractor
         /// </summary>
         /// <param name="binding">The binding, e.g. '{{cat.name}}'.</param>
         /// /// <param name="exactMatch">exact match</param>
+        /// <param name="rootSelector"> Optional selector of the ng-app element, default is 'body', often used values: '[ng-app]','[data-ng-app]'</param>
         /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
-        public static By Binding(string binding, bool exactMatch = true)
+        public static By Binding(string binding, bool exactMatch = true, string rootSelector = null)
         {
-            return new JavaScriptBy(ClientSideScripts.FindBindings, binding, null, exactMatch);
+            return new JavaScriptBy(ClientSideScripts.FindBindings, binding, rootSelector, exactMatch);
         }
 
         /// <summary>
         /// Gets a mechanism to find input elements by their model name.
         /// </summary>
         /// <param name="model">The model name.</param>
+        /// <param name="rootSelector"> Optional selector of the ng-app element, default is 'body', often used values: '[ng-app]','[data-ng-app]'</param>
         /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
         [Obsolete("Use Model instead.")]
-        public static By Input(string model)
+        public static By Input(string model, string rootSelector = null)
         {
-            return new JavaScriptBy(ClientSideScripts.FindModel, model);
+            return new JavaScriptBy(ClientSideScripts.FindModel, model, rootSelector);
         }
-
 
         /// <summary>
         /// Gets a mechanism to find elements by their model name.
         /// </summary>
-        /// <param name="model"></param>
+        /// <param name="model">The model name.</param>
+        /// <param name="rootSelector"> Optional selector of the ng-app element, default is 'body', often used values: '[ng-app]','[data-ng-app]'</param>
         /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
-        public static By Model(string model)
+        public static By Model(string model, string rootSelector = null)
         {
-            return new JavaScriptBy(ClientSideScripts.FindModel, model);
+            return new JavaScriptBy(ClientSideScripts.FindModel, model, rootSelector);
         }
 
         /// <summary>
         /// Gets a mechanism to find textarea elements by their model name.
         /// </summary>
         /// <param name="model">The model name.</param>
-        /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
+        /// <param name="rootSelector"> Optional selector of the ng-app element, default is 'body', often used values: '[ng-app]','[data-ng-app]'</param>
+		/// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
         [Obsolete("Use Model instead.")]
-        public static By TextArea(string model)
+        public static By TextArea(string model, string rootSelector = null)
         {
-            return new JavaScriptBy(ClientSideScripts.FindModel, model);
+            return new JavaScriptBy(ClientSideScripts.FindModel, model, rootSelector);
         }
 
         /// <summary>
         /// Gets a mechanism to find select elements by their model name.
         /// </summary>
         /// <param name="model">The model name.</param>
+        /// <param name="rootSelector"> Optional selector of the ng-app element, default is 'body', often used values: '[ng-app]','[data-ng-app]'</param>
         /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
         [Obsolete("Use Model instead.")]
-        public static By Select(string model)
+        public static By Select(string model, string rootSelector = null)
         {
-            return new JavaScriptBy(ClientSideScripts.FindModel, model);
+            return new JavaScriptBy(ClientSideScripts.FindModel, model, rootSelector);
         }
 
 
