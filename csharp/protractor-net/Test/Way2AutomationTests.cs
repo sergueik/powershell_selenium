@@ -405,12 +405,23 @@ namespace Protractor.Test
             // found new customer
             ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
             // collect all customers
-            ReadOnlyCollection<NgWebElement> ng_users = ngDriver.FindElements(NgBy.RepeaterColumn("cust in Customers", "user"));
-
-            NgWebElement new_customer = ng_customers.Single(cust => Regex.IsMatch(cust.Text, "John Doe"));
+            ReadOnlyCollection<NgWebElement> ng_custfNames = ngDriver.FindElements(NgBy.RepeaterColumn("cust in Customers", "cust.fName"));
+            // In the application there is always 5 customers preloaded:  
+           	// http://www.way2automation.com/angularjs-protractor/banking/mockDataLoadService.js
+            Assert.Greater(ng_custfNames.Count, 3);
+            
+            NgWebElement new_customer = ng_customers.Single(cust => Regex.IsMatch(cust.Text, "Harry Potter"));
+            Assert.IsNotNull(new_customer);
+            ReadOnlyCollection<Object>accounts = (ReadOnlyCollection<Object>)new_customer.Evaluate("cust.accountNo");
+            foreach (Object account in accounts){
+            	Console.Error.WriteLine("AccountNo: {0}", account.ToString());
+            }
+            
+            // remove customer that was just added
+            new_customer = ng_customers.Single(cust => Regex.IsMatch(cust.Text, "John Doe"));
             Assert.IsNotNull(new_customer);
 
-            // remove button
+            // locate the remove button
             NgWebElement ng_delete_customer_button = new_customer.FindElement(NgBy.ButtonText("Delete"));
             StringAssert.IsMatch("Delete", ng_delete_customer_button.Text);
             actions.MoveToElement(ng_delete_customer_button.WrappedElement).Build().Perform();
