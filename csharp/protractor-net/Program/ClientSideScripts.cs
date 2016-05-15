@@ -570,7 +570,7 @@ var using = arguments[0] || document;
 var repeater = arguments[1];
 var binding = arguments[2];
 var exact = false;
-var rootSelector = null;
+var rootSelector = arguments[3];
 return findRepeaterColumn(repeater, exact, binding, using, rootSelector);";
         #endregion
     }

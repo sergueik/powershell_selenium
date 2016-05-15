@@ -73,10 +73,11 @@ namespace Protractor
         /// </summary>
         /// <param name="repeat">The text of the repeater, e.g. 'cat in cats'.</param>
         /// <param name="binding">The text of the repeater, e.g. '{{cat.name}}'.</param>
+        /// <param name="rootSelector"> Optional selector of the ng-app element, default is 'body', often used values: '[ng-app]','[data-ng-app]'</param>
         /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
-        public static By RepeaterColumn(string repeat, string binding)
+        public static By RepeaterColumn(string repeat, string binding, string rootSelector = null)
         {
-            return new JavaScriptBy(ClientSideScripts.FindRepeaterColumn, repeat, binding);
+            return new JavaScriptBy(ClientSideScripts.FindRepeaterColumn, repeat, binding, rootSelector);
         }
 
         /// <summary>
