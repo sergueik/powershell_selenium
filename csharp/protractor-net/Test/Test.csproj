@@ -176,6 +176,7 @@
     <Compile Include="CalculatorTests.cs" />
     <Compile Include="LocalFileTests.cs" />
     <Compile Include="MultiSelectTests.cs" />
+    <Compile Include="PageObjectsTests.cs" />
     <Compile Include="Way2AutomationTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
