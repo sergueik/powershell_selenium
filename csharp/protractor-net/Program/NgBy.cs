@@ -67,7 +67,6 @@ namespace Protractor
             return new JavaScriptBy(ClientSideScripts.FindModel, model, rootSelector);
         }
 
-
         /// <summary>
         /// Gets a mechanism to find  the elements in a column of an ng-repeat.
         /// </summary>

@@ -477,11 +477,11 @@ namespace Protractor.Test
         [Test]
         public void ShouldProperlyHandeMixedPages()
         {
-        	NgWebElement element;
-        	ngDriver.Navigate().GoToUrl( "http://dalelotts.github.io/angular-bootstrap-datetimepicker/");
+            NgWebElement element;
+            ngDriver.Navigate().GoToUrl("http://dalelotts.github.io/angular-bootstrap-datetimepicker/");
             Action a = () =>
             {
-            	element = ngDriver.FindElements(NgBy.Model("data.dateDropDownInput")).First();
+                element = ngDriver.FindElements(NgBy.Model("data.dateDropDownInput")).First();
                 Console.Error.WriteLine("Type: {0}", element.GetAttribute("type"));
             };
             a.ShouldThrow<InvalidOperationException>();
@@ -489,10 +489,10 @@ namespace Protractor.Test
             // Can't find variable: angular
             // [ng:test] no injector found for element argument to getTestability
 
-            	// '[ng-app]', '[data-ng-app]'
-            	element = ngDriver.FindElements(NgBy.Model("data.dateDropDownInput", "[data-ng-app]")).First();
-            	Assert.IsNotNull(element);
-                Console.Error.WriteLine("Type: {0}", element.GetAttribute("type"));
+            // '[ng-app]', '[data-ng-app]'
+            element = ngDriver.FindElements(NgBy.Model("data.dateDropDownInput", "[data-ng-app]")).First();
+            Assert.IsNotNull(element);
+            Console.Error.WriteLine("Type: {0}", element.GetAttribute("type"));
 
         }
 

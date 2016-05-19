@@ -6,18 +6,16 @@ using System.Globalization;
 using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
+using OpenQA.Selenium.Support.PageObjects;
 using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.IE;
 using Protractor.Extensions;
 
-namespace Protractor.Test{  
+namespace Protractor.Test
+{
 
-    /*
-     * E2E testing against the AngularJS tutorial Step 5 sample: 
-     * http://docs.angularjs.org/tutorial/step_05
-     */
     [TestFixture]
     public class PageObjectsTests
     {
@@ -42,7 +40,7 @@ namespace Protractor.Test{
         [Test(Description = "Should filter the phone list as user types into the search box")]
         public void ShouldFilter()
         {
-            var step5Page = new TutorialStep5Page(driver, base_url );
+            var step5Page = new TutorialStep5Page(driver, base_url);
 
             Assert.AreEqual(20, step5Page.GetResultsCount());
 
@@ -69,45 +67,41 @@ namespace Protractor.Test{
             Assert.AreEqual("Motorola XOOM™ with Wi-Fi", step5Page.GetResultsPhoneName(1));
         }
     }
-      /*
-     * Page Object that represents the the AngularJS tutorial Step 5 page: 
-     * http://docs.angularjs.org/tutorial/step_05
-     */
+    /*
+   * Page Object that represents the the AngularJS tutorial Step 5 page: 
+   * http://docs.angularjs.org/tutorial/step_05
+   */
     public class TutorialStep5Page
     {
         NgWebDriver ngDriver;
+        [FindsBy(How = How.Custom, CustomFinderType = typeof(NgByModel), Using = "query")]
+        public IWebElement QueryInput { get; set; }
 
+        [FindsBy(How = How.Custom, CustomFinderType = typeof(NgByModel), Using = "orderProp")]
+        public IWebElement SortBySelect { get; set; }
         public TutorialStep5Page(IWebDriver driver, string url)
         {
             ngDriver = new NgWebDriver(driver);
+            PageFactory.InitElements(ngDriver, this);
             ngDriver.Navigate().GoToUrl(url);
         }
 
         public TutorialStep5Page SearchFor(string query)
         {
-            var q = ngDriver.FindElement(NgBy.Model("query"));
-            q.Clear();
-            q.SendKeys(query);
+            QueryInput.Clear();
+            QueryInput.SendKeys(query);
             return this;
         }
 
         public TutorialStep5Page SortByName()
         {
-            // Alternative: Use OpenQA.Selenium.Support.UI.SelectElement from Selenium.Support package
-            ngDriver
-                .FindElement(NgBy.Model("orderProp"))
-                .FindElement(By.XPath("//option[@value='name']"))
-                .Click();
+            SortBySelect.FindElement(By.XPath("//option[@value='name']")).Click();
             return this;
         }
 
         public TutorialStep5Page SortByAge()
         {
-            // Alternative: Use OpenQA.Selenium.Support.UI.SelectElement from Selenium.Support package
-            ngDriver
-                .FindElement(NgBy.Model("orderProp"))
-                .FindElement(By.XPath("//option[@value='age']"))
-                .Click();
+            SortBySelect.FindElement(By.XPath("//option[@value='age']")).Click();
             return this;
         }
 
