@@ -1,13 +1,6 @@
 // Decorated NgBy to serve in FindsBy annotations 
 namespace Protractor
 {
-    public class NgByRepeater : JavaScriptBy
-    {
-        public NgByRepeater(string repeat)
-            : base(ClientSideScripts.FindAllRepeaterRows, repeat)
-        {
-        }
-    }
 
     public class NgByModel : JavaScriptBy
     {
@@ -73,6 +66,14 @@ namespace Protractor
         }
     }
 
+    public class NgByRepeater : JavaScriptBy
+    {
+        public NgByRepeater(string repeat)
+            : base(ClientSideScripts.FindAllRepeaterRows, repeat)
+        {
+        }
+    }
+
     public class NgByRepeaterColumn : JavaScriptBy
     {
         public NgByRepeaterColumn(string repeat, string binding)
@@ -80,4 +81,13 @@ namespace Protractor
         {
         }
     }
+    
+    public class NgByRepeaterelement : JavaScriptBy
+    {
+        public NgByRepeaterelement(string repeat, int index, string binding)
+            : base(ClientSideScripts.FindRepeaterElement, repeat, index, binding)
+        {
+        }
+    }
+    
 }

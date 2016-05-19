@@ -67,6 +67,17 @@ namespace Protractor
             return new JavaScriptBy(ClientSideScripts.FindModel, model, rootSelector);
         }
 
+
+        /// <summary>
+        /// Gets a mechanism to find all rows of an ng-repeat.
+        /// </summary>
+        /// <param name="repeat">The text of the repeater, e.g. 'cat in cats'.</param>
+        /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
+        public static By Repeater(string repeat)
+        {
+            return new JavaScriptBy(ClientSideScripts.FindAllRepeaterRows, repeat);
+        }
+
         /// <summary>
         /// Gets a mechanism to find  the elements in a column of an ng-repeat.
         /// </summary>
@@ -80,13 +91,16 @@ namespace Protractor
         }
 
         /// <summary>
-        /// Gets a mechanism to find all rows of an ng-repeat.
+        /// Gets a mechanism to find  the elements in a column of an ng-repeat.
         /// </summary>
-        /// <param name="repeat">The text of the repeater, e.g. 'cat in cats'.</param>
+        /// <param name="repeat">The partial text of the repeater, e.g. 'cat in cats'.</param>
+        /// <param name="index">The row index.</param>
+        /// <param name="binding">The text of the repeater, e.g. '{{cat.name}}'.</param>
+        /// <param name="rootSelector"> Optional selector of the ng-app element, default is 'body', often used values: '[ng-app]','[data-ng-app]'</param>
         /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
-        public static By Repeater(string repeat)
+        public static By Repeaterelement(string repeat, int index, string binding, string rootSelector = null)
         {
-            return new JavaScriptBy(ClientSideScripts.FindAllRepeaterRows, repeat);
+            return new JavaScriptBy(ClientSideScripts.FindRepeaterElement, repeat, index, binding, rootSelector);
         }
 
         /// <summary>
