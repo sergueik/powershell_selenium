@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<!-- https://jsfiddle.net/benfosterdev/UWLFJ/ -->
+<head>
+<meta charset=utf-8/>
+<title>Editable Cells Tables</title>
+<style>
+table, th , td  {
+  border: 1px solid grey;
+  border-collapse: collapse;
+  padding: 5px;
+}
+table tr:nth-child(odd)	{
+  background-color: #f1f1f1;
+}
+table tr:nth-child(even) {
+  background-color: #ffffff;
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.js">
+</script>
+<script type='text/javascript'>
+var demo = angular.module("demo", []);
+
+demo.controller("Ctrl",
+
+function Ctrl($scope) {
+    $scope.model = {
+        contacts: [{
+            id: 1,
+            name: "Ben",
+            age: 28
+        }, {
+            id: 2,
+            name: "Sally",
+            age: 24
+        }, {
+            id: 3,
+            name: "John",
+            age: 32
+        }, {
+            id: 4,
+            name: "Jane",
+            age: 40
+        }],
+        selected: {}
+    };
+
+    // gets the template to ng-include for a table row / item
+    $scope.getTemplate = function (contact) {
+        if (contact.id === $scope.model.selected.id) return 'edit';
+        else return 'display';
+    };
+
+    $scope.editContact = function (contact) {
+        $scope.model.selected = angular.copy(contact);
+    };
+
+    $scope.saveContact = function (idx) {
+        console.log("Saving contact");
+        $scope.model.contacts[idx] = angular.copy($scope.model.selected);
+        $scope.reset();
+    };
+
+    $scope.reset = function () {
+        $scope.model.selected = {};
+    };
+});
+</script>
+</head>
+<body ng-app='demo' > 
+<div ng-controller='Ctrl'>
+  <table>
+    <thead>
+      <th>Name</th>
+      <th>Age</th>
+      <th></th>
+    </thead>
+    <tbody>
+      <tr ng-repeat="contact in model.contacts" ng-include="getTemplate(contact)">
+      </tr>
+    </tbody>
+  </table>
+    
+  <script type="text/ng-template" id="display">
+    <td>{{contact.name}}</td>
+    <td>{{contact.age}}</td>
+    <td>
+      <button ng-click="editContact(contact)">Edit</button>
+    </td>
+  </script>
+  <script type="text/ng-template" id="edit">
+    <td><input type="text" ng-model="model.selected.name" /></td>
+    <td><input type="text" ng-model="model.selected.age" /></td>
+    <td>
+      <button ng-click="saveContact($index)">Save</button>
+      <button ng-click="reset()">Cancel</button>
+    </td>
+  </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<!-- http://jsfiddle.net/Xeoncross/y7r1xe0t/ -->
+<head>
+<meta charset=utf-8/>
+<title>Angular Tables</title>
+<style>
+table, th , td  {
+  border: 1px solid grey;
+  border-collapse: collapse;
+  padding: 5px;
+}
+table tr:nth-child(odd)	{
+  background-color: #f1f1f1;
+}
+table tr:nth-child(even) {
+  background-color: #ffffff;
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.js">
+</script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.4/underscore-min.js">
+</script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular-resource.js">
+</script>
+
+<script type='text/javascript'>
+
+'use strict';
+var App = angular.module('myApp', ['ngResource', 'App.filters']);
+App.controller('ClientCtrl', ['$scope', function ($scope) {
+    $scope.selectedCompany = [];
+    $scope.companyList = [{
+        id: 1,
+        name: 'Apple'
+    }, {
+        id: 2,
+        name: 'Facebook'
+    }, {
+        id: 3,
+        name: 'Google'
+    }];
+
+    $scope.clients = [{
+        name: 'Brett',
+        designation: 'Software Engineer',
+        company: {
+            id: 1,
+            name: 'Apple'
+        }
+    }, {
+        name: 'Steven',
+        designation: 'Database Administrator',
+        company: {
+            id: 3,
+            name: 'Google'
+        }
+    }, {
+        name: 'Jim',
+        designation: 'Designer',
+        company: {
+            id: 2,
+            name: 'Facebook'
+        }
+    }, {
+        name: 'Michael',
+        designation: 'Front-End Developer',
+        company: {
+            id: 1,
+            name: 'Apple'
+        }
+    }, {
+        name: 'Josh',
+        designation: 'Network Engineer',
+        company: {
+            id: 3,
+            name: 'Google'
+        }
+    }, {
+        name: 'Ellie',
+        designation: 'Internet Marketing Engineer',
+        company: {
+            id: 1,
+            name: 'Apple'
+        }
+    }];
+
+    $scope.setSelectedClient = function () {
+        var id = this.company.id;
+        if (_.contains($scope.selectedCompany, id)) {
+            $scope.selectedCompany = _.without($scope.selectedCompany, id);
+        } else {
+            $scope.selectedCompany.push(id);
+        }
+        return false;
+    };
+
+    $scope.isChecked = function (id) {
+        if (_.contains($scope.selectedCompany, id)) {
+            return 'icon-ok pull-right';
+        }
+        return false;
+    };
+
+    $scope.checkAll = function () {
+        $scope.selectedCompany = _.pluck($scope.companyList, 'id');
+    };
+}]);
+
+angular.module('App.filters', []).filter('companyFilter', [function () {
+    return function (clients, selectedCompany) {
+        if (!angular.isUndefined(clients) && !angular.isUndefined(selectedCompany) && selectedCompany.length > 0) {
+            var tempClients = [];
+            angular.forEach(selectedCompany, function (id) {
+                angular.forEach(clients, function (client) {
+                    if (angular.equals(client.company.id, id)) {
+                        tempClients.push(client);
+                    }
+                });
+            });
+            return tempClients;
+        } else {
+            return clients;
+        }
+    };
+}]);
+</script>
+</head>
+<body ng-app='myApp' > 
+<div ng-controller='ClientCtrl'>
+  <ul class="inline">
+    <li>
+      <div class="alert alert-info">
+         <h4>Total Filtered Client: {{filtered.length}}</h4>
+      </div>
+    </li>
+    <li>
+      <div class="btn-group" data-ng-class="{open: open}">
+        <button class="btn">Filter by Company</button>
+        <button class="btn dropdown-toggle" data-ng-click="open=!open"><span class="caret"></span>
+
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenu">
+          <li><a data-ng-click="checkAll()"><i class="icon-ok-sign"></i>  Check All</a>
+          </li>
+          <li><a data-ng-click="selectedCompany=[];"><i class="icon-remove-sign"></i>  Uncheck All</a>
+          </li>
+          <li class="divider"></li>
+          <li data-ng-repeat="company in companyList"> <a data-ng-click="setSelectedClient()">{{company.name}}<span data-ng-class="isChecked(company.id)"></span></a>
+          </li>
+        </ul>
+      </div>
+    </li>
+  </ul>
+  <hr/>
+  <h3>Clients Table:</h3>
+  <table class="table table-hover table-striped">
+    <thead>
+      <tr>
+        <th style="width:10%">#</th>
+        <th style="width:20%">Name</th>
+        <th style="width:40%">Designation</th>
+        <th style="width:30%">Company</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-ng-repeat="client in filtered = (clients | companyFilter:selectedCompany)">
+        <td>{{$index + 1}}</td>
+        <td><em>{{client.name}}</em>
+        </td>
+        <td>{{client.designation}}</td>
+        <td>{{client.company.name}}</td>
+      </tr>
+    </tbody>
+  </table>
+  <!-- <pre>{{selectedCompany|json}}</pre>
+<pre>{{companyList|json}}</pre>
+<pre>{{clients|json}}</pre>
+-->
+</div>
+
+</body>
+</html>
