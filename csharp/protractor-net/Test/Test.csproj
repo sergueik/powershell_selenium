@@ -139,8 +139,20 @@
       <Link>ng_service.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\Samples\ng_table1.html">
-      <Link>ng_table1.html</Link>
+    <None Include="..\Samples\ng_table1.htm">
+      <Link>ng_table1.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_table2.htm">
+      <Link>ng_table2.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_table3.htm">
+      <Link>ng_table3.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_table4.htm">
+      <Link>ng_table4.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="..\Samples\angular.js">
@@ -177,6 +189,7 @@
     <Compile Include="LocalFileTests.cs" />
     <Compile Include="MultiSelectTests.cs" />
     <Compile Include="PageObjectsTests.cs" />
+    <Compile Include="QualityShepherdTests.cs" />
     <Compile Include="Way2AutomationTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
