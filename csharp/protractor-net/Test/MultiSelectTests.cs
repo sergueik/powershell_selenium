@@ -54,32 +54,58 @@ namespace Protractor.Test
             Assert.AreEqual("", verificationErrors.ToString());
         }
 
-
         [Test]
-        public void Shouldcheck_allSelect()
+        public void ShouldSelectByOneCar()
         {
-
-            NgWebElement ng_selected_car = ngDriver.FindElement(NgBy.Model("selectedCar"));
-            Assert.IsNotNull(ng_selected_car.WrappedElement);
-            Console.Error.WriteLine(ng_selected_car.GetAttribute("innerHTML"));
-            IWebElement toggleSelect = ng_selected_car.FindElement(By.CssSelector("button[ng-click='toggleSelect()']"));
+            NgWebElement ng_directive_selector = ngDriver.FindElement(NgBy.Model("selectedCar"));
+            Assert.IsNotNull(ng_directive_selector.WrappedElement);
+            // Console.Error.WriteLine(ng_directive_selector.GetAttribute("innerHTML"));
+            IWebElement toggleSelect = ng_directive_selector.FindElement(By.CssSelector("button[ng-click='toggleSelect()']"));
             Assert.IsNotNull(toggleSelect);
             Assert.IsTrue(toggleSelect.Displayed);
             toggleSelect.Click();
-
-            // ngDriver.waitForAngular();
-            wait.Until(d => (d.FindElements(By.CssSelector("button[ng-click='checkAll()']")).Count != 0));
-            IWebElement check_all = ng_selected_car.FindElement(By.CssSelector("button[ng-click='checkAll()']"));
-            Assert.IsNotNull(check_all);
-            Assert.IsTrue(check_all.Displayed);
-
-            NgWebElement ngcheck_all = new NgWebElement(ngDriver, check_all);
-            ngcheck_all.Click();
-            // ngDriver.waitForAngular();
-            ReadOnlyCollection<NgWebElement> cars = ng_selected_car.FindElements(NgBy.Repeater("i in items"));
-            Assert.AreEqual(3, cars.Count(car => Regex.IsMatch(car.Text, "(?i:Audi|BMW|Honda)")));
+            // count how many cars to select
+            ReadOnlyCollection<NgWebElement> cars = ng_directive_selector.FindElements(NgBy.Repeater("i in items"));
+            int cars_count = cars.Count(car => Regex.IsMatch(car.Text, "(?i:Audi|BMW|Honda)"));
+            // select one car at a time
+            for (int count = 0; count < cars_count; count++)
+            {
+                NgWebElement next_car = ng_directive_selector.FindElement(NgBy.Repeaterelement("i in items", count, "i.label"));
+                StringAssert.IsMatch(@"(?i:Audi|BMW|Honda)", next_car.Text);
+                Console.Error.WriteLine(next_car.Text);
+                ngDriver.Highlight(next_car);
+                next_car.Click();
+                IWebElement button = driver.FindElement(By.CssSelector("am-multiselect > div > button"));
+                StringAssert.IsMatch(@"There are (\d+) car\(s\) selected", button.Text);
+                Console.Error.WriteLine(button.Text);
+                // the following does not work:
+                // ms-selected ="There are {{selectedCar.length}}	                                                             
+                // NgWebElement ng_button = new NgWebElement(ngDriver, button);
+                // NgWebElement ng_length = ng_button.FindElement(NgBy.Binding("selectedCar.length"));
+            }
         }
 
-
+        [Test]
+        public void ShouldSelectAll()
+        {
+            NgWebElement ng_directive_selector = ngDriver.FindElement(NgBy.Model("selectedCar"));
+            Assert.IsNotNull(ng_directive_selector.WrappedElement);
+            Console.Error.WriteLine(ng_directive_selector.GetAttribute("innerHTML"));
+            IWebElement toggleSelect = ng_directive_selector.FindElement(By.CssSelector("button[ng-click='toggleSelect()']"));
+            Assert.IsNotNull(toggleSelect);
+            Assert.IsTrue(toggleSelect.Displayed);
+            toggleSelect.Click();
+            // find 'check all' link
+            wait.Until(d => (d.FindElements(By.CssSelector("button[ng-click='checkAll()']")).Count != 0));
+            IWebElement check_all = ng_directive_selector.FindElement(By.CssSelector("button[ng-click='checkAll()']"));
+            Assert.IsNotNull(check_all);
+            Assert.IsTrue(check_all.Displayed);
+            check_all.Click();
+            // count how many cars were selected
+            ReadOnlyCollection<NgWebElement> cars = ng_directive_selector.FindElements(NgBy.Repeater("i in items"));
+            Assert.AreEqual(3, cars.Count(car => (Boolean) car.Evaluate("i.checked")));
+            // Assert.AreEqual(3, cars.Count(car => Regex.IsMatch(car.Text, "(?i:Audi|BMW|Honda)")));
+            // Console.Error.WriteLine(length.ToString());
+        }
     }
 }
