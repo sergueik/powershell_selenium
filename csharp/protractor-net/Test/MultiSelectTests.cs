@@ -55,7 +55,7 @@ namespace Protractor.Test
         }
 
         [Test]
-        public void ShouldSelectByOneCar()
+        public void ShouldSelectOneByOne()
         {
             NgWebElement ng_directive_selector = ngDriver.FindElement(NgBy.Model("selectedCar"));
             Assert.IsNotNull(ng_directive_selector.WrappedElement);
@@ -66,12 +66,12 @@ namespace Protractor.Test
             toggleSelect.Click();
             // count how many cars to select
             ReadOnlyCollection<NgWebElement> cars = ng_directive_selector.FindElements(NgBy.Repeater("i in items"));
-            int cars_count = cars.Count(car => Regex.IsMatch(car.Text, "(?i:Audi|BMW|Honda)"));
+            int cars_count = cars.Count(car => Regex.IsMatch(car.Text, "(?i:Audi|BMW)"));
             // select one car at a time
             for (int count = 0; count < cars_count; count++)
             {
                 NgWebElement next_car = ng_directive_selector.FindElement(NgBy.Repeaterelement("i in items", count, "i.label"));
-                StringAssert.IsMatch(@"(?i:Audi|BMW|Honda)", next_car.Text);
+                StringAssert.IsMatch(@"(?i:Audi|BMW)", next_car.Text);
                 Console.Error.WriteLine(next_car.Text);
                 ngDriver.Highlight(next_car);
                 next_car.Click();
