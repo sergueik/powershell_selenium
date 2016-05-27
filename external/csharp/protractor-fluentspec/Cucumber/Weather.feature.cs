@@ -10,7 +10,7 @@
 // ------------------------------------------------------------------------------
 #region Designer generated code
 #pragma warning disable
-namespace Weather_Cucumber
+namespace Cucumber
 {
     using TechTalk.SpecFlow;
     
@@ -24,7 +24,7 @@ namespace Weather_Cucumber
         
         private TechTalk.SpecFlow.ITestRunner testRunner;
         
-#line 1 "Find City Weather.feature"
+#line 1 "Weather.feature"
 #line hidden
         
         [NUnit.Framework.TestFixtureSetUpAttribute()]
@@ -65,11 +65,11 @@ namespace Weather_Cucumber
         }
         
         [NUnit.Framework.TestAttribute()]
-        [NUnit.Framework.DescriptionAttribute("Find City Weather")]
+        [NUnit.Framework.DescriptionAttribute("Weather")]
         [NUnit.Framework.CategoryAttribute("Short")]
         public virtual void FindCityWeather()
         {
-            TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Find City Weather", new string[] {
+            ScenarioInfo scenarioInfo = new ScenarioInfo("Weather", new string[] {
                         "Short"});
 #line 9
 this.ScenarioSetup(scenarioInfo);

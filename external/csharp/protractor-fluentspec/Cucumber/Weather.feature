@@ -6,7 +6,7 @@
 	
 #In future might want to add edge case for auto-completion of cities with same name
 @Short
-Scenario: Find City Weather
+Scenario: Weather
 	Given I am on the URL www.weather.com
 	And I have entered Jacksonville, FL into the search bar
 	When I search by clicking the magnifying glass

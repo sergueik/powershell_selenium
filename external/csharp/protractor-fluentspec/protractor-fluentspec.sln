@@ -2,7 +2,7 @@
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Weather Cucumber", "Weather Cucumber\Weather Cucumber.csproj", "{B0CA032D-C14B-4982-814C-7D81A1D6585A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cucumber", "Cucumber\Test.csproj", "{B0CA032D-C14B-4982-814C-7D81A1D6585A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

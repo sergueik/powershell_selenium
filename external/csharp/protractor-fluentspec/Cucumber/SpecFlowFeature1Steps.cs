@@ -7,7 +7,7 @@ using NUnit.Framework;
 using OpenQA.Selenium.Chrome;
 using System.Linq;
 
-namespace Weather_Cucumber
+namespace Cucumber
     {
     //Make extension method Click + WaitForAngular?
     [Binding]
