@@ -42,10 +42,10 @@ namespace Protractor.Test
         {
             var step5Page = new TutorialStep5Page(driver, base_url);
 
-            Assert.AreEqual(20, step5Page.GetResultsCount());
+            Assert.AreEqual(3, step5Page.GetResultsCount());
 
             step5Page.SearchFor("Motorola");
-            Assert.AreEqual(8, step5Page.GetResultsCount());
+            Assert.AreEqual(2, step5Page.GetResultsCount());
 
             step5Page.SearchFor("Nexus");
             Assert.AreEqual(1, step5Page.GetResultsCount());
@@ -74,8 +74,10 @@ namespace Protractor.Test
     public class TutorialStep5Page
     {
         NgWebDriver ngDriver;
-        [FindsBy(How = How.Custom, CustomFinderType = typeof(NgByModel), Using = "query")]
-        public IWebElement QueryInput { get; set; }
+        [FindsBy(How = How.Custom, CustomFinderType = typeof(NgByModel), Using = "$ctrl.query")]
+        public IWebElement QueryInput { 
+        	get; set; 
+        }
 
         [FindsBy(How = How.Custom, CustomFinderType = typeof(NgByModel), Using = "orderProp")]
         public IWebElement SortBySelect { get; set; }
@@ -107,12 +109,16 @@ namespace Protractor.Test
 
         public int GetResultsCount()
         {
-            return ngDriver.FindElements(NgBy.Repeater("phone in phones")).Count;
+            return ngDriver.FindElements(NgBy.Repeater("phone in $ctrl.phones")).Count;
         }
 
         public string GetResultsPhoneName(int index)
         {
-            return ngDriver.FindElements(NgBy.Repeater("phone in phones"))[index].Evaluate("phone.name") as string;
+            return ngDriver.FindElements(NgBy.Repeater("phone in $ctrl.phones"))[index].Evaluate("phone.name") as string;
+			// phone-list.template.html            
+			//    {{phone.name}}
+			//    {{phone.snippet}}
+
         }
     }
 

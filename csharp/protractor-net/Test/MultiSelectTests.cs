@@ -25,22 +25,22 @@ namespace Protractor.Test
     [TestFixture]
     public class MultiSelectTests
     {
-        private StringBuilder verificationErrors = new StringBuilder();
-        private IWebDriver driver;
-        private NgWebDriver ngDriver;
-        private WebDriverWait wait;
-        private const int wait_seconds = 3;
-        private String base_url = "http://amitava82.github.io/angular-multiselect/";
+        private StringBuilder _verificationErrors = new StringBuilder();
+        private IWebDriver _driver;
+        private NgWebDriver _ngDriver;
+        private WebDriverWait _wait;
+        private const int _wait_seconds = 3;
+        private String _base_url = "http://amitava82.github.io/angular-multiselect/";
 
         [TestFixtureSetUp]
         public void SetUp()
         {
-            driver = new ChromeDriver();
-            driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+            _driver = new ChromeDriver();
+            _driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
             // driver.Manage().Window.Size = new System.Drawing.Size(700, 400);
-            ngDriver = new NgWebDriver(driver);
-            wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
-            ngDriver.Navigate().GoToUrl(base_url);
+            _ngDriver = new NgWebDriver(_driver);
+            _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(_wait_seconds));
+            _ngDriver.Navigate().GoToUrl(_base_url);
         }
 
         [TestFixtureTearDown]
@@ -48,17 +48,17 @@ namespace Protractor.Test
         {
             try
             {
-                driver.Quit();
+                _driver.Quit();
             }
             catch (Exception) { } /* Ignore cleanup errors */
-            Assert.AreEqual("", verificationErrors.ToString());
+            Assert.AreEqual("", _verificationErrors.ToString());
         }
 
         [Test]
         public void ShouldSelectOneByOne()
         {
         	// Given selecting cars in multuselect directive
-            NgWebElement ng_directive_selector = ngDriver.FindElement(NgBy.Model("selectedCar"));
+            NgWebElement ng_directive_selector = _ngDriver.FindElement(NgBy.Model("selectedCar"));
             Assert.IsNotNull(ng_directive_selector.WrappedElement);
             IWebElement toggleSelect = ng_directive_selector.FindElement(By.CssSelector("button[ng-click='toggleSelect()']"));
             Assert.IsNotNull(toggleSelect);
@@ -74,7 +74,7 @@ namespace Protractor.Test
                 NgWebElement next_car = ng_directive_selector.FindElement(NgBy.Repeaterelement("i in items", count, "i.label"));
                 StringAssert.IsMatch(@"(?i:Audi|BMW)", next_car.Text);
                 Console.Error.WriteLine(next_car.Text);
-                ngDriver.Highlight(next_car);
+                _ngDriver.Highlight(next_car);
                 next_car.Click();
                 // NOTE: the following does not work:
                 // ms-selected ="There are {{selectedCar.length}}	                                                             
@@ -82,7 +82,7 @@ namespace Protractor.Test
                 // NgWebElement ng_length = ng_button.FindElement(NgBy.Binding("selectedCar.length"));
             }
             // TODO: Then button text shows that all cars were selected
-            IWebElement button = driver.FindElement(By.CssSelector("am-multiselect > div > button"));
+            IWebElement button = _driver.FindElement(By.CssSelector("am-multiselect > div > button"));
             StringAssert.IsMatch(@"There are (\d+) car\(s\) selected", button.Text);
             Console.Error.WriteLine(button.Text);
         }
@@ -91,7 +91,7 @@ namespace Protractor.Test
         public void ShouldSelectAll()
         {
         	// Given selecting cars in multuselect directive
-            NgWebElement ng_directive_selector = ngDriver.FindElement(NgBy.Model("selectedCar"));
+            NgWebElement ng_directive_selector = _ngDriver.FindElement(NgBy.Model("selectedCar"));
             Assert.IsNotNull(ng_directive_selector.WrappedElement);
             Console.Error.WriteLine(ng_directive_selector.GetAttribute("innerHTML"));
             IWebElement toggleSelect = ng_directive_selector.FindElement(By.CssSelector("button[ng-click='toggleSelect()']"));
@@ -99,7 +99,7 @@ namespace Protractor.Test
             Assert.IsTrue(toggleSelect.Displayed);
             toggleSelect.Click();
             // When selected all cars using 'check all' link
-            wait.Until(d => (d.FindElements(By.CssSelector("button[ng-click='checkAll()']")).Count != 0));
+            _wait.Until(d => (d.FindElements(By.CssSelector("button[ng-click='checkAll()']")).Count != 0));
             IWebElement check_all = ng_directive_selector.FindElement(By.CssSelector("button[ng-click='checkAll()']"));
             Assert.IsNotNull(check_all);
             Assert.IsTrue(check_all.Displayed);
