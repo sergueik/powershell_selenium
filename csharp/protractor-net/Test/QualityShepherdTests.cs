@@ -53,7 +53,6 @@ namespace Protractor.Test
         [Test]
         public void ShouldAddFriend()
         {
-            int timeout = 1000;
             StringAssert.AreEqualIgnoringCase(_ngDriver.Title, "Angular JS Demo");
             String friendName = "John Doe";
             int friendCount = _ngDriver.FindElements(NgBy.Repeater("row in rows")).Count;
