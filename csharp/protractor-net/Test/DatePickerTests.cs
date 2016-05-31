@@ -18,8 +18,7 @@ using Protractor.Extensions;
 //using System.Drawing;
 //using System.Windows.Forms;
 
-// tests of Native AngularJS multiselect directive https://github.com/amitava82/angular-multiselect
-
+// tests of Angular UI  DatePicker 
 namespace Protractor.Test
 {
     [TestFixture]
@@ -30,7 +29,7 @@ namespace Protractor.Test
         private NgWebDriver _ngDriver;
         private WebDriverWait _wait;
         private const int _wait_seconds = 3;
-        private String _base_url ="http://dalelotts.github.io/angular-bootstrap-datetimepicker/";
+        private String _base_url = "http://dalelotts.github.io/angular-bootstrap-datetimepicker/";
 
         [TestFixtureSetUp]
         public void SetUp()
@@ -42,11 +41,12 @@ namespace Protractor.Test
             _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(_wait_seconds));
             _ngDriver.Navigate().GoToUrl(_base_url);
         }
-        
-                [Test]
+
+        [Ignore("Ignore a test - only works in java version")]
+        [Test]
         public void ShouldDirectSelectFromDatePicker()
         {
-            
+
             NgWebElement ng_result = _ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet", "[data-ng-app]"));
             ng_result.Clear();
             _ngDriver.Highlight(ng_result);
@@ -97,7 +97,7 @@ namespace Protractor.Test
             _ngDriver.Highlight(ng_result, 100);
             Console.Error.WriteLine("Selected Date/time: " + ng_result.GetAttribute("value"));
 
-    }
+        }
 
         [TestFixtureTearDown]
         public void TearDown()
