@@ -185,7 +185,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ButtonTests.cs" />
     <Compile Include="CalculatorTests.cs" />
+    <Compile Include="DatePickerTests.cs" />
     <Compile Include="LocalFileTests.cs" />
     <Compile Include="MultiSelectTests.cs" />
     <Compile Include="PageObjectsTests.cs" />

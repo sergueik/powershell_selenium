@@ -566,8 +566,6 @@ namespace Protractor.Test
             ng_result = _ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet"));
             _ngDriver.Highlight(ng_result, 100);
             Console.Error.WriteLine("Selected Date/time: " + ng_result.GetAttribute("value"));
-
-
         }
 
         [Test]

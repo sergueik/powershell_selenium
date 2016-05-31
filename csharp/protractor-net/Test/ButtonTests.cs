@@ -20,21 +20,28 @@ using Protractor.Extensions;
 
 namespace Protractor.Test
 {
-
+	// http://kenhowardpdx.com/blog/2015/05/how-to-watch-scope-properties-in-angular-with-typescript/
     [TestFixture]
-    public class ButtonTest
+    public class ButtonTests
     {
-        private StringBuilder verificationErrors = new StringBuilder();
-        private IWebDriver driver;
-        private NgWebDriver ngDriver;
-        private String base_url = "http://kenhowardpdx.com/blog/2015/05/how-to-watch-scope-properties-in-angular-with-typescript/";
+        private StringBuilder _verificationErrors = new StringBuilder();
+        private IWebDriver _driver;
+        private NgWebDriver _ngDriver;
+        private String _base_page = "ng_dropdown_watch.htm";
+
+        private void GetPageContent(string testpage)
+        {
+            String base_url = new System.Uri(Path.Combine(Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
+            _ngDriver.Navigate().GoToUrl(base_url);
+        }
 
         [TestFixtureSetUp]
         public void SetUp()
         {
-            driver = new ChromeDriver();
-            driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
-            driver.Navigate().GoToUrl(base_url);
+            // _driver = new ChromeDriver();
+            _driver = new PhantomJSDriver();
+            _driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
+            GetPageContent(_base_page);
         }
 
         [TestFixtureTearDown]
@@ -42,19 +49,18 @@ namespace Protractor.Test
         {
             try
             {
-                driver.Quit();
+                _driver.Quit();
             }
             catch (Exception) { } /* Ignore cleanup errors */
-            Assert.IsEmpty(verificationErrors.ToString());
+            Assert.IsEmpty(_verificationErrors.ToString());
         }
         [Test]
         public void ShouldEvaluateIf()
         {
-            IWebElement button = driver.FindElement(By.CssSelector("button.btn"));
-            ngDriver = new NgWebDriver(driver);
-            ngDriver.IgnoreSynchronization = true;
-            ngDriver.IgnoreSynchronization = false;
-            NgWebElement ng_button = new NgWebElement(ngDriver,button);
+            IWebElement button = _driver.FindElement(By.CssSelector("button.btn"));
+            _ngDriver = new NgWebDriver(_driver);
+            _ngDriver.IgnoreSynchronization = true;
+            NgWebElement ng_button = new NgWebElement(_ngDriver,button);
             Object state = ng_button.Evaluate("!house.frontDoor.isOpen");
             Assert.IsTrue(Convert.ToBoolean(state));
             StringAssert.IsMatch("house.frontDoor.open()", button.GetAttribute("ng-click"));
