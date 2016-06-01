@@ -66,7 +66,7 @@ namespace Protractor.Test
         }
 
         [Test]
-        public void ShouldEvaluateIf()
+        public void Should_01_EvaluateIf()
         {
             driver.Navigate().GoToUrl(base_url);
             IWebElement frameElement = driver.FindElement(By.CssSelector("iframe[id='cp_embed_EjYzev']"));
@@ -84,10 +84,10 @@ namespace Protractor.Test
             StringAssert.IsMatch("house.frontDoor.open()", button.GetAttribute("ng-click"));
             StringAssert.IsMatch("Open Door", button.Text);
         }
-
-        // [Ignore("Ignore a test - only works in java version")]
+        
+		// TODO : test works correctly only in java
         [Test]
-        public void ShouldzClickButton()
+        public void Should_02_ClickButton()
         {
             driver.Navigate().GoToUrl(base_url);
             IWebElement frameElement = driver.FindElement(By.CssSelector("iframe[id='cp_embed_EjYzev']"));
@@ -115,7 +115,7 @@ namespace Protractor.Test
                 alert = driver.SwitchTo().Alert();
                 alert_text = alert.Text;
                 Console.Error.WriteLine(alert_text);
-                // StringAssert.StartsWith("The door is open", alert_text);
+                StringAssert.StartsWith("The door is open", alert_text);
                 alert.Accept();
             }
             catch (NoAlertPresentException ex)
