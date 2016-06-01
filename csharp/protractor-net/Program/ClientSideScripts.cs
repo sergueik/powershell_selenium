@@ -214,7 +214,6 @@ if (typeof exactMatch === 'undefined') {
 return findBindings(binding, exactMatch, using, rootSelector);";
 
 
-
         /**
          * Find elements by model name.
          *
@@ -226,6 +225,7 @@ return findBindings(binding, exactMatch, using, rootSelector);";
         public const string FindModel = @"
 var findByModel = function(model, using, rootSelector) {
     var root = document.querySelector(rootSelector || 'body');
+    using = using || '[ng-app]';
     using = using || document;
     if (angular.getTestability) {
         return angular.getTestability(root).

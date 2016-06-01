@@ -71,12 +71,19 @@ namespace Protractor.Extensions
 
         }
 
-        public static void Highlight(this NgWebDriver driver, IWebElement element, int highlight_timeout = 100, int px = 3, string color = "yellow")
+        public static void Highlight(this NgWebDriver ngDriver, IWebElement element, int highlight_timeout = 100, int px = 3, string color = "yellow")
         {
-            IWebDriver context = driver.WrappedDriver;
-            ((IJavaScriptExecutor)context).ExecuteScript("arguments[0].style.border='" + px + "px solid " + color + "'", element);
+            IWebDriver driver = ngDriver.WrappedDriver;
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.border='" + px + "px solid " + color + "'", element);
             Thread.Sleep(highlight_timeout);
-            ((IJavaScriptExecutor)context).ExecuteScript("arguments[0].style.border=''", element);
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.border=''", element);
+        }
+
+        public static void Highlight(this IWebDriver driver, IWebElement element, int highlight_timeout = 100, int px = 3, string color = "yellow")
+        {
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.border='" + px + "px solid " + color + "'", element);
+            Thread.Sleep(highlight_timeout);
+            ((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.border=''", element);
         }
 
         public static string CssSelectorOf(this NgWebElement ngWebElement)
