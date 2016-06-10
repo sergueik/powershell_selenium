@@ -130,12 +130,12 @@ TestForAngular(attempts);";
         public const string Evaluate = "return angular.element(arguments[0]).scope().$eval(arguments[1]);";
 
         /**
- * Browse to another page using in-page navigation.
- *
- * arguments[0]  {string} selector The selector housing an ng-app
- * arguments[1]{string} url In page URL using the same syntax as $location.url(), e.g.
- * 
- */
+		 * Browse to another page using in-page navigation.
+		 *
+		 * arguments[0]  {string} selector The selector housing an ng-app
+		 * arguments[1]{string} url In page URL using the same syntax as $location.url(), e.g.
+		 * 
+		 */
         public const string SetLocation = @"
 var setLocation = function(selector, url) {
 

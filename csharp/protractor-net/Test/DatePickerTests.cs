@@ -46,7 +46,6 @@ namespace Protractor.Test
         [Test]
         public void ShouldDirectSelectFromDatePicker()
         {
-
             NgWebElement ng_result = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput", "*[data-ng-app]"));
             Assert.IsNotNull(ng_result);
             ng_result.Clear();
@@ -84,9 +83,7 @@ namespace Protractor.Test
             ng_hour.Click();
             String specificMinute = "6:35 PM";
 
-            // reload
-            // dropdown = driver.FindElement(By.CssSelector("div.dropdown.open ul.dropdown-menu"));
-            // ng_dropdown = new NgWebElement(ngDriver, dropdown);
+            // no need to reload
             ng_element = ng_dropdown.FindElement(NgBy.Model("data.dateDropDownInput", "[data-ng-app]"));
             Assert.IsNotNull(ng_element);
             ngDriver.Highlight(ng_element);

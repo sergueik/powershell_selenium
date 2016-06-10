@@ -289,11 +289,12 @@ namespace Protractor.Test
         [Test]
         public void ShouldAddCustomer()
         {
-            // switch to "Add Customer" screen
+            // When I proceed to "Bank Manager Login"
             ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();
+            // And I proceed to "Add Customer"
             ngDriver.FindElement(NgBy.PartialButtonText("Add Customer")).Click();
 
-            // fill new Customer data
+            // And I fill new Customer data
             IWebElement ng_first_name = ngDriver.FindElement(NgBy.Model("fName"));
             ngDriver.Highlight(ng_first_name, highlight_timeout);
             StringAssert.IsMatch("First Name", ng_first_name.GetAttribute("placeholder"));
@@ -339,7 +340,7 @@ namespace Protractor.Test
             int.TryParse(alert_text.FindMatch(@"(?<customer_id>\d+)$"), out customer_id);
             Assert.AreNotEqual(0, customer_id);
 
-            // switch to "Customers" screen
+            // And I switch to "Customers" screen
             ngDriver.FindElement(NgBy.PartialButtonText("Customers")).Click();
 
             // discover newly added customer
@@ -386,6 +387,106 @@ namespace Protractor.Test
         }
 
         [Test]
+        public void ShouldInviteToOpenAccount()
+        {
+            // When I proceed to "Bank Manager Login"
+            ngDriver.FindElement(NgBy.ButtonText("Bank Manager Login")).Click();
+            // And I proceed to "Add Customer"
+            ngDriver.FindElement(NgBy.PartialButtonText("Add Customer")).Click();
+
+            // And I fill new Customer data
+            IWebElement ng_first_name = ngDriver.FindElement(NgBy.Model("fName"));
+            ngDriver.Highlight(ng_first_name, highlight_timeout);
+            StringAssert.IsMatch("First Name", ng_first_name.GetAttribute("placeholder"));
+            ng_first_name.SendKeys("John");
+
+            IWebElement ng_last_name = ngDriver.FindElement(NgBy.Model("lName"));
+            ngDriver.Highlight(ng_last_name, highlight_timeout);
+            StringAssert.IsMatch("Last Name", ng_last_name.GetAttribute("placeholder"));
+            ng_last_name.SendKeys("Doe");
+
+            IWebElement ng_post_code = ngDriver.FindElement(NgBy.Model("postCd"));
+            ngDriver.Highlight(ng_post_code, highlight_timeout);
+            StringAssert.IsMatch("Post Code", ng_post_code.GetAttribute("placeholder"));
+            ng_post_code.SendKeys("11011");
+
+            // NOTE: there are two 'Add Customer' buttons on this form
+            NgWebElement ng_add_customer_button = ngDriver.FindElements(NgBy.PartialButtonText("Add Customer"))[1];
+            actions.MoveToElement(ng_add_customer_button.WrappedElement).Build().Perform();
+            ngDriver.Highlight(ng_add_customer_button, highlight_timeout);
+            ng_add_customer_button.Submit();
+            // confirm
+            string alert_text = null;
+            try
+            {
+                alert = ngDriver.WrappedDriver.SwitchTo().Alert();
+                alert_text = alert.Text;
+                StringAssert.StartsWith("Customer added successfully with customer id :", alert_text);
+                alert.Accept();
+            }
+            catch (NoAlertPresentException ex)
+            {
+                // Alert not present
+                verificationErrors.Append(ex.StackTrace);
+            }
+            catch (WebDriverException ex)
+            {
+                // Alert not handled by PhantomJS
+                verificationErrors.Append(ex.StackTrace);
+            }
+
+            int customer_id = 0;
+            int.TryParse(alert_text.FindMatch(@"(?<customer_id>\d+)$"), out customer_id);
+            Assert.AreNotEqual(0, customer_id);
+
+
+            // And I switch to "Home" screen
+
+            ngDriver.FindElement(NgBy.ButtonText("Home")).Click();
+
+            // And I proceed to "Customer Login"
+            ngDriver.FindElement(NgBy.ButtonText("Customer Login")).Click();
+
+            // And I login as new customer "John Doe" 			
+            ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
+            int customer_count = ng_customers.Count;
+            NgWebElement ng_new_customer = ng_customers.First(cust => Regex.IsMatch(cust.Text, "John Doe"));
+            Assert.IsNotNull(ng_new_customer);
+
+            actions.MoveToElement(ng_new_customer.WrappedElement).Build().Perform();
+            ngDriver.Highlight(ng_new_customer, highlight_timeout);
+            ng_new_customer.Click();
+
+            NgWebElement ng_login_button = ngDriver.FindElement(NgBy.ButtonText("Login"));
+            Assert.IsTrue(ng_login_button.Displayed && ng_login_button.Enabled);
+            ngDriver.Highlight(ng_login_button, highlight_timeout);
+            ng_login_button.Click();
+
+            // Then I am greeted as "John Doe"
+            NgWebElement ng_user = ngDriver.FindElement(NgBy.Binding("user"));
+            StringAssert.Contains("John", ng_user.Text);
+            StringAssert.Contains("Doe", ng_user.Text);
+
+            // And I am invited to open an account
+            Object noAccount = ng_user.Evaluate("noAccount");
+            Assert.IsTrue(Boolean.Parse(noAccount.ToString()));
+            Boolean hasAccounts = !(Boolean.Parse(noAccount.ToString()));
+            Console.Error.WriteLine("Has accounts: " + hasAccounts);
+            // IWebElement invitationMessage = driver.FindElement(By.CssSelector("span[ng-show='noAccount']"));
+            IWebElement invitationMessage = ng_user.FindElement(By.XPath("..")).FindElement(By.XPath("..")).FindElement(By.CssSelector("span[ng-show='noAccount']"));
+            Assert.IsTrue(invitationMessage.Displayed);
+            ngDriver.Highlight(invitationMessage);
+            StringAssert.Contains("Please open an account with us", invitationMessage.Text);
+            Console.Error.WriteLine(invitationMessage.Text);
+
+            // And I have no accounts
+            NgWebElement accountNo = ngDriver.FindElement(NgBy.Binding("accountNo"));
+            Assert.IsFalse(accountNo.Displayed);
+            ReadOnlyCollection<NgWebElement> ng_accounts = ngDriver.FindElements(NgBy.Repeater("account for account in Accounts"));
+            Assert.AreEqual(0, ng_accounts.Count);
+        }
+
+        [Test]
         public void ShouldDeleteCustomer()
         {
             // switch to "Add Customer" screen
@@ -425,19 +526,31 @@ namespace Protractor.Test
             {
                 Console.Error.WriteLine("AccountNo: {0}", account.ToString());
             }
+            // highlight individual accounts ofan existing customer
+            ReadOnlyCollection<NgWebElement> ng_accounts = ng_customers.First().FindElements(NgBy.Repeater("account in cust.accountNo"));
+            foreach (NgWebElement ng_account in ng_accounts)
+            {
+                ngDriver.Highlight(ng_account, highlight_timeout);
+            }
+
 
             // remove customer that was just added
-            new_customer = ng_customers.Single(cust => Regex.IsMatch(cust.Text, "John Doe"));
-            Assert.IsNotNull(new_customer);
+            NgWebElement ng_delete_customer = ng_customers.Single(cust => Regex.IsMatch(cust.Text, "John Doe"));
+            Assert.IsNotNull(ng_delete_customer);
+            actions.MoveToElement(ng_delete_customer.WrappedElement).Build().Perform();
+            ngDriver.Highlight(ng_delete_customer, highlight_timeout);
+            Thread.Sleep(1000);
 
             // locate the remove button
-            NgWebElement ng_delete_customer_button = new_customer.FindElement(NgBy.ButtonText("Delete"));
+            NgWebElement ng_delete_customer_button = ng_delete_customer.FindElement(NgBy.ButtonText("Delete"));
             StringAssert.IsMatch("Delete", ng_delete_customer_button.Text);
             ngDriver.Highlight(ng_delete_customer_button, highlight_timeout);
-            actions.MoveToElement(ng_delete_customer_button.WrappedElement).Build().Perform();
-            ng_delete_customer_button.Click();
 
-            // confirm the cusomer is no loger present
+            actions.MoveToElement(ng_delete_customer_button.WrappedElement).ClickAndHold().Build().Perform();
+            Thread.Sleep(1000);
+            actions.Release().Build().Perform();
+
+            // confirm the customer is gone
             ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
             IEnumerable<NgWebElement> removed_customer = ng_customers.TakeWhile(cust => Regex.IsMatch(cust.Text, "John Doe.*"));
             Assert.IsEmpty(removed_customer);

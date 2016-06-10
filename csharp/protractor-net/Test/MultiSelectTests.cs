@@ -76,15 +76,19 @@ namespace Protractor.Test
                 Console.Error.WriteLine(next_car.Text);
                 _ngDriver.Highlight(next_car);
                 next_car.Click();
-                // NOTE: the following does not work:
-                // ms-selected ="There are {{selectedCar.length}}	                                                             
-                // NgWebElement ng_button = new NgWebElement(ngDriver, button);
-                // NgWebElement ng_length = ng_button.FindElement(NgBy.Binding("selectedCar.length"));
             }
-            // TODO: Then button text shows that all cars were selected
+            // Then button text shows that all cars were selected
             IWebElement button = _driver.FindElement(By.CssSelector("am-multiselect > div > button"));
             StringAssert.IsMatch(@"There are (\d+) car\(s\) selected", button.Text);
             Console.Error.WriteLine(button.Text);
+            // NOTE: the following does not work:
+            // ms-selected ="There are {{selectedCar.length}}	                                                             
+            NgWebElement ng_button = new NgWebElement(_ngDriver, button);
+            try {
+	            NgWebElement ng_length = ng_button.FindElement(NgBy.Binding("selectedCar.length"));
+	            Console.Error.WriteLine(ng_length.Text);            	
+            } catch(NullReferenceException){
+            }
         }
 
         [Test]
@@ -92,8 +96,10 @@ namespace Protractor.Test
         {
         	// Given selecting cars in multuselect directive
             NgWebElement ng_directive_selector = _ngDriver.FindElement(NgBy.Model("selectedCar"));
+            // am-multiselect custom directive
             Assert.IsNotNull(ng_directive_selector.WrappedElement);
-            Console.Error.WriteLine(ng_directive_selector.GetAttribute("innerHTML"));
+            Assert.That(ng_directive_selector.TagName, Is.EqualTo("am-multiselect"));
+            // open am-multiselect
             IWebElement toggleSelect = ng_directive_selector.FindElement(By.CssSelector("button[ng-click='toggleSelect()']"));
             Assert.IsNotNull(toggleSelect);
             Assert.IsTrue(toggleSelect.Displayed);
@@ -108,5 +114,9 @@ namespace Protractor.Test
             ReadOnlyCollection<NgWebElement> cars = ng_directive_selector.FindElements(NgBy.Repeater("i in items"));
             Assert.AreEqual(cars.Count(), cars.Count(car => (Boolean) car.Evaluate("i.checked")));
         }
+
+        // TODO: filter
+        // <input class="form-control placeholder="Filter" ng-model="searchText.label">
+
     }
 }

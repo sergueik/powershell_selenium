@@ -436,7 +436,7 @@ namespace Protractor.Test
 
             ng_element = _ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
             StringAssert.IsMatch(text, ng_element.Text);
-            // Assert.IsTrue(ng_element.Displayed);
+            Assert.IsTrue(ng_element.Displayed);
         }
 
         [Test]
