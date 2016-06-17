@@ -42,13 +42,13 @@ namespace Protractor.Test
             ngDriver.Navigate().GoToUrl(base_url);
         }
 
-        //[Ignore("Ignore a test - only works in java version")]
+
         [Test]
         public void ShouldDirectSelectFromDatePicker()
         {
             NgWebElement ng_result = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput", "*[data-ng-app]"));
             Assert.IsNotNull(ng_result);
-            ng_result.Clear();
+            // ng_result.Clear();
             ngDriver.Highlight(ng_result);
             IWebElement calendar = ngDriver.FindElement(By.CssSelector(".input-group-addon"));
             Assert.IsNotNull(calendar);
@@ -84,7 +84,7 @@ namespace Protractor.Test
             String specificMinute = "6:35 PM";
 
             // no need to reload
-            ng_element = ng_dropdown.FindElement(NgBy.Model("data.dateDropDownInput", "[data-ng-app]"));
+            ng_element = ng_dropdown.FindElement(NgBy.Model("data.dateDropDownInput", "*[data-ng-app]"));
             Assert.IsNotNull(ng_element);
             ngDriver.Highlight(ng_element);
             NgWebElement ng_minute = ng_element.FindElements(NgBy.CssContainingText("span.minute", specificMinute)).First();
@@ -92,11 +92,52 @@ namespace Protractor.Test
             ngDriver.Highlight(ng_minute);
             Console.Error.WriteLine("Time of the day: " + ng_minute.Text);
             ng_minute.Click();
-            ng_result = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput","[data-ng-app]"));
+            ng_result = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput", "[data-ng-app]"));
             ngDriver.Highlight(ng_result, 100);
             Console.Error.WriteLine("Selected Date/time: " + ng_result.GetAttribute("value"));
 
         }
+        [Test]
+        public void ShouldNavigateDatePicker()
+        {
+            // Open datepicker directive
+            NgWebElement ng_result = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput", "*[data-ng-app]"));
+            Assert.IsNotNull(ng_result);
+            // ng_result.Clear();
+            ngDriver.Highlight(ng_result);
+            IWebElement calendar = ngDriver.FindElement(By.CssSelector(".input-group-addon"));
+            ngDriver.Highlight(calendar);
+            Actions actions = new Actions(ngDriver.WrappedDriver);
+            actions.MoveToElement(calendar).Click().Build().Perform();
+
+            IWebElement dropdown = driver.FindElement(By.CssSelector("div.dropdown.open ul.dropdown-menu"));
+            NgWebElement ng_dropdown = new NgWebElement(ngDriver, dropdown);
+            Assert.IsNotNull(ng_dropdown);
+            NgWebElement ng_display = ngDriver.FindElement(NgBy.Binding("data.previousViewDate.display", true, "[data-ng-app]"));
+            Assert.IsNotNull(ng_display);
+            String dateDattern = @"\d{4}\-(?<month>\w{3})";
+
+            Regex dateDatternReg = new Regex(dateDattern);
+
+            Assert.IsTrue(dateDatternReg.IsMatch(ng_display.Text));
+            ngDriver.Highlight(ng_display);
+            String display_month = ng_display.Text.FindMatch(dateDattern);
+
+            String[] months = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Dec", "Jan" };
+
+            String next_month = months[Array.IndexOf(months, display_month) + 1];
+
+            Console.Error.WriteLine("Current month: " + display_month);
+            Console.Error.WriteLine("Expect to find next month: " + next_month);
+            IWebElement ng_right = ng_display.FindElement(By.XPath("..")).FindElement(By.ClassName("right"));
+            Assert.IsNotNull(ng_right);
+            ngDriver.Highlight(ng_right, 100);
+            ng_right.Click();
+            Assert.IsTrue(ng_display.Text.Contains(next_month));
+            ngDriver.Highlight(ng_display);
+            Console.Error.WriteLine("Next month: " + ng_display.Text);
+        }
+
 
         [TestFixtureTearDown]
         public void TearDown()
