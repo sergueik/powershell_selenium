@@ -24,44 +24,34 @@
 </tr>
 <tr>
   <td>runScript</td>
-  <td>
-var rows = document.querySelectorAll('div#example_wrapper table#example tbody tr.even');
+  <td>var rows = document.querySelectorAll('div#example_wrapper table#example tbody tr.even');
 var result = [];
-for (row_cnt = 0 ;row_cnt != rows.length ; row_cnt++ ){
-  var row = rows[row_cnt];
-  if(row instanceof Element ) {
-    var cols = row.querySelectorAll('td');
-    var col_num = 1;
-    result.push(cols[col_num].innerHTML);
-  } 
+for (row_cnt = 0; row_cnt != rows.length; row_cnt++) {
+    var row = rows[row_cnt];
+    if (row instanceof Element) {
+        var cols = row.querySelectorAll('td');
+        var col_num = 1;
+        result.push(cols[col_num].innerHTML);
+    }
 }
-console.log(result.join());
-</td>
+console.log(result.join());</td>
   <td></td>
 </tr>
 <tr>
   <td>storeEval</td>
-  <td>var x = 'test'; x </td>
-  <td>result</td>
-</tr>
-<tr>
-  <td>storeEval</td>
-  <td>
-  function processRows(){
-var rows = window.document.querySelectorAll('div#example_wrapper table#example tbody tr.even');
-var result = [];
-for (row_cnt = 0 ;row_cnt != rows.length ; row_cnt++ ){
-  var row = rows[row_cnt];
-  if(row instanceof Element ) {
-    var cols = row.querySelectorAll('td');
-    var col_num = 1;
-    result.push(cols[col_num].innerHTML);
-  } 
-}
-return  result;
-}
-  var result = processRows();
-  result </td>
+  <td>(function() {
+    var rows = window.document.querySelectorAll('div#example_wrapper table#example tbody tr.even');
+    var result = [];
+    for (row_cnt = 0; row_cnt != rows.length; row_cnt++) {
+        var row = rows[row_cnt];
+        if (row instanceof Element) {
+            var cols = row.querySelectorAll('td');
+            var col_num = 1;
+            result.push(cols[col_num].innerHTML);
+        }
+    }
+    return result;
+})();</td>
   <td>result</td>
 </tr>
 <tr>
