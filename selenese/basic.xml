@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="https://datatables.net/examples/api/highlight.html" />
+<title>sample</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">sample</td></tr>
+</thead><tbody>
+<tr>
+	<td>open</td>
+	<td>https://datatables.net/examples/api/highlight.html</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+  
+	<td>//table[@id='example']/thead/tr/th[6]</td>
+	<td></td>
+</tr>
+<tr>
+  <td>runScript</td>
+  <td>
+var rows = document.querySelectorAll('div#example_wrapper table#example tbody tr.even');
+var result = [];
+for (row_cnt = 0 ;row_cnt != rows.length ; row_cnt++ ){
+  var row = rows[row_cnt];
+  if(row instanceof Element ) {
+    var cols = row.querySelectorAll('td');
+    var col_num = 1;
+    result.push(cols[col_num].innerHTML);
+  } 
+}
+console.log(result.join());
+</td>
+  <td></td>
+</tr>
+<tr>
+  <td>storeEval</td>
+  <td>var x = 'test'; x </td>
+  <td>result</td>
+</tr>
+<tr>
+  <td>storeEval</td>
+  <td>
+  function processRows(){
+var rows = window.document.querySelectorAll('div#example_wrapper table#example tbody tr.even');
+var result = [];
+for (row_cnt = 0 ;row_cnt != rows.length ; row_cnt++ ){
+  var row = rows[row_cnt];
+  if(row instanceof Element ) {
+    var cols = row.querySelectorAll('td');
+    var col_num = 1;
+    result.push(cols[col_num].innerHTML);
+  } 
+}
+return  result;
+}
+  var result = processRows();
+  result </td>
+  <td>result</td>
+</tr>
+<tr>
+	<td>echo</td>
+	<td>${result}</td>
+	<td></td>
+</tr>
+
+</tbody></table>
+</body>
+</html>
