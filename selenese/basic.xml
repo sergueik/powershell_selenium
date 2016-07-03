@@ -5,6 +5,10 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <link rel="selenium.base" href="https://datatables.net/examples/api/highlight.html" />
 <title>sample</title>
+<!-- 
+http://release.seleniumhq.org/selenium-core/1.0.1/reference.html#actions
+https://developer.mozilla.org/en-US/docs/Web/API/Element
+-->
 </head>
 <body>
 <table cellpadding="1" cellspacing="1" border="1">
@@ -23,16 +27,36 @@
 	<td></td>
 </tr>
 <tr>
+  <td>store</td>
+  <td>div#example_wrapper table#example tbody tr.even</td>
+  <td>table_row_locator</td>
+</tr>
+<tr>
+	<td>echo</td>
+	<td>${table_row_locator}</td>
+	<td></td>
+</tr>
+<tr>
   <td>runScript</td>
-  <td>var rows = document.querySelectorAll('div#example_wrapper table#example tbody tr.even');
+  <td>
+try {
+  var table_row_locator = storedVars['table_row_locator'];
+  console.log(table_row_locator);
+} catch (e) {
+  // ReferenceError: storedVars is not defined
+  // available only in storeEval 
+}
+table_row_locator = "${table_row_locator}";
+console.log(table_row_locator);
+var rows = document.querySelectorAll(table_row_locator);
 var result = [];
 for (row_cnt = 0; row_cnt != rows.length; row_cnt++) {
-    var row = rows[row_cnt];
-    if (row instanceof Element) {
-        var cols = row.querySelectorAll('td');
-        var col_num = 1;
-        result.push(cols[col_num].innerHTML);
-    }
+  var row = rows[row_cnt];
+  if (row instanceof Element) {
+    var cols = row.querySelectorAll('td');
+    var col_num = 1;
+    result.push(cols[col_num].innerHTML);
+  }
 }
 console.log(result.join());</td>
   <td></td>
@@ -40,17 +64,18 @@ console.log(result.join());</td>
 <tr>
   <td>storeEval</td>
   <td>(function() {
-    var rows = window.document.querySelectorAll('div#example_wrapper table#example tbody tr.even');
-    var result = [];
-    for (row_cnt = 0; row_cnt != rows.length; row_cnt++) {
-        var row = rows[row_cnt];
-        if (row instanceof Element) {
-            var cols = row.querySelectorAll('td');
-            var col_num = 1;
-            result.push(cols[col_num].innerHTML);
-        }
-    }
-    return result;
+  var table_row_locator = storedVars['table_row_locator'];
+  var rows = window.document.querySelectorAll(table_row_locator);
+  var result = [];
+  for (row_cnt = 0; row_cnt != rows.length; row_cnt++) {
+		var row = rows[row_cnt];
+		if (row instanceof Element) {
+			var cols = row.querySelectorAll('td');
+			var col_num = 1;
+			result.push(cols[col_num].innerHTML);
+		}
+	}
+	return result;
 })();</td>
   <td>result</td>
 </tr>
@@ -59,7 +84,6 @@ console.log(result.join());</td>
 	<td>${result}</td>
 	<td></td>
 </tr>
-
 </tbody></table>
 </body>
 </html>
