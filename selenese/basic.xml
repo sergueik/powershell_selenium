@@ -8,6 +8,7 @@
 <!-- 
 http://release.seleniumhq.org/selenium-core/1.0.1/reference.html#actions
 https://developer.mozilla.org/en-US/docs/Web/API/Element
+http://stackoverflow.com/questions/17674397/selenium-ide-basic-authentication
 -->
 </head>
 <body>
@@ -15,6 +16,23 @@ https://developer.mozilla.org/en-US/docs/Web/API/Element
 <thead>
 <tr><td rowspan="1" colspan="3">sample</td></tr>
 </thead><tbody>
+<!--
+<tr>
+  <td>store</td>
+  <td>username</td>
+  <td>stored_username</td>
+</tr>
+<tr>
+  <td>store</td>
+  <td>password</td>
+  <td>stored_password</td>
+</tr>
+<tr>
+    <td>open</td>
+    <td>http://${stored_username}:${stored_password}@site.my/</td>
+    <td></td>
+</tr>
+-->
 <tr>
 	<td>open</td>
 	<td>https://datatables.net/examples/api/highlight.html</td>
