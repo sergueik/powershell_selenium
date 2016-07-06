@@ -5,6 +5,7 @@ param(
 )
 
 
+
 function removeFrequentKey {
   param(
     [object]$frequencies
@@ -56,6 +57,48 @@ try {
 } catch [exception]{
   Write-Output ("Exception : {0} ...`n(ignored)" -f (($_.Exception.Message) -split "`n")[0])
 }
+
+
+# run monolythic script
+
+$column_css_selector = 'td:nth-child(1)' 
+
+$script = @"
+  var table_selector = '${table_css_selector}';
+  var row_selector = '${row_css_selector}';
+  var column_selector = '${column_css_selector}';
+  // var table_selector = 'html body div table.sortable';
+  // var row_selector = 'tbody tr';
+  // var column_selector = 'td:nth-child(1)';
+  var col_num = 0;
+  var table_selector = 'html body div table.sortable';
+  var row_selector = 'tbody tr';
+  var column_selector = 'td:nth-child(1)';
+  col_num = 0;
+  var tables = window.document.querySelectorAll(table_selector);
+  var result = [];
+  for (table_cnt = 0; table_cnt != tables.length; table_cnt++) {
+      var table = tables[table_cnt];
+      if (table instanceof Element) {
+          var rows = table.querySelectorAll(row_selector);
+          // skip first row
+          for (row_cnt = 1; row_cnt != rows.length; row_cnt++) {
+              var row = rows[row_cnt];
+              if (row instanceof Element) {
+                  var cols = row.querySelectorAll(column_selector);
+                  if (cols.length > 0) {
+                      result.push(cols[0].innerHTML);
+                  }
+              }
+          }
+      }
+  }
+  return result.join();
+"@
+
+$result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script)
+write-output $result 
+
 
 # iterate over modules 
 foreach ($table in ($selenium.FindElements([OpenQA.Selenium.By]::CssSelector($table_css_selector))) ) {
