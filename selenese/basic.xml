@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head profile="http://selenium-ide.openqa.org/profiles/test-case">
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<link rel="selenium.base" href="https://datatables.net/examples/api/highlight.html" />
-<title>sample</title>
+  <head profile="http://selenium-ide.openqa.org/profiles/test-case">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="selenium.base" href="https://datatables.net/examples/api/highlight.html" />
+    <title>sample</title>
 <!-- 
 http://release.seleniumhq.org/selenium-core/1.0.1/reference.html#actions
 https://developer.mozilla.org/en-US/docs/Web/API/Element
 http://stackoverflow.com/questions/17674397/selenium-ide-basic-authentication
 -->
-</head>
-<body>
-<table cellpadding="1" cellspacing="1" border="1">
-<thead>
-<tr><td rowspan="1" colspan="3">sample</td></tr>
-</thead><tbody>
+  </head>
+  <body>
+    <table cellpadding="1" cellspacing="1" border="1">
+      <thead>
+        <tr>
+          <td rowspan="1" colspan="3">sample</td>
+        </tr>
+      </thead>
+      <tbody>
 <!--
 <tr>
   <td>store</td>
@@ -33,40 +36,90 @@ http://stackoverflow.com/questions/17674397/selenium-ide-basic-authentication
     <td></td>
 </tr>
 -->
-<tr>
-	<td>open</td>
-	<td>https://datatables.net/examples/api/highlight.html</td>
-	<td></td>
-</tr>
-<tr>
-	<td>click</td>
-  
-	<td>//table[@id='example']/thead/tr/th[6]</td>
-	<td></td>
-</tr>
-<tr>
-  <td>store</td>
-  <td>div#example_wrapper table#example tbody tr.even</td>
-  <td>table_row_locator</td>
-</tr>
-<tr>
-	<td>echo</td>
-	<td>${table_row_locator}</td>
-	<td></td>
-</tr>
-<tr>
-  <td>runScript</td>
-  <td>
+        <tr>
+          <td>open</td>
+          <td>https://datatables.net/examples/api/highlight.html</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>click</td>
+          <td>//table[@id='example']/thead/tr/th[6]</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>store</td>
+          <td>div#example_wrapper table#example tbody tr.even</td>
+          <td>table_row_selector</td>
+        </tr>
+        <tr>
+          <td>echo</td>
+          <td>${table_row_selector}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>store</td>
+          <td>2</td>
+          <td>column_index</td>
+        </tr>
+        <tr>
+          <td>store</td>
+          <td>td:nth-child(${column_index})</td>
+          <td>column_selector</td>
+        </tr>
+        <tr>
+          <td>echo</td>
+          <td>${column_selector}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>storeEval</td>
+          <td>(function() {
+git_hashes = { '8e565c8' : 7 , '9683baa': 2, '1e3ad71' : 1 }
+
+// Array.prototype.max = function() {
+//   return Math.max.apply(null, this);
+// };
+
+array_keys = [];
+array_values = [];
+
+for (var key in git_hashes) {
+    array_keys.push(key);
+    array_values.push(git_hashes[key]);
+}
+max_freq = array_values.max()
+for (var key in git_hashes) {
+  if (git_hashes[key] === max_freq) {
+  delete git_hashes[key]
+  }
+}
+
+array_keys = [];
+for (var key in git_hashes) {
+    array_keys.push(key);
+}
+return array_keys.join()
+})();</td>
+          <td>result</td>
+        </tr>
+        <tr>
+          <td>echo</td>
+          <td>${result}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>runScript</td>
+          <td>
 try {
-  var table_row_locator = storedVars['table_row_locator'];
-  console.log(table_row_locator);
+  var table_row_selector = storedVars['table_row_selector'];
+  console.log(table_row_selector);
 } catch (e) {
   // ReferenceError: storedVars is not defined
   // available only in storeEval 
 }
-table_row_locator = "${table_row_locator}";
-console.log(table_row_locator);
-var rows = document.querySelectorAll(table_row_locator);
+table_row_selector = "${table_row_selector}";
+console.log(table_row_selector);
+var rows = document.querySelectorAll(table_row_selector);
 var result = [];
 for (row_cnt = 0; row_cnt != rows.length; row_cnt++) {
   var row = rows[row_cnt];
@@ -77,31 +130,35 @@ for (row_cnt = 0; row_cnt != rows.length; row_cnt++) {
   }
 }
 console.log(result.join());</td>
-  <td></td>
-</tr>
-<tr>
-  <td>storeEval</td>
-  <td>(function() {
-  var table_row_locator = storedVars['table_row_locator'];
-  var rows = window.document.querySelectorAll(table_row_locator);
+          <td></td>
+        </tr>
+        <tr>
+          <td>storeEval</td>
+          <td>(function() {
+  var table_row_selector = storedVars['table_row_selector'];
+  var column_selector = storedVars['column_selector'];
+  var rows = window.document.querySelectorAll(table_row_selector);
   var result = [];
   for (row_cnt = 0; row_cnt != rows.length; row_cnt++) {
 		var row = rows[row_cnt];
 		if (row instanceof Element) {
-			var cols = row.querySelectorAll('td');
-			var col_num = 1;
-			result.push(cols[col_num].innerHTML);
+      // var cols = row.querySelectorAll('td');
+			// var col_num = 1;
+			// result.push(cols[col_num].innerHTML);
+			var col = row.querySelectorAll(column_selector);
+			result.push(col[0].innerHTML);
 		}
 	}
 	return result;
 })();</td>
-  <td>result</td>
-</tr>
-<tr>
-	<td>echo</td>
-	<td>${result}</td>
-	<td></td>
-</tr>
-</tbody></table>
-</body>
+          <td>result</td>
+        </tr>
+        <tr>
+          <td>echo</td>
+          <td>${result}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
 </html>
