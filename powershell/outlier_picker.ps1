@@ -77,28 +77,24 @@ try {
 }
 
 # iterate over modules 
-[OpenQA.Selenium.IWebElement[]]$tables = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($table_css_selector))
-[OpenQA.Selenium.IWebElement]$table 
-foreach ($table in $tables ) {
-  [OpenQA.Selenium.IWebElement[]]$rows = $table.FindElements([OpenQA.Selenium.By]::CssSelector($row_css_selector))
+foreach ($table in ($selenium.FindElements([OpenQA.Selenium.By]::CssSelector($table_css_selector))) ) {
   $max_rows = 100
   $row_cnt = 0
   $hashes = @{}
   $module = $null
-
-  foreach ($row in $rows ) {
+  
+  # iterate overs Puppet master server r10k hashes
+  foreach ($row in ($table.FindElements([OpenQA.Selenium.By]::CssSelector($row_css_selector))) ) {
     if ($row_cnt -eq 0) {
       # skil first row (table headers) 
       $row_cnt++
       continue
     }
-    if ($row_cnt -gt $max_rows) { return }
-    [OpenQA.Selenium.IWebElement]$githash_column = $row.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $githash_column_number)))
-    $githash = $githash_column.Text
+    if ($row_cnt -gt $max_rows) { break }
+    $githash = $row.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $githash_column_number))).Text
     if ( -not $hashes[$githash] ) {
       $hashes[$githash] = 1
-      [OpenQA.Selenium.IWebElement]$module_column = $row.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $module_column_number)))
-      $module = $module_column.Text
+      $module = $row.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $module_column_number))).Text
       if (-not $modules[$module]) {
         $modules[$module] = $true
       }
@@ -112,12 +108,10 @@ foreach ($table in $tables ) {
   $hashes.Keys | ForEach-Object { $keys += $_ }
   if ($keys.Length -gt 1) {
     Write-Output ("Module = '{0}'" -f $module)
-    Write-Output ('Hashes found: {0}' -f ($hashes.Keys -join "`r`n"))
+    # Write-Output ('Hashes found: {0}' -f ($hashes.Keys -join "`r`n"))
     $hashes_amended = removeFrequentKey ($hashes)
-    [OpenQA.Selenium.IWebElement[]]$rows2 = $table.FindElements([OpenQA.Selenium.By]::CssSelector($row_css_selector))
-    $max_rows2 = 100
     $row2_cnt = 0
-    foreach ($row2 in $rows2 ) {
+    foreach ($row2 in ($table.FindElements([OpenQA.Selenium.By]::CssSelector($row_css_selector))) ) {
       if ($row2_cnt -eq 0) {
         # first row is table headers
         $row2_cnt++
