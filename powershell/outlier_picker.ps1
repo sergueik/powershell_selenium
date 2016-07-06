@@ -64,9 +64,10 @@ try {
 $column_css_selector = 'td:nth-child(3)' 
 
 $script = @"
-  var table_selector = '${table_css_selector}';
-  var row_selector = '${row_css_selector}';
-  var column_selector = '${column_css_selector}';
+
+  var table_selector = 'html body div table.sortable';
+  var row_selector = 'tbody tr';
+  var column_selector = 'td:nth-child(3)';
   // var table_selector = 'html body div table.sortable';
   // var row_selector = 'tbody tr';
   // var column_selector = 'td:nth-child(3)';
@@ -75,20 +76,14 @@ $script = @"
   var git_hashes = {};
   for (table_cnt = 0; table_cnt != tables.length; table_cnt++) {
       var table = tables[table_cnt];
-      // console.log("table " + table_cnt);
       if (table instanceof Element) {
-          // console.log(table.innerHTML);
           var rows = table.querySelectorAll(row_selector);
           // skip first row
           for (row_cnt = 1; row_cnt != rows.length; row_cnt++) {
               var row = rows[row_cnt];
-              //console.log("row " + row_cnt);
               if (row instanceof Element) {
-                  // console.log(row.innerHTML)
-                  // console.log(column_selector);        
                   var cols = row.querySelectorAll(column_selector);
                   if (cols.length > 0) {
-                      // console.log(cols.size);
                       data = cols[0].innerHTML
                       if (!git_hashes[data]) {
                           git_hashes[data] = 0;
@@ -99,29 +94,33 @@ $script = @"
           }
       }
   }
-
-  array_keys = [];
-  array_values = [];
   var sortNumber = function(a, b) {
-    return b - a;
+    // reverse numeric sort
+      return b - a;
   }
-
-
-  for (var key in git_hashes) {
-      array_keys.push(key);
-      array_values.push(0 + git_hashes[key]);
-  }
-  max_freq = array_values.sort(sortNumber)[0]
-  for (var key in git_hashes) {
-      if (git_hashes[key] === max_freq) {
-          delete git_hashes[key]
+  var removeFrequentKey = function(datahash) {
+      var array_keys = [];
+      var array_values = [];
+      for (var key in datahash) {
+          array_keys.push(key);
+          array_values.push(0 + datahash[key]);
       }
+      max_freq = array_values.sort(sortNumber)[0]
+      for (var key in datahash) {
+          if (datahash[key] === max_freq) {
+              delete datahash[key]
+          }
+      }
+      return datahash;
   }
-
-  array_keys = [];
+  
+  git_hashes = removeFrequentKey(git_hashes);
+  
+  var array_keys = [];
   for (var key in git_hashes) {
       array_keys.push(key);
   }
+  
   return array_keys.join();
 "@
 
