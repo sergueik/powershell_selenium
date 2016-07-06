@@ -23,12 +23,26 @@ param(
   # TODO: version
 )
 
+
+function removeFrequentKey {
+  param(
+    [object]$frequencies
+  )
+  $max_freq = $frequencies.Values | Sort-Object -Descending | Select-Object -First 1
+  # Collection was modified; enumeration operation may not execute..
+  # $frequencies.Keys | foreach-object { if ( $frequencies.Item($_) -eq $max_freq ) {$frequencies.Remove($_)}}
+
+  $result = @{}
+  $frequencies.Keys | ForEach-Object { if ($frequencies.Item($_) -ne $max_freq) { $result[$_] = $frequencies.Item($_) } }
+  return $result
+}
+
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 
 $selenium = launch_selenium -browser $browser
 
-# http://www.w3schools.com/xpath/xpath_axes.asp
+[OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
 $base_url = "file:///C:/developer/sergueik/powershell_selenium/powershell/data.html"
 $selenium.Navigate().GoToUrl($base_url)
@@ -78,6 +92,9 @@ $tables | ForEach-Object {
     [OpenQA.Selenium.IWebElement[]]$rows = $provider.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
     $max_rows = 100
     $row_cnt = 0
+    $hashes = @{}
+    $module = $null
+
     $rows | ForEach-Object {
       $row = $_
       if ($row_cnt -eq 0) {
@@ -86,44 +103,82 @@ $tables | ForEach-Object {
         return
       }
       if ($row_cnt -gt $max_rows) { return }
-    # write-output ('row_cnt = {0}' -f $row_cnt )
-    $hashes = @{}
-    $column_css_selector = ('td:nth-child({0})' -f $module_column_number)
-    $css_selector = $column_css_selector
-    $provider = $row
-    try {
-      [OpenQA.Selenium.IWebElement[]]$column = $provider.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-      $module = $column.Text
-      if ( -not $modules[$module]) {
-        $modules[$module] = $true
-        Write-Output ("Module = '{0}'" -f $module)
-        # Write-Output ("Row innerHTML`r`n{0}" -f $row.getAttribute('innerHTML'))
+      # Write-Output ('row_cnt = {0}' -f $row_cnt)
+      $column_css_selector = ('td:nth-child({0})' -f $module_column_number)
+      $css_selector = $column_css_selector
+      $provider = $row
+      try {
+        [OpenQA.Selenium.IWebElement]$column = $provider.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+        $module = $column.Text
+        if (-not $modules[$module]) {
+          $modules[$module] = $true
+          # Write-Output ("Module = '{0}'" -f $module)
+          # Write-Output ("Row innerHTML`r`n{0}" -f $row.getAttribute('innerHTML'))
+        }
+      } catch [exception]{
+        # Exception is expected:
+        # Unable to locate element: {"method":"css selector","selector":"td:nth-child(2)"} 
+        # indicates row is the header row of the product
       }
-    } catch [exception]{
-      # Exception is expected:
-      # Unable to locate element: {"method":"css selector","selector":"td:nth-child(2)"} 
-      # indicates row is the header row of the product
-    }
-    $column_css_selector = ('td:nth-child({0})' -f $githash_column_number)
-    $css_selector = $column_css_selector
-    $provider = $row
-    try {
-      [OpenQA.Selenium.IWebElement]$column = $provider.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-      $data = $column.Text
-      if (-not $hashes[$data]) {
-        $hashes[$data] = 1
-      } else { 
-        $hashes[$data] ++
+      $column_css_selector = ('td:nth-child({0})' -f $githash_column_number)
+      $css_selector = $column_css_selector
+      $provider = $row
+      try {
+        [OpenQA.Selenium.IWebElement]$column = $provider.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+        $data = $column.Text
+        if (-not $hashes[$data]) {
+          # write-output ('data = {0}' -f $data)
+          $hashes[$data] = 1
+        } else {
+          $hashes[$data]++
+        }
+      } catch [exception]{
+        # Exception is expected:
+        # Unable to locate element: {"method":"css selector","selector":"td:nth-child(2)"} 
+        # indicates row is the header row of the product
       }
-    } catch [exception]{
-      # Exception is expected:
-      # Unable to locate element: {"method":"css selector","selector":"td:nth-child(2)"} 
-      # indicates row is the header row of the product
+      $row_cnt++
     }
-    $row_cnt ++
+    # Workaround Powershell flexible types
+    $keys = @()
+    $hashes.Keys | ForEach-Object { $keys += $_ }
+    if ($keys.Length -gt 1) {
+      Write-Output ("Module = '{0}'" -f $module)
+      Write-Output ('Hashes found: {0}' -f ($hashes.Keys -join "`r`n"))
+      $hashes_amended = removeFrequentKey ($hashes)
+      # TODO:  get master 
+      $css_selector = $row_css_selector
+      $provider = $table
+      [OpenQA.Selenium.IWebElement[]]$rows2 = $provider.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
+      $max_rows2 = 100
+      $row2_cnt = 0
+      $rows2 | ForEach-Object {
+        $row2 = $_
+        if ($row2_cnt -eq 0) {
+          # first row is table headers
+          $row2_cnt++
+          return
+        }
+        if ($row2_cnt -gt $max_rows2) { return }
+        $column_css_selector = ('td:nth-child({0})' -f $githash_column_number)
+        $css_selector = $column_css_selector
+        $provider = $row2
+        [OpenQA.Selenium.IWebElement]$column = $provider.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+        $data = $column.Text
+        if ($hashes_amended[$data]) {
+          [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$column).Build().Perform()
+          highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$column ) -color 'red'
+          $column_css_selector = ('td:nth-child({0})' -f $server_column_number)
+          $css_selector = $column_css_selector
+          $provider = $row2
+          [OpenQA.Selenium.IWebElement]$column = $provider.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+          $server = $column.Text
+          highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$column ) -color 'red'
+          Write-Output $server
+        }
+      }
     }
-    write-output ($hashes.Keys -join ',')
-    
+
   } catch [exception]{
     Write-Output ("Exception message={0}" -f (($_.Exception.Message) -split "`n")[0])
   }
@@ -131,4 +186,7 @@ $tables | ForEach-Object {
 # Cleanup
 cleanup ([ref]$selenium)
 
+# for Javascript 
+# http://stackoverflow.com/questions/1669190/javascript-min-max-array-values
+# Powershell does not have this
 
