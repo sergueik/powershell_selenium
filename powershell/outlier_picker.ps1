@@ -8,7 +8,7 @@ param(
 
 function removeFrequentKey {
   param(
-    [object]$frequencies
+	[object]$frequencies
   )
   # for Javascript 
   # http://stackoverflow.com/questions/1669190/javascript-min-max-array-values
@@ -75,50 +75,50 @@ $script = @"
   var tables = document.querySelectorAll(table_selector);
   var git_hashes = {};
   for (table_cnt = 0; table_cnt != tables.length; table_cnt++) {
-      var table = tables[table_cnt];
-      if (table instanceof Element) {
-          var rows = table.querySelectorAll(row_selector);
-          // skip first row
-          for (row_cnt = 1; row_cnt != rows.length; row_cnt++) {
-              var row = rows[row_cnt];
-              if (row instanceof Element) {
-                  var cols = row.querySelectorAll(column_selector);
-                  if (cols.length > 0) {
-                      data = cols[0].innerHTML
-                      if (!git_hashes[data]) {
-                          git_hashes[data] = 0;
-                      }
-                      git_hashes[data]++;
-                  }
-              }
-          }
-      }
+	  var table = tables[table_cnt];
+	  if (table instanceof Element) {
+		  var rows = table.querySelectorAll(row_selector);
+		  // skip first row
+		  for (row_cnt = 1; row_cnt != rows.length; row_cnt++) {
+			  var row = rows[row_cnt];
+			  if (row instanceof Element) {
+				  var cols = row.querySelectorAll(column_selector);
+				  if (cols.length > 0) {
+					  data = cols[0].innerHTML
+					  if (!git_hashes[data]) {
+						  git_hashes[data] = 0;
+					  }
+					  git_hashes[data]++;
+				  }
+			  }
+		  }
+	  }
   }
   var sortNumber = function(a, b) {
-    // reverse numeric sort
-      return b - a;
+	// reverse numeric sort
+	  return b - a;
   }
   var removeFrequentKey = function(datahash) {
-      var array_keys = [];
-      var array_values = [];
-      for (var key in datahash) {
-          array_keys.push(key);
-          array_values.push(0 + datahash[key]);
-      }
-      max_freq = array_values.sort(sortNumber)[0]
-      for (var key in datahash) {
-          if (datahash[key] === max_freq) {
-              delete datahash[key]
-          }
-      }
-      return datahash;
+	  var array_keys = [];
+	  var array_values = [];
+	  for (var key in datahash) {
+		  array_keys.push(key);
+		  array_values.push(0 + datahash[key]);
+	  }
+	  max_freq = array_values.sort(sortNumber)[0]
+	  for (var key in datahash) {
+		  if (datahash[key] === max_freq) {
+			  delete datahash[key]
+		  }
+	  }
+	  return datahash;
   }
   
   git_hashes = removeFrequentKey(git_hashes);
   
   var array_keys = [];
   for (var key in git_hashes) {
-      array_keys.push(key);
+	  array_keys.push(key);
   }
   
   return array_keys.join();
@@ -126,6 +126,7 @@ $script = @"
 
 $result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script)
 write-output $result 
+$result =  $result -replace '\s+', ''
 
 $script = @"
 var result = [];
@@ -133,8 +134,7 @@ var table_selector = 'html body div table.sortable';
 var row_selector = 'tbody tr';
 var hash_column_selector = 'td:nth-child(3)';
 var master_server_column_selector = 'td:nth-child(0)';
-
-var git_hashes_str = '259c762,25bad25,2bad762,b26e5f1,bade5f1,d1bad8d,d158d8d,533acf2,533ace2,1b24bca,1b24bc2,d3c1652,d3aaa52,7538e12,7000e12';
+var git_hashes_str = arguments[0];
 var col_num = 0;
 var git_hashes = {};
 var git_hashes_keys = git_hashes_str.split(',');
@@ -145,33 +145,29 @@ var tables = document.querySelectorAll(table_selector);
 
 
 for (table_cnt = 0; table_cnt != tables.length; table_cnt++) {
-    var table = tables[table_cnt];
-    if (table instanceof Element) {
-        var rows = table.querySelectorAll(row_selector);
-        // skip first row
-        for (row_cnt = 1; row_cnt != rows.length; row_cnt++) {
-            var row = rows[row_cnt];
-            if (row instanceof Element) {
-                var cols = row.querySelectorAll(hash_column_selector);
-                if (cols.length > 0) {
-
-                    data = cols[0].innerHTML;
-                    data = data.replace(/\s+/g,'');
-                    if (git_hashes[data]) {
-                      console.log('action');
-                      result.push(data);
-                    } else {
-                        console.log("'" + data + "'" + ' not found!');
-                    }
-                }
-            }
-        }
-    }
+	var table = tables[table_cnt];
+	if (table instanceof Element) {
+		var rows = table.querySelectorAll(row_selector);
+		// skip first row
+		for (row_cnt = 1; row_cnt != rows.length; row_cnt++) {
+			var row = rows[row_cnt];
+			if (row instanceof Element) {
+				var cols = row.querySelectorAll(hash_column_selector);
+				if (cols.length > 0) {
+					data = cols[0].innerHTML;
+					data = data.replace(/\s+/g,'');
+					if (git_hashes[data]) {
+					  result.push(data);
+					}
+				}
+			}
+		}
+	}
 }
 
 return result.join();
 "@
-$result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script)
+$result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script, $result)
 write-output $result 
 
 # Cleanup
@@ -187,47 +183,47 @@ foreach ($table in ($selenium.FindElements([OpenQA.Selenium.By]::CssSelector($ta
   
   # iterate overs Puppet master server r10k hashes
   foreach ($row in ($table.FindElements([OpenQA.Selenium.By]::CssSelector($row_css_selector))) ) {
-    if ($row_cnt -eq 0) {
-      # skil first row (table headers) 
-      $row_cnt++
-      continue
-    }
-    if ($row_cnt -gt $max_rows) { break }
-    $githash = $row.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $githash_column_number))).Text
-    if ( -not $hashes[$githash] ) {
-      $hashes[$githash] = 1
-      $module = $row.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $module_column_number))).Text
-      if (-not $modules[$module]) {
-        $modules[$module] = $true
-      }
-    } else {
-      $hashes[$githash]++
-    }
-    $row_cnt++
+	if ($row_cnt -eq 0) {
+	  # skil first row (table headers) 
+	  $row_cnt++
+	  continue
+	}
+	if ($row_cnt -gt $max_rows) { break }
+	$githash = $row.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $githash_column_number))).Text
+	if ( -not $hashes[$githash] ) {
+	  $hashes[$githash] = 1
+	  $module = $row.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $module_column_number))).Text
+	  if (-not $modules[$module]) {
+		$modules[$module] = $true
+	  }
+	} else {
+	  $hashes[$githash]++
+	}
+	$row_cnt++
   }
   # Workaround Powershell flexible types
   $keys = @()
   $hashes.Keys | ForEach-Object { $keys += $_ }
   if ($keys.Length -gt 1) {
-    Write-Output ("Module = '{0}'" -f $module)
-    # Write-Output ('Hashes found: {0}' -f ($hashes.Keys -join "`r`n"))
-    $hashes_amended = removeFrequentKey ($hashes)
-    $row2_cnt = 0
-    foreach ($row2 in ($table.FindElements([OpenQA.Selenium.By]::CssSelector($row_css_selector))) ) {
-      if ($row2_cnt -eq 0) {
-        # first row is table headers
-        $row2_cnt++
-        continue 
-      }
-      [OpenQA.Selenium.IWebElement]$githash_column = $row2.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $githash_column_number)))
-      if ($hashes_amended[$githash_column.Text]) {
-        [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$githash_column).Build().Perform()
-        highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$githash_column) -color 'red'
-        [OpenQA.Selenium.IWebElement]$server_column = $row2.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $server_column_number)))
-        highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$server_column) -color 'blue'
-        Write-Output $server_column.Text
-      }
-    }
+	Write-Output ("Module = '{0}'" -f $module)
+	# Write-Output ('Hashes found: {0}' -f ($hashes.Keys -join "`r`n"))
+	$hashes_amended = removeFrequentKey ($hashes)
+	$row2_cnt = 0
+	foreach ($row2 in ($table.FindElements([OpenQA.Selenium.By]::CssSelector($row_css_selector))) ) {
+	  if ($row2_cnt -eq 0) {
+		# first row is table headers
+		$row2_cnt++
+		continue 
+	  }
+	  [OpenQA.Selenium.IWebElement]$githash_column = $row2.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $githash_column_number)))
+	  if ($hashes_amended[$githash_column.Text]) {
+		[void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$githash_column).Build().Perform()
+		highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$githash_column) -color 'red'
+		[OpenQA.Selenium.IWebElement]$server_column = $row2.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $server_column_number)))
+		highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$server_column) -color 'blue'
+		Write-Output $server_column.Text
+	  }
+	}
   }
 }
 # Cleanup
