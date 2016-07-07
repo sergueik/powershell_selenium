@@ -130,13 +130,13 @@ write-output $result
 $result =  $result -replace '\s+', ''
 
 $script = @"
-var result = [];
+var result = {};
 var table_selector = 'html body div table.sortable';
 var row_selector = 'tbody tr';
 var hash_column_selector = 'td:nth-child(3)';
 var master_server_column_selector = 'td:nth-child(1)';
-// var git_hashes_str = arguments[0];
-var git_hashes_str = '259c762,25bad25,2bad762,b26e5f1,bade5f1,d1bad8d,d158d8d,533acf2,533ace2,1b24bca,1b24bc2,d3c1652,d3aaa52,7538e12,7000e12';
+var git_hashes_str = arguments[0];
+// var git_hashes_str = '259c762,25bad25,2bad762,b26e5f1,bade5f1,d1bad8d,d158d8d,533acf2,533ace2,1b24bca,1b24bc2,d3c1652,d3aaa52,7538e12,7000e12';
 
 var col_num = 0;
 var git_hashes = {};
@@ -164,7 +164,10 @@ for (table_cnt = 0; table_cnt != tables.length; table_cnt++) {
 						if (master_server_cols.length > 0) {
 							data = master_server_cols[0].innerHTML;
 							data = data.replace(/\s+/g, '');
-							result.push(data);
+							if (!result[data]) {
+								result[data] = 0;
+							}
+							result[data]++;
 						}
 					}
 				}
@@ -172,7 +175,12 @@ for (table_cnt = 0; table_cnt != tables.length; table_cnt++) {
 		}
 	}
 }
-return result.join();
+var array_keys = [];
+for (var key in result) {
+	array_keys.push(key);
+}
+
+return array_keys.join();
 "@
 $result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script, $result)
 write-output $result 
