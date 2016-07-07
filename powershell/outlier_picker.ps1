@@ -1,18 +1,14 @@
 
 param(
-  [string]$browser
-  # TODO: version
+  [string]$browser = 'firefox',
+  [switch]$grid,
+  [switch]$full
 )
-
-
 
 function removeFrequentKey {
   param(
-	[object]$frequencies
+    [object]$frequencies
   )
-  # for Javascript 
-  # http://stackoverflow.com/questions/1669190/javascript-min-max-array-values
-  # Powershell does not have this
   $max_freq = $frequencies.Values | Sort-Object -Descending | Select-Object -First 1
   # Collection was modified; enumeration operation may not execute..
   # $frequencies.Keys | foreach-object { if ( $frequencies.Item($_) -eq $max_freq ) {$frequencies.Remove($_)}}
@@ -25,7 +21,14 @@ function removeFrequentKey {
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 
-$selenium = launch_selenium -browser $browser
+# $selenium = launch_selenium -browser $browser
+if ([bool]$PSBoundParameters['grid'].IsPresent) {
+  $selenium = launch_selenium -browser $browser -grid
+
+} else {
+  $selenium = launch_selenium -browser $browser
+
+}
 
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
@@ -41,7 +44,7 @@ $table_css_selector = 'html body div table.sortable'
 # rows locator (relative to table)
 $row_css_selector = 'tbody tr'
 
-# columns locators (relative to row)
+# columns locators (relative to row) - the td:nth-child(...) is used
 # puppet master server
 $server_column_number = 1
 # module
@@ -58,19 +61,17 @@ try {
   Write-Output ("Exception : {0} ...`n(ignored)" -f (($_.Exception.Message) -split "`n")[0])
 }
 
-
-# run monolythic script
-
-$column_css_selector = 'td:nth-child(3)' 
+$hash_column_css_selector = ('td:nth-child({0})' -f $githash_column_number)
 
 $script = @"
 
-	var table_selector = 'html body div table.sortable';
-	var row_selector = 'tbody tr';
-	var column_selector = 'td:nth-child(3)';
 	// var table_selector = 'html body div table.sortable';
 	// var row_selector = 'tbody tr';
 	// var column_selector = 'td:nth-child(3)';
+
+	var table_selector = '${table_css_selector}';
+	var row_selector = '${row_css_selector}';
+	var column_selector = '${hash_column_css_selector}';
 	col_num = 0;
 	var tables = document.querySelectorAll(table_selector);
 	var git_hashes = {};
@@ -126,18 +127,26 @@ $script = @"
 "@
 
 $result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script)
-write-output $result 
-$result =  $result -replace '\s+', ''
+Write-Output ("Outliers: git hashes:`r`n{0}" -f $result)
+
+$hash_column_css_selector = ('td:nth-child({0})' -f $githash_column_number)
+$master_server_column_css_selector = ('td:nth-child({0})' -f $server_column_number)
 
 $script = @"
-var result = {};
-var table_selector = 'html body div table.sortable';
-var row_selector = 'tbody tr';
-var hash_column_selector = 'td:nth-child(3)';
-var master_server_column_selector = 'td:nth-child(1)';
+
+var table_selector = '${table_css_selector}';
+var row_selector = '${row_css_selector}';
+var hash_column_selector = '${hash_column_css_selector}';
+var master_server_column_selector = '${master_server_column_css_selector}';
 var git_hashes_str = arguments[0];
+
+// var table_selector = 'html body div table.sortable';
+// var row_selector = 'tbody tr';
+// var hash_column_selector = 'td:nth-child(3)';
+// var master_server_column_selector = 'td:nth-child(1)';
 // var git_hashes_str = '259c762,25bad25,2bad762,b26e5f1,bade5f1,d1bad8d,d158d8d,533acf2,533ace2,1b24bca,1b24bc2,d3c1652,d3aaa52,7538e12,7000e12';
 
+var result = {};
 var col_num = 0;
 var git_hashes = {};
 var git_hashes_keys = git_hashes_str.split(',');
@@ -179,66 +188,69 @@ var array_keys = [];
 for (var key in result) {
 	array_keys.push(key);
 }
-
+// TODO: collect 'module' column
 return array_keys.join();
 "@
-$result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script, $result)
-write-output $result 
+$result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script,$result)
+Write-Output ("Outliers: master servers:`r`n{0}" -f ($result -replace ',',"`r`n"))
 
-# Cleanup
-cleanup ([ref]$selenium)
+if (-not ([bool]$PSBoundParameters['full'].IsPresent)) {
+  # Cleanup
+  cleanup ([ref]$selenium)
+  exit
+}
 
-exit 
-# iterate over modules 
-foreach ($table in ($selenium.FindElements([OpenQA.Selenium.By]::CssSelector($table_css_selector))) ) {
+# iterate over modules
+foreach ($table in ($selenium.FindElements([OpenQA.Selenium.By]::CssSelector($table_css_selector)))) {
+
   $max_rows = 100
   $row_cnt = 0
   $hashes = @{}
   $module = $null
-  
+
   # iterate overs Puppet master server r10k hashes
-  foreach ($row in ($table.FindElements([OpenQA.Selenium.By]::CssSelector($row_css_selector))) ) {
-	if ($row_cnt -eq 0) {
-	  # skil first row (table headers) 
-	  $row_cnt++
-	  continue
-	}
-	if ($row_cnt -gt $max_rows) { break }
-	$githash = $row.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $githash_column_number))).Text
-	if ( -not $hashes[$githash] ) {
-	  $hashes[$githash] = 1
-	  $module = $row.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $module_column_number))).Text
-	  if (-not $modules[$module]) {
-		$modules[$module] = $true
-	  }
-	} else {
-	  $hashes[$githash]++
-	}
-	$row_cnt++
+  foreach ($row in ($table.FindElements([OpenQA.Selenium.By]::CssSelector($row_css_selector)))) {
+    if ($row_cnt -eq 0) {
+      # skil first row (table headers)
+      $row_cnt++
+      continue
+    }
+    if ($row_cnt -gt $max_rows) { break }
+    $githash = $row.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $githash_column_number))).Text
+    if (-not $hashes[$githash]) {
+      $hashes[$githash] = 1
+      $module = $row.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $module_column_number))).Text
+      if (-not $modules[$module]) {
+        $modules[$module] = $true
+      }
+    } else {
+      $hashes[$githash]++
+    }
+    $row_cnt++
   }
   # Workaround Powershell flexible types
   $keys = @()
   $hashes.Keys | ForEach-Object { $keys += $_ }
   if ($keys.Length -gt 1) {
-	Write-Output ("Module = '{0}'" -f $module)
-	# Write-Output ('Hashes found: {0}' -f ($hashes.Keys -join "`r`n"))
-	$hashes_amended = removeFrequentKey ($hashes)
-	$row2_cnt = 0
-	foreach ($row2 in ($table.FindElements([OpenQA.Selenium.By]::CssSelector($row_css_selector))) ) {
-	  if ($row2_cnt -eq 0) {
-		# first row is table headers
-		$row2_cnt++
-		continue 
-	  }
-	  [OpenQA.Selenium.IWebElement]$githash_column = $row2.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $githash_column_number)))
-	  if ($hashes_amended[$githash_column.Text]) {
-		[void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$githash_column).Build().Perform()
-		highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$githash_column) -color 'red'
-		[OpenQA.Selenium.IWebElement]$server_column = $row2.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $server_column_number)))
-		highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$server_column) -color 'blue'
-		Write-Output $server_column.Text
-	  }
-	}
+    Write-Output ('Module: {0}' -f $module)
+    # Write-Output ('Hashes found: {0}' -f ($hashes.Keys -join "`r`n"))
+    $hashes_amended = removeFrequentKey ($hashes)
+    $first_row = $true
+    foreach ($row2 in ($table.FindElements([OpenQA.Selenium.By]::CssSelector($row_css_selector)))) {
+      if ($first_row) {
+        # first row is table headers
+        $first_row = $false
+        continue
+      }
+      [OpenQA.Selenium.IWebElement]$githash_column = $row2.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $githash_column_number)))
+      if ($hashes_amended[$githash_column.Text]) {
+        [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$githash_column).Build().Perform()
+        highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$githash_column) -color 'red'
+        [OpenQA.Selenium.IWebElement]$server_column = $row2.FindElement([OpenQA.Selenium.By]::CssSelector(('td:nth-child({0})' -f $server_column_number)))
+        highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$server_column) -color 'blue'
+        Write-Output ('Master Server: ' + $server_column.Text)
+      }
+    }
   }
 }
 # Cleanup

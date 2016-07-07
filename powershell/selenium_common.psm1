@@ -66,7 +66,7 @@ function launch_selenium {
 
   # Write-Debug (Get-ScriptDirectory)
   $use_remote_driver = [bool]$PSBoundParameters['grid'].IsPresent
-  $phantomjs_path = 'C:\tools\phantomjs-2.0.0\bin'
+  $phantomjs_path = 'C:\tools\phantomjs\bin'
   if (($env:PHANTOMJS_PATH -ne $null) -and ($env:PHANTOMJS_PATH -ne '')) {
     $phantomjs_path = $env:PHANTOMJS_PATH
   }
