@@ -196,17 +196,22 @@ return array_keys.join();
 
 $result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($serverFinderScript,([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($hashesFinderScript ))
 
-# cannot cast instance of type "System.Management.Automation.PSCustomObject" to type "System.Collections.Hashtable"
-# custom code to convert simple PSCustomObject back to a hashtable
-# TODO: add Newtonsoft.Json to sharedassemblies and JObject.Parse(json);
-# https://github.com/JamesNK/Newtonsoft.Json
 
 $result_obj = convertFrom-JSON $result 
 $result_hash = @{}
 $result_obj.psobject.properties | Foreach-object { $result_hash[$_.Name] = $_.Value }
-
-
 Write-Output ("Outliers: master servers:`r`n{0}" -f ($result_hash.keys -join "`r`n"))
+
+# cannot cast instance of type "System.Management.Automation.PSCustomObject" to type "System.Collections.Hashtable"
+# custom code to convert simple PSCustomObject back to a hashtable
+# TODO: add Newtonsoft.Json to sharedassemblies and JObject.Parse(json);
+# https://github.com/JamesNK/Newtonsoft.Json
+# $config = [Newtonsoft.Json.Linq.JObject]::Parse($result)
+# $config.GetEnumerator()
+
+$result_array = @()
+[Newtonsoft.Json.Linq.JObject]::Parse($result) | foreach-object { $result_array   += $_.Path  } 
+Write-Output ("Outliers: master servers:`r`n{0}" -f ($result_array -join "`r`n"))
 
 if (-not ([bool]$PSBoundParameters['full'].IsPresent)) {
   # Cleanup

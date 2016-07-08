@@ -56,6 +56,7 @@ function launch_selenium {
       'WebDriver.dll',
       'WebDriver.Support.dll',
       'nunit.core.dll',
+      'Newtonsoft.Json.dll',
       'nunit.framework.dll'
     ),
     [string]$hub_host = '127.0.0.1',
@@ -396,6 +397,7 @@ function load_shared_assemblies {
     [string[]]$shared_assemblies = @(
       'WebDriver.dll',
       'WebDriver.Support.dll',
+      'Newtonsoft.Json.dll',
       'nunit.core.dll',
       'nunit.framework.dll'
       )
@@ -433,10 +435,11 @@ function load_shared_assemblues_demand_versions {
   param(
     [string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies',
     $shared_assemblies = @{
-      'WebDriver.dll' = 2.44;
-      'WebDriver.Support.dll' = '2.44';
+      'WebDriver.dll' = 2.47;
+      'WebDriver.Support.dll' = '2.47';
       'nunit.core.dll' = $null;
       'nunit.framework.dll' = $null;
+      'Newtonsoft.Json.dll' = $null; 
     }
   )
 
