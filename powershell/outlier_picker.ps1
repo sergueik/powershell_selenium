@@ -54,7 +54,7 @@ $githash_column_number = 3
 
 # wait for the page to load
 try {
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(30))
   $wait.PollingInterval = 25
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementIsVisible([OpenQA.Selenium.By]::CssSelector($row_css_selector)))
 } catch [exception]{
@@ -63,7 +63,7 @@ try {
 
 $hash_column_css_selector = ('td:nth-child({0})' -f $githash_column_number)
 
-$script = @"
+$hashesFinderScript = @"
 
 	// var table_selector = 'html body div table.sortable';
 	// var row_selector = 'tbody tr';
@@ -126,13 +126,13 @@ $script = @"
 	return array_keys.join();
 "@
 
-$result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script)
+$result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($hashesFinderScript)
 Write-Output ("Outliers: git hashes:`r`n{0}" -f $result)
 
 $hash_column_css_selector = ('td:nth-child({0})' -f $githash_column_number)
 $master_server_column_css_selector = ('td:nth-child({0})' -f $server_column_number)
 
-$script = @"
+[string]$serverFinderScript = @"
 
 var table_selector = '${table_css_selector}';
 var row_selector = '${row_css_selector}';
@@ -189,10 +189,24 @@ for (var key in result) {
 	array_keys.push(key);
 }
 // TODO: collect 'module' column
+return JSON.stringify(result);
 return array_keys.join();
+
 "@
-$result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script,$result)
-Write-Output ("Outliers: master servers:`r`n{0}" -f ($result -replace ',',"`r`n"))
+
+$result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($serverFinderScript,([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($hashesFinderScript ))
+
+# cannot cast instance of type "System.Management.Automation.PSCustomObject" to type "System.Collections.Hashtable"
+# custom code to convert simple PSCustomObject back to a hashtable
+# TODO: add Newtonsoft.Json to sharedassemblies and JObject.Parse(json);
+# https://github.com/JamesNK/Newtonsoft.Json
+
+$result_obj = convertFrom-JSON $result 
+$result_hash = @{}
+$result_obj.psobject.properties | Foreach-object { $result_hash[$_.Name] = $_.Value }
+
+
+Write-Output ("Outliers: master servers:`r`n{0}" -f ($result_hash.keys -join "`r`n"))
 
 if (-not ([bool]$PSBoundParameters['full'].IsPresent)) {
   # Cleanup
