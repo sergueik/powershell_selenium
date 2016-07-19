@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<!-- http://jsfiddle.net/kashjs/n2gxobf7/ -->
+<head>
+<meta charset=utf-8/>
+<title>Angular Drag and Drop demo</title>
+</head>
+<body>
+<!-- dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.19/angular.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.19/angular-sanitize.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+<script src="http://adaptv.github.io/adapt-strap/dist/adapt-strap.js"></script>
+<script src="http://adaptv.github.io/adapt-strap/dist/adapt-strap.tpl.js"></script>
+<link rel="stylesheet" href="http://adaptv.github.io/adapt-strap/dist/adapt-strap.css">
+
+<div ng-controller="draggableCtrl" ng-app="adaptv.adaptStrapDocs">
+<p>( Drag car from the <strong>list of cars</strong> to the <strong>basket</strong>. )</p>
+  <div class="rows">
+    <div class="col-md-3">
+      <ul id="car-list" class="list-group">
+        <li class="list-group-item active">List of Cars</li>
+        <!-- ========== Usage Drag ========== -->
+        <li class="list-group-item"
+            ad-drag="true"
+            ad-drag-data="car"
+            ad-drag-begin="onDragStart($data, $dragElement, $event);"
+            ad-drag-end="onDragEnd($data, $dragElement, $lastDropElement, $event);"
+            ng-repeat="car in models.cars">
+          <span>
+            <span class="glyphicon glyphicon-th"></span>
+            {{ car.name }} - {{ car.modelYear }} ( {{ car.price | currency }} )
+          </span>
+        </li>
+      </ul>
+    </div>
+    <div class="col-md-4">
+      <!-- ========== Usage Drop ========== -->
+      <ul id="my-basket"
+          class="list-group"
+          ad-drop="true"
+          ad-drop-over="onDragOver($data, $dragElement, $dropElement, $event);"
+          ad-drop-leave="onDragLeave($data, $dragElement, $dropElement, $event)"
+          ad-drop-end="onDrop($data, $dragElement, $dropElement, $event);">
+        <li class="list-group-item disabled">My Basket</li>
+        <li class="list-group-item"
+            ad-drag="true"
+            ng-repeat="car in models.basket">
+          <span>
+            <span class="glyphicon glyphicon-thumbs-up"></span>
+            {{ car.name }} - {{ car.modelYear }} ( {{ car.price | currency }} )
+          </span>
+        </li>
+        <li class="list-group-item" ng-hide="models.basket.length">
+            <span> Drop here</span>
+        </li>
+      </ul>
+    </div>
+    <div class="col-md-3">
+      <ul class="list-group">
+        <!-- =========== Drag with handles ============= -->
+        <li class="list-group-item"
+            ad-drag="true"
+            ad-drag-handle="true"
+            id="drag-handle-demo">
+          <span class="ad-drag-handle glyphicon glyphicon-align-justify"></span>
+          Drag me using my handle
+        </li>
+        <!-- =========== Drag on the whole element ============= -->
+        <li class="list-group-item"
+            ad-drag="true"
+            id="drag-element-demo">
+          Drag me without handle
+        </li>
+        <!-- =========== Prevent drag on parts of the element ============= -->
+        <li class="list-group-item"
+            ad-drag="true"
+            id="drag-prevent-demo">
+          Drag me, except <strong ad-prevent-drag>this bold text</strong></li>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+// ========== initialize documentation app module ========== //
+
+angular.module('adaptv.adaptStrapDocs', [
+  'ngSanitize',
+  'adaptv.adaptStrap'
+])
+
+// ========== controllers ========== //
+angular.module('adaptv.adaptStrapDocs')
+  .controller('draggableCtrl', ['$scope', function($scope) {
+    $scope.models = {
+      basket: [],
+      cars: [
+        {
+          id: 1,
+          name: 'Audi A4',
+          modelYear: 2009,
+          price: 34000
+        },
+        {
+          id: 2,
+          name: 'BMW 328i',
+          modelYear: 2012,
+          price: 39000
+        },
+        {
+          id: 3,
+          name: 'Audi A6',
+          modelYear: 2012,
+          price: 44000
+        },
+        {
+          id: 4,
+          name: 'Audi S8',
+          modelYear: 2014,
+          price: 100000
+        },
+        {
+          id: 5,
+          name: 'Audi A4',
+          modelYear: 2009,
+          price: 34000
+        }
+      ]
+    };
+
+    $scope.currentDropElement = null;
+
+    $scope.remove = function(l, o) {
+      var index = l.indexOf(o);
+      if (index > -1) {
+        l.splice(index, 1);
+      }
+    };
+
+    $scope.onDragStart = function() {
+
+    };
+
+    $scope.onDragEnd = function() {
+
+    };
+
+    $scope.onDragOver = function(data, dragElement, dropElement) {
+      $scope.currentDropElement = dropElement;
+    };
+
+    $scope.onDragLeave = function() {
+      $scope.currentDropElement = null;
+    };
+
+    $scope.onDrop = function(data) {
+      if (data && $scope.currentDropElement) {
+        $scope.models.basket.push(data);
+        $scope.remove($scope.models.cars, data);
+      }
+    };
+  }])
+
+</script>
+</body>
+</html>
