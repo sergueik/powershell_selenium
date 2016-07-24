@@ -80,40 +80,24 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Samples\ng_ui_select_example1.htm">
-      <Link>ng_ui_select_example1.htm</Link>
+    <None Include="..\Samples\ng_basic.htm">
+      <Link>ng_basic.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="..\Samples\ng_datepicker.htm">
       <Link>ng_datepicker.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\Samples\ng_ui_select_example2.htm">
-      <Link>ng_ui_select_example2.htm</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="..\Samples\ng_directive_binding.htm">
       <Link>ng_directive_binding.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\Samples\ng_upload1.htm">
-      <Link>ng_upload1.htm</Link>
+    <None Include="..\Samples\ng_drag_and_drop1.htm">
+      <Link>ng_drag_and_drop1.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\Samples\ng_watch_ng_if.htm">
-      <Link>ng_watch_ng_if.htm</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Samples\ng_todo.htm">
-      <Link>ng_todo.htm</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Samples\ng_select_array.htm">
-      <Link>ng_select_array.htm</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Samples\ng_basic.htm">
-      <Link>ng_basic.htm</Link>
+    <None Include="..\Samples\ng_drag_and_drop2.htm">
+      <Link>ng_drag_and_drop2.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="..\Samples\ng_dropdown.htm">
@@ -124,6 +108,18 @@
       <Link>ng_dropdown_watch.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="..\Samples\ng_headers_sort_example1.htm">
+      <Link>ng_headers_sort_example1.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_headers_sort_example2.htm">
+      <Link>ng_headers_sort_example2.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_multi_select.htm">
+      <Link>ng_multi_select.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="..\Samples\ng_options_with_object.htm">
       <Link>ng_options_with_object.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -132,8 +128,16 @@
       <Link>ng_repeat.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="..\Samples\ng_repeat_selected.htm">
+      <Link>ng_repeat_selected.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="..\Samples\ng_repeat_start_end.htm">
       <Link>ng_repeat_start_end.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_select_array.htm">
+      <Link>ng_select_array.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="..\Samples\ng_service.htm">
@@ -156,32 +160,36 @@
       <Link>ng_table4.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\Samples\angular.js">
-      <Link>angular.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="..\Samples\ng_th.htm">
       <Link>ng_th.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="..\Samples\ng_todo.htm">
+      <Link>ng_todo.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_ui_select_example1.htm">
+      <Link>ng_ui_select_example1.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_ui_select_example2.htm">
+      <Link>ng_ui_select_example2.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_upload1.htm">
+      <Link>ng_upload1.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\ng_watch_ng_if.htm">
+      <Link>ng_watch_ng_if.htm</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\angular.js">
+      <Link>angular.js</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="..\Samples\ng_pattern_validate.htm">
       <Link>ng_pattern_validate.htm</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Samples\ng_headers_sort_example1.htm">
-      <Link>ng_headers_sort_example1.htm</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Samples\ng_headers_sort_example2.htm">
-      <Link>ng_headers_sort_example2.htm</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Samples\ng_multi_select.htm">
-      <Link>ng_multi_select.htm</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Samples\ng_repeat_selected.htm">
-      <Link>ng_repeat_selected.htm</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

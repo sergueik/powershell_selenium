@@ -526,7 +526,7 @@ namespace Protractor.Test
             {
                 Console.Error.WriteLine("AccountNo: {0}", account.ToString());
             }
-            // highlight individual accounts ofan existing customer
+            // highlight individual accounts of an existing customer
             ReadOnlyCollection<NgWebElement> ng_accounts = ng_customers.First().FindElements(NgBy.Repeater("account in cust.accountNo"));
             foreach (NgWebElement ng_account in ng_accounts)
             {
