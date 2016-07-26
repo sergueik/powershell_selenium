@@ -40,20 +40,6 @@ function set_timeouts {
 
 }
 
-# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
-function Get-ScriptDirectory
-{
-  $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-  if ($Invocation.PSScriptRoot) {
-    $Invocation.PSScriptRoot
-  }
-  elseif ($Invocation.MyCommand.Path) {
-    Split-Path $Invocation.MyCommand.Path
-  } else {
-    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf(""))
-  }
-}
-
 function cleanup
 {
   param(
@@ -64,13 +50,12 @@ function cleanup
   } catch [exception]{
     # Ignore errors if unable to close the browser
     Write-Output (($_.Exception.Message) -split "`n")[0]
-
   }
 }
 
 $shared_assemblies = @{
-  'WebDriver.dll' = 2.44;
-  'WebDriver.Support.dll' = '2.44';
+  'WebDriver.dll' = '2.47';
+  'WebDriver.Support.dll' = '2.47';
   'nunit.core.dll' = $null;
   'nunit.framework.dll' = '2.6.3';
 

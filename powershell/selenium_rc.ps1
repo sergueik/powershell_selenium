@@ -18,24 +18,6 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
-function Get-ScriptDirectory
-{
-  $Invocation = (Get-Variable MyInvocation -Scope 1).Value;
-  if ($Invocation.PSScriptRoot)
-  {
-    $Invocation.PSScriptRoot;
-  }
-  elseif ($Invocation.MyCommand.Path)
-  {
-    Split-Path $Invocation.MyCommand.Path
-  }
-  else
-  {
-    $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf('\'));
-  }
-}
-
 $shared_assemblies = @(
   'ThoughtWorks.Selenium.Core.dll',
   'nunit.core.dll',
