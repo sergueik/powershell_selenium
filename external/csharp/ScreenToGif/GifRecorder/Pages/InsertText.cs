@@ -135,14 +135,7 @@ namespace ScreenToGif.Pages
             //Insert content in owner form using delegate method
             InsertTextDelegate insertTextMethod;
 
-            if (_isLegacy)
-            {
                 insertTextMethod = ((Legacy)Owner).InsertText;
-            }
-            else
-            {
-                insertTextMethod = ((Modern)Owner).InsertText;
-            }
 
             insertTextMethod(tbContent.Text.Trim());
 

@@ -89,14 +89,7 @@ namespace ScreenToGif
 
             #region Modern or Legacy Forms
 
-            if (!Settings.Default.modernStyle) 
-            {
-                Application.Run(new Legacy());
-            }
-            else
-            {
-                Application.Run(new Modern());
-            }
+            Application.Run(new Legacy());
 
             #endregion
 
