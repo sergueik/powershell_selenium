@@ -1,0 +1,63 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR Simple Chat</title>
+    <link href="Content/bootstrap.css" rel="stylesheet" />
+    <link href="Content/toastr.css" rel="stylesheet" />
+    <style>
+        body {
+            margin: 2em;
+        }
+    </style>
+</head>
+<body data-ng-app="app" ng-controller="demo as vm" ng-cloak>
+    <div class="container well well-lg">
+
+        <form class="form-horizontal" role="form">
+            <div class="form-group">
+                <label for="name" class="col-sm-2 control-label">Your Name</label>
+                <div class="col-sm-4">
+                    <input class="form-control" id="name" placeholder="Your Name"
+                            data-ng-model="vm.name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="name" class="col-sm-2 control-label">Message</label>
+                <div class="col-sm-4">
+                    <input class="form-control" id="name" placeholder="Message"
+                           data-ng-model="vm.newContent">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button data-ng-click="vm.sendMessage()" class="btn btn-default">Send</button>
+                </div>
+            </div>
+        </form>
+
+        <table class="table table-condensed table-bordered">
+            <thead>
+                <tr>
+                    <th class="col-sm-2">Name</th>
+                    <th class="col-sm-10">Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-ng-repeat="msg in vm.messages"
+                    ng-class="msg.name == vm.name ? 'success' : 'nope'">
+                    <td class="col-sm-2">{{msg.name}}</td>
+                    <td class="col-sm-10">{{msg.content}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script src="Scripts/jquery-2.0.3.js"></script>
+    <script src="Scripts/angular.js"></script>
+    <script src="Scripts/toastr.js"></script>
+    <script src="Scripts/jquery.signalR-2.0.0.min.js"></script>
+    <script src="/signalr/hubs"></script>
+    <script src="demo.js"></script>
+    <script src="chat.js"></script>
+</body>
+</html>
