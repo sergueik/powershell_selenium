@@ -1,4 +1,4 @@
-#Copyright (c) 2015 Serguei Kouzmine
+#Copyright (c) 2015,2016 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -18,6 +18,10 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
+# https://github.com/bbaia/protractor-net/tree/master/src/Protractor
+# https://github.com/sergueik/protractor-net
+# https://github.com/anthonychu/Protractor-Net-Demo
+
 param(
   [string]$browser = '',
   [string]$base_url = 'http://www.way2automation.com/demo.html',
@@ -29,7 +33,9 @@ param(
   [switch]$pause
 )
 
-# Setup 
+# Setup
+# copy ../csharp/protractor-net/Program/bin/Debug/Protractor.dll to
+# ../../csharp/sharedassemblies
 $shared_assemblies = @(
   'WebDriver.dll',
   'WebDriver.Support.dll',
@@ -48,7 +54,6 @@ Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
   $selenium = launch_selenium -browser $browser -grid -shared_assemblies $shared_assemblies
-
 } else {
   $selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
   Start-Sleep -Millisecond 500
@@ -61,11 +66,10 @@ $selenium.Navigate().GoToUrl($base_url)
 [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
 
 <#
-
 Write-Output 'Zoom 100%'
 try{
   [void]$selenium.Keyboard.SendKeys([System.Windows.Forms.SendKeys]::SendWait('^0'))
-  } catch [Exception] { 
+  } catch [Exception] {
     # ignore exception
     write-Debug $_.Exception.Message
   }
@@ -74,7 +78,7 @@ try{
 try{
   write-output 'Zoom out'
   [void]$selenium.Keyboard.SendKeys([System.Windows.Forms.SendKeys]::SendWait('^-'))
-  } catch [Exception] { 
+  } catch [Exception] {
     # ignore exception
     # key sequence to send must not be null
     write-Output $_.Exception.Message
@@ -85,11 +89,7 @@ try{
 
 $selenium.Navigate().GoToUrl($login_url)
 
-
-
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
-
-
 
 [string]$signup_css_selector = 'div#load_box.popupbox form#load_form a.fancybox[href="#login"]'
 [object]$signup_button_element = find_element -css_selector $signup_css_selector
@@ -98,7 +98,6 @@ highlight ([ref]$selenium) ([ref]$signup_button_element) -Delay 1200
 
 $signup_button_element.Click()
 Write-Output 'Sign Up'
-
 
 [string]$login_username_selector = "div#login.popupbox form#load_form input[name='username']"
 [string]$login_username_data = $username
@@ -112,7 +111,6 @@ $login_username_element.SendKeys($login_username_data)
 highlight ([ref]$selenium) ([ref]$login_password_element)
 $login_password_element.SendKeys($login_password_data)
 
-
 [string]$login_button_selector = "div#login.popupbox form#load_form [value='Submit']"
 [object]$login_button_element = find_element -css_selector $login_button_selector
 
@@ -125,9 +123,7 @@ $protractor_test_base_url = 'http://www.way2automation.com/protractor-angularjs-
 
 $selenium.Navigate().GoToUrl($protractor_test_base_url)
 
-
 [OpenQA.Selenium.Internal.ReturnedCookie[]]$cookies = $selenium.Manage().Cookies.AllCookies
-
 
 $cookie_data = @{}
 
@@ -147,7 +143,6 @@ if ($cookie_data.Value -ne $null) {
   $selenium.Manage().Cookies.AddCookie((New-Object -TypeName 'OpenQA.Selenium.Cookie' -ArgumentList ($cookie_data.Name,$cookie_data.Value,$cookie_data.Domain,$cookie_data.Path,$null)))
 }
 
-
 Write-Output 'Protractor Exercise Page'
 
 [string]$exercise_css_selector = "div.row div.linkbox ul.boxed_style li a[href='http://www.way2automation.com/angularjs-protractor/checkboxes']"
@@ -155,7 +150,6 @@ Write-Output 'Protractor Exercise Page'
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$exercise_button_element).Build().Perform()
 highlight ([ref]$selenium) ([ref]$exercise_button_element)
 [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('target', '')",$exercise_button_element)
-
 
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$exercise_button_element).Click().Build().Perform()
 

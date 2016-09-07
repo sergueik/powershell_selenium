@@ -1,5 +1,5 @@
 
-#Copyright (c) 2015 Serguei Kouzmine
+#Copyright (c) 2015,2016 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,7 @@
 #THE SOFTWARE.
 
 # https://github.com/bbaia/protractor-net/tree/master/src/Protractor
+# https://github.com/sergueik/protractor-net
 # https://github.com/anthonychu/Protractor-Net-Demo
 
 param(
@@ -28,12 +29,9 @@ param(
   [switch]$pause
 )
 
-
-
-
-# 'C:\developer\sergueik\csharp\Protractor-Net-Demo-master\packages\Protractor.0.3.0\lib\net40'
-
 # Setup 
+# copy ../csharp/protractor-net/Program/bin/Debug/Protractor.dll to 
+# ../../csharp/sharedassemblies
 $shared_assemblies = @(
   'WebDriver.dll',
   'WebDriver.Support.dll',
@@ -45,10 +43,8 @@ $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
   $selenium = launch_selenium -browser $browser -grid -shared_assemblies $shared_assemblies
-
 } else {
   $selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
-
 }
 [Protractor.NgWebDriver]$ng_driver = New-Object Protractor.NgWebDriver ($selenium)
 $base_url = 'http://juliemr.github.io/protractor-demo/'
