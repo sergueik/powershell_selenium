@@ -22,24 +22,24 @@ namespace Protractor.Test
     [TestFixture]
     public class WeatherTests
     {
-        private StringBuilder _verificationErrors = new StringBuilder();
-        private IWebDriver _driver;
-        private NgWebDriver _ngDriver;
-        private String _base_url = "https://weather.com/";
-        private WebDriverWait _wait;
-        private const int _wait_seconds = 3;
-        private const long _wait_poll_milliseconds = 300;
+        private StringBuilder verificationErrors = new StringBuilder();
+        private IWebDriver driver;
+        private NgWebDriver ngDriver;
+        private String base_url = "https://weather.com/";
+        private WebDriverWait wait;
+        private const int wait_seconds = 3;
+        private const long wait_poll_milliseconds = 300;
 
         [TestFixtureSetUp]
         public void SetUp()
         {
-            _driver = new ChromeDriver();
-            _driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+            driver = new ChromeDriver();
+            driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
             // driver.Manage().Window.Size = new System.Drawing.Size(700, 400);
-            _ngDriver = new NgWebDriver(_driver);
-            _ngDriver.Navigate().GoToUrl(_base_url);
-            _wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(_wait_seconds));
-            _wait.PollingInterval = TimeSpan.FromMilliseconds(_wait_poll_milliseconds);
+            ngDriver = new NgWebDriver(driver);
+            ngDriver.Navigate().GoToUrl(base_url);
+            wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
+            wait.PollingInterval = TimeSpan.FromMilliseconds(wait_poll_milliseconds);
         }
 
         [TestFixtureTearDown]
@@ -47,10 +47,10 @@ namespace Protractor.Test
         {
             try
             {
-                _driver.Quit();
+                driver.Quit();
             }
             catch (Exception) { } /* Ignore cleanup errors */
-            Assert.AreEqual("", _verificationErrors.ToString());
+            Assert.AreEqual("", verificationErrors.ToString());
         }
 
 
@@ -59,10 +59,10 @@ namespace Protractor.Test
         {
 
             String city = "Jacksonville, FL";
-            _wait.Until(ExpectedConditions.ElementIsVisible(NgBy.Model("term")));
-            IWebElement search = _driver.FindElement(By.XPath("//input[@name='search']"));
+            wait.Until(ExpectedConditions.ElementIsVisible(NgBy.Model("term")));
+            IWebElement search = driver.FindElement(By.XPath("//input[@name='search']"));
             Assert.IsNotNull(search);
-            _ngDriver.Highlight(search);
+            ngDriver.Highlight(search);
 
             // NOTE: occasionally dropping first letter .
             search.SendKeys(city[0].ToString());
@@ -75,7 +75,7 @@ namespace Protractor.Test
 
             }
             search.Click();
-            ReadOnlyCollection<NgWebElement> ng_elements = _ngDriver.FindElements(NgBy.Repeater("item in results | limitTo:10"));
+            ReadOnlyCollection<NgWebElement> ng_elements = ngDriver.FindElements(NgBy.Repeater("item in results | limitTo:10"));
             foreach (NgWebElement ng_element in ng_elements)
             {
                 try
@@ -88,7 +88,7 @@ namespace Protractor.Test
             }
             NgWebElement ng_firstMatchingElement = ng_elements.First(x => x.Text.ToLower() == city.ToLower());
             Assert.IsNotNull(ng_firstMatchingElement);
-            _ngDriver.Highlight(ng_firstMatchingElement);
+            ngDriver.Highlight(ng_firstMatchingElement);
             Console.Error.WriteLine("Clicking: {0}", ng_firstMatchingElement.Text);
 
             ng_firstMatchingElement.Click();

@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -30,28 +30,28 @@ namespace Protractor.Test
 	[TestFixture]
 	public class LocalFileTests
 	{
-		private StringBuilder _verificationErrors = new StringBuilder();
-		private IWebDriver _driver;
-		private NgWebDriver _ngDriver;
-		private WebDriverWait _wait;
-		private Actions _actions;
-		private const int _wait_seconds = 3;
-		private const long _wait_poll_milliseconds = 300;
+		private StringBuilder verificationErrors = new StringBuilder();
+		private IWebDriver driver;
+		private NgWebDriver ngDriver;
+		private WebDriverWait wait;
+		private Actions actions;
+		private const int wait_seconds = 3;
+		private const long wait_poll_milliseconds = 300;
 
 		// private String testpage;
 
 		[TestFixtureSetUp]
 		public void SetUp()
 		{
-			// _driver = new FirefoxDriver();
+			// driver = new FirefoxDriver();
 			// System.InvalidOperationException : Access to 'file:///...' from script denied (UnexpectedJavaScriptError)
-			// _driver = new ChromeDriver();
-			_driver = new PhantomJSDriver();
-			_driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
-			_ngDriver = new NgWebDriver(_driver);
-			_wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(_wait_seconds));
-			_wait.PollingInterval = TimeSpan.FromMilliseconds(_wait_poll_milliseconds);
-			_actions = new Actions(_driver);
+			// driver = new ChromeDriver();
+			driver = new PhantomJSDriver();
+			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
+			ngDriver = new NgWebDriver(driver);
+			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
+			wait.PollingInterval = TimeSpan.FromMilliseconds(wait_poll_milliseconds);
+			actions = new Actions(driver);
 		}
 
 		[TestFixtureTearDown]
@@ -59,15 +59,15 @@ namespace Protractor.Test
 		{
 			try
 			{
-				_driver.Quit();
+				driver.Quit();
 			}
 			catch (Exception) { } /* Ignore cleanup errors */
-			Assert.IsEmpty(_verificationErrors.ToString());
+			Assert.IsEmpty(verificationErrors.ToString());
 		}
 		private void GetPageContent(string testpage)
 		{
 			String base_url = new System.Uri(Path.Combine(Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
-			_ngDriver.Navigate().GoToUrl(base_url);
+			ngDriver.Navigate().GoToUrl(base_url);
 		}
 
 		[Test]
@@ -75,21 +75,21 @@ namespace Protractor.Test
 		{
 			GetPageContent("ng_dropdown.htm");
 			string optionsCountry = "country for (country, states) in countries";
-			ReadOnlyCollection<NgWebElement> ng_countries = _ngDriver.FindElements(NgBy.Options(optionsCountry));
+			ReadOnlyCollection<NgWebElement> ng_countries = ngDriver.FindElements(NgBy.Options(optionsCountry));
 
 			Assert.IsTrue(4 == ng_countries.Count);
 			Assert.IsTrue(ng_countries[0].Enabled);
 			string optionsState = "state for (state,city) in states";
-			NgWebElement ng_state = _ngDriver.FindElement(NgBy.Options(optionsState));
+			NgWebElement ng_state = ngDriver.FindElement(NgBy.Options(optionsState));
 			Assert.IsFalse(ng_state.Enabled);
-			SelectElement countries = new SelectElement(_ngDriver.FindElement(NgBy.Model("states")).WrappedElement);
+			SelectElement countries = new SelectElement(ngDriver.FindElement(NgBy.Model("states")).WrappedElement);
 			countries.SelectByText("Australia");
 			Thread.Sleep(1000);
 			Assert.IsTrue(ng_state.Enabled);
-			NgWebElement ng_selected_country = _ngDriver.FindElement(NgBy.SelectedOption(optionsCountry));
+			NgWebElement ng_selected_country = ngDriver.FindElement(NgBy.SelectedOption(optionsCountry));
 			// TODO:debug (works in Java client)
 			// Assert.IsNotNull(ng_selected_country.WrappedElement);
-			// ng_countries = _ngDriver.FindElements(NgBy.Options(optionsCountry));
+			// ng_countries = ngDriver.FindElements(NgBy.Options(optionsCountry));
 			NgWebElement ng_country = ng_countries.First(o => o.Selected);
 			StringAssert.IsMatch("Australia", ng_country.Text);
 		}
@@ -99,18 +99,18 @@ namespace Protractor.Test
 		{
 			GetPageContent("ng_dropdown_watch.htm");
 			string optionsCountry = "country for country in countries";
-			ReadOnlyCollection<NgWebElement> ng_countries = _ngDriver.FindElements(NgBy.Options(optionsCountry));
+			ReadOnlyCollection<NgWebElement> ng_countries = ngDriver.FindElements(NgBy.Options(optionsCountry));
 
 			Assert.IsTrue(3 == ng_countries.Count);
 			Assert.IsTrue(ng_countries[0].Enabled);
 			string optionsState = "state for state in states";
-			NgWebElement ng_state = _ngDriver.FindElement(NgBy.Options(optionsState));
+			NgWebElement ng_state = ngDriver.FindElement(NgBy.Options(optionsState));
 			Assert.IsFalse(ng_state.Enabled);
-			SelectElement countries = new SelectElement(_ngDriver.FindElement(NgBy.Model("country")).WrappedElement);
+			SelectElement countries = new SelectElement(ngDriver.FindElement(NgBy.Model("country")).WrappedElement);
 			countries.SelectByText("china");
 			Thread.Sleep(1000);
 			Assert.IsTrue(ng_state.Enabled);
-			NgWebElement ng_selected_country = _ngDriver.FindElement(NgBy.SelectedOption("country"));
+			NgWebElement ng_selected_country = ngDriver.FindElement(NgBy.SelectedOption("country"));
 			Assert.IsNotNull(ng_selected_country.WrappedElement);
 			NgWebElement ng_country = ng_countries.First(o => o.Selected);
 			StringAssert.IsMatch("china", ng_country.Text);
@@ -121,8 +121,8 @@ namespace Protractor.Test
 		public void ShouldEvaluateIf()
 		{
 			GetPageContent("ng_watch_ng_if.htm");
-			IWebElement button = _ngDriver.FindElement(By.CssSelector("button.btn"));
-			NgWebElement ng_button = new NgWebElement(_ngDriver, button);
+			IWebElement button = ngDriver.FindElement(By.CssSelector("button.btn"));
+			NgWebElement ng_button = new NgWebElement(ngDriver, button);
 			Object state = ng_button.Evaluate("!house.frontDoor.isOpen");
 			Assert.IsTrue(Convert.ToBoolean(state));
 			StringAssert.IsMatch("house.frontDoor.open()", button.GetAttribute("ng-click"));
@@ -134,7 +134,7 @@ namespace Protractor.Test
 		public void ShouldFindRepeaterSelectedtOption()
 		{
 			GetPageContent("ng_repeat_selected.htm");
-			NgWebElement ng_element = _ngDriver.FindElement(NgBy.SelectedRepeaterOption("fruit in Fruits"));
+			NgWebElement ng_element = ngDriver.FindElement(NgBy.SelectedRepeaterOption("fruit in Fruits"));
 			StringAssert.IsMatch("Mango", ng_element.Text);
 		}
 
@@ -143,9 +143,9 @@ namespace Protractor.Test
 		public void ShouldChangeRepeaterSelectedtOption()
 		{
 			GetPageContent("ng_repeat_selected.htm");
-			NgWebElement ng_element = _ngDriver.FindElement(NgBy.SelectedRepeaterOption("fruit in Fruits"));
+			NgWebElement ng_element = ngDriver.FindElement(NgBy.SelectedRepeaterOption("fruit in Fruits"));
 			StringAssert.IsMatch("Mango", ng_element.Text);
-			ReadOnlyCollection<NgWebElement> ng_elements = _ngDriver.FindElements(NgBy.Repeater("fruit in Fruits"));
+			ReadOnlyCollection<NgWebElement> ng_elements = ngDriver.FindElements(NgBy.Repeater("fruit in Fruits"));
 			ng_element = ng_elements.First(o => String.Compare("Orange", o.Text,
 			                                                   StringComparison.InvariantCulture) == 0);
 			ng_element.Click();
@@ -153,7 +153,7 @@ namespace Protractor.Test
 			// to trigger WaitForAngular
 			Assert.IsTrue(ng_element.Displayed);
 			// reload
-			ng_element = _ngDriver.FindElement(NgBy.SelectedRepeaterOption("fruit in Fruits"));
+			ng_element = ngDriver.FindElement(NgBy.SelectedRepeaterOption("fruit in Fruits"));
 			StringAssert.IsMatch("Orange", ng_element.Text);
 
 		}
@@ -163,9 +163,9 @@ namespace Protractor.Test
 		public void ShouldHandleMultiSelect()
 			// appears to be broken in PahtomJS / working in desktop browsers
 		{
-			Actions actions = new Actions(_ngDriver.WrappedDriver);
+			Actions actions = new Actions(ngDriver.WrappedDriver);
 			GetPageContent("ng_multi_select.htm");
-			IWebElement element = _ngDriver.FindElement(NgBy.Model("selectedValues"));
+			IWebElement element = ngDriver.FindElement(NgBy.Model("selectedValues"));
 			// use core Selenium
 			IList<IWebElement> options = new SelectElement(element).Options;
 			IEnumerator<IWebElement> etr = options.Where(o => Convert.ToBoolean(o.GetAttribute("selected"))).GetEnumerator();
@@ -177,11 +177,11 @@ namespace Protractor.Test
 			{
 				// http://selenium.googlecode.com/svn/trunk/docs/api/dotnet/html/AllMembers_T_OpenQA_Selenium_Keys.htm
 				actions.KeyDown(Keys.Control).Click(option).KeyUp(Keys.Control).Build().Perform();
-				// triggers _ngDriver.WaitForAngular()
-				Assert.IsNotEmpty(_ngDriver.Url);
+				// triggers ngDriver.WaitForAngular()
+				Assert.IsNotEmpty(ngDriver.Url);
 			}
 			// re-read select options
-			element = _ngDriver.FindElement(NgBy.Model("selectedValues"));
+			element = ngDriver.FindElement(NgBy.Model("selectedValues"));
 			options = new SelectElement(element).Options;
 			etr = options.Where(o => Convert.ToBoolean(o.GetAttribute("selected"))).GetEnumerator();
 			while (etr.MoveNext())
@@ -199,12 +199,12 @@ namespace Protractor.Test
 			{
 				for (int cnt = 0; cnt != 2; cnt++)
 				{
-					IWebElement headerElement = _ngDriver.FindElement(By.XPath("//th/a[contains(text(),'" + header + "')]"));
+					IWebElement headerElement = ngDriver.FindElement(By.XPath("//th/a[contains(text(),'" + header + "')]"));
 					Console.Error.WriteLine("Clicking on header: " + header);
 					headerElement.Click();
-					// triggers _ngDriver.WaitForAngular()
-					Assert.IsNotEmpty(_ngDriver.Url);
-					ReadOnlyCollection<NgWebElement> ng_emps = _ngDriver.FindElements(NgBy.Repeater("emp in data.employees"));
+					// triggers ngDriver.WaitForAngular()
+					Assert.IsNotEmpty(ngDriver.Url);
+					ReadOnlyCollection<NgWebElement> ng_emps = ngDriver.FindElements(NgBy.Repeater("emp in data.employees"));
 					NgWebElement ng_emp = ng_emps[0];
 					String field = ng_emp.GetAttribute("ng-order-by");
 					Console.Error.WriteLine(field + ": " + ng_emp.Evaluate(field).ToString());
@@ -244,19 +244,19 @@ namespace Protractor.Test
 			String[] headers = new String[] { "First Name", "Last Name", "Age" };
 			foreach (String header in headers)
 			{
-				IWebElement headerelement = _ngDriver.FindElement(By.XPath(String.Format("//th/a[contains(text(),'{0}')]", header)));
+				IWebElement headerelement = ngDriver.FindElement(By.XPath(String.Format("//th/a[contains(text(),'{0}')]", header)));
 				Console.Error.WriteLine(header);
 				headerelement.Click();
 				// to trigger WaitForAngular
-				Assert.IsNotEmpty(_ngDriver.Url);
-				IWebElement emp = _ngDriver.FindElement(NgBy.Repeater("emp in data.employees"));
-				NgWebElement ngRow = new NgWebElement(_ngDriver, emp);
+				Assert.IsNotEmpty(ngDriver.Url);
+				IWebElement emp = ngDriver.FindElement(NgBy.Repeater("emp in data.employees"));
+				NgWebElement ngRow = new NgWebElement(ngDriver, emp);
 				String orderByField = emp.GetAttribute("ng-order-by");
 				Console.Error.WriteLine(orderByField + ": " + ngRow.Evaluate(orderByField).ToString());
 			}
 
 
-			ReadOnlyCollection<NgWebElement> ng_people = _ngDriver.FindElements(NgBy.Repeater("person in people"));
+			ReadOnlyCollection<NgWebElement> ng_people = ngDriver.FindElements(NgBy.Repeater("person in people"));
 			var ng_people_enumerator = ng_people.GetEnumerator();
 			ng_people_enumerator.Reset();
 			while (ng_people_enumerator.MoveNext())
@@ -282,26 +282,26 @@ namespace Protractor.Test
 		{
 			//  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
 			GetPageContent("ng_pattern_validate.htm");
-			NgWebElement ng_input = _ngDriver.FindElement(NgBy.Model("myVal"));
+			NgWebElement ng_input = ngDriver.FindElement(NgBy.Model("myVal"));
 			ng_input.Clear();
-			NgWebElement ng_valid = _ngDriver.FindElement(NgBy.Binding("form.value.$valid"));
+			NgWebElement ng_valid = ngDriver.FindElement(NgBy.Binding("form.value.$valid"));
 			StringAssert.IsMatch("false", ng_valid.Text);
 
-			NgWebElement ng_pattern = _ngDriver.FindElement(NgBy.Binding("form.value.$error.pattern"));
+			NgWebElement ng_pattern = ngDriver.FindElement(NgBy.Binding("form.value.$error.pattern"));
 			StringAssert.IsMatch("false", ng_pattern.Text);
 
-			NgWebElement ng_required = _ngDriver.FindElement(NgBy.Binding("!!form.value.$error.required"));
+			NgWebElement ng_required = ngDriver.FindElement(NgBy.Binding("!!form.value.$error.required"));
 			StringAssert.IsMatch("true", ng_required.Text);
 
 			ng_input.SendKeys("42");
 			Assert.IsTrue(ng_input.Displayed);
-			ng_valid = _ngDriver.FindElement(NgBy.Binding("form.value.$valid"));
+			ng_valid = ngDriver.FindElement(NgBy.Binding("form.value.$valid"));
 			StringAssert.IsMatch("true", ng_valid.Text);
 
-			ng_pattern = _ngDriver.FindElement(NgBy.Binding("form.value.$error.pattern"));
+			ng_pattern = ngDriver.FindElement(NgBy.Binding("form.value.$error.pattern"));
 			StringAssert.IsMatch("false", ng_pattern.Text);
 
-			ng_required = _ngDriver.FindElement(NgBy.Binding("!!form.value.$error.required"));
+			ng_required = ngDriver.FindElement(NgBy.Binding("!!form.value.$error.required"));
 			StringAssert.IsMatch("false", ng_required.Text);
 		}
 
@@ -310,17 +310,17 @@ namespace Protractor.Test
 		{
 			GetPageContent("ng_ui_select_example1.htm");
 			String searchText = "Ma";
-			IWebElement search = _ngDriver.FindElement(By.CssSelector("input[type='search']"));
+			IWebElement search = ngDriver.FindElement(By.CssSelector("input[type='search']"));
 			search.SendKeys(searchText);
-			NgWebElement ng_search = new NgWebElement(_ngDriver, search);
+			NgWebElement ng_search = new NgWebElement(ngDriver, search);
 
-			StringAssert.IsMatch(@"input", ng_search.TagName); // triggers  _ngDriver.waitForAngular();
-			ReadOnlyCollection<IWebElement> available_colors = _ngDriver.WrappedDriver.FindElements(By.CssSelector("div[role='option']"));
+			StringAssert.IsMatch(@"input", ng_search.TagName); // triggers  ngDriver.waitForAngular();
+			ReadOnlyCollection<IWebElement> available_colors = ngDriver.WrappedDriver.FindElements(By.CssSelector("div[role='option']"));
 
 			var matching_colors = available_colors.Where(color => color.Text.Contains(searchText));
 			foreach (IWebElement matching_color in matching_colors)
 			{
-				_ngDriver.Highlight(matching_color);
+				ngDriver.Highlight(matching_color);
 				Console.Error.WriteLine(String.Format("Matched color: {0}", matching_color.Text));
 			}
 
@@ -331,10 +331,10 @@ namespace Protractor.Test
 		public void ShouldHandleDeselectAngularUISelect()
 		{
 			GetPageContent("ng_ui_select_example1.htm");
-			ReadOnlyCollection<NgWebElement> ng_selected_colors = _ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
+			ReadOnlyCollection<NgWebElement> ng_selected_colors = ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
 			while (true)
 			{
-				ng_selected_colors = _ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
+				ng_selected_colors = ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
 				if (ng_selected_colors.Count == 0)
 				{
 					break;
@@ -347,9 +347,9 @@ namespace Protractor.Test
 				Assert.IsNotNull(ng_close.GetAttribute("ng-click"));
 				StringAssert.IsMatch(@"removeChoice", ng_close.GetAttribute("ng-click"));
 
-				_ngDriver.Highlight(ng_close);
+				ngDriver.Highlight(ng_close);
 				ng_close.Click();
-				// _ngDriver.waitForAngular();
+				// ngDriver.waitForAngular();
 
 			}
 			Console.Error.WriteLine("Nothing is selected");
@@ -360,26 +360,26 @@ namespace Protractor.Test
 		public void ShouldHandleAngularUISelect()
 		{
 			GetPageContent("ng_ui_select_example1.htm");
-			ReadOnlyCollection<NgWebElement> ng_selected_colors = _ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
+			ReadOnlyCollection<NgWebElement> ng_selected_colors = ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
 			Assert.IsTrue(2 == ng_selected_colors.Count);
 			foreach (NgWebElement ng_selected_color in ng_selected_colors)
 			{
-				_ngDriver.Highlight(ng_selected_color);
+				ngDriver.Highlight(ng_selected_color);
 				Object selected_color_item = ng_selected_color.Evaluate("$item");
 				Console.Error.WriteLine(String.Format("selected color: {0}", selected_color_item.ToString()));
 			}
-			// IWebElement search = _ngDriver.FindElement(By.CssSelector("input[type='search']"));
+			// IWebElement search = ngDriver.FindElement(By.CssSelector("input[type='search']"));
 			// same element
-			NgWebElement ng_search = _ngDriver.FindElement(NgBy.Model("$select.search"));
+			NgWebElement ng_search = ngDriver.FindElement(NgBy.Model("$select.search"));
 			ng_search.Click();
 			int wait_seconds = 3;
-			WebDriverWait wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(wait_seconds));
+			WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
 			wait.Until(d => (d.FindElements(By.CssSelector("div[role='option']"))).Count > 0);
-			ReadOnlyCollection<NgWebElement> ng_available_colors = _ngDriver.FindElements(By.CssSelector("div[role='option']"));
+			ReadOnlyCollection<NgWebElement> ng_available_colors = ngDriver.FindElements(By.CssSelector("div[role='option']"));
 			Assert.IsTrue(6 == ng_available_colors.Count);
 			foreach (NgWebElement ng_available_color in ng_available_colors)
 			{
-				_ngDriver.Highlight(ng_available_color);
+				ngDriver.Highlight(ng_available_color);
 				int available_color_index = -1;
 				try
 				{
@@ -400,14 +400,14 @@ namespace Protractor.Test
 			GetPageContent("ng_service.htm");
 			// TODO: properly wait for Angular service to complete
 			Thread.Sleep(3000);
-			// _wait.Until(ExpectedConditions.ElementIsVisible(NgBy.Repeater("person in people")));
-			ReadOnlyCollection<NgWebElement> ng_people = _ngDriver.FindElements(NgBy.Repeater("person in people"));
+			// wait.Until(ExpectedConditions.ElementIsVisible(NgBy.Repeater("person in people")));
+			ReadOnlyCollection<NgWebElement> ng_people = ngDriver.FindElements(NgBy.Repeater("person in people"));
 			if (ng_people.Count > 0)
 			{
-				ng_people = _ngDriver.FindElements(NgBy.Repeater("person in people"));
+				ng_people = ngDriver.FindElements(NgBy.Repeater("person in people"));
 				var check = ng_people.Select(o => o.FindElement(NgBy.Binding("person.Country")));
 				Assert.AreEqual(ng_people.Count, check.Count());
-				ReadOnlyCollection<NgWebElement> ng_countries = _ngDriver.FindElements(NgBy.RepeaterColumn("person in people", "person.Country"));
+				ReadOnlyCollection<NgWebElement> ng_countries = ngDriver.FindElements(NgBy.RepeaterColumn("person in people", "person.Country"));
 
 				Assert.AreEqual(3, ng_countries.Count(o => String.Compare("Mexico", o.Text,
 				                                                          StringComparison.InvariantCulture) == 0));
@@ -418,7 +418,7 @@ namespace Protractor.Test
 		public void ShouldFindSelectedtOption()
 		{
 			GetPageContent("ng_select_array.htm");
-			NgWebElement ng_element = _ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
+			NgWebElement ng_element = ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
 			StringAssert.IsMatch("three", ng_element.Text);
 			Assert.IsTrue(ng_element.Displayed);
 		}
@@ -427,7 +427,7 @@ namespace Protractor.Test
 		public void ShouldChangeSelectedtOption()
 		{
 			GetPageContent("ng_select_array.htm");
-			ReadOnlyCollection<NgWebElement> ng_elements = _ngDriver.FindElements(NgBy.Repeater("option in options"));
+			ReadOnlyCollection<NgWebElement> ng_elements = ngDriver.FindElements(NgBy.Repeater("option in options"));
 			NgWebElement ng_element = ng_elements.First(o => String.Compare("two", o.Text,
 			                                                                StringComparison.InvariantCulture) == 0);
 			ng_element.Click();
@@ -435,7 +435,7 @@ namespace Protractor.Test
 			// to trigger WaitForAngular
 			Assert.IsTrue(ng_element.Displayed);
 
-			ng_element = _ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
+			ng_element = ngDriver.FindElement(NgBy.SelectedOption("myChoice"));
 			StringAssert.IsMatch(text, ng_element.Text);
 			Assert.IsTrue(ng_element.Displayed);
 		}
@@ -445,7 +445,7 @@ namespace Protractor.Test
 		{
 			//  NOTE: works with Angular 1.2.13, fails with Angular 1.4.9
 			GetPageContent("ng_repeat_start_end.htm");
-			ReadOnlyCollection<NgWebElement> elements = _ngDriver.FindElements(NgBy.RepeaterColumn("definition in definitions", "definition.text"));
+			ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.RepeaterColumn("definition in definitions", "definition.text"));
 			Assert.AreEqual(2, elements.Count);
 			StringAssert.IsMatch("Lorem ipsum", elements[0].Text);
 		}
@@ -454,25 +454,25 @@ namespace Protractor.Test
 		public void ShouldNavigateDatesInDatePicker()
 		{
 			GetPageContent("ng_datepicker.htm");
-			NgWebElement ng_result = _ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet"));
+			NgWebElement ng_result = ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet"));
 			ng_result.Clear();
-			_ngDriver.Highlight(ng_result);
-			IWebElement calendar = _ngDriver.FindElement(By.CssSelector(".input-group-addon"));
-			_ngDriver.Highlight(calendar);
-			Actions actions = new Actions(_ngDriver.WrappedDriver);
+			ngDriver.Highlight(ng_result);
+			IWebElement calendar = ngDriver.FindElement(By.CssSelector(".input-group-addon"));
+			ngDriver.Highlight(calendar);
+			Actions actions = new Actions(ngDriver.WrappedDriver);
 			actions.MoveToElement(calendar).Click().Build().Perform();
 
-			IWebElement dropdown = _driver.FindElement(By.CssSelector("div.dropdown.open ul.dropdown-menu"));
-			NgWebElement ng_dropdown = new NgWebElement(_ngDriver, dropdown);
+			IWebElement dropdown = driver.FindElement(By.CssSelector("div.dropdown.open ul.dropdown-menu"));
+			NgWebElement ng_dropdown = new NgWebElement(ngDriver, dropdown);
 			Assert.IsNotNull(ng_dropdown);
-			NgWebElement ng_display = _ngDriver.FindElement(NgBy.Binding("data.previousViewDate.display"));
+			NgWebElement ng_display = ngDriver.FindElement(NgBy.Binding("data.previousViewDate.display"));
 			Assert.IsNotNull(ng_display);
 			String dateDattern = @"\d{4}\-(?<month>\w{3})";
 
 			Regex dateDatternReg = new Regex(dateDattern);
 
 			Assert.IsTrue(dateDatternReg.IsMatch(ng_display.Text));
-			_ngDriver.Highlight(ng_display);
+			ngDriver.Highlight(ng_display);
 			String display_month = ng_display.Text.FindMatch(dateDattern);
 			// Console.Error.WriteLine("Current month: " + ng_display.Text);
 			String[] months = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Dec", "Jan" };
@@ -483,10 +483,10 @@ namespace Protractor.Test
 			Console.Error.WriteLine("Next month: " + next_month);
 			IWebElement ng_right = ng_display.FindElement(By.XPath("..")).FindElement(By.ClassName("right"));
 			Assert.IsNotNull(ng_right);
-			_ngDriver.Highlight(ng_right, 100);
+			ngDriver.Highlight(ng_right, 100);
 			ng_right.Click();
 			Assert.IsTrue(ng_display.Text.Contains(next_month));
-			_ngDriver.Highlight(ng_display);
+			ngDriver.Highlight(ng_display);
 			Console.Error.WriteLine("Next month: " + ng_display.Text);
 		}
 
@@ -494,10 +494,10 @@ namespace Protractor.Test
 		public void ShouldProperlyHandeMixedPages()
 		{
 			NgWebElement element;
-			_ngDriver.Navigate().GoToUrl("http://dalelotts.github.io/angular-bootstrap-datetimepicker/");
+			ngDriver.Navigate().GoToUrl("http://dalelotts.github.io/angular-bootstrap-datetimepicker/");
 			Action a = () =>
 			{
-				element = _ngDriver.FindElements(NgBy.Model("data.dateDropDownInput")).First();
+				element = ngDriver.FindElements(NgBy.Model("data.dateDropDownInput")).First();
 				Console.Error.WriteLine("Type: {0}", element.GetAttribute("type"));
 			};
 			a.ShouldThrow<InvalidOperationException>();
@@ -506,7 +506,7 @@ namespace Protractor.Test
 			// [ng:test] no injector found for element argument to getTestability
 
 			// '[ng-app]', '[data-ng-app]'
-			element = _ngDriver.FindElements(NgBy.Model("data.dateDropDownInput", "[data-ng-app]")).First();
+			element = ngDriver.FindElements(NgBy.Model("data.dateDropDownInput", "[data-ng-app]")).First();
 			Assert.IsNotNull(element);
 			Console.Error.WriteLine("Type: {0}", element.GetAttribute("type"));
 
@@ -518,19 +518,19 @@ namespace Protractor.Test
 		{
 			GetPageContent("ng_datepicker.htm");
 			// http://dalelotts.github.io/angular-bootstrap-datetimepicker/
-			NgWebElement ng_result = _ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet"));
+			NgWebElement ng_result = ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet"));
 			ng_result.Clear();
-			_ngDriver.Highlight(ng_result);
-			IWebElement calendar = _ngDriver.FindElement(By.CssSelector(".input-group-addon"));
-			_ngDriver.Highlight(calendar);
-			Actions actions = new Actions(_ngDriver.WrappedDriver);
+			ngDriver.Highlight(ng_result);
+			IWebElement calendar = ngDriver.FindElement(By.CssSelector(".input-group-addon"));
+			ngDriver.Highlight(calendar);
+			Actions actions = new Actions(ngDriver.WrappedDriver);
 			actions.MoveToElement(calendar).Click().Build().Perform();
 
 			int datepicker_width = 900;
 			int datepicker_heght = 800;
-			_driver.Manage().Window.Size = new System.Drawing.Size(datepicker_width, datepicker_heght);
-			IWebElement dropdown = _driver.FindElement(By.CssSelector("div.dropdown.open ul.dropdown-menu"));
-			NgWebElement ng_dropdown = new NgWebElement(_ngDriver, dropdown);
+			driver.Manage().Window.Size = new System.Drawing.Size(datepicker_width, datepicker_heght);
+			IWebElement dropdown = driver.FindElement(By.CssSelector("div.dropdown.open ul.dropdown-menu"));
+			NgWebElement ng_dropdown = new NgWebElement(ngDriver, dropdown);
 			Assert.IsNotNull(ng_dropdown);
 			ReadOnlyCollection<NgWebElement> elements = ng_dropdown.FindElements(NgBy.Repeater("dateObject in week.dates"));
 			Assert.IsTrue(28 <= elements.Count);
@@ -541,31 +541,31 @@ namespace Protractor.Test
 			dateElement.Click();
 			NgWebElement ng_element = ng_dropdown.FindElement(NgBy.Model("data.inputOnTimeSet"));
 			Assert.IsNotNull(ng_element);
-			_ngDriver.Highlight(ng_element);
+			ngDriver.Highlight(ng_element);
 			ReadOnlyCollection<NgWebElement> ng_dataDates = ng_element.FindElements(NgBy.Repeater("dateObject in data.dates"));
 			Assert.AreEqual(24, ng_dataDates.Count);
 
 			String timeOfDay = "6:00 PM";
 			NgWebElement ng_hour = ng_element.FindElements(NgBy.CssContainingText("span.hour", timeOfDay)).First();
 			Assert.IsNotNull(ng_hour);
-			_ngDriver.Highlight(ng_hour);
+			ngDriver.Highlight(ng_hour);
 			Console.Error.WriteLine("Hour of the day: " + ng_hour.Text);
 			ng_hour.Click();
 			String specificMinute = "6:35 PM";
 
 			// reload
-			// dropdown = _driver.FindElement(By.CssSelector("div.dropdown.open ul.dropdown-menu"));
-			// ng_dropdown = new NgWebElement(_ngDriver, dropdown);
+			// dropdown = driver.FindElement(By.CssSelector("div.dropdown.open ul.dropdown-menu"));
+			// ng_dropdown = new NgWebElement(ngDriver, dropdown);
 			ng_element = ng_dropdown.FindElement(NgBy.Model("data.inputOnTimeSet"));
 			Assert.IsNotNull(ng_element);
-			_ngDriver.Highlight(ng_element);
+			ngDriver.Highlight(ng_element);
 			NgWebElement ng_minute = ng_element.FindElements(NgBy.CssContainingText("span.minute", specificMinute)).First();
 			Assert.IsNotNull(ng_minute);
-			_ngDriver.Highlight(ng_minute);
+			ngDriver.Highlight(ng_minute);
 			Console.Error.WriteLine("Time of the day: " + ng_minute.Text);
 			ng_minute.Click();
-			ng_result = _ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet"));
-			_ngDriver.Highlight(ng_result, 100);
+			ng_result = ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet"));
+			ngDriver.Highlight(ng_result, 100);
 			Console.Error.WriteLine("Selected Date/time: " + ng_result.GetAttribute("value"));
 		}
 
@@ -574,7 +574,7 @@ namespace Protractor.Test
 		{
 			// base_url = "http://www.java2s.com/Tutorials/AngularJSDemo/n/ng_options_with_object_example.htm";
 			GetPageContent("ng_options_with_object.htm");
-			ReadOnlyCollection<NgWebElement> elements = _ngDriver.FindElements(NgBy.Options("c.name for c in colors"));
+			ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Options("c.name for c in colors"));
 			Assert.AreEqual(5, elements.Count);
 			try
 			{
@@ -593,7 +593,7 @@ namespace Protractor.Test
 		public void ShouldFindRows()
 		{
 			GetPageContent("ng_repeat_start_end.htm");
-			ReadOnlyCollection<NgWebElement> elements = _ngDriver.FindElements(NgBy.Repeater("definition in definitions"));
+			ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Repeater("definition in definitions"));
 			Assert.IsTrue(elements[0].Displayed);
 
 			StringAssert.AreEqualIgnoringCase(elements[0].Text, "Foo");
@@ -605,7 +605,7 @@ namespace Protractor.Test
 			GetPageContent("ng_repeat_start_end.htm");
 			Action a = () =>
 			{
-				var displayed = _ngDriver.FindElement(NgBy.Repeater("this is not going to be found")).Displayed;
+				var displayed = ngDriver.FindElement(NgBy.Repeater("this is not going to be found")).Displayed;
 			};
 			// NoSuchElement Exception is not thrown by Protractor
 			// a.ShouldThrow<NoSuchElementException>().WithMessage("Could not find element by: NgBy.Repeater:");
@@ -617,15 +617,15 @@ namespace Protractor.Test
 		{
 			// GetPageContent("ng_upload1.htm");
 			//  need to run
-			_ngDriver.Navigate().GoToUrl("http://localhost:8080/ng_upload1.htm");
+			ngDriver.Navigate().GoToUrl("http://localhost:8080/ng_upload1.htm");
 
-			IWebElement file = _driver.FindElement(By.CssSelector("div[ng-controller = 'myCtrl'] > input[type='file']"));
+			IWebElement file = driver.FindElement(By.CssSelector("div[ng-controller = 'myCtrl'] > input[type='file']"));
 			Assert.IsNotNull(file);
 			StringAssert.AreEqualIgnoringCase(file.GetAttribute("file-model"), "myFile");
 			String localPath = CreateTempFile("lorem ipsum dolor sit amet");
 
 
-			IAllowsFileDetection fileDetectionDriver = _driver as IAllowsFileDetection;
+			IAllowsFileDetection fileDetectionDriver = driver as IAllowsFileDetection;
 			if (fileDetectionDriver == null)
 			{
 				Assert.Fail("driver does not support file detection. This should not be");
@@ -642,9 +642,9 @@ namespace Protractor.Test
 				// the operation has timed out
 				Console.Error.WriteLine(e.Message);
 			}
-			NgWebElement button = _ngDriver.FindElement(NgBy.ButtonText("Upload"));
+			NgWebElement button = ngDriver.FindElement(NgBy.ButtonText("Upload"));
 			button.Click();
-			NgWebElement ng_file = new NgWebElement(_ngDriver, file);
+			NgWebElement ng_file = new NgWebElement(ngDriver, file);
 			Object myFile = ng_file.Evaluate("myFile");
 			if (myFile != null)
 			{
@@ -660,7 +660,7 @@ namespace Protractor.Test
 			String script = "var e = angular.element(arguments[0]); var f = e.scope().myFile; if (f){return f.name} else {return null;}";
 			try
 			{
-				Object result = ((IJavaScriptExecutor)_driver).ExecuteScript(script, ng_file);
+				Object result = ((IJavaScriptExecutor)driver).ExecuteScript(script, ng_file);
 				if (result != null)
 				{
 					Console.Error.WriteLine(result.ToString());
@@ -680,9 +680,9 @@ namespace Protractor.Test
 		public void ShouldFindAllBindings()
 		{
 			GetPageContent("ng_directive_binding.htm");
-			IWebElement container = _ngDriver.FindElement(By.CssSelector("body div"));
+			IWebElement container = ngDriver.FindElement(By.CssSelector("body div"));
 			Console.Error.WriteLine(container.GetAttribute("innerHTML"));
-			ReadOnlyCollection<NgWebElement> elements = _ngDriver.FindElements(NgBy.Binding("name"));
+			ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Binding("name"));
 			Assert.AreEqual(5, elements.Count);
 			foreach (NgWebElement element in elements)
 			{
@@ -696,7 +696,7 @@ namespace Protractor.Test
 		public void ShouldAngularTodoApp()
 		{
 			GetPageContent("ng_todo.htm");
-			ReadOnlyCollection<NgWebElement> ng_todo_elements = _ngDriver.FindElements(NgBy.Repeater("todo in todoList.todos"));
+			ReadOnlyCollection<NgWebElement> ng_todo_elements = ngDriver.FindElements(NgBy.Repeater("todo in todoList.todos"));
 			String ng_identity = ng_todo_elements[0].IdentityOf();
 			// <input type="checkbox" ng-model="todo.done" class="ng-pristine ng-untouched ng-valid">
 			// <span class="done-true">learn angular</span>
@@ -716,20 +716,20 @@ namespace Protractor.Test
 		public void ShouldDragAndDrop()
 		{
 			GetPageContent("ng_drag_and_drop1.htm");
-			ReadOnlyCollection<NgWebElement> ng_cars = _ngDriver.FindElements(NgBy.Repeater("car in models.cars"));
+			ReadOnlyCollection<NgWebElement> ng_cars = ngDriver.FindElements(NgBy.Repeater("car in models.cars"));
 			Assert.AreEqual(5, ng_cars.Count);
 			foreach (NgWebElement ng_car in ng_cars)
 			{
 				try
 				{
-					_ngDriver.Highlight(ng_car);
-					_actions.MoveToElement(ng_car).Build().Perform();
-					IWebElement basket = _driver.FindElement(By.XPath("//*[@id='my-basket']"));
-					// works in Java
-					_actions.ClickAndHold(ng_car).MoveToElement(basket).Release().Build()
+					ngDriver.Highlight(ng_car);
+					actions.MoveToElement(ng_car).Build().Perform();
+					IWebElement basket = driver.FindElement(By.XPath("//*[@id='my-basket']"));
+					// works in Java, desktop browser
+					actions.ClickAndHold(ng_car).MoveToElement(basket).Release().Build()
 						.Perform();
 					Thread.Sleep(1000);
-					NgWebElement ng_basket = new NgWebElement(_ngDriver, basket);
+					NgWebElement ng_basket = new NgWebElement(ngDriver, basket);
 					ReadOnlyCollection<NgWebElement> ng_cars_basket = ng_basket.FindElements(NgBy.Repeater("car in models.basket"));
 					NgWebElement ng_car_basket = ng_cars_basket.Last();
 
@@ -748,7 +748,7 @@ namespace Protractor.Test
 		
 		private string CreateTempFile(string content)
 		{
-			FileInfo testFile = new FileInfo("web_driver.tmp");
+			FileInfo testFile = new FileInfo("webdriver.tmp");
 			if (testFile.Exists)
 			{
 				testFile.Delete();

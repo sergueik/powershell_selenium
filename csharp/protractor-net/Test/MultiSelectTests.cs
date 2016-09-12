@@ -100,10 +100,11 @@ namespace Protractor.Test
 
 			try {
 				// NOTE: the following does not work:
-				// ms-selected ="There are {{selectedCar.length}}
+				// ms-selected = "There are {{selectedCar.length}}
 				NgWebElement ng_button = new NgWebElement(ngDriver, button);
-				// Console.Error.WriteLine(ng_button.GetAttribute("innerHTML"));
+				Console.Error.WriteLine(ng_button.GetAttribute("innerHTML"));
 				NgWebElement ng_length = ng_button.FindElement(NgBy.Binding("selectedCar.length"));
+				ng_length = ngDriver.FindElement(NgBy.Binding("selectedCar.length"));
 				Console.Error.WriteLine(ng_length.Text);
 			} catch (NullReferenceException) {
 			}
