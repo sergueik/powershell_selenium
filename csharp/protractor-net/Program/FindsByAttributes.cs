@@ -81,7 +81,7 @@ namespace Protractor
         {
         }
     }
-    
+
     public class NgByRepeaterelement : JavaScriptBy
     {
         public NgByRepeaterelement(string repeat, int index, string binding)
@@ -89,5 +89,5 @@ namespace Protractor
         {
         }
     }
-    
+
 }

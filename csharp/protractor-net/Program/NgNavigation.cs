@@ -25,7 +25,7 @@ namespace Protractor
 
         /// <summary>
         /// Gets the wrapped <see cref="INavigation"/> instance.
-        /// </summary> 	
+        /// </summary>
         public INavigation WrappedNavigation
         {
             get { return this.navigation; }
@@ -38,23 +38,23 @@ namespace Protractor
         /// </summary>
         public void Back()
         {
-        	this.ngDriver.WaitForAngular();
+            this.ngDriver.WaitForAngular();
             this.navigation.Back();
         }
 
         /// <summary>
         /// Move a single "item" forward in the browser's history.
-        /// </summary>    	
+        /// </summary>
         public void Forward()
         {
-        	this.ngDriver.WaitForAngular();
+            this.ngDriver.WaitForAngular();
             this.navigation.Forward();
         }
 
         /// <summary>
         /// Load a new web page in the current browser window.
         /// </summary>
-        /// <param name="url">The URL to load.</param>    	
+        /// <param name="url">The URL to load.</param>
         public void GoToUrl(Uri url)
         {
             if (url == null)
@@ -84,14 +84,14 @@ namespace Protractor
             jsExecutor.ExecuteScript(ClientSideScripts.SetLocation, new Object[] { selector, url });
         }
 
-        
+
         /// <summary>
         /// Browse to another page using in-page navigation.
         /// </summary>
-        /// <param name="path">The path to load using the same syntax as '$location.url()'.</param>
-        public void GoToLocation(string path)
+        /// <param name="url">The URL / path to load using the same syntax as '$location.url()'.</param>
+        public void GoToLocation(string url)
         {
-            this.ngDriver.Location = path;
+            this.ngDriver.Location = url;
         }
         /// <summary>
         /// Refreshes the current page.

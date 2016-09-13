@@ -112,13 +112,23 @@ TestForAngular(attempts);";
          */
         public const string ResumeAngularBootstrap = "angular.resumeBootstrap(arguments[0].length ? arguments[0].split(',') : []);";
 
-        
-                /**
-         * Return the current location using $location.url().
-         *
-         * arguments[0] {string} The selector housing an ng-app
-         */
-        public const string GetLocation = @"var el = document.querySelector(arguments[0]); return angular.element(el).injector().get('$location').url();";
+
+        /**
+ * Return the current location using $location.url().
+ *
+ * arguments[0] {string} The selector housing an ng-app
+ */
+        public const string GetLocation = @"
+var getLocation = function(selector) {
+    var el = document.querySelector(selector || 'body');
+if (angular.getTestability) {
+    return angular.getTestability(el).getLocation();
+}
+return angular.element(el).injector().get('$location').url();
+}
+var selector = arguments[0];
+return getLocation(selector);
+";
 
         /**
          * Return the current url using $location.absUrl().
@@ -161,9 +171,9 @@ var setLocation = function(selector, url) {
     }
 };
 var selector = arguments[0];
-var binding = arguments[1];
+var url = arguments[1];
 
-setLocation(selector, binding);";
+setLocation(selector, url);";
 
         #region Locators
 
@@ -309,14 +319,14 @@ var using = arguments[0] || document;
 var searchText = arguments[1];
 return findByButtonText(searchText, using);";
 
-         /**
-          * Find selected option elements in the select element
-          * implemented via repeater without a model.
-          * arguments[0] {Element} The scope of the search.
-          * arguments[1] {string} The repeater name.
-          *
-          * @return {Array.WebElement} The matching select elements.
-          */
+        /**
+         * Find selected option elements in the select element
+         * implemented via repeater without a model.
+         * arguments[0] {Element} The scope of the search.
+         * arguments[1] {string} The repeater name.
+         *
+         * @return {Array.WebElement} The matching select elements.
+         */
 
         public const string FindSelectedRepeaterOption = @"
 
@@ -595,7 +605,7 @@ return findRepeaterColumn(repeater, exact, binding, using, rootSelector);";
 		 */
 
 
-        public const string FindRepeaterElement  = @"
+        public const string FindRepeaterElement = @"
         
         function repeaterMatch(ngRepeat, repeater, exact) {
   if (exact) {

@@ -48,7 +48,7 @@ namespace Protractor
         /// </summary>
         /// <param name="model">The model name.</param>
         /// <param name="rootSelector"> Optional selector of the ng-app element, default is 'body', often used values: '[ng-app]','[data-ng-app]'</param>
-		/// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
+        /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
         [Obsolete("Use Model instead.")]
         public static By TextArea(string model, string rootSelector = null)
         {
@@ -105,7 +105,7 @@ namespace Protractor
 
         /// <summary>
         /// Gets a mechanism to find buttons by textual content.
-        /// </summary>    	
+        /// </summary>
         /// <param name="buttonText">TThe exact text to match.</param>
         /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
         public static By ButtonText(string buttonText)
@@ -115,7 +115,7 @@ namespace Protractor
 
         /// <summary>
         /// Gets a mechanism to find buttons by textual content.
-        /// </summary>    	
+        /// </summary>
         /// <param name="buttonText">The partial text to match.</param>
         /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
         public static By PartialButtonText(string buttonText)
@@ -125,7 +125,7 @@ namespace Protractor
 
         /// <summary>
         /// Gets a mechanism to find select option elements by their model name.
-        /// </summary>    	
+        /// </summary>
         /// <param name="option">The descriptor for the option e.g. fruit for fruit in fruits.</param>
         /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
         public static By Options(string option)
@@ -153,7 +153,7 @@ namespace Protractor
         {
             return new JavaScriptBy(ClientSideScripts.FindSelectedOption, model);
         }
-        
+
         /// <summary>
         /// Gets a mechanism to find select option elements by their model name.
         /// </summary>
@@ -162,7 +162,7 @@ namespace Protractor
         /// <returns>A <see cref="By"/> object the driver can use to find the elements.</returns>
         public static By CssContainingText(string cssSelector, string searchText)
         {
-        	return new JavaScriptBy(ClientSideScripts.FindByCssContainingText, searchText, cssSelector );
-        }        
+            return new JavaScriptBy(ClientSideScripts.FindByCssContainingText, searchText, cssSelector);
+        }
     }
 }

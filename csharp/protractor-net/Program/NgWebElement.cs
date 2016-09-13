@@ -190,7 +190,7 @@ namespace Protractor
 
         /// <summary>
         ///
-        /// </summary>    	
+        /// </summary>
         public NgWebElement FindElement(By by)
         {
             if (by is JavaScriptBy)
@@ -203,7 +203,7 @@ namespace Protractor
 
         /// <summary>
         ///
-        /// </summary>    	
+        /// </summary>
         public ReadOnlyCollection<NgWebElement> FindElements(By by)
         {
             if (by is JavaScriptBy)
