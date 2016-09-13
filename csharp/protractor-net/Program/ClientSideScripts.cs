@@ -112,6 +112,14 @@ TestForAngular(attempts);";
          */
         public const string ResumeAngularBootstrap = "angular.resumeBootstrap(arguments[0].length ? arguments[0].split(',') : []);";
 
+        
+                /**
+         * Return the current location using $location.url().
+         *
+         * arguments[0] {string} The selector housing an ng-app
+         */
+        public const string GetLocation = @"var el = document.querySelector(arguments[0]); return angular.element(el).injector().get('$location').url();";
+
         /**
          * Return the current url using $location.absUrl().
          * 
