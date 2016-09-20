@@ -17,3 +17,18 @@ function Add-IETrustedWebsite ([string]$website)
         New-ItemProperty -Path $pathCreate -Name "https" -Value "2" -PropertyType 'DWORD' -Force | Out-Null
     }
 }
+
+function Remove-IETrustedWebsite ([string]$website) 
+{
+    #Declares
+    $path = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Domains\'
+    $pathRemove = $path + $website
+
+    #Check if the registry key already exists
+    $pathExists = Test-Path $pathRemove
+    if ($pathExists)
+    {
+        #Remove an entry recursive
+        Remove-Item -Path $pathRemove -Recurse
+    }
+}
