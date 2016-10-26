@@ -163,9 +163,9 @@ namespace Protractor
 
 				if (!this.IgnoreSynchronization) {
 					// Make sure the page is an Angular page.
-					object isAngularApp = this.jsExecutor.ExecuteAsyncScript(ClientSideScripts.TestForAngular, 60);
-
-					if (isAngularApp is bool && (bool) isAngularApp)
+					int isAngularApp = 0;
+					Int32.TryParse(this.jsExecutor.ExecuteAsyncScript(ClientSideScripts.TestForAngular, 60).ToString(), out isAngularApp);
+					if (isAngularApp != 0)
 					{
 						// At this point, Angular will pause for us, until angular.resumeBootstrap is called.
 

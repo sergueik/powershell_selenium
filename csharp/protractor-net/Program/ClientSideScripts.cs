@@ -92,19 +92,20 @@ waitForAllAngular2(callback);
         public const string TestForAngular = @"
 var attempts = arguments[0];
 var callback = arguments[arguments.length - 1];
-var TestForAngular = function(attempts) {
-    if (window.angular && window.angular.resumeBootstrap) {
-        callback(true);
+var testForAngular = function(attempts) {
+    if (window.getAllAngularTestabilities) {
+        callback(2);
+    } else if (window.angular && window.angular.resumeBootstrap) {
+        callback(1);
     } else if (attempts < 1) {
-        callback(false);
+        callback(0);
     } else {
         window.setTimeout(function() {
-            check(attempts - 1)
+            testForAngular(attempts - 1)
         }, 1000);
     }
 };
-TestForAngular(attempts);";
-
+testForAngular(attempts);";
         /**
          * Continue to bootstrap Angular. 
          * 
