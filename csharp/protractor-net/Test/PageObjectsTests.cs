@@ -70,7 +70,7 @@ namespace Protractor.Test
         }
 	    }
     /*
-   * Page Object that represents the the AngularJS tutorial Step 6 page: 
+   * Page Object that represents the the AngularJS tutorial Step  page: 
    * http://docs.angularjs.org/tutorial/step_06
    */
     public class TutorialStep6Page
@@ -81,7 +81,7 @@ namespace Protractor.Test
         	get; set; 
         }
 
-        [FindsBy(How = How.Custom, CustomFinderType = typeof(NgByModel), Using = "orderProp")]
+        [FindsBy(How = How.Custom, CustomFinderType = typeof(NgByModel), Using = "$ctrl.orderProp")]
         public IWebElement SortBySelect { get; set; }
         public TutorialStep6Page(IWebDriver driver, string url)
         {
