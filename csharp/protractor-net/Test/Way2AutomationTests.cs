@@ -32,6 +32,9 @@ namespace Protractor.Test
         private IAlert alert;
         private string alert_text;
         private Regex theReg;
+        private const int window_width = 800;
+        private const int window_height = 600;
+        private const int script_wait_seconds = 60;
         private const int wait_seconds = 3;
         private int highlight_timeout = 1000;
         private Actions actions;
@@ -50,8 +53,9 @@ namespace Protractor.Test
             // driver = new PhantomJSDriver();
             // driver = new FirefoxDriver();
             driver = new ChromeDriver();
-            driver.Manage().Window.Size = new System.Drawing.Size(800, 600);
-            driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
+            driver.Manage().Cookies.DeleteAllCookies();
+            driver.Manage().Window.Size = new System.Drawing.Size(window_width, window_height);
+            driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(script_wait_seconds));
             ngDriver = new NgWebDriver(driver);
             wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
             actions = new Actions(driver);
