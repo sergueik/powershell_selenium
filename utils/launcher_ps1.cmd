@@ -2,20 +2,21 @@
 @echo OFF
 setlocal
 set SCRIPT=%~f0
-set ARGS=
+
+set ARGS='%~1'
 :PARSE
-if "%~1"=="" goto :ENDPARSE
-if NOT "%ARGS%"=="" set ARGS=%ARGS%,'%~1'
-if "%ARGS%"=="" set ARGS='%~1'
 shift
+if "%~1"=="" goto :ENDPARSE
+set ARGS=%ARGS%,'%~1'
 goto :PARSE
 :ENDPARSE
+
 REM passes an extra blank argument
 powershell.exe /noprofile /executionpolicy bypass "&{[ScriptBlock]::Create((get-content '%SCRIPT%') -join """`n""").Invoke(@(%ARGS%))}"
 goto :EOF
 #>
 
-[int]$cnt
+[int]$cnt = 0
 foreach ($cnt in 0..$args.length) {
   write-output ('arg[{0}] = "{1}"' -f $cnt, $args[$cnt])
 }
