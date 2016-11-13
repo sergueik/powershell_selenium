@@ -21,7 +21,7 @@
 
 
 param(
-  [switch]$all # for clearing "Protected Mode" for internet "Zones" 
+  [switch]$all # For clearing 'Protected Mode' for allInternet 'Zones'
 )
 
 
@@ -55,13 +55,13 @@ function change_registry_setting {
 
 }
 
-Write-Host -ForegroundColor 'green' @"
+write-host -ForegroundColor 'green' @"
 This call suppresses IE updates
 "@
 
 # Works OK for WOW6432
 
-# found  tidbit for IE 10 
+# found  tidbit for IE 10
 # http://www.eightforums.com/tutorials/7996-internet-explorer-10-auto-update-enable-disable.html
 # seems to work with IE 11 as well
 # http://www.liutilities.com/products/registrybooster/tweaklibrary/tweaks/10290/
@@ -76,7 +76,7 @@ $propertyType = 'Dword'
   change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
 }
 
-Write-Host -ForegroundColor 'green' @"
+write-host -ForegroundColor 'green' @"
 This call clears "Tell me if Internert Explorer is not the default web Browser" checkbox
 "@
 
@@ -88,7 +88,7 @@ $propertyType = 'String'
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
 
 
-Write-Host -ForegroundColor 'green' @"
+write-host -ForegroundColor 'green' @"
 This call clears "Display intranet sites in compatibility view" checkbox.
 "@
 
@@ -100,7 +100,7 @@ $propertyType = 'Dword'
 
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
 
-Write-Host -ForegroundColor 'green' @"
+write-host -ForegroundColor 'green' @"
 This call enables "Delete browsing History on exit" - checkbox
 "@
 
@@ -110,8 +110,8 @@ $name = 'Enabled'
 $value = '0'
 
 
-# NOTE: keys may be absent: 
-# '/Software/Microsoft/Internet Explorer/ContinuousBrowsing', '/Software/Microsoft/Internet Explorer/Privacy' 
+# NOTE: keys may be absent:
+# '/Software/Microsoft/Internet Explorer/ContinuousBrowsing', '/Software/Microsoft/Internet Explorer/Privacy'
 
 pushd $hive
 $registry_path_status = Test-Path -Path $path -ErrorAction 'SilentlyContinue'
@@ -134,22 +134,18 @@ $value = '1'
 $propertyType = 'Dword'
 
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
-
-
 # TODO: Ensure the subkeys under '/Software/Microsoft/Internet Explorer/DOMStorage' to be destroyed:
 
-
-Write-Host -ForegroundColor 'green' @"
-This call clears "Enable Protected Mode" - checkboxes - for specific internet "Zones" 
-- "Restricted sites" and "Internet"
-- or all 4 Zones when wun with '-all'switch 
+write-host -ForegroundColor 'green' @"
+This call clears 'Enable Protected Mode' checkboxes for the following internet 'Zones':
+- 'Restricted sites' and 'Internet'
+- when run with '-all' switch will clear for all 4 Zones
 "@
 
-$zones = @( '4','3')
+$zones = @('4','3')
 
-if ($PSBoundParameters["all"]) {
-  # Proceed to two remaining zones
-  $zones += @( '2','1')
+if ($PSBoundParameters['all']) {
+  $zones += @( '2','1' , '0')
 }
 
 
@@ -159,7 +155,8 @@ $zones | ForEach-Object {
   $hive = 'HKCU:'
   $path = ('/Software/Microsoft/Windows/CurrentVersion/Internet Settings/Zones/{0}' -f $zone)
   $propertyType = 'Dword'
-  $data = @{ '2500' = '3';
+  $data = @{ 
+    '2500' = '3';
     '2707' = '0'
   }
 
@@ -173,21 +170,21 @@ $zones | ForEach-Object {
   } else {
     $description = $description.DisplayName }
 
-  Write-Host -ForegroundColor 'green' ('Configuring Zone {0} - "{1}"' -f $zone,$description)
+  write-host -ForegroundColor 'green' ('Configuring Zone {0} - "{1}"' -f $zone,$description)
 
   $data.Keys | ForEach-Object {
     $name = $_
     $value = $data.Item($name)
-    Write-Host -ForegroundColor 'green' ('Writing Settings {0}' -f $name)
+    write-host -ForegroundColor 'green' ('Writing Settings {0}' -f $name)
     change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
   }
   popd
 
 }
+# see also: https://github.com/conceptsandtraining/modernie_selenium/blob/master/Tools/ie_protectedmode.reg 
 
-
-Write-Host -ForegroundColor 'green' @"
-This call confirms "Protected Mode is Turned Off" alert
+write-host -ForegroundColor 'green' @"
+This call confirms 'Protected Mode is Turned Off' alert
 "@
 
 $hive = 'HKCU:'
@@ -198,11 +195,11 @@ $propertyType = 'Dword'
 
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
 
-Write-Host -ForegroundColor 'green' @"
-This call turns off "Popup Blocker".
+write-host -ForegroundColor 'green' @"
+This call turns off 'Popup Blocker'.
 "@
 
-# NOTE: The registry 'HKCU:\Software\Microsoft\Internet Explorer\New Windows' does not exist for IE 8 
+# NOTE: The registry 'HKCU:\Software\Microsoft\Internet Explorer\New Windows' does not exist for IE 8
 $hive = 'HKCU:'
 $path = '/Software/Microsoft/Internet Explorer/New Windows'
 $name = 'PopupMgr'
@@ -222,8 +219,8 @@ if ($setting -ne $null) {
 popd
 
 
-Write-Host -ForegroundColor 'green' @"
-This call Enalbes full SSL / TLS  support.
+write-host -ForegroundColor 'green' @"
+This call Enalbes full SSL / TLS  support
 "@
 $settings = @{
 
@@ -246,7 +243,7 @@ change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $pro
 
 # http://www.sevenforums.com/tutorials/112232-internet-explorer-change-default-download-location.html
 $download_directory = 'C:\windows\temp'
-Write-Host -ForegroundColor 'green' @"
+write-host -ForegroundColor 'green' @"
 This call sets default IE download location to ${download_directory}
 "@
 
@@ -257,7 +254,7 @@ $value = $download_directory
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType 'String'
 
 # http://www.sevenforums.com/tutorials/271795-internet-explorer-notify-when-downloads-complete-turn-off.html?filter=&#91;2]=Networking%20Internet
-Write-Host -ForegroundColor 'green' @"
+write-host -ForegroundColor 'green' @"
 This call suppresses IE download notifications
 "@
 
@@ -266,3 +263,56 @@ $path = '/Software/Microsoft/Internet Explorer/Main'
 $name = 'NotifyDownloadComplete'
 $value = 'no'
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType 'String'
+
+write-host -ForegroundColor 'green' @"
+This call applies misc. settings from
+https://github.com/conceptsandtraining/modernie_selenium
+"@
+
+$hive = 'HKLM:'
+$path = 'SOFTWARE/Microsoft/Internet Explorer/MAIN/FeatureControl/FEATURE_BFCACHE'
+$name = 'iexplore.exe'
+$value = '0'
+$propertyType = 'Dword'
+change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Internet Explorer/Main'
+$name = 'Start Page'
+$value = 'about:blank'
+change_registry_setting -hive $hive -Name $name -Value $value -PropertyType 'String'
+
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings/CACHE'
+$name = 'Persistent'
+$value = '0'
+$propertyType = 'Dword'
+change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings'
+$name = 'SyncMode5'
+$value = '3'
+$propertyType = 'Dword'
+change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings/Url History'
+$name = 'DaysToKeep'
+$value = '0'
+$propertyType = 'Dword'
+change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings/5.0/CACHE/Content'
+$name = 'CacheLimit'
+$value = '8192' # 0x2000 
+$propertyType = 'Dword'
+change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings/CACHE/Content'
+$name = 'CacheLimit'
+$value = '8192' # 0x2000 
+$propertyType = 'Dword'
+change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
