@@ -1,34 +1,25 @@
-# origin : https://github.com/perplexityjeff/PowerShell-InternetExplorer-TrustedZone
-function Add-IETrustedWebsite ([string]$website) 
-{
-    #Declares
-    $path = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Domains\'
-    $pathCreate = $path + $website
+# based on : https://github.com/perplexityjeff/PowerShell-InternetExplorer-TrustedZone
+function Add-IETrustedWebsite {
+  param(
+    [string]$website
+  )
+  $website_path = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Domains\' + $website
 
-    #Check if the registry key already exists
-    $pathExists = Test-Path $pathCreate
-    if (!$pathExists)
-    {
-        #Create new entry
-        New-Item -Path $pathCreate
-
-        #Create new registry values for http and https to add it to the Trusted Zone
-        New-ItemProperty -Path $pathCreate -Name "http" -Value "2" -PropertyType 'DWORD' -Force | Out-Null
-        New-ItemProperty -Path $pathCreate -Name "https" -Value "2" -PropertyType 'DWORD' -Force | Out-Null
+  if (-not (Test-Path $website_path -ErrorAction SilentlyContinue)) {
+    New-Item -Path $website_path
+    # Create rules for http and https to add it to the Trusted Zone
+    foreach ($protocol in @( 'http','https')) {
+      New-ItemProperty -Path $website_path -Name $protocol -Value '2' -PropertyType 'DWORD' -Force | Out-Null
     }
+  }
 }
 
-function Remove-IETrustedWebsite ([string]$website) 
-{
-    #Declares
-    $path = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Domains\'
-    $pathRemove = $path + $website
-
-    #Check if the registry key already exists
-    $pathExists = Test-Path $pathRemove
-    if ($pathExists)
-    {
-        #Remove an entry recursive
-        Remove-Item -Path $pathRemove -Recurse
-    }
+function Remove-IETrustedWebsite {
+  param(
+    [string]$website
+  )
+  $website_path = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings\ZoneMap\Domains\' + $website
+  if (Test-Path $website_path) {
+    Remove-Item -Path $website_path -Recurse
+  }
 }
