@@ -1,23 +1,28 @@
 <# :
-  @echo off
-  REM origin http://forum.oszone.net/thread-320616.html
-    setlocal
-      powershell /noprofile /executionpolicy bypass^
-      "&{[ScriptBlock]::Create((Get-Content '%~f0') -join [Char]10).Invoke(@(&{$args}%*))}"
-    endlocal
-  exit /b
+@echo OFF
+setlocal
+set SCRIPT=%~f0
+set ARGS=
+:PARSE
+if "%~1"=="" goto :ENDPARSE
+if NOT "%ARGS%"=="" set ARGS=%ARGS%,'%~1'
+if "%ARGS%"=="" set ARGS='%~1'
+shift
+goto :PARSE
+:ENDPARSE
+REM passes an extra blank argument
+powershell.exe /noprofile /executionpolicy bypass "&{[ScriptBlock]::Create((get-content '%SCRIPT%') -join """`n""").Invoke(@(%ARGS%))}"
+goto :EOF
 #>
-Add-Type -AssemblyName System.Drawing
 
-try {
-  $ico = [Drawing.Icon]::ExtractAssociatedIcon($args[0])
-  
-  $ms = New-Object IO.MemoryStream
-  $ico.Save($ms)
-  [IO.File]::WriteAllBytes($args[1], $ms.ToArray())
+[int]$cnt
+foreach ($cnt in 0..$args.length) {
+  write-output ('arg[{0}] = "{1}"' -f $cnt, $args[$cnt])
 }
-catch { $_ }
-finally {
-  if ($ms) { $ms.Dispose() }
-  if ($ico ) { $ico.Dispose() }
-}
+
+<#
+REM http://edgylogic.com/blog/powershell-and-external-commands-done-right/
+REM http://stackoverflow.com/questions/14286457/using-parameters-in-batch-files-at-dos-command-line
+REM a longer, somewhat less crypic alternative of: http://forum.oszone.net/thread-320616.html
+REM powershell /noprofile /executionpolicy bypass "&{[ScriptBlock]::Create((Get-Content '%~f0') -join [Char]10).Invoke(@(&{$args}%*))}"
+#>
