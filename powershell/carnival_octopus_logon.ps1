@@ -100,8 +100,8 @@ function cleanup
 
 
 $shared_assemblies = @{
-  'WebDriver.dll' = 2.44;
-  'WebDriver.Support.dll' = '2.44';
+  'WebDriver.dll' = '2.53';
+  'WebDriver.Support.dll' = '2.53';
   'nunit.core.dll' = $null;
   'nunit.framework.dll' = $null;
 }

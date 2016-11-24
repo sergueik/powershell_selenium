@@ -241,7 +241,7 @@ if ($browser -ne $null -and $browser -ne '') {
   $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
 }
 
-$base_url = "http://www.carnival.com"
+$base_url = 'http://www.carnival.com'
 
 if (!$base_url.EndsWith('/')) {
 		$base_url = $base_url + '/'
@@ -279,7 +279,7 @@ try {
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector1)))
 ##
   [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
-} catch [exception]{
+} catch [exception] {
   Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
 }
 
@@ -299,7 +299,7 @@ try {
 ##
   [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector2))
 
-} catch [exception]{
+} catch [exception] {
   Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
 }
 $element2 = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector2))
@@ -319,7 +319,7 @@ try {
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector1)))
 ##
   [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
-} catch [exception]{
+} catch [exception] {
   Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
 }
 
@@ -339,7 +339,7 @@ try {
 ##
   [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector2))
 
-} catch [exception]{
+} catch [exception] {
   Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
 }
 $element2 = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector2))
@@ -357,7 +357,7 @@ try {
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector1)))
 ##
   [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
-} catch [exception]{
+} catch [exception] {
   Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
 }
 
@@ -378,7 +378,7 @@ try {
 ##
   [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector2))
 
-} catch [exception]{
+} catch [exception] {
   Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
 }
 $element2 = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector2))
@@ -391,7 +391,7 @@ Start-Sleep 3
 $css_selector1 = 'div.actions > a.search'
 try {
   [void]$selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector1))
-} catch [exception]{
+} catch [exception] {
   Write-Output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
 }
 
@@ -422,13 +422,13 @@ $owner.DstImagePath = $stamped_image_path
 
     $owner.StampScreenshot()
 
-} catch [exception]{
+} catch [exception] {
   Write-Output $_.Exception.Message
 }
 # Cleanup
 try {
   $selenium.Quit()
-} catch [exception]{
+} catch [exception] {
   # Ignore errors if unable to close the browser
 }
 

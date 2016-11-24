@@ -54,8 +54,8 @@ function cleanup
 }
 
 $shared_assemblies = @{
-  'WebDriver.dll' = '2.47';
-  'WebDriver.Support.dll' = '2.47';
+  'WebDriver.dll' = '2.53';
+  'WebDriver.Support.dll' = '2.53';
   'nunit.core.dll' = $null;
   'nunit.framework.dll' = '2.6.3';
 
