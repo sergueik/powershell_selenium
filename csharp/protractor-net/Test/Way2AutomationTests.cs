@@ -19,12 +19,9 @@ using System.Drawing;
 using System.Windows.Forms;
 using Protractor.Extensions;
 
-namespace Protractor.Test
-{
-
+namespace Protractor.Test {
     [TestFixture]
-    public class Way2AutomationTests
-    {
+    public class Way2AutomationTests {
         private StringBuilder verificationErrors = new StringBuilder();
         private IWebDriver driver;
         private NgWebDriver ngDriver;
@@ -52,7 +49,7 @@ namespace Protractor.Test
             // driver = new InternetExplorerDriver(options);
             // driver = new PhantomJSDriver();
             // driver = new FirefoxDriver();
-            driver = new ChromeDriver();
+            driver = new ChromeDriver(System.IO.Directory.GetCurrentDirectory());
             driver.Manage().Cookies.DeleteAllCookies();
             driver.Manage().Window.Size = new System.Drawing.Size(window_width, window_height);
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(script_wait_seconds));
@@ -442,7 +439,6 @@ namespace Protractor.Test
             int customer_id = 0;
             int.TryParse(alert_text.FindMatch(@"(?<customer_id>\d+)$"), out customer_id);
             Assert.AreNotEqual(0, customer_id);
-
 
             // And I switch to "Home" screen
 
