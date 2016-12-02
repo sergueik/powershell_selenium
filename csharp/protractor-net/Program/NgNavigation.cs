@@ -96,9 +96,12 @@ namespace Protractor
         /// <summary>
         /// Refreshes the current page.
         /// </summary>
-        public void Refresh()
-        {
-            this.navigation.Refresh();
+        public void Refresh(){
+          if (this.ngDriver.IgnoreSynchronization){
+                this.navigation.Refresh();
+            } else {
+                this.ngDriver.Url = this.ngDriver.Url;
+            }
         }
         #endregion
     }
