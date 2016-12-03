@@ -6,8 +6,15 @@ This directory contains a fork of [protractor-net](https://github.com/bbaia/prot
 
 ### Example
 ![Screen Recording](https://github.com/sergueik/powershell_selenium/blob/master/csharp/protractor-net/Screenshots/3.gif?)
+## Protractor for .NET
+### Info
 
-``` c #
+This directory contains a fork of [protractor-net](https://github.com/bbaia/protractor-net) project with slightly more complete and up-to-date Javascript code (PR pending) and significant number of tests exploring various typical scenaios.
+
+### Example
+![Screen Recording](https://github.com/sergueik/powershell_selenium/blob/master/csharp/protractor-net/Screenshots/3.gif?)
+
+```  csharp
 IWebDriver driver = new FirefoxDriver();
 NgWebDriver ngDriver = new NgWebDriver(driver);
 String base_url = "http://juliemr.github.io/protractor-demo/";
@@ -36,7 +43,7 @@ highlight(result_element.WrappedElement);
 
 ### Note
 Local Angular files may be placed under `Samples` directory and copied into output directory of the `Test`
-```c #
+``` csharp
 base_url = new System.Uri(Path.Combine( Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
 ngDriver.Navigate().GoToUrl(base_url);
 ```
@@ -53,8 +60,4 @@ then update the code to  use `base_url = String.Format("http://localhost/{0}", t
 
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
-
 Screen Recording converted to gif via [convert-to-gif](http://image.online-convert.com/convert-to-gif)
-
-
-
