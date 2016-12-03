@@ -1,11 +1,3 @@
-
-## Protractor for .NET
-### Info
-
-This directory contains a fork of [protractor-net](https://github.com/bbaia/protractor-net) project with slightly more complete and up-to-date Javascript code (PR pending) and significant number of tests exploring various typical scenaios.
-
-### Example
-![Screen Recording](https://github.com/sergueik/powershell_selenium/blob/master/csharp/protractor-net/Screenshots/3.gif?)
 ## Protractor for .NET
 ### Info
 
