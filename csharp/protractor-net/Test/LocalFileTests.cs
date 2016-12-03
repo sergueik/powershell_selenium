@@ -57,11 +57,10 @@ namespace Protractor.Test
 		[TestFixtureTearDown]
 		public void TearDown()
 		{
-			try
-			{
+			try {
 				driver.Quit();
-			}
-			catch (Exception) { } /* Ignore cleanup errors */
+			} catch (Exception) {
+			} /* Ignore cleanup errors */
 			Assert.IsEmpty(verificationErrors.ToString());
 		}
 		private void GetPageContent(string testpage)
@@ -147,7 +146,7 @@ namespace Protractor.Test
 			StringAssert.IsMatch("Mango", ng_element.Text);
 			ReadOnlyCollection<NgWebElement> ng_elements = ngDriver.FindElements(NgBy.Repeater("fruit in Fruits"));
 			ng_element = ng_elements.First(o => String.Compare("Orange", o.Text,
-			                                                   StringComparison.InvariantCulture) == 0);
+				StringComparison.InvariantCulture) == 0);
 			ng_element.Click();
 			string text = ng_element.Text;
 			// to trigger WaitForAngular
@@ -169,12 +168,10 @@ namespace Protractor.Test
 			// use core Selenium
 			IList<IWebElement> options = new SelectElement(element).Options;
 			IEnumerator<IWebElement> etr = options.Where(o => Convert.ToBoolean(o.GetAttribute("selected"))).GetEnumerator();
-			while (etr.MoveNext())
-			{
+			while (etr.MoveNext()) {
 				Console.Error.WriteLine(etr.Current.Text);
 			}
-			foreach (IWebElement option in options)
-			{
+			foreach (IWebElement option in options) {
 				// http://selenium.googlecode.com/svn/trunk/docs/api/dotnet/html/AllMembers_T_OpenQA_Selenium_Keys.htm
 				actions.KeyDown(Keys.Control).Click(option).KeyUp(Keys.Control).Build().Perform();
 				// triggers ngDriver.WaitForAngular()
@@ -184,8 +181,7 @@ namespace Protractor.Test
 			element = ngDriver.FindElement(NgBy.Model("selectedValues"));
 			options = new SelectElement(element).Options;
 			etr = options.Where(o => Convert.ToBoolean(o.GetAttribute("selected"))).GetEnumerator();
-			while (etr.MoveNext())
-			{
+			while (etr.MoveNext()) {
 				Console.Error.WriteLine(etr.Current.Text);
 			}
 		}
@@ -195,10 +191,8 @@ namespace Protractor.Test
 		{
 			GetPageContent("ng_headers_sort_example2.htm");
 			String[] headers = new String[] { "First Name", "Last Name", "Age" };
-			foreach (String header in headers)
-			{
-				for (int cnt = 0; cnt != 2; cnt++)
-				{
+			foreach (String header in headers) {
+				for (int cnt = 0; cnt != 2; cnt++) {
 					IWebElement headerElement = ngDriver.FindElement(By.XPath("//th/a[contains(text(),'" + header + "')]"));
 					Console.Error.WriteLine("Clicking on header: " + header);
 					headerElement.Click();
@@ -212,23 +206,18 @@ namespace Protractor.Test
 					Console.Error.WriteLine(empField + ":");
 					var ng_emp_enumerator = ng_emps.GetEnumerator();
 					ng_emp_enumerator.Reset();
-					while (ng_emp_enumerator.MoveNext())
-					{
+					while (ng_emp_enumerator.MoveNext()) {
 						ng_emp = (NgWebElement)ng_emp_enumerator.Current;
-						if (ng_emp.Text == null)
-						{
+						if (ng_emp.Text == null) {
 							break;
 						}
 						Assert.IsNotNull(ng_emp.WrappedElement);
 
-						try
-						{
+						try {
 							NgWebElement ng_column = ng_emp.FindElement(NgBy.Binding(empField));
 							Assert.IsNotNull(ng_column);
 							Console.Error.WriteLine(ng_column.Text);
-						}
-						catch (Exception ex)
-						{
+						} catch (Exception ex) {
 							Console.Error.WriteLine(ex.ToString());
 						}
 					}
@@ -242,8 +231,7 @@ namespace Protractor.Test
 			GetPageContent("ng_headers_sort_example1.htm");
 
 			String[] headers = new String[] { "First Name", "Last Name", "Age" };
-			foreach (String header in headers)
-			{
+			foreach (String header in headers) {
 				IWebElement headerelement = ngDriver.FindElement(By.XPath(String.Format("//th/a[contains(text(),'{0}')]", header)));
 				Console.Error.WriteLine(header);
 				headerelement.Click();
@@ -259,19 +247,16 @@ namespace Protractor.Test
 			ReadOnlyCollection<NgWebElement> ng_people = ngDriver.FindElements(NgBy.Repeater("person in people"));
 			var ng_people_enumerator = ng_people.GetEnumerator();
 			ng_people_enumerator.Reset();
-			while (ng_people_enumerator.MoveNext())
-			{
+			while (ng_people_enumerator.MoveNext()) {
 				NgWebElement ng_person = (NgWebElement)ng_people_enumerator.Current;
-				if (ng_person.Text == null)
-				{
+				if (ng_person.Text == null) {
 					break;
 				}
 				NgWebElement ng_name = ng_person.FindElement(NgBy.Binding("person.Name"));
 				Assert.IsNotNull(ng_name.WrappedElement);
 				Object obj_country = ng_person.Evaluate("person.Country");
 				Assert.IsNotNull(obj_country);
-				if (String.Compare("Around the Horn", ng_name.Text) == 0)
-				{
+				if (String.Compare("Around the Horn", ng_name.Text) == 0) {
 					StringAssert.IsMatch("UK", obj_country.ToString());
 				}
 			}
@@ -318,8 +303,7 @@ namespace Protractor.Test
 			ReadOnlyCollection<IWebElement> available_colors = ngDriver.WrappedDriver.FindElements(By.CssSelector("div[role='option']"));
 
 			var matching_colors = available_colors.Where(color => color.Text.Contains(searchText));
-			foreach (IWebElement matching_color in matching_colors)
-			{
+			foreach (IWebElement matching_color in matching_colors) {
 				ngDriver.Highlight(matching_color);
 				Console.Error.WriteLine(String.Format("Matched color: {0}", matching_color.Text));
 			}
@@ -332,11 +316,9 @@ namespace Protractor.Test
 		{
 			GetPageContent("ng_ui_select_example1.htm");
 			ReadOnlyCollection<NgWebElement> ng_selected_colors = ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
-			while (true)
-			{
+			while (true) {
 				ng_selected_colors = ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
-				if (ng_selected_colors.Count == 0)
-				{
+				if (ng_selected_colors.Count == 0) {
 					break;
 				}
 				NgWebElement ng_deselect_color = ng_selected_colors.Last();
@@ -362,8 +344,7 @@ namespace Protractor.Test
 			GetPageContent("ng_ui_select_example1.htm");
 			ReadOnlyCollection<NgWebElement> ng_selected_colors = ngDriver.FindElements(NgBy.Repeater("$item in $select.selected"));
 			Assert.IsTrue(2 == ng_selected_colors.Count);
-			foreach (NgWebElement ng_selected_color in ng_selected_colors)
-			{
+			foreach (NgWebElement ng_selected_color in ng_selected_colors) {
 				ngDriver.Highlight(ng_selected_color);
 				Object selected_color_item = ng_selected_color.Evaluate("$item");
 				Console.Error.WriteLine(String.Format("selected color: {0}", selected_color_item.ToString()));
@@ -377,16 +358,12 @@ namespace Protractor.Test
 			wait.Until(d => (d.FindElements(By.CssSelector("div[role='option']"))).Count > 0);
 			ReadOnlyCollection<NgWebElement> ng_available_colors = ngDriver.FindElements(By.CssSelector("div[role='option']"));
 			Assert.IsTrue(6 == ng_available_colors.Count);
-			foreach (NgWebElement ng_available_color in ng_available_colors)
-			{
+			foreach (NgWebElement ng_available_color in ng_available_colors) {
 				ngDriver.Highlight(ng_available_color);
 				int available_color_index = -1;
-				try
-				{
+				try {
 					available_color_index = Int32.Parse(ng_available_color.Evaluate("$index").ToString());
-				}
-				catch (Exception)
-				{
+				} catch (Exception) {
 					// ignore
 				}
 				Console.Error.WriteLine(String.Format("available color [{1}]:{0}", ng_available_color.Text, available_color_index));
@@ -402,15 +379,14 @@ namespace Protractor.Test
 			Thread.Sleep(3000);
 			// wait.Until(ExpectedConditions.ElementIsVisible(NgBy.Repeater("person in people")));
 			ReadOnlyCollection<NgWebElement> ng_people = ngDriver.FindElements(NgBy.Repeater("person in people"));
-			if (ng_people.Count > 0)
-			{
+			if (ng_people.Count > 0) {
 				ng_people = ngDriver.FindElements(NgBy.Repeater("person in people"));
 				var check = ng_people.Select(o => o.FindElement(NgBy.Binding("person.Country")));
 				Assert.AreEqual(ng_people.Count, check.Count());
 				ReadOnlyCollection<NgWebElement> ng_countries = ngDriver.FindElements(NgBy.RepeaterColumn("person in people", "person.Country"));
 
 				Assert.AreEqual(3, ng_countries.Count(o => String.Compare("Mexico", o.Text,
-				                                                          StringComparison.InvariantCulture) == 0));
+					StringComparison.InvariantCulture) == 0));
 			}
 		}
 
@@ -429,7 +405,7 @@ namespace Protractor.Test
 			GetPageContent("ng_select_array.htm");
 			ReadOnlyCollection<NgWebElement> ng_elements = ngDriver.FindElements(NgBy.Repeater("option in options"));
 			NgWebElement ng_element = ng_elements.First(o => String.Compare("two", o.Text,
-			                                                                StringComparison.InvariantCulture) == 0);
+				                          StringComparison.InvariantCulture) == 0);
 			ng_element.Click();
 			string text = ng_element.Text;
 			// to trigger WaitForAngular
@@ -475,7 +451,20 @@ namespace Protractor.Test
 			ngDriver.Highlight(ng_display);
 			String display_month = ng_display.Text.FindMatch(dateDattern);
 			// Console.Error.WriteLine("Current month: " + ng_display.Text);
-			String[] months = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Dec", "Jan" };
+			String[] months = {
+				"Jan",
+				"Feb",
+				"Mar",
+				"Apr",
+				"May",
+				"Jun",
+				"Jul",
+				"Aug",
+				"Sep",
+				"Oct",
+				"Dec",
+				"Jan"
+			};
 
 			String next_month = months[Array.IndexOf(months, display_month) + 1];
 
@@ -495,8 +484,7 @@ namespace Protractor.Test
 		{
 			NgWebElement element;
 			ngDriver.Navigate().GoToUrl("http://dalelotts.github.io/angular-bootstrap-datetimepicker/");
-			Action a = () =>
-			{
+			Action a = () => {
 				element = ngDriver.FindElements(NgBy.Model("data.dateDropDownInput")).First();
 				Console.Error.WriteLine("Type: {0}", element.GetAttribute("type"));
 			};
@@ -576,12 +564,9 @@ namespace Protractor.Test
 			GetPageContent("ng_options_with_object.htm");
 			ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Options("c.name for c in colors"));
 			Assert.AreEqual(5, elements.Count);
-			try
-			{
+			try {
 				List<Dictionary<String, String>> result = elements[0].ScopeOf();
-			}
-			catch (InvalidOperationException)
-			{
+			} catch (InvalidOperationException) {
 				// Maximum call stack size exceeded.
 				// TODO
 			}
@@ -603,8 +588,7 @@ namespace Protractor.Test
 		public void ShouldHandleFluentExceptions()
 		{
 			GetPageContent("ng_repeat_start_end.htm");
-			Action a = () =>
-			{
+			Action a = () => {
 				var displayed = ngDriver.FindElement(NgBy.Repeater("this is not going to be found")).Displayed;
 			};
 			// NoSuchElement Exception is not thrown by Protractor
@@ -626,19 +610,15 @@ namespace Protractor.Test
 
 
 			IAllowsFileDetection fileDetectionDriver = driver as IAllowsFileDetection;
-			if (fileDetectionDriver == null)
-			{
+			if (fileDetectionDriver == null) {
 				Assert.Fail("driver does not support file detection. This should not be");
 			}
 
 			fileDetectionDriver.FileDetector = new LocalFileDetector();
 
-			try
-			{
+			try {
 				file.SendKeys(localPath);
-			}
-			catch (WebDriverException e)
-			{
+			} catch (WebDriverException e) {
 				// the operation has timed out
 				Console.Error.WriteLine(e.Message);
 			}
@@ -646,32 +626,23 @@ namespace Protractor.Test
 			button.Click();
 			NgWebElement ng_file = new NgWebElement(ngDriver, file);
 			Object myFile = ng_file.Evaluate("myFile");
-			if (myFile != null)
-			{
+			if (myFile != null) {
 				Dictionary<String, Object> result = (Dictionary<String, Object>)myFile;
 				Assert.IsTrue(result.Keys.Contains("name"));
 				Assert.IsTrue(result.Keys.Contains("type"));
 				Assert.IsTrue(result.Keys.Contains("size"));
-			}
-			else
-			{
+			} else {
 				Console.Error.WriteLine("myFile is null");
 			}
 			String script = "var e = angular.element(arguments[0]); var f = e.scope().myFile; if (f){return f.name} else {return null;}";
-			try
-			{
+			try {
 				Object result = ((IJavaScriptExecutor)driver).ExecuteScript(script, ng_file);
-				if (result != null)
-				{
+				if (result != null) {
 					Console.Error.WriteLine(result.ToString());
-				}
-				else
-				{
+				} else {
 					Console.Error.WriteLine("result is null");
 				}
-			}
-			catch (InvalidOperationException e)
-			{
+			} catch (InvalidOperationException e) {
 				Console.Error.WriteLine(e.Message);
 			}
 		}
@@ -684,8 +655,7 @@ namespace Protractor.Test
 			Console.Error.WriteLine(container.GetAttribute("innerHTML"));
 			ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Binding("name"));
 			Assert.AreEqual(5, elements.Count);
-			foreach (NgWebElement element in elements)
-			{
+			foreach (NgWebElement element in elements) {
 				Console.Error.WriteLine(element.GetAttribute("outerHTML"));
 				Console.Error.WriteLine(String.Format("Identity: {0}", element.IdentityOf()));
 				Console.Error.WriteLine(String.Format("Text: {0}", element.Text));
@@ -718,10 +688,8 @@ namespace Protractor.Test
 			GetPageContent("ng_drag_and_drop1.htm");
 			ReadOnlyCollection<NgWebElement> ng_cars = ngDriver.FindElements(NgBy.Repeater("car in models.cars"));
 			Assert.AreEqual(5, ng_cars.Count);
-			foreach (NgWebElement ng_car in ng_cars)
-			{
-				try
-				{
+			foreach (NgWebElement ng_car in ng_cars) {
+				try {
 					ngDriver.Highlight(ng_car);
 					actions.MoveToElement(ng_car).Build().Perform();
 					IWebElement basket = driver.FindElement(By.XPath("//*[@id='my-basket']"));
@@ -735,10 +703,8 @@ namespace Protractor.Test
 
 					Assert.IsTrue(ng_car_basket.Displayed);
 					// {{ car.name }} - {{ car.modelYear }} ( {{ car.price | currency }} )
-					Console.Error.WriteLine("%s - %s ( %s )" , ng_car_basket.Evaluate("car.name"), ng_car_basket.Evaluate("car.modelYear"), ng_car_basket.Evaluate("car.price | currency"));
-				}
-				catch (Exception e)
-				{
+					Console.Error.WriteLine("%s - %s ( %s )", ng_car_basket.Evaluate("car.name"), ng_car_basket.Evaluate("car.modelYear"), ng_car_basket.Evaluate("car.price | currency"));
+				} catch (Exception e) {
 					// System.InvalidOperationException: Sequence contains no elements
 					// TODO
 					Console.Error.WriteLine(e.ToString());
@@ -749,8 +715,7 @@ namespace Protractor.Test
 		private string CreateTempFile(string content)
 		{
 			FileInfo testFile = new FileInfo("webdriver.tmp");
-			if (testFile.Exists)
-			{
+			if (testFile.Exists) {
 				testFile.Delete();
 			}
 			StreamWriter testFileWriter = testFile.CreateText();

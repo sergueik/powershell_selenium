@@ -39,11 +39,10 @@ namespace Protractor.Test
 		[TestFixtureTearDown]
 		public void TearDown()
 		{
-			try
-			{
+			try {
 				driver.Quit();
-			}
-			catch (Exception) { } /* Ignore cleanup errors */
+			} catch (Exception) {
+			} /* Ignore cleanup errors */
 			Assert.AreEqual("", _verificationErrors.ToString());
 		}
 
@@ -57,7 +56,9 @@ namespace Protractor.Test
 			var ng_first_operand = ngDriver.FindElement(NgBy.Model("first"));
 			ng_first_operand.SendKeys("1");
 
+			#pragma warning disable 618
 			NgWebElement ng_second_operand = ngDriver.FindElement(NgBy.Input("second"));
+			#pragma warning restore 618
 			ng_second_operand.SendKeys("2");
 
 			NgWebElement ng_math_operator_element = ngDriver.FindElement(NgBy.Options("value for (key, value) in operators"));
@@ -82,10 +83,14 @@ namespace Protractor.Test
 		[Test]
 		public void ShouldSubstract()
 		{
+			#pragma warning disable 618
 			var first = ngDriver.FindElement(NgBy.Input("first"));
+			#pragma warning restore 618
 			first.SendKeys("10");
 
+			#pragma warning disable 618
 			var second = ngDriver.FindElement(NgBy.Input("second"));
+			#pragma warning restore 618
 			second.SendKeys("2");
 
 			ReadOnlyCollection<NgWebElement> ng_math_operators = ngDriver.FindElements(NgBy.Options("value for (key, value) in operators"));

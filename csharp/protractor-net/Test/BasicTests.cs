@@ -42,11 +42,10 @@ namespace Protractor.Test
 		[TearDown]
 		public void TearDown()
 		{
-			try
-			{
+			try {
 				driver.Quit();
-			}
-			catch (Exception){} /* Ignore cleanup errors */
+			} catch (Exception) {
+			} /* Ignore cleanup errors */
 			Assert.AreEqual("", verificationErrors.ToString());
 		}
 
@@ -61,10 +60,10 @@ namespace Protractor.Test
 		[Test]
 		public void ShouldSetLocation()
 		{
-			ngDriver.Navigate().GoToUrl(base_url );
+			ngDriver.Navigate().GoToUrl(base_url);
 			String loc = "misc/faq";
 			NgNavigation nav = new NgNavigation(ngDriver, ngDriver.Navigate());
-			nav.SetLocation(null,loc);
+			nav.SetLocation(null, loc);
 			Assert.IsTrue(ngDriver.Url.ToString().Contains(loc));
 		}
 
@@ -73,7 +72,7 @@ namespace Protractor.Test
 		public void ShouldGreetUsingBinding()
 		{
 			IWebDriver ngDriver = new NgWebDriver(driver);
-			ngDriver.Navigate().GoToUrl(base_url );
+			ngDriver.Navigate().GoToUrl(base_url);
 			ngDriver.FindElement(NgBy.Model("yourName")).SendKeys("Julie");
 			Assert.AreEqual("Hello Julie!", ngDriver.FindElement(NgBy.Binding("yourName")).Text);
 		}
@@ -102,10 +101,9 @@ namespace Protractor.Test
 		public void NonAngularPageShouldBeSupported()
 		{
 			ngDriver.IgnoreSynchronization = true;
-			Assert.DoesNotThrow(() =>
-			                    {
-			                    	ngDriver.Navigate().GoToUrl("http://www.google.com");
-			                    });
+			Assert.DoesNotThrow(() => {
+				ngDriver.Navigate().GoToUrl("http://www.google.com");
+			});
 			ngDriver.IgnoreSynchronization = false;
 		}
 	}
