@@ -1,13 +1,13 @@
-Protractor for .NET
-===================
-This is a fork of [protractor-net](https://github.com/bbaia/protractor-net) project with slightly more complete and up-to-date Javascript code (PR pending).
 
-Example
--------
+## Protractor for .NET
+### Info
 
+This directory contains a fork of [protractor-net](https://github.com/bbaia/protractor-net) project with slightly more complete and up-to-date Javascript code (PR pending) and significant number of tests exploring various typical scenaios.
+
+### Example
 ![Screen Recording](https://github.com/sergueik/powershell_selenium/blob/master/csharp/protractor-net/Screenshots/3.gif?)
 
-```
+``` c #
 IWebDriver driver = new FirefoxDriver();
 NgWebDriver ngDriver = new NgWebDriver(driver);
 String base_url = "http://juliemr.github.io/protractor-demo/";
@@ -32,17 +32,13 @@ ng_substract_math_operator.Click();
 NgWebElement result_element = ngDriver.FindElement(NgBy.Binding("latest"));
 Assert.AreEqual("3", result_element.Text);
 highlight(result_element.WrappedElement);
-
 ```
 
-
-Note
-----
+### Note
 Local Angular files may be placed under `Samples` directory and copied into output directory of the `Test`
-```
+```c #
 base_url = new System.Uri(Path.Combine( Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
 ngDriver.Navigate().GoToUrl(base_url);
-
 ```
 However, local files work only  with __PhantomJSDriver__ - error varies with the browser:
 
@@ -55,8 +51,7 @@ For desktop browser-hosted tests, start a web server locally and point web root 
 then update the code to  use `base_url = String.Format("http://localhost/{0}", testpage);`
 
 
-Author
-------
+### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
 
 Screen Recording converted to gif via [convert-to-gif](http://image.online-convert.com/convert-to-gif)
