@@ -53,9 +53,9 @@ namespace Protractor.Test
 			actions = new Actions(driver);
 		}
 
-		// Embedded calendar
+		// uses Embedded calendar
 		[Test]
-		public void ShouldDirectSelectEmbedded()
+		public void ShouldHighlightCurrentMonthDays()
 		{
 			// Arrange
 			try {
@@ -64,34 +64,34 @@ namespace Protractor.Test
 			} catch (Exception e) {
 				verificationErrors.Append(e.Message);
 			}
-			NgWebElement ng_result = ngDriver.FindElement(NgBy.Model("data.embeddedDate", "*[data-ng-app]"));
-			Assert.IsNotNull(ng_result);
+			NgWebElement ng_datepicker = ngDriver.FindElement(NgBy.Model("data.embeddedDate", "*[data-ng-app]"));
+			Assert.IsNotNull(ng_datepicker);
 			// NOTE: cannot highlight calendar, only individual days
-			actions.MoveToElement(ng_result).Build().Perform();
-			ngDriver.Highlight(ng_result);
+			actions.MoveToElement(ng_datepicker).Build().Perform();
+			ngDriver.Highlight(ng_datepicker);
             
-			NgWebElement[] elements = ng_result.FindElements(NgBy.Repeater("dateObject in week.dates")).ToArray();
-			Assert.IsTrue(28 <= elements.Length);
+			NgWebElement[] ng_dates = ng_datepicker.FindElements(NgBy.Repeater("dateObject in week.dates")).ToArray();
+			Assert.IsTrue(28 <= ng_dates.Length);
 			// Act
 			// Highlight every day in the month 
-			int start = 0, end = elements.Length;
-			for (int cnt = 0; cnt != elements.Length; cnt++) {
-				if (start == 0 && Convert.ToInt32(elements[cnt].Text) == 1) {
+			int start = 0, end = ng_dates.Length;
+			for (int cnt = 0; cnt != ng_dates.Length; cnt++) {
+				if (start == 0 && Convert.ToInt32(ng_dates[cnt].Text) == 1) {
 					start = cnt;
 				}
-				if (cnt > start && Convert.ToInt32(elements[cnt].Text) == 1) {
+				if (cnt > start && Convert.ToInt32(ng_dates[cnt].Text) == 1) {
 					end = cnt;
 				}
 			}
 			for (int cnt = start; cnt != end; cnt++) {
-				NgWebElement element = elements[cnt];
-				ngDriver.Highlight(element, highlight_timeout, 3, (element.GetAttribute("class").Contains("current")) ? "blue" : "green");
+				NgWebElement ng_date = ng_dates[cnt];
+				ngDriver.Highlight(ng_date, highlight_timeout, 3, (ng_date.GetAttribute("class").Contains("current")) ? "blue" : "green");
 			}
 		}
         
-		// Drop-down Datetime with input box
+		// uses Drop-down Datetime with input box
 		[Test]
-		public void ShouldDirectSelectDropDownInputBox()
+		public void ShouldDirectSelect()
 		{
 			// Arrange
 			try {
@@ -100,10 +100,10 @@ namespace Protractor.Test
 			} catch (Exception e) {
 				verificationErrors.Append(e.Message);
 			}
-			NgWebElement ng_result = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput", "*[data-ng-app]"));
-			Assert.IsNotNull(ng_result);
-			// ng_result.Clear();
-			ngDriver.Highlight(ng_result);
+			NgWebElement ng_datepicker = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput", "*[data-ng-app]"));
+			Assert.IsNotNull(ng_datepicker);
+			// ng_datepicker.Clear();
+			ngDriver.Highlight(ng_datepicker);
 			IWebElement calendar = ngDriver.FindElement(By.CssSelector(".input-group-addon"));
 			Assert.IsNotNull(calendar);
 			ngDriver.Highlight(calendar);
@@ -143,19 +143,36 @@ namespace Protractor.Test
 			ngDriver.Highlight(ng_minute);
 			Console.Error.WriteLine("Time of the day: " + ng_minute.Text);
 			ng_minute.Click();
-			ng_result = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput", "[data-ng-app]"));
-			ngDriver.Highlight(ng_result, 100);
-			Console.Error.WriteLine("Selected Date/time: " + ng_result.GetAttribute("value"));
+			ng_datepicker = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput", "[data-ng-app]"));
+			ngDriver.Highlight(ng_datepicker, 100);
+			Console.Error.WriteLine("Selected Date/time: " + ng_datepicker.GetAttribute("value"));
 
 		}
+
+		// uses Drop-down Datetime with input box
 		[Test]
-		public void ShouldNavigateDropDownInputBox()
+		public void ShouldBrowse()
 		{
-			// Open datepicker directive
-			NgWebElement ng_result = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput", "*[data-ng-app]"));
-			Assert.IsNotNull(ng_result);
-			// ng_result.Clear();
-			ngDriver.Highlight(ng_result);
+			// Open datepicker directive			
+			String searchText = "Drop-down Datetime with input box";
+			IWebElement contaiter = null;
+			try {
+				contaiter = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(String.Format("//div[@class='col-sm-6']//*[contains(text(),'{0}')]", searchText))));
+				ngDriver.Highlight(contaiter);
+			} catch (Exception e) {
+				Console.Error.WriteLine("Exception: " + e.ToString());
+			}
+			try {
+				contaiter = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(String.Format("//*[text()[contains(.,'{0}')]]", searchText))));
+				ngDriver.Highlight(contaiter);
+			} catch (Exception e) {
+				Console.Error.WriteLine("Exception: " + e.ToString());
+			}
+
+			NgWebElement ng_datepicker = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput", "*[data-ng-app]"));
+			Assert.IsNotNull(ng_datepicker);
+			// ng_datepicker.Clear();
+			ngDriver.Highlight(ng_datepicker);
 			IWebElement calendar = ngDriver.FindElement(By.CssSelector(".input-group-addon"));
 			ngDriver.Highlight(calendar);
 			Actions actions = new Actions(ngDriver.WrappedDriver);
@@ -193,10 +210,10 @@ namespace Protractor.Test
 
 			Console.Error.WriteLine("Current month: " + display_month);
 			Console.Error.WriteLine("Expect to find next month: " + next_month);
-			IWebElement ng_right = ng_display.FindElement(By.XPath("..")).FindElement(By.ClassName("right"));
-			Assert.IsNotNull(ng_right);
-			ngDriver.Highlight(ng_right, 100);
-			ng_right.Click();
+			IWebElement ng_next_month = ng_display.FindElement(By.XPath("..")).FindElement(By.ClassName("right"));
+			Assert.IsNotNull(ng_next_month);
+			ngDriver.Highlight(ng_next_month, 100);
+			ng_next_month.Click();
 			Assert.IsTrue(ng_display.Text.Contains(next_month));
 			ngDriver.Highlight(ng_display);
 			Console.Error.WriteLine("Next month: " + ng_display.Text);
