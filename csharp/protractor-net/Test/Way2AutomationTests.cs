@@ -44,8 +44,8 @@ namespace Protractor.Test
 		{
 			// NOTE: OpenQA.Selenium.NoSuchWindowException : Unable to get browser with vanilla Internet ExplorerIE 11 without FEATURE_BFCACHE set
 			// with  https://github.com/seleniumhq/selenium-google-code-issue-archive/issues/6511#issuecomment-192149755
-			// registry hack applied, is unstable - 
-			// sporadic timeouts in ExecuteAsyncScript 
+			// registry hack applied, is unstable -
+			// sporadic timeouts in ExecuteAsyncScript
 			// use at your own risk
 			// var options = new InternetExplorerOptions() { IntroduceInstabilityByIgnoringProtectedModeSettings = true };
 			// driver = new InternetExplorerDriver(options);
@@ -148,12 +148,12 @@ namespace Protractor.Test
 			NgWebElement ng_deposit_amount = ng_form_element.FindElement(NgBy.Model("amount"));
 			ng_deposit_amount.SendKeys("100");
 
-			wait.Until(ExpectedConditions.ElementIsVisible(NgBy.ButtonText("Deposit")));
-			ng_deposit_button = ng_form_element.FindElement(NgBy.ButtonText("Deposit"));
-			actions.MoveToElement(ng_deposit_button.WrappedElement).Build().Perform();
-			ngDriver.Highlight(ng_deposit_button, highlight_timeout);
+			// Confirm to perform deposit
+			NgWebElement ng_submit_deposit_button = ng_form_element.FindElements(NgBy.ButtonText("Deposit")).First(o=>o.GetAttribute("class").IndexOf("btn-default", StringComparison.InvariantCultureIgnoreCase) > -1);
+			actions.MoveToElement(ng_submit_deposit_button.WrappedElement).Build().Perform();
+			ngDriver.Highlight(ng_submit_deposit_button, highlight_timeout);
 
-			ng_deposit_button.Click();
+			ng_submit_deposit_button.Click();
 			// http://www.way2automation.com/angularjs-protractor/banking/depositTx.html
 
 			// inspect message
@@ -367,12 +367,12 @@ namespace Protractor.Test
 			actions.MoveToElement(ng_delete_button.WrappedElement).ClickAndHold().Build().Perform();
 			Thread.Sleep(1000);
 			actions.Release();
-			// sometimes actions do not work - for example in this test 
+			// sometimes actions do not work - for example in this test
 			ng_delete_button.Click();
 			// wait for customer list to reload
 			Thread.Sleep(1000);
 			wait.Until(ExpectedConditions.ElementIsVisible(NgBy.Repeater("cust in Customers")));
-			// count the remaining customers            
+			// count the remaining customers
 			ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
 			int new_customer_count = ng_customers.Count;
 			// conrirm the customer count changed
@@ -502,7 +502,7 @@ namespace Protractor.Test
 			ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
 			// collect all customers
 			ReadOnlyCollection<NgWebElement> ng_custfNames = ngDriver.FindElements(NgBy.RepeaterColumn("cust in Customers", "cust.fName"));
-			// In the application there is always 5 customers preloaded:  
+			// In the application there is always 5 customers preloaded:
 			// http://www.way2automation.com/angularjs-protractor/banking/mockDataLoadService.js
 			Assert.Greater(ng_custfNames.Count, 3);
 
@@ -650,7 +650,7 @@ namespace Protractor.Test
 			// wait for transaction information to be loaded and rendered
 			wait.Until(ExpectedConditions.ElementExists(NgBy.Repeater("tx in transactions")));
 
-			// examine first few transactions using Evaluate            
+			// examine first few transactions using Evaluate
 			ReadOnlyCollection<NgWebElement> ng_transactions = ngDriver.FindElements(NgBy.Repeater("tx in transactions"));
 			int cnt = 0;
 			foreach (NgWebElement ng_current_transaction in ng_transactions) {
@@ -692,7 +692,7 @@ namespace Protractor.Test
 			// wait for transaction information to be loaded and rendered
 			wait.Until(ExpectedConditions.ElementExists(NgBy.Repeater("tx in transactions")));
 
-			// highlight transaction type cells in the page differently for Credit or Debit using RepeaterColumn            
+			// highlight transaction type cells in the page differently for Credit or Debit using RepeaterColumn
 			ReadOnlyCollection<NgWebElement> ng_transaction_type_columns = ngDriver.FindElements(NgBy.RepeaterColumn("tx in transactions", "tx.type"));
 			Assert.IsNotEmpty(ng_transaction_type_columns);
 
