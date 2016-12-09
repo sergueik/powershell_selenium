@@ -45,8 +45,7 @@ namespace Protractor
 		/// </param>
 		public NgWebDriver(IWebDriver driver, string rootElement, params NgModule[] mockModules)
 		{
-			if (!(driver is IJavaScriptExecutor))
-			{
+			if (!(driver is IJavaScriptExecutor)) {
 				throw new NotSupportedException("The WebDriver instance must implement the IJavaScriptExecutor interface.");
 			}
 			this.driver = driver;
@@ -62,8 +61,7 @@ namespace Protractor
 		/// <para/>
 		/// Use this to interact with pages that do not contain Angular (such as a log-in screen).
 		/// </summary>
-		public IWebDriver WrappedDriver
-		{
+		public IWebDriver WrappedDriver {
 			get { return this.driver; }
 		}
 
@@ -74,8 +72,7 @@ namespace Protractor
 		/// <para/>
 		/// This is usually 'body' but if your ng-app is on a subsection of the page it may be a subelement.
 		/// </summary>
-		public string RootElement
-		{
+		public string RootElement {
 			get { return this.rootElement; }
 		}
 
@@ -93,18 +90,15 @@ namespace Protractor
 		/// Gets the current window handle, which is an opaque handle to this
 		/// window that uniquely identifies it within this driver instance.
 		/// </summary>
-		public string CurrentWindowHandle
-		{
+		public string CurrentWindowHandle {
 			get { return this.driver.CurrentWindowHandle; }
 		}
 
 		/// <summary>
 		/// Gets the source of the page last loaded by the browser.
 		/// </summary>
-		public string PageSource
-		{
-			get
-			{
+		public string PageSource {
+			get {
 				this.WaitForAngular();
 				return this.driver.PageSource;
 			}
@@ -113,50 +107,55 @@ namespace Protractor
 		/// <summary>
 		/// Gets the title of the current browser window.
 		/// </summary>
-		public string Title
-		{
-			get
-			{
+		public string Title {
+			get {
 				this.WaitForAngular();
 				return this.driver.Title;
+			}
+		}
+
+		public Boolean TestForAngular()
+		{
+			// Make sure the page is an Angular page.
+			try {
+				int isAngularApp = 0;
+				Int32.TryParse(this.jsExecutor.ExecuteAsyncScript(ClientSideScripts.TestForAngular, 60).ToString(), out isAngularApp);
+				if (isAngularApp != 0) {
+					return true;
+				} else {
+					return false;
+				}
+			} catch (WebDriverTimeoutException) {
+				return false;
 			}
 		}
 
 		/// <summary>
 		/// Gets or sets the URL the browser is currently displaying.
 		/// </summary>
-		public string Url
-		{
-			get
-			{
+		public string Url {
+			get {
 				this.WaitForAngular();
 				IHasCapabilities hcDriver = this.driver as IHasCapabilities;
-				if (hcDriver != null && hcDriver.Capabilities.BrowserName == "internet explorer")
-				{
+				if (hcDriver != null && hcDriver.Capabilities.BrowserName == "internet explorer") {
 					// 'this.driver.Url' does not work on IE
 					return this.jsExecutor.ExecuteScript(ClientSideScripts.GetLocationAbsUrl, this.rootElement) as string;
-				}
-				else
-				{
+				} else {
 					return this.driver.Url;
 				}
 			}
-			set
-			{
+			set {
 				// Reset URL
 				this.driver.Url = "about:blank";
 				// TODO: test Safari & Android
 				IHasCapabilities hcDriver = this.driver as IHasCapabilities;
 				if (hcDriver != null &&
 				    (hcDriver.Capabilities.BrowserName == "internet explorer" ||
-				     hcDriver.Capabilities.BrowserName == "phantomjs"))
-				{
+				    hcDriver.Capabilities.BrowserName == "phantomjs")) {
 					// Internet Explorer & PhantomJS
 					this.jsExecutor.ExecuteScript("window.name += '" + AngularDeferBootstrap + "';");
 					this.driver.Url = value;
-				}
-				else
-				{
+				} else {
 					// Chrome & Firefox
 					this.jsExecutor.ExecuteScript("window.name += '" + AngularDeferBootstrap + "'; window.location.href = '" + value + "';");
 				}
@@ -165,27 +164,21 @@ namespace Protractor
 					// Make sure the page is an Angular page.
 					int isAngularApp = 0;
 					Int32.TryParse(this.jsExecutor.ExecuteAsyncScript(ClientSideScripts.TestForAngular, 60).ToString(), out isAngularApp);
-					if (isAngularApp != 0)
-					{
+					if (isAngularApp != 0) {
 						// At this point, Angular will pause for us, until angular.resumeBootstrap is called.
 
 						// Register extra modules
-						foreach (NgModule ngModule in this.mockModules)
-						{
+						foreach (NgModule ngModule in this.mockModules) {
 							this.jsExecutor.ExecuteScript(ngModule.Script);
 						}
 						// Resume Angular bootstrap
 						this.jsExecutor.ExecuteScript(ClientSideScripts.ResumeAngularBootstrap,
-						                              String.Join(",", this.mockModules.Select(m => m.Name).ToArray()));
-					}
-					else
-					{
+							String.Join(",", this.mockModules.Select(m => m.Name).ToArray()));
+					} else {
 						throw new InvalidOperationException(
 							String.Format("Angular could not be found on the page '{0}'", value));
 					}
 				}
-
-
 
 			}
 
@@ -194,8 +187,7 @@ namespace Protractor
 		/// <summary>
 		/// Gets the window handles of open browser windows.
 		/// </summary>
-		public ReadOnlyCollection<string> WindowHandles
-		{
+		public ReadOnlyCollection<string> WindowHandles {
 			get { return this.driver.WindowHandles; }
 		}
 
@@ -301,15 +293,12 @@ namespace Protractor
 		/// <summary>
 		/// Gets or sets the location for in-page navigation using the same syntax as '$location.url()'.
 		/// </summary>
-		public string Location
-		{
-			get
-			{
+		public string Location {
+			get {
 				this.WaitForAngular();
 				return this.jsExecutor.ExecuteScript(ClientSideScripts.GetLocation, this.rootElement) as string;
 			}
-			set
-			{
+			set {
 				this.WaitForAngular();
 				this.jsExecutor.ExecuteScript(ClientSideScripts.SetLocation, this.rootElement, value);
 			}
@@ -317,16 +306,14 @@ namespace Protractor
 
 		internal void WaitForAngular()
 		{
-			if (!this.IgnoreSynchronization)
-			{
+			if (!this.IgnoreSynchronization) {
 				this.jsExecutor.ExecuteAsyncScript(ClientSideScripts.WaitForAngular, this.rootElement);
 			}
 		}
 
 		internal void WaitForAllAngular2()
 		{
-			if (!this.IgnoreSynchronization)
-			{
+			if (!this.IgnoreSynchronization) {
 				this.jsExecutor.ExecuteAsyncScript(ClientSideScripts.WaitForAllAngular2);
 			}
 		}
