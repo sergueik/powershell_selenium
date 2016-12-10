@@ -20,6 +20,7 @@
 # http://poshcode.org/2887
 # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
 # https://msdn.microsoft.com/en-us/library/system.management.automation.invocationinfo.pscommandpath%28v=vs.85%29.aspx
+# https://gist.github.com/glombard/1ae65c7c6dfd0a19848c
 function Get-ScriptDirectory
 {
   [string]$scriptDirectory = $null
@@ -463,8 +464,8 @@ function load_shared_assemblues_demand_versions {
   param(
     [string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies',
     $shared_assemblies = @{
-      'WebDriver.dll' = 2.47;
-      'WebDriver.Support.dll' = '2.47';
+      'WebDriver.dll' = '2.53';
+      'WebDriver.Support.dll' = '2.53';
       'nunit.core.dll' = $null;
       'nunit.framework.dll' = $null;
       'Newtonsoft.Json.dll' = $null; 
