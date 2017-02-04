@@ -1,4 +1,5 @@
-﻿namespace SwdPageRecorder.UI
+﻿using FastColoredTextBoxNS;
+namespace SwdPageRecorder.UI
 {
     partial class JavaScriptEditorView
     {
