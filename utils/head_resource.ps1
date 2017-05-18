@@ -1,25 +1,24 @@
 param(
   [Parameter(Position = 0)]
-  [string]$url
+  [string]$url,
+  [switch]$body
 )
+
+$get_response_body = [bool]$PSBoundParameters['body'].IsPresent
+$get_response_headers = -not $get_response_body
+
 # ignore self-signed certificates
-Add-Type @"
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
-public class TrustAllCertsPolicy : ICertificatePolicy {
-  public bool CheckValidationResult(
-    ServicePoint srvPoint, X509Certificate certificate,
-    WebRequest request, int certificateProblem) {
-    return true;
-  }
-}
-"@
-[System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+
+# https://msdn.microsoft.com/en-us/library/system.net.httpwebrequest(v=vs.95).aspx
 $webRequest = [System.Net.WebRequest]::Create($url)
-$get_response_body = $false
-$get_response_headers = $true
-$webRequest.Method = 'HEAD'
+if ($get_response_headers -eq $true ) {
+  $webRequest.Method = 'HEAD'; }
+else { 
+  $webRequest.Method = 'GET';
+}
 try {
+	# https://msdn.microsoft.com/en-us/library/system.net.webresponse(v=vs.95).aspx
   [System.Net.WebResponse]$response = $webRequest.GetResponse()
   if ($get_response_headers -eq $true) {
     if ($response.StatusCode.value__ -eq 200) {
@@ -33,8 +32,14 @@ try {
     [string]$Result = $sr.ReadToEnd()
     Write-Output ("Reponse:`n{0}" -f $Result)
   }
+  try { 
+    $response.Close();
+  } catch [exception]{
+    Write-Output ("Exception (ignored ): '{0}'" -f $_[0].Exception.Message)
+    # ignore
+  }
+
 } catch [exception]{
-  # System.Management.Automation.ErrorRecord -> System.Net.WebException
-  $exception = $_[0].Exception
-  Write-Output ("Exception : Status: '{0}'  StatusCode: '{1}' Message: '{2}'" -f $exception.Status,$exception.Response.StatusCode,$exception.Message)
+  Write-Output ("Exception : '{0}'" -f $_[0].Exception.Message)
 }
+$webRequest = $null
