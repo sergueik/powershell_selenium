@@ -19,7 +19,7 @@
 #THE SOFTWARE.
 # $DebugPreference = 'Continue'
 
-
+# see also: http://www.oszone.net/15060/ie9_tweaks
 param(
   [switch]$all # For clearing 'Protected Mode' for allInternet 'Zones'
 )
@@ -100,8 +100,19 @@ $propertyType = 'Dword'
 
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
 
+
 write-host -ForegroundColor 'green' @"
-This call enables "Delete browsing History on exit" - checkbox
+This call disables warning when multiple browser tabs is open checkbox.
+"@
+
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Internet Explorer/TabbedBrowsing'
+$name = 'WarnOnClose'
+$value = '0'
+$propertyType = 'Dword'
+
+write-host -ForegroundColor 'green' @"
+These calls enable "Delete browsing History on exit" - checkbox
 "@
 
 $hive = 'HKCU:'
