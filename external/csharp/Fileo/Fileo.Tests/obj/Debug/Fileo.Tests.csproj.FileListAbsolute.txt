@@ -1,0 +1,1 @@
+C:\developer\sergueik\powershell_selenium\external\csharp\Fileo\Fileo.Tests\obj\Debug\Fileo.Tests.csprojResolveAssemblyReference.cache

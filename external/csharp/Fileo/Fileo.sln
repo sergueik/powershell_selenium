@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fileo", "Fileo\Fileo.csproj", "{92FBB07D-4B08-4570-A9F6-80B0B420F2CC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fileo.Tests", "Fileo.Tests\Fileo.Tests.csproj", "{0E348A2F-4787-42B0-BAE4-304988C8E598}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{92FBB07D-4B08-4570-A9F6-80B0B420F2CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92FBB07D-4B08-4570-A9F6-80B0B420F2CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92FBB07D-4B08-4570-A9F6-80B0B420F2CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92FBB07D-4B08-4570-A9F6-80B0B420F2CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E348A2F-4787-42B0-BAE4-304988C8E598}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E348A2F-4787-42B0-BAE4-304988C8E598}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E348A2F-4787-42B0-BAE4-304988C8E598}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E348A2F-4787-42B0-BAE4-304988C8E598}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
