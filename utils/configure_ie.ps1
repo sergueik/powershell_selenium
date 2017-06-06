@@ -1,4 +1,4 @@
-#Copyright (c) 2014,2015,2016 Serguei Kouzmine
+#Copyright (c) 2014,2015,2016,2017 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -327,3 +327,35 @@ $name = 'CacheLimit'
 $value = '8192' # 0x2000 
 $propertyType = 'Dword'
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+
+# https://www.codeproject.com/Articles/1189642/Browser-Update-for-WebBrowser-control-in-VB-NET
+# $hive = 'HKLM:'
+# $path = 'HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION'
+# $name = 'Skype.exe'
+# $value = '11001'
+# 11001 (0x2AF9)
+# Internet Explorer 11. Webpages are displayed in IE11 Standards mode, regardless of the !DOCTYPE directive.
+# 
+# 11000 (0x2AF8)
+# Internet Explorer 11. Webpages containing standards-based !DOCTYPE directives are displayed in IE9 mode.
+# 
+# 10001 (0x2AF7)
+# Internet Explorer 10. Webpages are displayed in IE10 Standards mode, regardless of the !DOCTYPE directive.
+# 
+# 10000 (0x2710)
+# Internet Explorer 10. Webpages containing standards-based !DOCTYPE directives are displayed in IE9 mode.
+# 
+# 9999 (0x270F)
+# Internet Explorer 9. Webpages are displayed in IE9 Standards mode, regardless of the !DOCTYPE directive.
+# 
+# 9000 (0x2328)
+# Internet Explorer 9. Webpages containing standards-based !DOCTYPE directives are displayed in IE9 mode.
+# 
+# 8888 (0x22B8)
+# Webpages are displayed in IE8 Standards mode, regardless of the !DOCTYPE directive.
+# 
+# 8000 (0x1F40)
+# Webpages containing standards-based !DOCTYPE directives are displayed in IE8 mode.
+# 
+# 7000 (0x1B58)
+# Webpages containing standards-based !DOCTYPE directives are displayed in IE7 Standards mode. 
