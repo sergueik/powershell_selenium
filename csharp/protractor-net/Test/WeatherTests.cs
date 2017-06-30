@@ -33,7 +33,7 @@ namespace Protractor.Test
 		[TestFixtureSetUp]
 		public void SetUp()
 		{
-			driver = new ChromeDriver();
+			driver = new FirefoxDriver();
 			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
 			// driver.Manage().Window.Size = new System.Drawing.Size(700, 400);
 			ngDriver = new NgWebDriver(driver);
@@ -63,8 +63,8 @@ namespace Protractor.Test
 			Assert.IsNotNull(search);
 			ngDriver.Highlight(search);
 
-			// NOTE: occasionally dropping first letter .
-			search.SendKeys(city[0].ToString());
+			// NOTE: Chrome is occasionally dropping first letter .
+			// search.SendKeys(city[0].ToString());
 			// TODO: http://stackoverflow.com/questions/1450774/splitting-a-string-into-chunks-of-a-certain-size
 			foreach (char cityChar in city.ToCharArray()) {
 				Console.Error.WriteLine("Sending: {0}", cityChar);

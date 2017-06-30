@@ -43,7 +43,7 @@ namespace Protractor.Test
 		[TestFixtureSetUp]
 		public void SetUp()
 		{
-			driver = new ChromeDriver();
+			driver = new FirefoxDriver();
 			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
 			driver.Manage().Window.Size = new System.Drawing.Size(700, 400);
 			ngDriver = new NgWebDriver(driver);

@@ -179,9 +179,7 @@ namespace Protractor
 							String.Format("Angular could not be found on the page '{0}'", value));
 					}
 				}
-
 			}
-
 		}
 
 		/// <summary>
