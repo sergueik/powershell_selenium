@@ -89,6 +89,7 @@ namespace Protractor.Test
 			}
 		}
         
+		// NOTE: Test passes when run alone, but randomly fails when run as a group
 		// uses Drop-down Datetime with input box
 		[Test]
 		public void ShouldDirectSelect()

@@ -65,7 +65,7 @@ namespace Protractor.Test
 			Assert.IsTrue(ngDriver.Url.ToString().Contains(loc));
 		}
 
-		
+		// NOTE: Test passes when run alone, but randomly fails when run as a group
 		[Test]
 		public void ShouldGreetUsingBinding()
 		{
@@ -83,7 +83,7 @@ namespace Protractor.Test
 		public void ShouldListTodos()
 		{
 			var elements = ngDriver.FindElements(NgBy.Repeater("todo in todoList.todos"));
-			Assert.AreEqual("build an angular app", elements[1].Text);
+			Assert.AreEqual("build an AngularJS app", elements[1].Text);
 			Assert.AreEqual(false, elements[1].Evaluate("todo.done"));
 		}
 
