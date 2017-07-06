@@ -34,10 +34,10 @@ namespace Protractor.Test
 		private IAlert alert;
 		private string alert_text;
 
-		private const int wait_seconds = 3;
-		private const long wait_poll_milliseconds = 300;
+		private const int wait_seconds = 10;
+		private const long wait_poll_milliseconds = 500;
 		private String base_url = "https://plnkr.co/edit/vxwV6zxEwZGVUVR5V6tg?p=preview";
-		private IWebDriver frame;
+		private IWebDriver iframe;
 
 		[TestFixtureSetUp]
 		public void SetUp()
@@ -68,12 +68,13 @@ namespace Protractor.Test
 			IWebElement frameElement = driver.FindElement(By.CssSelector("iframe[name='plunkerPreviewTarget']"));
 			Assert.IsNotNull(frameElement);
 			var iframe = driver.SwitchTo().Frame(frameElement);
-			string header_text = "Single select example";
+			String headerText = "Single select example";
+			Thread.Sleep(1500);
 			wait.Until(ExpectedConditions.ElementExists(By.XPath(
-				String.Format("//form/div[contains(text(), '{0}')]", header_text))));
+				String.Format("//form/div[contains(text(), '{0}')]", headerText))));
 
 			IWebElement header = iframe.FindElement(By.XPath(
-				                     String.Format("//form/div[contains(text(), '{0}')]", header_text)));
+				                     String.Format("//form/div[contains(text(), '{0}')]", headerText)));
 			Assert.IsNotNull(header);
 			actions.MoveToElement(header).Build().Perform();
 			driver.Highlight(header);
@@ -82,25 +83,23 @@ namespace Protractor.Test
 			actions.MoveToElement(selectOne).Build().Perform();
 			driver.Highlight(selectOne);
 			Console.Error.WriteLine("Element contents:\n{0}", selectOne.GetAttribute("innerHTML"));
-			String button_text = "Select one";			
-			IWebElement selectButtonElement = selectOne.FindElement(By.XPath(String.Format("//div[@class='placeholder'][contains(text(), '{0}')]", button_text)));
+			String buttonText = "Select one";			
+			IWebElement selectButtonElement = selectOne.FindElement(By.XPath(String.Format("//div[@class='placeholder'][contains(text(), '{0}')]", buttonText)));
 			Assert.IsNotNull(selectButtonElement);
 
 			actions.MoveToElement(selectButtonElement).Build().Perform();
 			driver.Highlight(selectButtonElement);
 			selectButtonElement.Click();
-			Thread.Sleep(1000);
 			wait.Until(d => (d.FindElements(By.CssSelector("select-dropdown div.options ul li")).Count > 0));
 			IWebElement dropdownElement = iframe.FindElement(By.CssSelector("select-dropdown div.options"));
 			Assert.IsNotNull(dropdownElement);
 			IWebElement[] optionElements = dropdownElement.FindElements(By.CssSelector("ul li")).ToArray();
 			Assert.IsTrue(1 <= optionElements.Length);
 			foreach (IWebElement optionElement in optionElements) {
-				// Console.Error.WriteLine("Option name:\n{0}", optionElement.GetAttribute("outerHTML"));
-				Console.Error.WriteLine("Option text:{0}", optionElement.Text);
 				actions.MoveToElement(optionElement).Build().Perform();
-				driver.Highlight(optionElement);
-				if (optionElement.Text.Contains("7")) {
+				if (optionElement.Text.Contains("10")) {
+					Console.Error.WriteLine("Selecting option:\"{0}\"", optionElement.Text);
+					driver.Highlight(optionElement);
 					optionElement.Click();
 				}
 				try {
@@ -108,9 +107,9 @@ namespace Protractor.Test
 					Assert.IsNotNull(ng_option_element.WrappedElement);
 					Console.Error.WriteLine("Option angular object:{0}\n", ng_option_element.Evaluate("ng-reflect-ng-outlet-context"));
 				} catch (InvalidOperationException e) { 
-					// ignore: angular is not defined
+					// angular is not defined
 					Console.Error.WriteLine("Ignore exception: " + e.Message);
-				} catch (StaleElementReferenceException e) { 
+				} catch (StaleElementReferenceException) { 
 					break;
 				}
 			}
@@ -120,13 +119,16 @@ namespace Protractor.Test
 			actions.MoveToElement(selectOptions).Build().Perform();
 			driver.Highlight(selectOptions);
 			String idPattern = @"Selected option id: (?<result>\d{1,2})";
-			Regex idReg = new Regex(idPattern);
-			Assert.IsTrue(idReg.IsMatch(selectOptions.Text));
-			// TODO: debug 
-			idPattern = @"Selected option id: (?<id>\d+)";
+			Assert.IsTrue((new Regex(idPattern)).IsMatch(selectOptions.Text));
+			// TODO: debug FindMatch
 			int result = 0;
 			int.TryParse(selectOptions.Text.FindMatch(idPattern), out result);
-			// Assert.AreEqual(7, result);
+			Console.Error.WriteLine("FindMatch \"{0}\" result: {1}\n", idPattern, result.ToString());
+			result = 0;
+			idPattern = @"(?<result>\d{1,2})";
+			int.TryParse(selectOptions.Text.FindMatch(idPattern), out result);
+			Console.Error.WriteLine("FindMatch \"{0}\" result: {1}\n", idPattern, result.ToString());
+			Assert.AreEqual(10, result);
 		}
 		
 
@@ -137,12 +139,13 @@ namespace Protractor.Test
 			IWebElement frameElement = driver.FindElement(By.CssSelector("iframe[name='plunkerPreviewTarget']"));
 			Assert.IsNotNull(frameElement);
 			var iframe = driver.SwitchTo().Frame(frameElement);
-			string header_text = "Multilpe select example";
+			string headerText = "Multilpe select example";
+			Thread.Sleep(1500);
 			wait.Until(ExpectedConditions.ElementExists(By.XPath(
-				String.Format("//form/div[contains(text(), '{0}')]", header_text))));
+				String.Format("//form/div[contains(text(), '{0}')]", headerText))));
 
 			IWebElement header = iframe.FindElement(By.XPath(
-				                     String.Format("//form/div[contains(text(), '{0}')]", header_text)));
+				                     String.Format("//form/div[contains(text(), '{0}')]", headerText)));
 			Assert.IsNotNull(header);
 			actions.MoveToElement(header).Build().Perform();
 			iframe.Highlight(header);
@@ -157,8 +160,8 @@ namespace Protractor.Test
 				int selectNumber = selectNumbers[cnt];
 				IWebElement selectPlacholderElement;
 				if (cnt == 0) {
-					String button_text = "Select multiple";			
-					selectPlacholderElement = selectMultiple.FindElement(By.CssSelector(String.Format("input[placeholder *= '{0}']", button_text)));
+					String buttonText = "Select multiple";			
+					selectPlacholderElement = selectMultiple.FindElement(By.CssSelector(String.Format("input[placeholder *= '{0}']", buttonText)));
 				} else {
 					selectPlacholderElement = selectMultiple.FindElement(By.CssSelector("input[placeholder]"));
 				}
@@ -172,12 +175,11 @@ namespace Protractor.Test
 				Assert.IsTrue(1 <= optionElements.Length);
 			
 				foreach (IWebElement optionElement in optionElements) {
-					// Console.Error.WriteLine("Option text:\"{0}\"", optionElement.Text);
 					actions.MoveToElement(optionElement).Build().Perform();
-					driver.Highlight(optionElement);
 					String selectOption = String.Format("{0}", selectNumber).Trim();
 					if (optionElement.Text.Contains(selectOption)) {
 						Console.Error.WriteLine("Selecting option:\"{0}\"", selectOption);
+						driver.Highlight(optionElement);
 						optionElement.Click();
 						break;
 					}
@@ -191,7 +193,7 @@ namespace Protractor.Test
 			driver.Highlight(selectOptions);
 			String idPattern = @"Selected option id: (?<result>(?:\d{1,2}|,)+)";
 			Regex idReg = new Regex(idPattern);
-			Assert.IsTrue(idReg.IsMatch(selectOptions.Text));
+			Assert.IsTrue((new Regex(idPattern)).IsMatch(selectOptions.Text));
 			// TODO: debug 
 			idPattern = @"Selected option id:(?<id>.+)$";
 			//

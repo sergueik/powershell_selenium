@@ -18,14 +18,14 @@ namespace Protractor.Extensions
 		private static Regex regex;
 		private static MatchCollection matches;
 
-		public static string FindMatch(this string text, string match_pattern, string match_tag)
+		public static string FindMatch(this string text, string matchPattern, string matchTag)
 		{
 			result = null;
-			regex = new Regex(match_pattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
+			regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
 			matches = regex.Matches(text);
 			foreach (Match match in matches) {
 				if (match.Length != 0) {
-					foreach (Capture capture in match.Groups[match_tag].Captures) {
+					foreach (Capture capture in match.Groups[matchTag].Captures) {
 						if (result == null) {
 							result = capture.ToString();
 						}
@@ -35,11 +35,11 @@ namespace Protractor.Extensions
 			return result;
 		}
 
-		public static string FindMatch(this string text, string match_pattern)
+		public static string FindMatch(this string text, string matchPattern)
 		{
-			string generated_tag = match_pattern.FindMatch("(?:<(?<result>[^>]+)>)", "result");
+			string generated_tag = matchPattern.FindMatch("(?:<(?<result>[^>]+)>)", "result");
 			result = null;
-			regex = new Regex(match_pattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
+			regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
 			matches = regex.Matches(text);
 			foreach (Match match in matches) {
 				if (match.Length != 0) {
