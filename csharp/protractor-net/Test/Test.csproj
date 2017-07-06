@@ -196,6 +196,7 @@
   <ItemGroup>
     <Compile Include="BasicTests.cs" />
     <Compile Include="ButtonTests.cs" />
+    <Compile Include="SelectTests.cs" />
     <Compile Include="CalculatorTests.cs" />
     <Compile Include="DatePickerTests.cs" />
     <Compile Include="LocalFileTests.cs" />

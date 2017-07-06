@@ -184,13 +184,13 @@ namespace Protractor.Test
 			Assert.IsNotNull(ng_dropdown);
 			NgWebElement ng_display = ngDriver.FindElement(NgBy.Binding("data.previousViewDate.display", true, "[data-ng-app]"));
 			Assert.IsNotNull(ng_display);
-			String dateDattern = @"\d{4}\-(?<month>\w{3})";
+			String datePattern = @"\d{4}\-(?<month>\w{3})";
 
-			Regex dateDatternReg = new Regex(dateDattern);
+			Regex datePatternReg = new Regex(datePattern);
 
-			Assert.IsTrue(dateDatternReg.IsMatch(ng_display.Text));
+			Assert.IsTrue(datePatternReg.IsMatch(ng_display.Text));
 			ngDriver.Highlight(ng_display);
-			String display_month = ng_display.Text.FindMatch(dateDattern);
+			String display_month = ng_display.Text.FindMatch(datePattern);
 
 			String[] months = {
 				"Jan",

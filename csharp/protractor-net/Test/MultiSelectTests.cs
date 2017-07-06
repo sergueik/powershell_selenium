@@ -22,7 +22,7 @@ using Protractor.Extensions;
 
 namespace Protractor.Test
 {
-	// NOTE: these tests are unstable in Chrome. 
+	// NOTE: these tests are unstable in Chrome.
 	// Tests pass when run alone, but randomly fail as a group
 	[TestFixture]
 	public class MultiSelectTests
@@ -119,7 +119,7 @@ namespace Protractor.Test
 			NgWebElement ng_directive = ngDriver.FindElement(NgBy.Model("selectedCar"));
 			Assert.IsNotNull(ng_directive.WrappedElement);
 			Assert.That(ng_directive.TagName, Is.EqualTo("am-multiselect"));
-            
+
 			// open am-multiselect
 			IWebElement toggleSelect = ng_directive.FindElement(NgBy.ButtonText("Select Some Cars"));
 			Assert.IsNotNull(toggleSelect);
