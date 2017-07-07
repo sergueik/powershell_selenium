@@ -21,7 +21,9 @@ namespace Protractor.Extensions
 		public static string FindMatch(this string text, string matchPattern, string matchTag)
 		{
 			result = null;
-			regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
+			regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled
+			                  /* RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled */
+			);
 			matches = regex.Matches(text);
 			foreach (Match match in matches) {
 				if (match.Length != 0) {
@@ -39,7 +41,9 @@ namespace Protractor.Extensions
 		{
 			string generated_tag = matchPattern.FindMatch("(?:<(?<result>[^>]+)>)", "result");
 			result = null;
-			regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
+			regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled
+			                  /* RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled */
+			);
 			matches = regex.Matches(text);
 			foreach (Match match in matches) {
 				if (match.Length != 0) {

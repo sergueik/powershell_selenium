@@ -67,7 +67,7 @@ namespace Protractor.Test
 			driver.Navigate().GoToUrl(base_url);
 			IWebElement frameElement = driver.FindElement(By.CssSelector("iframe[name='plunkerPreviewTarget']"));
 			Assert.IsNotNull(frameElement);
-			var iframe = driver.SwitchTo().Frame(frameElement);
+			iframe = driver.SwitchTo().Frame(frameElement);
 			String headerText = "Single select example";
 			Thread.Sleep(1500);
 			wait.Until(ExpectedConditions.ElementExists(By.XPath(
@@ -117,12 +117,14 @@ namespace Protractor.Test
 			IWebElement selectOptions = iframe.FindElement(By.XPath("//ng-select[@formcontrolname='selectSingle']/following-sibling::div"));
 			Assert.IsNotNull(selectOptions);
 			actions.MoveToElement(selectOptions).Build().Perform();
-			driver.Highlight(selectOptions);
+			driver.Highlight(selectOptions);			
+
 			String idPattern = @"Selected option id: (?<result>\d{1,2})";
+			
 			Assert.IsTrue((new Regex(idPattern)).IsMatch(selectOptions.Text));
-			// TODO: debug FindMatch
 			int result = 0;
-			int.TryParse(selectOptions.Text.FindMatch(idPattern), out result);
+			int.TryParse(selectOptions.Text.FindMatch(idPattern, "result"), out result);
+			Assert.AreEqual(10, result);
 			Console.Error.WriteLine("FindMatch \"{0}\" result: {1}\n", idPattern, result.ToString());
 			result = 0;
 			idPattern = @"(?<result>\d{1,2})";
@@ -131,14 +133,13 @@ namespace Protractor.Test
 			Assert.AreEqual(10, result);
 		}
 		
-
 		[Test]
 		public void Should_SelectMultipe()
 		{
 			driver.Navigate().GoToUrl(base_url);
 			IWebElement frameElement = driver.FindElement(By.CssSelector("iframe[name='plunkerPreviewTarget']"));
 			Assert.IsNotNull(frameElement);
-			var iframe = driver.SwitchTo().Frame(frameElement);
+			iframe = driver.SwitchTo().Frame(frameElement);
 			string headerText = "Multilpe select example";
 			Thread.Sleep(1500);
 			wait.Until(ExpectedConditions.ElementExists(By.XPath(
