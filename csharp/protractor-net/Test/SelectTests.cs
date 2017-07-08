@@ -31,12 +31,9 @@ namespace Protractor.Test
 		private NgWebDriver ngDriver;
 		private WebDriverWait wait;
 		private Actions actions;
-		private IAlert alert;
-		private string alert_text;
-
 		private const int wait_seconds = 10;
 		private const long wait_poll_milliseconds = 500;
-		private String base_url = "https://plnkr.co/edit/vxwV6zxEwZGVUVR5V6tg?p=preview";
+		private const string base_url = "https://plnkr.co/edit/vxwV6zxEwZGVUVR5V6tg";
 		private IWebDriver iframe;
 
 		[TestFixtureSetUp]
@@ -48,9 +45,14 @@ namespace Protractor.Test
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
 			wait.PollingInterval = TimeSpan.FromMilliseconds(wait_poll_milliseconds);
 			actions = new Actions(driver);
-
 		}
 
+		[SetUp]
+		public void TestSetUp()
+		{
+			driver.Navigate().GoToUrl(base_url);
+		}
+		
 		[TestFixtureTearDown]
 		public void TearDown()
 		{
@@ -62,9 +64,30 @@ namespace Protractor.Test
 		}
 		
 		[Test]
+		public void Should_Play()
+		{
+			wait.Until(ExpectedConditions.ElementExists(By.CssSelector(
+				"body > nav button i.icon-play")));
+			IWebElement buttonElement = driver.FindElement(By.CssSelector("body > nav button i.icon-play"));
+			Assert.IsNotNull(buttonElement);
+			driver.Highlight(buttonElement);
+			buttonElement.Click();
+			// 
+			IWebElement frameElement = driver.FindElement(By.CssSelector("iframe[name='plunkerPreviewTarget']"));
+			Assert.IsNotNull(frameElement);
+		}
+		
+		[Test]
 		public void Should_SelectSingle()
 		{
-			driver.Navigate().GoToUrl(base_url);
+			wait.Until(ExpectedConditions.ElementExists(By.CssSelector(
+				"body > nav button i.icon-play")));
+			IWebElement buttonElement = driver.FindElement(By.CssSelector("body > nav button i.icon-play"));
+			Assert.IsNotNull(buttonElement);
+			driver.Highlight(buttonElement);
+			buttonElement.Click();
+			// 
+			// 
 			IWebElement frameElement = driver.FindElement(By.CssSelector("iframe[name='plunkerPreviewTarget']"));
 			Assert.IsNotNull(frameElement);
 			iframe = driver.SwitchTo().Frame(frameElement);
@@ -123,20 +146,20 @@ namespace Protractor.Test
 			
 			Assert.IsTrue((new Regex(idPattern)).IsMatch(selectOptions.Text));
 			int result = 0;
-			int.TryParse(selectOptions.Text.FindMatch(idPattern, "result"), out result);
-			Assert.AreEqual(10, result);
-			Console.Error.WriteLine("FindMatch \"{0}\" result: {1}\n", idPattern, result.ToString());
-			result = 0;
-			idPattern = @"(?<result>\d{1,2})";
 			int.TryParse(selectOptions.Text.FindMatch(idPattern), out result);
-			Console.Error.WriteLine("FindMatch \"{0}\" result: {1}\n", idPattern, result.ToString());
 			Assert.AreEqual(10, result);
+			Console.Error.WriteLine("FindMatch result: {0}\n", result.ToString());
 		}
 		
 		[Test]
 		public void Should_SelectMultipe()
 		{
-			driver.Navigate().GoToUrl(base_url);
+			wait.Until(ExpectedConditions.ElementExists(By.CssSelector(
+				"body > nav button i.icon-play")));
+			IWebElement buttonElement = driver.FindElement(By.CssSelector("body > nav button i.icon-play"));
+			Assert.IsNotNull(buttonElement);
+			driver.Highlight(buttonElement);
+			buttonElement.Click();
 			IWebElement frameElement = driver.FindElement(By.CssSelector("iframe[name='plunkerPreviewTarget']"));
 			Assert.IsNotNull(frameElement);
 			iframe = driver.SwitchTo().Frame(frameElement);
@@ -193,12 +216,9 @@ namespace Protractor.Test
 			actions.MoveToElement(selectOptions).Build().Perform();
 			driver.Highlight(selectOptions);
 			String idPattern = @"Selected option id: (?<result>(?:\d{1,2}|,)+)";
-			Regex idReg = new Regex(idPattern);
 			Assert.IsTrue((new Regex(idPattern)).IsMatch(selectOptions.Text));
-			// TODO: debug 
-			idPattern = @"Selected option id:(?<id>.+)$";
-			//
-			Console.Error.WriteLine("\"{0}\" processed as :\"{0}\"", selectOptions.Text, selectOptions.Text.FindMatch(idPattern));
+			String result = selectOptions.Text.FindMatch(idPattern);
+			Console.Error.WriteLine("\"{0}\" processed as :\"{1}\"", selectOptions.Text, result);
 		}
 	}
 }
