@@ -1,0 +1,66 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="NUnit.Demo99.config" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="btn_MyAccount" Type="System.String" Scope="User">
+      <Value Profile="(Default)">a.account_icon</Value>
+    </Setting>
+    <Setting Name="btn_LogOut" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">div#account_logout</Value>
+    </Setting>
+    <Setting Name="txtbx_UserName" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">input#log</Value>
+    </Setting>
+    <Setting Name="txtbx_Password" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">input#pwd</Value>
+    </Setting>
+    <Setting Name="btn_LogIn" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">input#login</Value>
+    </Setting>
+    <Setting Name="menu_Product" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">nav#main-nav&gt;ul&gt;li:nth-child(2)&gt;a</Value>
+    </Setting>
+    <Setting Name="btn_GoToCheckout" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">a.go_to_checkout</Value>
+    </Setting>
+    <Setting Name="btn_Continue" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">div.slide1&gt;a</Value>
+    </Setting>
+    <Setting Name="select_Country" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">#current_country</Value>
+    </Setting>
+    <Setting Name="txtbx_Email" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">input[placeholder='Email']</Value>
+    </Setting>
+    <Setting Name="txtbx_Fname" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">input[placeholder='First Name']</Value>
+    </Setting>
+    <Setting Name="txtbx_Lname" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">input[placeholder='Last Name']</Value>
+    </Setting>
+    <Setting Name="txtbx_Pcode" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">input[placeholder='Postal Code']</Value>
+    </Setting>
+    <Setting Name="txtbx_Phone" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">input[placeholder='Phone']</Value>
+    </Setting>
+    <Setting Name="chkbx_Billing" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">input#shippingSameBilling</Value>
+    </Setting>
+    <Setting Name="btn_Purchase" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">.make_purchase.wpsc_buy_button</Value>
+    </Setting>
+    <Setting Name="finish" Type="System.String" Scope="Application">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="txtbx_City" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">input[placeholder='City']</Value>
+    </Setting>
+    <Setting Name="txtArea_Addr" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">textarea[placeholder='Address']</Value>
+    </Setting>
+    <Setting Name="Setting" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+  </Settings>
+</SettingsFile>
