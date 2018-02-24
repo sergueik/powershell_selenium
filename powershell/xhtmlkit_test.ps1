@@ -35,103 +35,132 @@ using XHtmlKit;
 using System.Text;
 using System.Threading.Tasks;
 using System;
-using SampleScraper;
+using System.Collections;
+using NUnit.Framework;
 
-namespace SampleScraper {
-	public class Program {
-		public static void Run(string[] args) {
+namespace SampleScraper
+{
+	public class Program
+	{
+		public static void Run(string[] args)
+		{
 			// Get data
 			MyScraper scraper = new MyScraper();
 			int pageNum = 1;
-			string url = "https://www.codeproject.com/script/Articles/Latest.aspx?pgnum=" + pageNum;
+			String url = "https://www.codeproject.com/script/Articles/Latest.aspx?pgnum=" + pageNum;
+			String nodeSelector = "//table[contains(@class,'article-list')]/tr[@valign]"; 
 			scraper.Url = url;
-			SampleScraper.ArticleDTO[] articles = scraper.GetCodeProjectArticlesAsync().Result;
+			scraper.NodeSelector = nodeSelector;
+			Hashtable selectors = new Hashtable();
+			selectors.Add("category", "./td[1]//a/text()"); 
+			selectors.Add("title", ".//div[@class='title']/a/text()"); 
+			selectors.Add("date", ".//div[contains(@class,'modified')]/text()"); 
+			selectors.Add("rating", ".//div[contains(@class,'rating-stars')]/@title"); 
+			selectors.Add("desc", ".//div[@class='description']/text()"); 
+			selectors.Add("author", ".//div[contains(@class,'author')]/text()"); 
+			selectors.Add("tag", ".//div[@class='t']/a/text()"); 
+      
+			scraper.Selectors = selectors;
+			Hashtable[] articles = scraper.GetCodeProjectArticlesAsync().Result;
 
 			// Do something with data
-			foreach (SampleScraper.ArticleDTO a in articles) {
-				Console.WriteLine(a.Date + ", " + a.Title + ", " + a.Rating);
+			foreach (Hashtable a in articles) {
+				Console.WriteLine(a["date"] + ", " + a["title"] + ", " + a["rating"] + ", " + a["tag"]);
 			}
-      // TODO
+			// TODO
 		}
 	}
-	public  class MyScraper {
-		private String url;
-		public String Url {
-			get {
-				return this.url;
+	public  class MyScraper
+	{
+		private Hashtable elements = new Hashtable();
+		private Hashtable selectors = new Hashtable();
+		public Hashtable Selectors {
+			set {
+				this.selectors = value;
 			}
+		}
+		/*
+		public Hashtable Elements {
+			get {
+				return this.elements;
+			}
+		}
+    */
+		private String nodeSelector;
+		private String url;
+		public String NodeSelector {
+			set {
+				this.nodeSelector = value;
+			}
+		}
+		public String Url {
 			set {
 				this.url = value;
 			}
 		}
-		public XmlDocument Page {
-			get {
-				return this.page;
-			}
-			set {
-			}
-		}
-    private XmlDocument page;
-		public MyScraper() {
+		private XmlDocument page;
+		public MyScraper()
+		{
 			
 		}
 		
-		public async Task<SampleScraper.ArticleDTO[]> GetCodeProjectArticlesAsync(int pageNum = 1)
+		public async Task<Hashtable[]> GetCodeProjectArticlesAsync(int pageNum = 1)
 		{
-			List<SampleScraper.ArticleDTO> results = new List<SampleScraper.ArticleDTO>();
+			List<Hashtable> results = new List<Hashtable>();
+			Assert.IsNotNull(url);
+			Assert.IsNotNull(nodeSelector);
+			Assert.IsNotEmpty(selectors.Keys);
 
 			// Get web page as an XHtml document using XHtmlKit
 			page = await XHtmlLoader.LoadWebPageAsync(url);
 
 			// Select all articles using an anchor node containing a robust @class attribute
-			var articles = page.SelectNodes("//table[contains(@class,'article-list')]/tr[@valign]");
+			var nodes = page.SelectNodes(nodeSelector);
 
 			// Get each article
-			foreach (XmlNode a in articles) {
-				// Extract article data - we need to be aware that sometimes there are no results
-				// for certain fields
-				var category = a.SelectSingleNode("./td[1]//a/text()");
-				var title = a.SelectSingleNode(".//div[@class='title']/a/text()");
-				var date = a.SelectSingleNode(".//div[contains(@class,'modified')]/text()");
-				var rating = a.SelectSingleNode(".//div[contains(@class,'rating-stars')]/@title");
-				var desc = a.SelectSingleNode(".//div[@class='description']/text()");
-				var author = a.SelectSingleNode(".//div[contains(@class,'author')]/text()");
+			foreach (XmlNode node in nodes) {
+				// Extract data
+           
+				elements = new Hashtable();
+				foreach (String field in selectors.Keys) {
+					String selector = (String)selectors[field];
+					var data = node.SelectSingleNode(selector);
+					elements.Add(field, data != null ? data.Value : string.Empty);
+          try {
+					  Console.Error.WriteLine(field + " " + selector + ": " + data.Value); 
+          } catch (Exception ) {}
+					// experimental
+          
+					XmlNodeList dataNodes = node.SelectNodes(selector);
+					if (dataNodes.Count == 0) {
+						elements[field] = string.Empty;
+					} else if (dataNodes.Count == 1) {
+						elements[field] = dataNodes[0].Value;
+					} else { 
+						StringBuilder dataCollector = new StringBuilder();
+						foreach (XmlNode dataNode in dataNodes)
+							dataCollector.Append((dataCollector.Length > 0 ? "," : "") + dataNode.Value);
+						elements[field] = dataCollector.ToString();
+					}
+          
+
+				} 
+				// Add to results
+				results.Add(elements);  
+				// TODO:
+				/*
 				XmlNodeList tagNodes = a.SelectNodes(".//div[@class='t']/a/text()");
 				StringBuilder tags = new StringBuilder();
 				foreach (XmlNode tagNode in tagNodes)
 					tags.Append((tags.Length > 0 ? "," : "") + tagNode.Value);
-
-				// Create the data structure we want
-				ArticleDTO article = new ArticleDTO {
-					Category = category != null ? category.Value : string.Empty,
-					Title = title != null ? title.Value : string.Empty,
-					Author = author != null ? author.Value : string.Empty,
-					Description = desc != null ? desc.Value : string.Empty,
-					Rating = rating != null ? rating.Value : string.Empty,
-					Date = date != null ? date.Value : string.Empty,
-					Tags = tags.ToString()
-				};
-
-				// Add to results
-				results.Add(article);
+				*/
 			}
 			return results.ToArray();
 		}
 	}
-
-	public class ArticleDTO
-	{
-		public string Category;
-		public string Title;
-		public string Rating;
-		public string Date;
-		public string Author;
-		public string Description;
-		public string Tags;
-	}
 }
 
-"@ -ReferencedAssemblies "${shared_assemblies_path}\XHtmlKit.dll",'System.dll','System.Data.dll','Microsoft.CSharp.dll','System.Xml.Linq.dll','System.Xml.dll'
+"@ -ReferencedAssemblies "${shared_assemblies_path}\XHtmlKit.dll","${shared_assemblies_path}\nunit.framework.dll",'System.dll','System.Data.dll','Microsoft.CSharp.dll','System.Xml.Linq.dll','System.Xml.dll'
 
 
 [SampleScraper.Program]::Run(@());
