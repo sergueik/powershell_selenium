@@ -47,7 +47,8 @@ namespace Protractor.Test
 		public void SetUp()
 		{
 			driver = new ChromeDriver();
-			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
+            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(60);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
 			wait.PollingInterval = TimeSpan.FromMilliseconds(wait_poll_milliseconds);
 			actions = new Actions(driver);

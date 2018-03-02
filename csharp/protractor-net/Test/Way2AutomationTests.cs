@@ -50,11 +50,17 @@ namespace Protractor.Test
 			// var options = new InternetExplorerOptions() { IntroduceInstabilityByIgnoringProtectedModeSettings = true };
 			// driver = new InternetExplorerDriver(options);
 			// driver = new PhantomJSDriver();
-			// driver = new FirefoxDriver();
-			driver = new ChromeDriver(System.IO.Directory.GetCurrentDirectory());
+			FirefoxOptions options = new FirefoxOptions();
+			options.UseLegacyImplementation = true;
+			System.Environment.SetEnvironmentVariable("webdriver.gecko.driver", String.Format(@"{0}\geckodriver.exe", System.IO.Directory.GetCurrentDirectory()));
+			driver = new FirefoxDriver(options);
+
+			// driver = new ChromeDriver(System.IO.Directory.GetCurrentDirectory());
 			driver.Manage().Cookies.DeleteAllCookies();
 			driver.Manage().Window.Size = new System.Drawing.Size(window_width, window_height);
-			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(script_wait_seconds));
+			// NOTE: SetScriptTimeout is obsolete
+            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(script_wait_seconds);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(script_wait_seconds));
 			ngDriver = new NgWebDriver(driver);
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
 			actions = new Actions(driver);

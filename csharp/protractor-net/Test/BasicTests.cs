@@ -21,7 +21,8 @@ namespace Protractor.Test
 		public void SetUp()
 		{
 			driver = new PhantomJSDriver();
-			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(5);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
 			
 			// Using NuGet Package 'WebDriver.ChromeDriver.win32'
 			//driver = new ChromeDriver();
@@ -34,7 +35,8 @@ namespace Protractor.Test
 			//driver = new EdgeDriver();
 
 			// Required for TestForAngular and WaitForAngular scripts
-			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(5);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
 			ngDriver = new NgWebDriver(driver);
 			ngDriver.Navigate().GoToUrl(base_url);
 		}
