@@ -50,11 +50,17 @@ namespace Protractor.Test
 			// var options = new InternetExplorerOptions() { IntroduceInstabilityByIgnoringProtectedModeSettings = true };
 			// driver = new InternetExplorerDriver(options);
 			// driver = new PhantomJSDriver();
-			// driver = new FirefoxDriver();
-			driver = new ChromeDriver(System.IO.Directory.GetCurrentDirectory());
+			FirefoxOptions options = new FirefoxOptions();
+			options.UseLegacyImplementation = true;
+			System.Environment.SetEnvironmentVariable("webdriver.gecko.driver", String.Format(@"{0}\geckodriver.exe", System.IO.Directory.GetCurrentDirectory()));
+			driver = new FirefoxDriver(options);
+
+			// driver = new ChromeDriver(System.IO.Directory.GetCurrentDirectory());
 			driver.Manage().Cookies.DeleteAllCookies();
 			driver.Manage().Window.Size = new System.Drawing.Size(window_width, window_height);
-			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(script_wait_seconds));
+			// NOTE: SetScriptTimeout is obsolete
+            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(script_wait_seconds);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(script_wait_seconds));
 			ngDriver = new NgWebDriver(driver);
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
 			actions = new Actions(driver);
@@ -129,7 +135,10 @@ namespace Protractor.Test
 			int account_id = 0;
 			int.TryParse(ng_account_number.Text.FindMatch(@"(?<account_number>\d+)$"), out account_id);
 			Assert.AreNotEqual(0, account_id);
-
+			/*
+			IEnumerable<IWebElement>elements = driver.FindElements(By.CssSelector("[data-id]"));			
+			int[] results = elements.TakeWhile(e => Regex.IsMatch(e.GetAttribute("data-id") , "[0-9]+" )).Select(x => Int32.Parse(x.GetAttribute("data-id"))).ToArray<int>();
+			*/
 			int account_balance = -1;
 			int.TryParse(ngDriver.FindElement(NgBy.Binding("amount")).Text.FindMatch(@"(?<account_balance>\d+)$"), out account_balance);
 			Assert.AreNotEqual(-1, account_balance);
@@ -149,7 +158,7 @@ namespace Protractor.Test
 			ng_deposit_amount.SendKeys("100");
 
 			// Confirm to perform deposit
-			NgWebElement ng_submit_deposit_button = ng_form_element.FindElements(NgBy.ButtonText("Deposit")).First(o=>o.GetAttribute("class").IndexOf("btn-default", StringComparison.InvariantCultureIgnoreCase) > -1);
+			NgWebElement ng_submit_deposit_button = ng_form_element.FindElements(NgBy.ButtonText("Deposit")).First(o => o.GetAttribute("class").IndexOf("btn-default", StringComparison.InvariantCultureIgnoreCase) > -1);
 			actions.MoveToElement(ng_submit_deposit_button.WrappedElement).Build().Perform();
 			ngDriver.Highlight(ng_submit_deposit_button, highlight_timeout);
 
@@ -167,7 +176,7 @@ namespace Protractor.Test
 			Assert.AreEqual(updated_account_balance, account_balance + 100);
 		}
 
-
+		// NOTE: this test has issues with test ordering. Passes when run alone 
 		[Test]
 		public void ShouldWithdraw()
 		{
@@ -434,7 +443,7 @@ namespace Protractor.Test
 			// And I proceed to "Customer Login"
 			ngDriver.FindElement(NgBy.ButtonText("Customer Login")).Click();
 
-			// And I login as new customer "John Doe" 			
+			// And I login as new customer "John Doe"
 			ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElements(NgBy.Repeater("cust in Customers"));
 			int customer_count = ng_customers.Count;
 			NgWebElement ng_new_customer = ng_customers.First(cust => Regex.IsMatch(cust.Text, "John Doe"));

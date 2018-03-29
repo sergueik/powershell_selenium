@@ -1,0 +1,35 @@
+﻿; Home Page Objects
+btn_MyAccount=a.account_icon
+btn_LogOut=div#account_logout
+
+; Login Page Objects
+txtbx_UserName=input#log
+txtbx_Password=input#pwd
+btn_LogIn=input#login
+
+; Product Page Object
+; this is the first form (first product)
+menu_Product=nav#main-nav>ul>li:nth-child(2)>a
+;frm_Product=form.product_form_ajax.group
+
+; Notify Page Object
+btn_GoToCheckout=a.go_to_checkout
+
+; Checkout Page
+btn_Continue=div.slide1>a
+
+; Payment Page
+select_Country=#current_country
+txtbx_Email=input[placeholder='Email']
+txtbx_Fname=input[placeholder='First Name']
+txtbx_Lname=input[placeholder='Last Name']
+txtArea_Addr=textarea[placeholder='Address']
+txtbx_City=input[placeholder='City']
+txtbx_Pcode=input[placeholder='Postal Code']
+txtbx_Phone=input[placeholder='Phone']
+chkbx_Billing=input#shippingSameBilling
+btn_Purchase=.make_purchase.wpsc_buy_button
+;frm_Calc=#change_country
+
+; Confirm Page
+finish=

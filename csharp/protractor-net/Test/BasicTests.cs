@@ -21,7 +21,8 @@ namespace Protractor.Test
 		public void SetUp()
 		{
 			driver = new PhantomJSDriver();
-			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(5);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
 			
 			// Using NuGet Package 'WebDriver.ChromeDriver.win32'
 			//driver = new ChromeDriver();
@@ -34,7 +35,8 @@ namespace Protractor.Test
 			//driver = new EdgeDriver();
 
 			// Required for TestForAngular and WaitForAngular scripts
-			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(5);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
 			ngDriver = new NgWebDriver(driver);
 			ngDriver.Navigate().GoToUrl(base_url);
 		}
@@ -65,7 +67,7 @@ namespace Protractor.Test
 			Assert.IsTrue(ngDriver.Url.ToString().Contains(loc));
 		}
 
-		
+		// NOTE: Test passes when run alone, but randomly fails when run as a group
 		[Test]
 		public void ShouldGreetUsingBinding()
 		{
@@ -83,7 +85,7 @@ namespace Protractor.Test
 		public void ShouldListTodos()
 		{
 			var elements = ngDriver.FindElements(NgBy.Repeater("todo in todoList.todos"));
-			Assert.AreEqual("build an angular app", elements[1].Text);
+			Assert.AreEqual("build an AngularJS app", elements[1].Text);
 			Assert.AreEqual(false, elements[1].Evaluate("todo.done"));
 		}
 

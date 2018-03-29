@@ -22,6 +22,8 @@ using Protractor.Extensions;
 
 namespace Protractor.Test
 {
+	// NOTE: these tests are unstable in Chrome.
+	// Tests pass when run alone, but randomly fail as a group
 	[TestFixture]
 	public class MultiSelectTests
 	{
@@ -36,8 +38,9 @@ namespace Protractor.Test
 		[TestFixtureSetUp]
 		public void SetUp()
 		{
-			driver = new ChromeDriver();
-			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+			driver = new FirefoxDriver();
+            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(5);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
 			// driver.Manage().Window.Size = new System.Drawing.Size(700, 400);
 			ngDriver = new NgWebDriver(driver);
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
@@ -117,7 +120,7 @@ namespace Protractor.Test
 			NgWebElement ng_directive = ngDriver.FindElement(NgBy.Model("selectedCar"));
 			Assert.IsNotNull(ng_directive.WrappedElement);
 			Assert.That(ng_directive.TagName, Is.EqualTo("am-multiselect"));
-            
+
 			// open am-multiselect
 			IWebElement toggleSelect = ng_directive.FindElement(NgBy.ButtonText("Select Some Cars"));
 			Assert.IsNotNull(toggleSelect);

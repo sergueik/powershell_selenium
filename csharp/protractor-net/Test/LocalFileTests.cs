@@ -47,7 +47,8 @@ namespace Protractor.Test
 			// System.InvalidOperationException : Access to 'file:///...' from script denied (UnexpectedJavaScriptError)
 			// driver = new ChromeDriver();
 			driver = new PhantomJSDriver();
-			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
+            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(60);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
 			ngDriver = new NgWebDriver(driver);
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
 			wait.PollingInterval = TimeSpan.FromMilliseconds(wait_poll_milliseconds);

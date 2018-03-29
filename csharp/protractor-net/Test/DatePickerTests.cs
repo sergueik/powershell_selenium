@@ -16,6 +16,9 @@ using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
+
+using System.IO;
+
 using OpenQA.Selenium.IE;
 using System.Drawing;
 // using System.Windows.Forms;
@@ -25,7 +28,7 @@ using Protractor.Extensions;
 // Angular UI  DatePicker tests
 namespace Protractor.Test
 {
-	
+
 	[TestFixture]
 	public class DatePickerTests
 	{
@@ -40,16 +43,47 @@ namespace Protractor.Test
 		private int highlight_timeout = 1000;
 		private Actions actions;
 
+		// only works with Chrome:
+		// SetUp : System.InvalidOperationException : Access to 'file:///C:/developer/sergueik/powershell_selenium/csharp/protractor-net/Test/bin/Debug/ng_datepicker.htm' from script denied
+		private void GetPageContent(string testpage)
+		{
+			String base_url = new System.Uri(Path.Combine(Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
+			ngDriver.Navigate().GoToUrl(base_url);
+		}
 		[TestFixtureSetUp]
 		public void SetUp()
 		{
-			driver = new ChromeDriver();
-			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+
+			/*
+			// options.IsMarionette = true;
+			// There is already an option for the marionette capability. Please use the  instead.
+			// options.AddAdditionalCapability("marionette", true);
+			// options.IsMarionette = true;
+			// There is already an option for the marionette capability. Please use the  instead.
+			// options.AddAdditionalCapability("marionette", true);
+            // DesiredCapabilities capabilities = DesiredCapabilities.Firefox();
+            // capabilities.SetCapability("marionette", true);
+			 */
+			// String projectDirectory = System.IO.Directory.GetCurrentDirectory();
+			
+			//FirefoxOptions options = new FirefoxOptions();
+			//options.UseLegacyImplementation = true;
+			//System.Environment.SetEnvironmentVariable("webdriver.gecko.driver", String.Format(@"{0}\geckodriver.exe", System.IO.Directory.GetCurrentDirectory()));
+			// driver = new FirefoxDriver(options);
+
+			driver = new ChromeDriver(System.IO.Directory.GetCurrentDirectory());
+			
+			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(60);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
 			driver.Manage().Window.Size = new System.Drawing.Size(700, 400);
 			ngDriver = new NgWebDriver(driver);
 			driver.Manage().Window.Size = new System.Drawing.Size(window_width, window_heght);
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
-			ngDriver.Navigate().GoToUrl(base_url);
+
+			// ngDriver.Navigate().GoToUrl(base_url);
+			// Tests will fail due to page redesign	- use the
+			GetPageContent("ng_datepicker.htm");
+
 			actions = new Actions(driver);
 		}
 
@@ -69,11 +103,11 @@ namespace Protractor.Test
 			// NOTE: cannot highlight calendar, only individual days
 			actions.MoveToElement(ng_datepicker).Build().Perform();
 			ngDriver.Highlight(ng_datepicker);
-            
+			
 			NgWebElement[] ng_dates = ng_datepicker.FindElements(NgBy.Repeater("dateObject in week.dates")).ToArray();
 			Assert.IsTrue(28 <= ng_dates.Length);
 			// Act
-			// Highlight every day in the month 
+			// Highlight every day in the month
 			int start = 0, end = ng_dates.Length;
 			for (int cnt = 0; cnt != ng_dates.Length; cnt++) {
 				if (start == 0 && Convert.ToInt32(ng_dates[cnt].Text) == 1) {
@@ -88,7 +122,8 @@ namespace Protractor.Test
 				ngDriver.Highlight(ng_date, highlight_timeout, 3, (ng_date.GetAttribute("class").Contains("current")) ? "blue" : "green");
 			}
 		}
-        
+		
+		// NOTE: Test passes when run alone, but randomly fails when run as a group
 		// uses Drop-down Datetime with input box
 		[Test]
 		public void ShouldDirectSelect()
@@ -153,7 +188,7 @@ namespace Protractor.Test
 		[Test]
 		public void ShouldBrowse()
 		{
-			// Open datepicker directive			
+			// Open datepicker directive
 			String searchText = "Drop-down Datetime with input box";
 			IWebElement contaiter = null;
 			try {
@@ -183,13 +218,13 @@ namespace Protractor.Test
 			Assert.IsNotNull(ng_dropdown);
 			NgWebElement ng_display = ngDriver.FindElement(NgBy.Binding("data.previousViewDate.display", true, "[data-ng-app]"));
 			Assert.IsNotNull(ng_display);
-			String dateDattern = @"\d{4}\-(?<month>\w{3})";
+			String datePattern = @"\d{4}\-(?<month>\w{3})";
 
-			Regex dateDatternReg = new Regex(dateDattern);
+			Regex datePatternReg = new Regex(datePattern);
 
-			Assert.IsTrue(dateDatternReg.IsMatch(ng_display.Text));
+			Assert.IsTrue(datePatternReg.IsMatch(ng_display.Text));
 			ngDriver.Highlight(ng_display);
-			String display_month = ng_display.Text.FindMatch(dateDattern);
+			String display_month = ng_display.Text.FindMatch(datePattern);
 
 			String[] months = {
 				"Jan",

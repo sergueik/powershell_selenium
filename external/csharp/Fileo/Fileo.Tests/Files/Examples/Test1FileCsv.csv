@@ -1,0 +1,10 @@
+Col1String;Col2StringNull;Col3Int;Col4IntNull;Col5DateTime;Col6DateTimeNull;Col7Decimal;Col8DecimalNull;Col9Bool;Col10BoolNull;Col11Email;Col12CustomRegex
+Id1;Green;1;11;10/04/2000;11/09/2001;1.0;11.0;1;0;test.email@gmail.com;Y
+Id2;;2;;10/04/2001;;2.0;;0;;t.email@gmail.com;N
+Id3;Blue;3;-90;10/04/2002;11/09/2003;3.0;;true;false;test.email@gmail.com;Y
+Id4;;-1;-9;10/04/2002;11/09/2003;3.9;;0;;ABC;N
+Id5;Red 1234;;44;;11/09/2004;0.9;test;test1;1;test.@gmail;ABC
+Id6;;5;;10/04/2005;36892;CDF;12;true;true;test.gmail.com;Y
+Id7;;6;-100;10/04/2006;;11.2;11.22;false;false;;N
+;Red;7;;10/04/2007;;9.01;130.0;1;1;t@p.a.a;
+Id9;;QWE;;10/04/2008;;9.02;100;1;0;test.email@gmail.com;N

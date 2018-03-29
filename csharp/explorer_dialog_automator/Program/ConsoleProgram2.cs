@@ -51,7 +51,7 @@ namespace ExplorerFileDialogDetector
                 }
                 finally
                 {
-                    // Free the allocated memory after the contol has been returned
+                    // Free the allocated memory after the control has been returned
                     if (ptrCopyData != IntPtr.Zero)
                         Marshal.FreeCoTaskMem(ptrCopyData);
                 }

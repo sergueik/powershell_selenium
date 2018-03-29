@@ -34,7 +34,7 @@ namespace Protractor.Test
 
 		private const int wait_seconds = 3;
 		private const long wait_poll_milliseconds = 300;
-		private String base_url = "http://kenhowardpdx.com/blog/2015/05/how-to-watch-scope-properties-in-angular-with-typescript/";
+		private String base_url = "http://kenhowardpdx.com/blog/2015/05/how-to-watch-scope-properties-in-angular-with-typescript";
 		private IWebDriver frame;
 
 		private void GetPageContent(string testpage)
@@ -47,7 +47,8 @@ namespace Protractor.Test
 		public void SetUp()
 		{
 			driver = new ChromeDriver();
-			driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
+            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(60);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
 			wait.PollingInterval = TimeSpan.FromMilliseconds(wait_poll_milliseconds);
 			actions = new Actions(driver);

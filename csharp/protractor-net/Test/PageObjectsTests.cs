@@ -29,7 +29,9 @@ namespace Protractor.Test
             // Using NuGet Package 'PhantomJS'
             // driver = new PhantomJSDriver();
             driver = new FirefoxDriver();
-            driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+            // NOTE: SetScriptTimeout is obsolete
+            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(5);
+            // driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
         }
 
         [TearDown]
