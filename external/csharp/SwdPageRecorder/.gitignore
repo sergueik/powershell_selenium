@@ -14,3 +14,12 @@ build.log
 **/*.suo
 **/.nuget
 **/packages/**
+
+#Custom WebDriver
+
+chromedriver.exe
+IEDriverServer.exe
+phantomjs.exe
+selenium-server-standalone-*
+
+#Tools
