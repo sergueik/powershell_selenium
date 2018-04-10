@@ -1,5 +1,7 @@
 # based on http://www.paraesthesia.com/archive/2009/12/16/posting-multipartform-data-using-.net-webrequest.aspx/
-
+# see also https://stackoverflow.com/questions/14634321/script-to-use-google-image-search-with-local-image-as-input
+# https://yandex.com/images/
+# https://yandex.com/images/search?source=collections&cbir_id=933558%2FIL8_KPSaP3n5GzB1qtTv6A&rpt=imageview
 Add-Type -TypeDefinition @"
 
 using System;
@@ -183,9 +185,11 @@ namespace MultipartFormData
 
 "@ -ReferencedAssemblies 'System.dll','System.Data.dll','System.Web.dll'
 
-$searchUrl = 'http://www.google.com/searchbyimage/upload'
-$imageFilePath = "$($env:USERPROFILE)/Pictures/butterfly-resized.jpg"
 
+$searchUrl = 'http://www.google.com/searchbyimage/upload'
+$searchUrl = 'https://yandex.com/images/'
+# $imageFilePath = "$($env:USERPROFILE)/Pictures/butterfly-resized.jpg"
+$imageFilePath = 'C:\developer\sergueik\powershell_selenium\utils\butterfly-resized.jpg';
 [MultipartFormData.MultipartFormDataDownloader]::ExecutePostRequest($searchUrl,@{},$imageFilePath,'image/jpeg','dummy_formkey')
 <#
 Exception calling "ExecutePostRequest" with "5" argument(s): 
@@ -238,3 +242,67 @@ $webresponse.Headers
 # $Stream = $Request.GetRequestStream();
 # $Stream.Write($Body, 0, $Body.Length);
 # $Request.GetResponse();
+
+function Get-GoogleImageSearchUrl
+{
+  param(
+    [Parameter(Mandatory = $true)]
+    [ValidateScript({ Test-Path $_ })]
+    [string]$ImagePath
+  )
+
+  # extract the image file name, without path
+  $fileName = Split-Path $imagePath -Leaf
+
+  # the request body has some boilerplate before the raw image bytes (part1) and some after (part2)
+  #   note that $filename is included in part1
+  $part1 = @"
+-----------------------------7dd2db3297c2202
+Content-Disposition: form-data; name="encoded_image"; filename="$fileName"
+Content-Type: image/jpeg
+
+
+"@
+  $part2 = @"
+-----------------------------7dd2db3297c2202
+Content-Disposition: form-data; name="image_content"
+
+
+-----------------------------7dd2db3297c2202--
+
+"@
+
+  # grab the raw bytes composing the image file
+  $imageBytes = [Io.File]::ReadAllBytes($imagePath)
+
+  # the request body should sandwich the image bytes between the 2 boilerplate blocks
+  $encoding = New-Object Text.ASCIIEncoding
+  $data = $encoding.GetBytes($part1) + $imageBytes + $encoding.GetBytes($part2)
+
+  # create the HTTP request, populate headers
+  # $request = [Net.HttpWebRequest]([Net.HttpWebRequest]::Create('http://images.google.com/searchbyimage/upload'))
+  $request = [Net.HttpWebRequest]([Net.HttpWebRequest]::Create($searchUrl))
+  $request.Method = "POST"
+  $request.ContentType = 'multipart/form-data; boundary=---------------------------7dd2db3297c2202' # must match the delimiter in the body, above
+  $request.ContentLength = $data.Length
+
+  # don't automatically redirect to the results page, just take the response which points to it
+  $request.AllowAutoredirect = $false
+
+  # populate the request body
+  $stream = $request.GetRequestStream()
+  $stream.Write($data,0,$data.Length)
+  $stream.Close()
+
+  # get response stream, which should contain a 302 redirect to the results page
+  $respStream = $request.GetResponse().GetResponseStream()
+
+  # pluck out the results page link that you would otherwise be redirected to
+  (New-Object Io.StreamReader $respStream).ReadToEnd() -match 'HREF\="([^"]+)"' | Out-Null
+  $matches[1]
+}
+# Usage:
+# 
+$url = Get-GoogleImageSearchUrl $imageFilePath
+Start-Process $url
+
