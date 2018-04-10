@@ -94,7 +94,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="WebDriver">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Selenium.WebDriver.2.53.1\lib\net40\WebDriver.dll</HintPath>
+      <HintPath>..\packages\Selenium.WebDriver.3.6.0\lib\net40\WebDriver.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
@@ -126,6 +126,15 @@
     <Compile Include="WebElementHtmlAttributes.cs" />
     <Compile Include="WebElementLocator.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="chromedriver.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="geckodriver.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+ </ItemGroup>
   <ItemGroup>
     <Content Include="JavaScript\json2.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
