@@ -48,8 +48,9 @@ $ES_DISPLAY_REQUIRED
 $ES_CONTINUOUS = -2147483648
 function SetThreadExecutionState {
   param(
-    [int]$State
+    [long]$State
   )
+  write-host ('Sending {0}' -f $state )  
   # https://www.pinvoke.net/default.aspx/kernel32.setthreadexecutionstate
   [Util.SleepControl]::SetThreadExecutionState($State)
 }
@@ -58,7 +59,8 @@ $s.Location = New-Object System.Drawing.Point (10,12)
 $s.Size = New-Object System.Drawing.Size (100,22)
 
 $s.add_Click({ SetThreadExecutionState -state (
-  $ES_SYSTEM_REQUIRED -bor $ES_CONTINUOUS -bor $ES_DISPLAY_REQUIRED )  # -2147483645
+-2147483645
+   )  # $ES_SYSTEM_REQUIRED -bor $ES_CONTINUOUS -bor $ES_DISPLAY_REQUIRED
 })
 $f.add_Closing({ SetThreadExecutionState -state ( $ES_CONTINUOUS) })
 
