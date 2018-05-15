@@ -25,7 +25,7 @@ $guid = [guid]::NewGuid()
 Add-Type -Name 'SleepControl' -Namespace 'Util' -MemberDefinition @'
 
 [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-public static extern int SetThreadExecutionState(int esflags);
+public static extern long SetThreadExecutionState(long esflags);
 '@
 
 # TODO:
@@ -43,9 +43,9 @@ $s = New-Object System.Windows.Forms.Button
 $s.Text = 'No Sleep'
 # https://msdn.microsoft.com/en-us/library/windows/desktop/aa373208(v=vs.85).aspx
 
-$ES_SYSTEM_REQUIRED = 1
-$ES_DISPLAY_REQUIRED
-$ES_CONTINUOUS = -2147483648
+$ES_SYSTEM_REQUIRED = 0x00000001
+$ES_DISPLAY_REQUIRED = 0x00000002
+$ES_CONTINUOUS = 0x80000000 # -2147483648
 function SetThreadExecutionState {
   param(
     [long]$State
@@ -58,9 +58,9 @@ function SetThreadExecutionState {
 $s.Location = New-Object System.Drawing.Point (10,12)
 $s.Size = New-Object System.Drawing.Size (100,22)
 
-$s.add_Click({ SetThreadExecutionState -state (
--2147483645
-   )  # $ES_SYSTEM_REQUIRED -bor $ES_CONTINUOUS -bor $ES_DISPLAY_REQUIRED
+$s.add_Click({
+  SetThreadExecutionState -state ( $ES_SYSTEM_REQUIRED -bor $ES_CONTINUOUS -bor $ES_DISPLAY_REQUIRED )
+  # -2147483645
 })
 $f.add_Closing({ SetThreadExecutionState -state ( $ES_CONTINUOUS) })
 
