@@ -18,7 +18,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-# based on
+# based onof utility to prevent workstations from going to sleep (during long running processes) from the article [Give your computer sleep apnea - Don't let it go](https://www.codeproject.com/KB/winsdk/No_Sleep/Prevent_Sleep.zip)
 $guid = [guid]::NewGuid()
 
 
@@ -28,7 +28,7 @@ Add-Type -Name 'SleepControl' -Namespace 'Util' -MemberDefinition @'
 public static extern long SetThreadExecutionState(long esflags);
 '@
 
-# TODO:
+# TODO: fandomie the namespace
 $helper_type_namespace = ('Util_{0}' -f ($guid -replace '-',''))
 $helper_type_name = 'SleepControl'
 
@@ -50,7 +50,7 @@ function SetThreadExecutionState {
   param(
     [long]$State
   )
-  write-host ('Sending {0}' -f $state )  
+  write-debug ('Sending {0}' -f $state )
   # https://www.pinvoke.net/default.aspx/kernel32.setthreadexecutionstate
   [Util.SleepControl]::SetThreadExecutionState($State)
 }
@@ -59,6 +59,7 @@ $s.Location = New-Object System.Drawing.Point (10,12)
 $s.Size = New-Object System.Drawing.Size (100,22)
 
 $s.add_Click({
+  $f.WindowState = [System.Windows.Forms.FormWindowState]::Minimized
   SetThreadExecutionState -state ( $ES_SYSTEM_REQUIRED -bor $ES_CONTINUOUS -bor $ES_DISPLAY_REQUIRED )
   # -2147483645
 })
@@ -66,5 +67,5 @@ $f.add_Closing({ SetThreadExecutionState -state ( $ES_CONTINUOUS) })
 
 $f.Controls.AddRange(@($s))
 $f.ResumeLayout($false)
-# TODO: start minimized
+# TODO: start minimized in he taskbar, indicate the app is running
 [void]$f.ShowDialog()
