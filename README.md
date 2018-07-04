@@ -32,22 +32,7 @@ param(
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
   $wait.PollingInterval = 100
 
-  # test begins ...
-
-
-  $project_cards_selector = 'div[search="search"]'
-  Write-Debug ('Trying CSS Selector "{0}"' -f $project_cards_selector)
-  try {
-    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
-  } catch [exception]{
-    Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
-  }
-
-  [object]$project_cards_containter_element = find_element -css_selector $project_cards_selector
-  [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_cards_containter_element).Build().Perform()
-
-  write-debug ('Found: {0}' -f $project_cards_containter_element.getAttribute('innerHTML'))
-  highlight ([ref]$selenium) ([ref]$project_cards_containter_element)
+  # iterate over ingiegogo campains ...
 
   $project_card_tagname = 'discoverable-card'
   $project_card_title_selector = 'div[class*="discoverableCard-title"]'
@@ -73,7 +58,6 @@ Run the script with the option:
 ```powershell
 . ./test_script.ps1 -browser chrome
 ```
-this will iterate over ingiegogo campains.
 
 ### Prerequisites
 Powershell relies on C# Selenium Client API library for interaction with the browser, Nunit for assertions and log4net for logging.
