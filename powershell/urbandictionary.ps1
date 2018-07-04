@@ -1,4 +1,4 @@
-#Copyright (c) 2014 Serguei Kouzmine
+#Copyright (c) 2014,2018 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -136,31 +136,30 @@ $css_selector = 'div#content'
 Write-Debug ('Trying CSS Selector "{0}"' -f $css_selector)
 
 try {
-
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
-
 } catch [exception]{
   Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
 }
 
-[OpenQA.Selenium.IWebElement]$element1 = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+[OpenQA.Selenium.IWebElement]$container_element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
 
 $cnt_found = 0
-$cnt_to_find = 17
+$cnt_to_find = 7
 
 while ($cnt_found -lt $cnt_to_find) {
 
   $css_selector = 'a.word'
-  Write-Debug ('Trying CSS Selector "{0}"' -f $css_selector)
+  Write-Debug ('Trying CSS Selector "{0}" inside "{1}"' -f $css_selector, '')
 
   try {
-    [OpenQA.Selenium.IWebElement[]]$elements2 = $element1.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
+    [OpenQA.Selenium.IWebElement[]]$elements2 = $container_element.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
   } catch [exception]{
     Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
   }
   $cnt = 0
   Write-Output ('inspecting {0} words' -f $elements2.count)
-  $elements2 | ForEach-Object { $element2 = $_
+  $elements2 | ForEach-Object {
+    $element2 = $_
     if (($element2 -ne $null -and $element2.Displayed)) {
       if ($cnt -ge $cnt_found) {
         Write-Output ('{0} / {1} => {2}' -f $cnt,$cnt_found,$element2.Text)
@@ -174,6 +173,11 @@ while ($cnt_found -lt $cnt_to_find) {
 
       Start-Sleep -Milliseconds 100
       [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element2,'')
+
+      highlight_new -element ([ref]$element2) -color 'magenta' -selenium_ref ([ref]$selenium)
+      flash -element ([ref]$element2) -selenium_ref ([ref]$selenium)
+      highlight -element ([ref]$element2) -color 'green' -selenium_ref ([ref]$selenium)
+
       $cnt++
     }
   }
@@ -195,10 +199,6 @@ if ($PSBoundParameters['pause']) {
   Start-Sleep -Millisecond 1000
 }
 
-
-
 # Cleanup
 cleanup ([ref]$selenium)
-
-
 

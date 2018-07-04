@@ -125,7 +125,7 @@ return get_css_selector_of(arguments[0]);
 
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
 
-  Write-Debug ('Javascript-generated CSS selector = "{0}"' -f $local:result)
+  Write-Debug ('Javascript-generated CSS selector: "{0}"' -f $local:result)
   return $local:result
 
 }
@@ -162,8 +162,10 @@ function extract_match {
   $local:results = {}
   $local:results = $source | where { $_ -match $capturing_match_expression } |
   ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
-  Write-Debug 'extract_match:'
-  Write-Debug $local:results
+  if  ( $local:results -ne $null ) {
+    Write-Debug 'extract_match:'
+    Write-Debug $local:results
+  }
   $result_ref.Value = $local:results.Media
 }
 
@@ -204,7 +206,7 @@ function highlight {
 	Highlights page element by executing Javascript through Selenium
 	
 .EXAMPLE
-        highlight_new -element ([ref]$element) -delay 1500 -color 'green'
+      highlight_new -element ([ref]$element)  -selenium_ref ([ref]$selenium)  -delay 1500 -color 'green'
 .LINK
 	
 .NOTES
@@ -214,21 +216,72 @@ function highlight {
 
 function highlight_new {
   param(
+    [System.Management.Automation.PSReference]$selenium_ref,
     [OpenQA.Selenium.IWebElement]$element,
     [string]$color = 'yellow',
     [int]$delay = 300
   )
 
   # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-  if ($selenium -eq $null) {
+  if ($selenium_ref.Value -eq $null) {
      throw 'Selenium object must be defined to highight page element'
   }
   [string]$local:script =  ('color: {0}; border: 4px solid {0};' -f $color )
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,$local:script)
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,$local:script)
   Start-Sleep -Millisecond $delay
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,'')
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,'')
 }
 
+<#
+.SYNOPSIS
+	Flashes page element
+.DESCRIPTION
+	Flashes page element by executing Javascript through Selenium
+	
+.EXAMPLE
+  flash -element ([ref]$element) -selenium_ref ([ref]$selenium) 
+.LINK
+	
+.NOTES
+	VERSION HISTORY
+	2018/07/04 Initial Version
+#>
+
+function flash {
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [OpenQA.Selenium.IWebElement]$element,
+    [string]$color = 'rgb(0,200,0)' # TODO: map the color
+  )
+
+  # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
+  if ($selenium_ref.Value -eq $null) {
+    throw 'Selenium object must be defined to highight page element'
+  }
+
+  [string]$bgcolor = $element.getCssValue('background-color')
+  # write-debug ('Original color: {0}' -f $bgcolor )
+
+  for ($i = 0; $i -lt 3; $i++) {
+    changeColor -color $color -element $element -selenium_ref $selenium_ref
+    changeColor -color $bgcolor -element $element -selenium_ref $selenium_ref
+  }
+}
+
+function changeColor {
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [OpenQA.Selenium.IWebElement]$element,
+    [string]$color = 'rgb(0,200,0)'
+  )
+
+  # write-debug ('Changing color to {0}' -f $color )
+  if ($selenium_ref.Value -eq $null) {
+     throw 'Selenium object must be defined to highight page element'
+  }
+  [string]$local:script = ("arguments[0].style.backgroundColor = '{0}'" -f $color )
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript($local:script,$element)
+}
 
 <#
 .SYNOPSIS
@@ -275,7 +328,7 @@ function find_page_element_by_xpath {
   $element_ref.Value = $local:element
 }
 
-<# 
+<#
 TODO: implement the helper methfs for the rest of By's
 e.g.
 
@@ -556,12 +609,12 @@ function find_elements {
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
   $wait.PollingInterval = $wait_polling_interval
   if ($parent) {
-     $parent_css_selector = get_css_selector_of ([ref] $parent ) 
-     $parent_xpath = get_xpath_of([ref] $parent ) 
+     $parent_css_selector = get_css_selector_of ([ref] $parent )
+     $parent_xpath = get_xpath_of([ref] $parent )
 
-  } else { 
+  } else {
      $parent= $selenium
-     $parent_css_selector = '' 
+     $parent_css_selector = ''
      $parent_xpath_selector = ''
   }
 
@@ -579,7 +632,7 @@ function find_elements {
   if ($xpath -ne $null) {
     if ($parent_xpath -ne '') {
       $extended_xpath = $xpath
-    } else { 
+    } else {
       $extended_xpath = ('{0}/{1}' -f $parent_xpath, $xpath)
     }
     try {

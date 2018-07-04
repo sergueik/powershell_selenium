@@ -35,7 +35,6 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
 
 }
 
-
 $selenium.Navigate().GoToUrl($base_url)
 Start-Sleep -Milliseconds 4000
 

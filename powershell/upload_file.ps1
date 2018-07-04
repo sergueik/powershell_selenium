@@ -58,15 +58,14 @@ Write-Host ('Translating: "{0}"' -f $text)
 $text_file = [System.IO.Path]::Combine((Get-ScriptDirectory),'testfile.txt')
 Write-Output $text | Out-File -FilePath $text_file -Encoding ascii
 
-
 $upload_button = $null
 $css_selector = ('div[id = "{0}"]' -f 'upload-button')
 $upload_button = find_element -css_selector $css_selector
-highlight_new -element $upload_button -Delay 1500
+highlight_new -element $upload_button -Delay 1500 -selenium_ref ([ref]$selenium) 
 
 # Populate upload input
 $upload_element = find_element -classname 'ajaxupload-input'
-highlight_new -element $upload_element -Delay 1500
+highlight_new -element $upload_element -Delay 1500 -selenium_ref ([ref]$selenium) 
 
 Write-Host ('Uploading the file "{0}".' -f $text_file)
 # https://searchcode.com/codesearch/view/51339609/

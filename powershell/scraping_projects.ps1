@@ -53,12 +53,16 @@ $selenium.Navigate().GoToUrl($base_url)
   Write-Output ('{0} iteration' -f $_)
 
   $project_cards_selector = 'div[class="i-project-cards"]'
+  $project_cards_selector = 'div[search="search"]'
+  Write-output ('Trying CSS Selector "{0}"' -f $project_cards_selector)
   [object]$project_cards_containter_element = find_element -css_selector $project_cards_selector
   [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_cards_containter_element).Build().Perform()
   highlight ([ref]$selenium) ([ref]$project_cards_containter_element)
+  Write-output ('Found: {0}' -f $project_cards_containter_element.getAttribute('innerHTML'))
 
-  $project_card_selector = 'div[class*="i-project-card"]'
-  [object[]]$project_card_elements = $project_cards_containter_element.FindElements([OpenQA.Selenium.By]::CssSelector($project_card_selector))
+  $project_card_tagname = 'discoverable-card'
+  $project_card_icon_selector = 'div[class*="discoverableCard-title"]'
+  [object[]]$project_card_elements = $selenium.FindElements([OpenQA.Selenium.By]::TagName($project_card_tagname))
 
   Write-Output ('{0} project card found' -f $project_card_elements.count)
   $project_card_elements | ForEach-Object {
@@ -67,6 +71,8 @@ $selenium.Navigate().GoToUrl($base_url)
     Write-Output $project_card_element.Text
     Write-Output '----'
     highlight ([ref]$selenium) ([ref]$project_card_element)
+    [object]$project_card_icon = $project_card_element.FindElement([OpenQA.Selenium.By]::CssSelector($project_card_icon_selector))
+    flash ([ref]$selenium) ([ref]$project_card_icon)
   }
 
   $project_show_more_selector = 'div[explore-show-more-www=""]'

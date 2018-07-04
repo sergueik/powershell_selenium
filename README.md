@@ -1,5 +1,5 @@
 ### Info
-Collection of Powershell scripts and modules for work with Selenium C# Client 
+Collection of Powershell scripts and modules for work with Selenium C# Client
 illustrating varios Selenium-related tasks in a problem-solution fashion.
 Common functionality is put into  `page_navigation_common.psm1` and `selenium_common.psm1` modules.
 
@@ -34,22 +34,37 @@ param(
 
   # test begins ...
 
-  $css_selector = 'a#logo'
-  Write-Debug ('Trying CSS Selector "{0}"' -f $css_selector)
+
+  $project_cards_selector = 'div[search="search"]'
+  Write-Debug ('Trying CSS Selector "{0}"' -f $project_cards_selector)
   try {
     [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
   } catch [exception]{
     Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
   }
 
-  [OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+  [object]$project_cards_containter_element = find_element -css_selector $project_cards_selector
+  [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_cards_containter_element).Build().Perform()
 
-  $actions.MoveToElement([OpenQA.Selenium.IWebElement]$element2).Build().Perform()
+  write-debug ('Found: {0}' -f $project_cards_containter_element.getAttribute('innerHTML'))
+  highlight ([ref]$selenium) ([ref]$project_cards_containter_element)
 
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element2,'background-color:  blue;')
+  $project_card_tagname = 'discoverable-card'
+  $project_card_title_selector = 'div[class*="discoverableCard-title"]'
 
-  Start-Sleep -Milliseconds 100
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element2,'')
+  [object[]]$project_card_elements = $selenium.FindElements([OpenQA.Selenium.By]::TagName($project_card_tagname))
+
+  Write-Output ('{0} project card found' -f $project_card_elements.count)
+  $project_card_elements | ForEach-Object {
+    $project_card_element = $_
+    [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_card_element).Build().Perform()
+    Write-Output $project_card_element.Text
+    Write-Output '----'
+    highlight ([ref]$selenium) ([ref]$project_card_element)
+    [object]$project_card_title = $project_card_element.FindElement([OpenQA.Selenium.By]::CssSelector($project_card_title_selector))
+    flash ([ref]$selenium) ([ref]$project_card_title)
+    # continue test
+  }
 
   # Cleanup
   cleanup ([ref]$selenium)
@@ -58,10 +73,11 @@ Run the script with the option:
 ```powershell
 . ./test_script.ps1 -browser chrome
 ```
+this will iterate over ingiegogo campains.
 
 ### Prerequisites
 Powershell relies on C# Selenium Client API library for interaction with the browser, Nunit for assertions and log4net for logging.
-Thus needs those asemblies need to be available in the directory `$env:SHARED_ASSEMBLIES_PATH` 
+Thus needs those asemblies need to be available in the directory `$env:SHARED_ASSEMBLIES_PATH`
 (default is `C:\selenium\csharp\sharedassemblies`):
 ```
 log4net.dll
@@ -117,14 +133,37 @@ PATH=%JAVA_HOME%\bin;%PATH%;c:\Program Files\Mozilla Firefox
 java -XX:MaxPermSize=1028M -Xmn128M -jar selenium-server-standalone-%SELENIUM_VERSION%.jar -port %HTTP_PORT% -role hub
 ```
 
-Alternatively one may specify the `$hub_host`, `$hub_port` arguments and a `$use_remote_driver` switch 
-to make script connect to `RemoteDriver`
+Alternatively one may specify the `$hub_host`, `$hub_port` arguments and a `$use_remote_driver` switch
+to make script connect to Selenium through `Remote Driver` class with `http://${hub_host}:${hub_port}/wd/hub`
 By default hub and node are launched locally on port `4444` when `$use_remote_driver` is set.
 
-#### Note:
+### Note:
 
-The common functionality is mostly refactored into the modules `selenium_common.psm1` and `page_navigation_common.psm1` 
+Using raw .Net method calls from Powershell looks rather verbosely:
+```powershell
+(New-Object OpenQA.Selenium.Interactions.Actions ($selenium)).MoveToElement([OpenQA.Selenium.IWebElement]$element).Click().Build().Perform()
+[OpenQA.Selenium.Support.UI.SelectElement]$select_element = New-Object OpenQA.Selenium.Support.UI.SelectElement ($selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector)))
+[NUnit.Framework.StringAssert]::AreEqualIgnoringCase($expected_text, $element.Text)
+
+```
+and naturally this leads to a big number of helper methods written in this project.
+
+The common functionality for locating elements, changing the element visual appearance on the page
+is mostly refactored into the modules `selenium_common.psm1` and `page_navigation_common.psm1`
 Older scripts contained the same functionality inline, few scripts still do, for some reason.
+The Powershell named function arguments "calling convention" is used in the project e.g:
+
+```powershell
+
+[string]$css_selector = 'input#mainSearch'
+[object]$element = find_element -css_selector $css_selector
+highlight ([ref]$selenium) ([ref]$element)
+```
+or
+```powershell
+highlight -element ([ref]$element) -color 'green' -selenium_ref ([ref]$selenium)
+
+```
 
 ![Selenium Execution Pipeline](https://raw.githubusercontent.com/sergueik/powershell_selenium/master/screenshots/selenium_execution_pipeline.png)
 
