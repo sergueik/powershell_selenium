@@ -148,7 +148,7 @@ $shared_assemblies = @(
 )
 [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
 
-$env:SHARED_ASSEMBLIES_PATH = "c:\developer\sergueik\csharp\SharedAssemblies"
+$env:SHARED_ASSEMBLIES_PATH = "C:\selenium\csharp\sharedassemblies"
 
 $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
 pushd $shared_assemblies_path

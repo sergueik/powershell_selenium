@@ -34,11 +34,11 @@ $shared_assemblies = @(
 <#
 
 Add-Type : Could not load file or assembly 
-'file:///C:\developer\sergueik\csharp\SharedAssemblies\WebDriver.dll' 
+'file:///C:\selenium\csharp\sharedassemblies\WebDriver.dll' 
 or one of its dependencies. This assembly is built by a runtime newer than the currently loaded runtime and cannot be loaded.
 
 Add-Type : Could not load file or assembly 
-'file:///C:\developer\sergueik\csharp\SharedAssemblies\nunit.framework.dll' or one of its dependencies. 
+'file:///C:\selenium\csharp\sharedassemblies\nunit.framework.dll' or one of its dependencies. 
 Operation is not supported. (Exception from HRESULT: 0x80131515) 
 
 use fixw2k3.ps1
@@ -46,7 +46,7 @@ use fixw2k3.ps1
 Add-Type : Unable to load one or more of the requested types. Retrieve the LoaderExceptions property for more information.
 #>
 
-$env:SHARED_ASSEMBLIES_PATH = "c:\developer\sergueik\csharp\SharedAssemblies"
+$env:SHARED_ASSEMBLIES_PATH = "C:\selenium\csharp\sharedassemblies"
 
 $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
 pushd $shared_assemblies_path

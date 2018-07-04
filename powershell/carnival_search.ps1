@@ -187,7 +187,7 @@ $shared_assemblies = @(
   'nunit.framework.dll'
 )
 
-$env:SHARED_ASSEMBLIES_PATH = "c:\developer\sergueik\csharp\SharedAssemblies"
+$env:SHARED_ASSEMBLIES_PATH = "C:\selenium\csharp\sharedassemblies"
 
 $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
 pushd $shared_assemblies_path

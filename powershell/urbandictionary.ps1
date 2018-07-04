@@ -26,74 +26,23 @@ param(
   [switch]$pause
 )
 
-function set_timeouts {
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref,
-    [int]$explicit = 120,
-    [int]$page_load = 600,
-    [int]$script = 3000
-  )
-
-  [void]($selenium_ref.Value.Manage().Timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))
-  [void]($selenium_ref.Value.Manage().Timeouts().SetPageLoadTimeout([System.TimeSpan]::FromSeconds($pageload)))
-  [void]($selenium_ref.Value.Manage().Timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script)))
-
-}
-
-function cleanup
-{
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref
-  )
-  try {
-    $selenium_ref.Value.Quit()
-  } catch [exception]{
-    # Ignore errors if unable to close the browser
-    Write-Output (($_.Exception.Message) -split "`n")[0]
-
-  }
-}
-
-
 $shared_assemblies = @{
   'WebDriver.dll' = '2.53';
   'WebDriver.Support.dll' = '2.53';
   'nunit.core.dll' = $null;
   'nunit.framework.dll' = '2.6.3';
-
 }
 
+$MODULE_NAME = 'selenium_utils.psd1'
+Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
+$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies'
 
 if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
   $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
 }
 
-pushd $shared_assemblies_path
-$shared_assemblies.Keys | ForEach-Object {
-  # http://all-things-pure.blogspot.com/2009/09/assembly-version-file-version-product.html
-  $assembly = $_
-  $assembly_path = [System.IO.Path]::Combine($shared_assemblies_path,$assembly)
-  $assembly_version = [Reflection.AssemblyName]::GetAssemblyName($assembly_path).Version
-  $assembly_version_string = ('{0}.{1}' -f $assembly_version.Major,$assembly_version.Minor)
-  if ($shared_assemblies[$assembly] -ne $null) {
-    # http://stackoverflow.com/questions/26999510/selenium-webdriver-2-44-firefox-33
-    if (-not ($shared_assemblies[$assembly] -match $assembly_version_string)) {
-      Write-Output ('Need {0} {1}, got {2}' -f $assembly,$shared_assemblies[$assembly],$assembly_path)
-      Write-Output $assembly_version
-      throw ('invalid version :{0}' -f $assembly)
-    }
-  }
-
-  if ($host.Version.Major -gt 2) {
-    Unblock-File -Path $_;
-  }
-  Write-Debug $_
-  Add-Type -Path $_
-}
-popd
-
+load_shared_assemblies_with_versions -path $shared_assemblies_path -shared_assemblies $shared_assemblies
 
 $verificationErrors = New-Object System.Text.StringBuilder
 
@@ -162,8 +111,6 @@ set_timeouts ([ref]$selenium)
 
 [NUnit.Framework.StringAssert]::Contains('www.urbandictionary.com',$selenium.url,{})
 
-
-
 [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
 $wait.PollingInterval = 100
 $css_selector = 'a#logo'
@@ -207,9 +154,7 @@ while ($cnt_found -lt $cnt_to_find) {
   Write-Debug ('Trying CSS Selector "{0}"' -f $css_selector)
 
   try {
-
     [OpenQA.Selenium.IWebElement[]]$elements2 = $element1.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
-
   } catch [exception]{
     Write-Output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
   }
@@ -230,15 +175,11 @@ while ($cnt_found -lt $cnt_to_find) {
       Start-Sleep -Milliseconds 100
       [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element2,'')
       $cnt++
-
-
     }
-
   }
 
   $cnt_found = $elements2.count
   Write-Output ('inspected {0} words' -f $cnt_found)
-
 }
 
 Write-Output ('Found {0}' -f $cnt_found)

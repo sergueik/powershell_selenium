@@ -28,10 +28,10 @@ $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
-  $selenium = launch_selenium -browser $browser -grid -shared_assemblies $shared_assemblies
+  $selenium = launch_selenium -browser $browser -grid
 
 } else {
-  $selenium = launch_selenium -browser $browser -shared_assemblies $shared_assemblies
+  $selenium = launch_selenium -browser $browser
 
 }
 

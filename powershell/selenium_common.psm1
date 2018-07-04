@@ -1,4 +1,3 @@
-
 <#
 .SYNOPSIS
 	Determines script directory
@@ -16,6 +15,7 @@
 	VERSION HISTORY
 	2015/06/07 Initial Version
 #>
+# use $debugpreference = 'continue'
 
 # http://poshcode.org/2887
 # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
@@ -159,11 +159,10 @@ function launch_selenium {
       }
 
     } else {
-      # launching Selenium jar in  standalone is not needed
+      # launching Selenium jar in standalone execution is not needed
 
       # adding driver folder to the path environment
-      if (-not (Test-Path $driver_folder_path))
-      {
+      if (-not (Test-Path $driver_folder_path)) {
         throw "Folder ${driver_folder_path} does not Exist, cannot be added to $env:PATH"
       }
 
@@ -182,12 +181,14 @@ function launch_selenium {
 
     if ($browser -match 'firefox') {
       if ($use_remote_driver) {
-
         $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
         $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
 
       } else {
-
+        $driver_environment_variable = 'webdriver.gecko.driver' 
+        if (-not [Environment]::GetEnvironmentVariable($driver_environment_variable, [System.EnvironmentVariableTarget]::Machine)){
+          [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${driver_folder_path}\geckodriver.exe")
+        }
         #  $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
 
         [object]$profile_manager = New-Object OpenQA.Selenium.Firefox.FirefoxProfileManager
@@ -216,7 +217,10 @@ function launch_selenium {
         $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
         $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
       } else {
-        # TODO: path to  chromedriver.exe
+        $driver_environment_variable = 'webdriver.chrome.driver' 
+        if (-not [Environment]::GetEnvironmentVariable($driver_environment_variable, [System.EnvironmentVariableTarget]::Machine)){
+          [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${driver_folder_path}\chromedriver.exe")
+        }
 
         # override
 
@@ -249,9 +253,6 @@ function launch_selenium {
 
         $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver ($options)
       }
-
-
-
     }
     elseif ($browser -match 'ie') {
       if ($use_remote_driver) {
@@ -268,11 +269,14 @@ function launch_selenium {
 NOTE:
 New-Object : Exception calling ".ctor" with "1" argument(s): "Unexpected error launching Internet Explorer. Browser zoom level was set to 75%. It should be
 #>
-        $selenium = New-Object OpenQA.Selenium.IE.InternetExplorerDriver ($driver_folder_path)
+        $driver_environment_variable = 'webdriver.ie.driver' 
+        if (-not [Environment]::GetEnvironmentVariable($driver_environment_variable, [System.EnvironmentVariableTarget]::Machine)){
+          [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${driver_folder_path}\chromedriver.exe")
+        }
+        $selenium = New-Object OpenQA.Selenium.IE.InternetExplorerDriver($driver_folder_path)
       }
     }
     elseif ($browser -match 'safari') {
-      # TODO: throw exception if not provided the 'grid' switch
       $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
 
       $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
@@ -318,8 +322,7 @@ New-Object : Exception calling ".ctor" with "1" argument(s): "Unexpected error l
 #>
 
 
-function cleanup
-{
+function cleanup {
   param(
     [System.Management.Automation.PSReference]$selenium_ref
   )
@@ -432,11 +435,11 @@ function load_shared_assemblies {
       )
   )
 
-
+  Write-Debug ('Loading "{0}" ' -f ($shared_assemblies -join ',' ))
   pushd $shared_assemblies_path
 
   $shared_assemblies | ForEach-Object {
-    Write-Debug ('Loading {0} ' -f $_)
+    Write-Debug ('Loading "{0}" ' -f $_)
     Unblock-File -Path $_;
     Add-Type -Path $_ }
   popd
@@ -445,12 +448,13 @@ function load_shared_assemblies {
 
 <#
 .SYNOPSIS
-	Loads calller-provided list of .net assembly dlls with specific versions or fails with a custom exception
+	Loads caller-specified list of .net assembly dll/ versions.
 .DESCRIPTION
-	Loads calller-provided list of .net assembly dlls with specific versions or fails with a custom exception
+	Loads caller-specified list of .net assembly dll/ versions.
+  Fails with a custom exception when a paricular assembly is of the wrong version
 	
 .EXAMPLE
-	load_shared_assemblues_demand_versions -shared_assemblies_path 'c:\tools'    
+	load_shared_assemblies_with_versions -shared_assemblies_path 'c:\tools'    
 .LINK
 	
 	
@@ -459,16 +463,19 @@ function load_shared_assemblies {
 	VERSION HISTORY
 	2015/06/22 Initial Version
 #>
-
-function load_shared_assemblues_demand_versions {
+# NOTE: Find past versions download links 
+# e.g.
+# https://www.nuget.org/packages/Selenium.WebDriver/2.53.1
+# https://www.nuget.org/packages/Selenium.Support/2.53.1
+function load_shared_assemblies_with_versions {
   param(
     [string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies',
     $shared_assemblies = @{
-      'WebDriver.dll' = '2.53';
+      'WebDriver.dll'         = '2.53';
       'WebDriver.Support.dll' = '2.53';
-      'nunit.core.dll' = $null;
-      'nunit.framework.dll' = $null;
-      'Newtonsoft.Json.dll' = $null; 
+      'nunit.core.dll'        = $null;
+      'nunit.framework.dll'   = $null;
+      'Newtonsoft.Json.dll'   = $null; 
     }
   )
 
@@ -482,9 +489,10 @@ function load_shared_assemblues_demand_versions {
     if ($shared_assemblies[$assembly] -ne $null) {
 
       if (-not ($shared_assemblies[$assembly] -match $assembly_version_string)) {
-        Write-Output ('Need {0} {1}, got {2}' -f $assembly,$shared_assemblies[$assembly],$assembly_path)
+        Write-Output ('Need version {0} of {1} - got {2} in {3}' -f $shared_assemblies[$assembly], $assembly, ( '{0}.{1}.{2}' -f $assembly_version.'Major', $assembly_version.'Minor', $assembly_version.'Build' ), $assembly_path)
         Write-Output $assembly_version
-        throw ('invalid version :{0}' -f $assembly)
+        popd
+        throw ('Invalid version of assembly: {0}' -f $assembly)
       }
     }
 

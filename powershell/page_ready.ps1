@@ -28,7 +28,7 @@ param(
 $MODULE_NAME = 'selenium_utils.psd1'
 import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
 
-[string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
+[string]$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies'
 $selenium = launch_selenium -browser $browser -hub_host $hub_host -hub_port $hub_port
 
 $verificationErrors = New-Object System.Text.StringBuilder

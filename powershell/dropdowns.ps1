@@ -43,7 +43,7 @@ $shared_assemblies = @(
 )
 
 $max_count = 5
-$env:SHARED_ASSEMBLIES_PATH = 'c:\developer\sergueik\csharp\SharedAssemblies'
+$env:SHARED_ASSEMBLIES_PATH = 'C:\selenium\csharp\sharedassemblies'
 
 $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
 pushd $shared_assemblies_path

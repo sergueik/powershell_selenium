@@ -152,7 +152,7 @@ $options.addArguments('--profile-directory=Default')
 $capabilities.setCapability([OpenQA.Selenium.Chrome.ChromeOptions]::Capability,$options)
 
 $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver ($options)
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
+$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies'
 Add-Type @"
 
 using System;

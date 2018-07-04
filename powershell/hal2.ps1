@@ -253,7 +253,7 @@ $shared_assemblies = @(
 )
 [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
 
-$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
+$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies'
 
 if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
   $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH

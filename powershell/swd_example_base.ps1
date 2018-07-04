@@ -8,7 +8,7 @@ function launch_selenium {
     $browser = ''
   )
   $driver_folder_path = 'C:\java\selenium' 
-  $shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies'
+  $shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies'
   $shared_assemblies = @(
     'WebDriver.dll',
     'WebDriver.Support.dll',
