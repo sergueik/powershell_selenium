@@ -76,6 +76,20 @@ Download past versions download links on nuget:
   * [Selenium.WebDriver v. 2.53.1](https://www.nuget.org/packages/Selenium.WebDriver/2.53.1)
   * [Selenium.Support v. 2.53.1](https://www.nuget.org/packages/Selenium.Support/2.53.1)
 
+e.g. with
+```powershell
+$ProgressPreference = 'silentlyContinue' ;
+pushd $env:TEMP
+$download_api_href = 'https://www.nuget.org/api/v2/package/Selenium.Support/2.53.1' ;
+$output_file = 'Selenium.Support.nupkg' ;
+Invoke-WebRequest -uri $download_api_href -OutFile $output_file ;
+Add-Type -assembly 'system.io.compression.filesystem'
+
+[IO.Compression.ZipFile]::ExtractToDirectory("${env:TEMP}\${output_file}", $env:TEMP)
+copy-item -path .\lib\net35\WebDriver.Support.dll -destination $shared_assemblies_path
+```
+NOTE: you will have to close the powershell window that was running Powershell Selenium scripts to avoid __The process cannot access the file because it is being used by another process__ error.
+
 There is no strict enforcement to use Selenium 2.x - the Selenium 3.x libraries work as well.
 
 The Selenium jars and drivers are loaded from `c:\java\selenium` by default:

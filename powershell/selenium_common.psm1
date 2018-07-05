@@ -80,7 +80,7 @@ function launch_selenium {
     [string]$browser = '',
     [switch]$grid,
     [int]$version,
-    [string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies',
+    [string]$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies',
     [string[]]$shared_assemblies = @(
       'WebDriver.dll',
       'WebDriver.Support.dll',
@@ -424,7 +424,7 @@ function set_timeouts {
 function load_shared_assemblies {
 
   param(
-    [string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies',
+    [string]$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies',
 
     [string[]]$shared_assemblies = @(
       'WebDriver.dll',
@@ -463,13 +463,28 @@ function load_shared_assemblies {
 	VERSION HISTORY
 	2015/06/22 Initial Version
 #>
+<#
 # NOTE: Find past versions download links 
 # e.g.
 # https://www.nuget.org/packages/Selenium.WebDriver/2.53.1
 # https://www.nuget.org/packages/Selenium.Support/2.53.1
+
+$ProgressPreference = 'silentlyContinue' ;
+pushd $env:TEMP
+$download_api_href = 'https://www.nuget.org/api/v2/package/Selenium.Support/2.53.1' ;
+$output_file = 'Selenium.Support.nupkg' ;
+Invoke-WebRequest -uri $download_api_href -OutFile $output_file ;
+Add-Type -assembly 'system.io.compression.filesystem'
+
+[IO.Compression.ZipFile]::ExtractToDirectory("${env:TEMP}\${output_file}", $env:TEMP)
+copy-item -path .\lib\net35\WebDriver.Support.dll -destination $shared_assemblies_path
+# NOTE: will have to close the powershell window that was running Powershell Selenium scripts
+# to avoid The process cannot access the file because it is being used by another process error.
+#>
+
 function load_shared_assemblies_with_versions {
   param(
-    [string]$shared_assemblies_path = 'c:\developer\sergueik\csharp\SharedAssemblies',
+    [string]$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies',
     $shared_assemblies = @{
       'WebDriver.dll'         = '2.53';
       'WebDriver.Support.dll' = '2.53';
