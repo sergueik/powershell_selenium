@@ -463,25 +463,6 @@ function load_shared_assemblies {
 	VERSION HISTORY
 	2015/06/22 Initial Version
 #>
-<#
-# NOTE: Find past versions download links 
-# e.g.
-# https://www.nuget.org/packages/Selenium.WebDriver/2.53.1
-# https://www.nuget.org/packages/Selenium.Support/2.53.1
-
-$ProgressPreference = 'silentlyContinue' ;
-pushd $env:TEMP
-$download_api_href = 'https://www.nuget.org/api/v2/package/Selenium.Support/2.53.1' ;
-$output_file = 'Selenium.Support.nupkg' ;
-Invoke-WebRequest -uri $download_api_href -OutFile $output_file ;
-Add-Type -assembly 'system.io.compression.filesystem'
-
-[IO.Compression.ZipFile]::ExtractToDirectory("${env:TEMP}\${output_file}", $env:TEMP)
-copy-item -path .\lib\net35\WebDriver.Support.dll -destination $shared_assemblies_path
-# NOTE: will have to close the powershell window that was running Powershell Selenium scripts
-# to avoid The process cannot access the file because it is being used by another process error.
-#>
-
 function load_shared_assemblies_with_versions {
   param(
     [string]$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies',
@@ -609,5 +590,62 @@ function read_installed_programs_registry {
   }
   popd
   return $install_location
+}
+
+
+<#
+.SYNOPSIS
+	Common method to perform assertions
+.DESCRIPTION
+	Based on: https://gallery.technet.microsoft.com/scriptcenter/A-PowerShell-Assert-d383bf14
+	With pipeline support removed 
+		
+.EXAMPLE
+		assert_true (1 -eq 0)
+.NOTES
+	VERSION HISTORY
+	2018/07/05 Initial Version
+#>
+
+function assert_true {
+  param(
+    [Parameter(Mandatory = $true,ValueFromPipeline = $false,Position = 0)]
+    [AllowNull()]
+    [AllowEmptyCollection()]
+    [System.Object]
+    $InputObject
+  )
+
+  $info = '{0}, file {1}, line {2}' -f @( $MyInvocation.Line.Trim(),$MyInvocation.ScriptName,$MyInvocation.ScriptLineNumber)
+  if ($null -eq $InputObject) {
+    $message = "Assertion failed: $info"
+    Write-Debug -Message $message
+    if (-not ($debugpreference -match 'continue')) {
+      throw $message
+    } else {
+      Write-Debug -Message 'Continue'
+    }
+  }
+  if (($InputObject -isnot [System.Boolean]) -and ($InputObject -isnot $null)) {
+    $type = $InputObject.GetType().FullName
+    $value = if ($InputObject -is [System.String]) { "'$InputObject'" } else { "{$InputObject}" }
+    $message = "Assertion failed (`$InputObject is of type $type with value $value): $info"
+    Write-Debug -Message $message
+    if (-not ($debugpreference -match 'continue')) {
+      throw $message
+    } else {
+      Write-Debug -Message 'Continue'
+    }
+  }
+  if (($InputObject -is [System.Boolean]) -and (-not $InputObject)) {
+    $message = "Assertion failed: $info"
+    Write-Debug -Message $message
+    if (-not ($debugpreference -match 'continue')) {
+      throw $message
+    } else {
+      Write-Debug -Message 'Continue'
+    }
+  }
+  Write-Verbose -Message "Assertion passed: $info"
 }
 

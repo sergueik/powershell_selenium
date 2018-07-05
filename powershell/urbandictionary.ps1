@@ -162,6 +162,7 @@ while ($cnt_found -lt $cnt_to_find) {
     $element2 = $_
     if (($element2 -ne $null -and $element2.Displayed)) {
       if ($cnt -ge $cnt_found) {
+        assert_true ($element2 -ne $null)
         Write-Output ('{0} / {1} => {2}' -f $cnt,$cnt_found,$element2.Text)
       }
 
