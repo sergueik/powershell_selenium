@@ -53,7 +53,7 @@ $shared_assemblies = @(
   'nunit.framework.dll'
 )
 
-$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies'
+$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies'
 
 if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
   $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH

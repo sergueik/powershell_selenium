@@ -54,7 +54,7 @@ $shared_assemblies = @(
   'Moq.dll'
 )
 
-$shared_assemblies_folder = 'C:\selenium\csharp\sharedassemblies'
+$shared_assemblies_folder = 'c:\java\selenium\csharp\sharedassemblies'
 pushd $shared_assemblies_folder
 $shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
 popd

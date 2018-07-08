@@ -62,7 +62,7 @@ Run the script with the option:
 ### Prerequisites
 Powershell relies on C# Selenium Client API library for interaction with the browser, Nunit for assertions and log4net for logging.
 Thus needs those asemblies need to be available in the directory `$env:SHARED_ASSEMBLIES_PATH`
-(default is `C:\selenium\csharp\sharedassemblies`):
+(default used in this project is `c:\java\selenium\csharp\sharedassemblies`):
 ```
 log4net.dll
 nunit.core.dll
@@ -92,7 +92,7 @@ NOTE: you will have to close the powershell window that was running Powershell S
 
 There is no strict enforcement to use Selenium 2.x - the Selenium 3.x libraries work as well.
 
-The Selenium jars and drivers are loaded from `c:\java\selenium` by default:
+The Selenium jars and drivers are loaded from `$env:SELENIUM_DRIVERS_PATH` or from `$env:SELENIUM_PATH` (whichever is found set first) or from `c:\java\selenium` by default:
 ```
 chromedriver.exe
 geckodriver.exe

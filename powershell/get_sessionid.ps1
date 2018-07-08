@@ -29,7 +29,7 @@ $shared_assemblies = @(
   'nunit.framework.dll'
 )
 
-$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies'
+$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies'
 
 if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
   $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
@@ -47,7 +47,7 @@ $shared_assemblies | ForEach-Object {
 popd
 
 
-$env:SHARED_ASSEMBLIES_PATH = 'C:\selenium\csharp\sharedassemblies'
+$env:SHARED_ASSEMBLIES_PATH = 'c:\java\selenium\csharp\sharedassemblies'
 
 $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
 

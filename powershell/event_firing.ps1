@@ -1,4 +1,4 @@
-#Copyright (c) 2014,2015 Serguei Kouzmine
+#Copyright (c) 2014,2015,2018 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -24,103 +24,19 @@ param(
   [string]$browser = 'firefox',
   [int]$event_delay = 250,
   [switch]$pause
-
 )
 
+$MODULE_NAME = 'selenium_utils.psd1'
+Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
+if ([bool]$PSBoundParameters['grid'].IsPresent) {
+  $selenium = launch_selenium -browser $browser -grid
 
-function netstat_check
-{
-  param(
-    [string]$selenium_http_port = 4444
-  )
-
-  $results = Invoke-Expression -Command "netsh interface ipv4 show tcpconnections"
-
-  $t = $results -split "`r`n" | Where-Object { ($_ -match "\s$selenium_http_port\s") }
-  (($t -ne '') -and $t -ne $null)
-
-}
-
-function cleanup
-{
-  param(
-    [System.Management.Automation.PSReference]$selenium_ref
-  )
-  try {
-    $selenium_ref.Value.Quit()
-  } catch [exception]{
-    Write-Output (($_.Exception.Message) -split "`n")[0]
-    # Ignore errors if unable to close the browser
-  }
-}
-
-$shared_assemblies = @(
-  'WebDriver.dll',
-  'WebDriver.Support.dll',# for Events
-  'nunit.core.dll',
-  'nunit.framework.dll'
-)
-
-$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies'
-
-if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
-  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
-}
-pushd $shared_assemblies_path
-$shared_assemblies | ForEach-Object {
-  # Unblock-File -Path $_; 
-  Add-Type -Path $_
-}
-popd
-
-[void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
-$verificationErrors = New-Object System.Text.StringBuilder
-$phantomjs_executable_folder = "C:\tools\phantomjs"
-if ($browser -ne $null -and $browser -ne '') {
-  try {
-    $connection = (New-Object Net.Sockets.TcpClient)
-    $connection.Connect("127.0.0.1",4444)
-    $connection.Close()
-  } catch {
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\hub.cmd"
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start cmd.exe /c c:\java\selenium\node.cmd"
-    Start-Sleep -Seconds 10
-  }
-  Write-Host "Running on ${browser}" -foreground 'Yellow'
-  if ($browser -match 'firefox') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
-
-  }
-  elseif ($browser -match 'chrome') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
-  }
-  elseif ($browser -match 'ie') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
-    if ($version -ne $null -and $version -ne 0) {
-      $capability.SetCapability("version",$version.ToString());
-    }
-
-  }
-  elseif ($browser -match 'safari') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
-  }
-  else {
-    throw "unknown browser choice:${browser}"
-  }
-  $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
-  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
 } else {
-  Write-Host 'Running on phantomjs' -foreground 'Yellow'
-  $phantomjs_executable_folder = "C:\tools\phantomjs"
-  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability("ssl-protocol","any")
-  $selenium.Capabilities.SetCapability("ignore-ssl-errors",$true)
-  $selenium.Capabilities.SetCapability("takesScreenshot",$true)
-  $selenium.Capabilities.SetCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
-  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
+  $selenium = launch_selenium -browser $browser
+
 }
 
+$verificationErrors = New-Object System.Text.StringBuilder
 
 if ($host.Version.Major -le 2) {
   [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
@@ -142,23 +58,22 @@ $base_url = 'http://www.google.com/'
 $event_firing_selenium = New-Object -Type 'OpenQA.Selenium.Support.Events.EventFiringWebDriver' -ArgumentList @( $selenium)
 
 $element_value_changing_handler = $event_firing_selenium.add_ElementValueChanging
-$element_value_changing_handler.Invoke(
-  {
-    param(
-      [object]$sender,
-      [OpenQA.Selenium.Support.Events.WebElementEventArgs]$eventargs
-    )
-    Write-Host 'Value Change handler' -foreground 'Yellow'
-    if ($eventargs.Element.GetAttribute('id') -eq 'lst-ib') {
-      $xpath1 = "//div[@class='sbsb_a']"
-      try {
-        [OpenQA.Selenium.IWebElement]$local:element = $sender.FindElement([OpenQA.Selenium.By]::XPath($xpath1))
-      } catch [exception]{
-      }
-      Write-Host $local:element.Text -foreground 'Blue'
+$element_value_changing_handler.Invoke({
+  param(
+    [object]$sender,
+    [OpenQA.Selenium.Support.Events.WebElementEventArgs]$eventargs
+  )
+  Write-Host 'Value Change handler' -foreground 'Yellow'
+  if ($eventargs.Element.GetAttribute('id') -eq 'lst-ib') {
+    $xpath1 = "//div[@class='sbsb_a']"
+    try {
+      [OpenQA.Selenium.IWebElement]$local:element = $sender.FindElement([OpenQA.Selenium.By]::XPath($xpath1))
+    } catch [exception]{
     }
+    Write-Host $local:element.Text -foreground 'Blue'
+  }
 
-  })
+})
 
 $verificationErrors = New-Object System.Text.StringBuilder
 $base_url = 'http://www.google.com'

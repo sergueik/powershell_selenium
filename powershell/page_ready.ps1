@@ -1,4 +1,4 @@
-#Copyright (c) 2015 Serguei Kouzmine
+#Copyright (c) 2015,2018 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -19,16 +19,17 @@
 #THE SOFTWARE.
 
 param(
-  [string]$browser,
+  [string]$browser  = 'chrome',
   [string]$hub_host = '127.0.0.1',
   [string]$hub_port = '4444'
 )
 
+# Used to construct the full path to Webdriver.dll assembly to compile embedded method  add-type
+[string]$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies'
 
 $MODULE_NAME = 'selenium_utils.psd1'
 import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
 
-[string]$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies'
 $selenium = launch_selenium -browser $browser -hub_host $hub_host -hub_port $hub_port
 
 $verificationErrors = New-Object System.Text.StringBuilder
@@ -36,7 +37,6 @@ Add-Type @"
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using OpenQA.Selenium;
 
@@ -45,7 +45,9 @@ namespace WaitForExtensions
     public static class DocumentReadyState
     {
         static int cnt = 0;
-        public static void Wait(/* this // no longer is an extension method  */ IWebDriver driver)
+        // Based on c# extension method example. 
+        // NOTE: no signature change, makine this method no longer be extension method
+        public static void Wait( IWebDriver driver)
         {
             var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(driver, TimeSpan.FromSeconds(30.00));
             wait.Until(dummy => ((IJavaScriptExecutor) driver).ExecuteScript("return document.readyState").Equals("complete"));
@@ -54,8 +56,9 @@ namespace WaitForExtensions
 
         }
 
-        public static void Wait2(/* this // no longer is an extension method  */ IWebDriver driver)
-        {
+        // Based on c# extension method. 
+        // NOTE: no signature change, makine this method no longer be extension method
+        public static void Wait2(IWebDriver driver) {
             var wait = new OpenQA.Selenium.Support.UI.WebDriverWait(driver, TimeSpan.FromSeconds(30.00));
             wait.PollingInterval = TimeSpan.FromSeconds(0.50);
             wait.Until(dummy =>
@@ -70,7 +73,7 @@ namespace WaitForExtensions
     }
 
 }
-"@ -ReferencedAssemblies 'System.dll','System.Data.dll','System.Data.Linq.dll',"${shared_assemblies_path}\WebDriver.dll","${shared_assemblies_path}\WebDriver.Support.dll"
+"@ -ReferencedAssemblies 'System.dll','System.Data.dll', "${shared_assemblies_path}\WebDriver.dll","${shared_assemblies_path}\WebDriver.Support.dll"
 
 # http://briarbird.com/archives/worst-websites-worth-a-visit/
 $base_url = 'http://arngren.net/'
@@ -78,7 +81,7 @@ $base_url = 'http://arngren.net/'
 # $base_url = 'http://www.google.com/'
 $selenium.Navigate().GoToUrl($base_url)
 
- [WaitForExtensions.DocumentReadyState]::Wait2($selenium)
+[WaitForExtensions.DocumentReadyState]::Wait2($selenium)
 
 [NUnit.Framework.Assert]::AreEqual($verificationErrors.Length,0)
 

@@ -37,7 +37,6 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
 
 }
 
-
 $base_url = 'https://datatables.net/examples/api/highlight.html'
 
 $selenium.Navigate().GoToUrl($base_url)
@@ -53,7 +52,6 @@ try {
 #>
 $table_id = 'example';
 
-
 # Find a specific row, only choose the matching cells.
 
 $cell_text = 'Software Engineer'
@@ -62,6 +60,7 @@ $matching_rows = @()
 $table_element = find_element -Id $table_id
 $table_row_relative_xpath = 'tbody/tr'
 $row_cell_relative_xpath = 'td'
+$row_role_attribute = 'row'
 
 [OpenQA.Selenium.IWebElement[]]$table_row_collection = $table_element.FindElements([OpenQA.Selenium.By]::XPath($table_row_relative_xpath))
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
@@ -76,7 +75,7 @@ if ($table_row_collection -ne $null) {
     [NUnit.Framework.Assert]::IsTrue(($table_row -ne $null))
     [NUnit.Framework.Assert]::IsTrue(($table_row.Displayed))
     [NUnit.Framework.Assert]::IsTrue(($table_row.getAttribute('role') -match $row_role_attribute),("Unexpected '{0}' attribute '{1}'" -f 'role',$table_row.getAttribute('role')))
-
+    write-output ('Row role: {0}' -f $table_row.getAttribute('role') )
     [OpenQA.Selenium.IWebElement[]]$table_cell_collection = $table_row.FindElements([OpenQA.Selenium.By]::XPath($row_cell_relative_xpath))
     $cell_num = 1
 
@@ -117,10 +116,8 @@ $matching_rows | ForEach-Object {
     highlight ([ref]$selenium) ([ref]$table_cell)
 
     Write-Output ("col # {0} text='{1}'" -f $cell_num,$table_cell.Text)
-    $cell_num++;
-
+    $cell_num++
   }
-
 }
 
 # Iterate the table cells end-to-end
@@ -150,8 +147,6 @@ if ($table_row_collection -ne $null) {
       highlight ([ref]$selenium) ([ref]$table_cell)
 
       Write-Output ("row # {0}, col # {1} text='{2}'" -f $row_num,$cell_num,$table_cell.Text)
-      $cell_num++;
-
       $cell_num++
     }
     $row_num++

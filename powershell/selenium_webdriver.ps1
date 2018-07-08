@@ -80,7 +80,7 @@ $shared_assemblies = @(
   'Selenium.WebDriverBackedSelenium.dll',
   'Moq.dll'
 )
-$env:SHARED_ASSEMBLIES_PATH = 'C:\selenium\csharp\sharedassemblies'
+$env:SHARED_ASSEMBLIES_PATH = 'c:\java\selenium\csharp\sharedassemblies'
 $env:SCREENSHOT_PATH = 'C:\developer\sergueik\powershell_ui_samples'
 
 

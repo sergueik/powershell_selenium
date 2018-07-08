@@ -22,7 +22,7 @@ $assembly_in_the_GAC =
 if ($assembly_in_the_GAC -eq $null) {
   [string[]]$shared_assemblies = @( 'System.Web.Razor.dll')
 
-  [string]$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies'
+  [string]$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies'
 
   # SHARED_ASSEMBLIES_PATH environment overrides parameter, for Team City
   if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
@@ -72,7 +72,7 @@ function launch_selenium {
     $browser = ''
   )
   $driver_folder_path = 'C:\java\selenium' 
-  $shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies'
+  $shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies'
   $shared_assemblies = @@(
     'WebDriver.dll',
     'WebDriver.Support.dll',

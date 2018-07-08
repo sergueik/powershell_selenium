@@ -27,11 +27,11 @@ param(
 <#
 
 Add-Type : Could not load file or assembly 
-'file:///C:\selenium\csharp\sharedassemblies\WebDriver.dll' 
+'file:///c:\java\selenium\csharp\sharedassemblies\WebDriver.dll' 
 or one of its dependencies. This assembly is built by a runtime newer than the currently loaded runtime and cannot be loaded.
 
 Add-Type : Could not load file or assembly 
-'file:///C:\selenium\csharp\sharedassemblies\nunit.framework.dll' or one of its dependencies. 
+'file:///c:\java\selenium\csharp\sharedassemblies\nunit.framework.dll' or one of its dependencies. 
 Operation is not supported. (Exception from HRESULT: 0x80131515) 
 
 use fixw2k3.ps1

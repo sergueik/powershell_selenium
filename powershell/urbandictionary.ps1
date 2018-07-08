@@ -36,7 +36,7 @@ $shared_assemblies = @{
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 
-$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies'
+$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies'
 
 if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
   $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
