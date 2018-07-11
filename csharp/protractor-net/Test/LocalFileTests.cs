@@ -47,7 +47,7 @@ namespace Protractor.Test
 			// System.InvalidOperationException : Access to 'file:///...' from script denied (UnexpectedJavaScriptError)
 			// driver = new ChromeDriver();
 			driver = new PhantomJSDriver();
-            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(60);
+			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(60);
 			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
 			ngDriver = new NgWebDriver(driver);
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
@@ -356,7 +356,20 @@ namespace Protractor.Test
 			ng_search.Click();
 			int wait_seconds = 3;
 			WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
+			// https://stackoverflow.com/questions/10934305/selenium-c-sharp-webdriver-how-to-detect-if-element-is-visible
+			/*
 			wait.Until(d => (d.FindElements(By.CssSelector("div[role='option']"))).Count > 0);
+			*/
+			wait.Until(d => {
+				IWebElement element = null;
+				try {
+					element = d.FindElement(By.CssSelector("div[role='option']"));
+					return element.Displayed && element.Enabled;
+				} catch (NoSuchElementException exception) {
+					return false;
+				}
+			});
+
 			ReadOnlyCollection<NgWebElement> ng_available_colors = ngDriver.FindElements(By.CssSelector("div[role='option']"));
 			Assert.IsTrue(6 == ng_available_colors.Count);
 			foreach (NgWebElement ng_available_color in ng_available_colors) {

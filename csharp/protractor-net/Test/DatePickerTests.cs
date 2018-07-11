@@ -71,8 +71,8 @@ namespace Protractor.Test
 			//System.Environment.SetEnvironmentVariable("webdriver.gecko.driver", String.Format(@"{0}\geckodriver.exe", System.IO.Directory.GetCurrentDirectory()));
 			// driver = new FirefoxDriver(options);
 
-			driver = new ChromeDriver(System.IO.Directory.GetCurrentDirectory());
-			
+	//		driver = new ChromeDriver(System.IO.Directory.GetCurrentDirectory());
+			driver = new PhantomJSDriver();
 			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(60);
 			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
 			driver.Manage().Window.Size = new System.Drawing.Size(700, 400);
@@ -101,7 +101,7 @@ namespace Protractor.Test
 			NgWebElement ng_datepicker = ngDriver.FindElement(NgBy.Model("data.embeddedDate", "*[data-ng-app]"));
 			Assert.IsNotNull(ng_datepicker);
 			// NOTE: cannot highlight calendar, only individual days
-			actions.MoveToElement(ng_datepicker).Build().Perform();
+			actions.MoveToElement(ng_datepicker.WrappedElement).Build().Perform();
 			ngDriver.Highlight(ng_datepicker);
 			
 			NgWebElement[] ng_dates = ng_datepicker.FindElements(NgBy.Repeater("dateObject in week.dates")).ToArray();
@@ -138,7 +138,7 @@ namespace Protractor.Test
 			NgWebElement ng_datepicker = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput", "*[data-ng-app]"));
 			Assert.IsNotNull(ng_datepicker);
 			// ng_datepicker.Clear();
-			ngDriver.Highlight(ng_datepicker);
+			ngDriver.Highlight(ng_datepicker.WrappedElement);
 			IWebElement calendar = ngDriver.FindElement(By.CssSelector(".input-group-addon"));
 			Assert.IsNotNull(calendar);
 			ngDriver.Highlight(calendar);
@@ -207,10 +207,10 @@ namespace Protractor.Test
 			NgWebElement ng_datepicker = ngDriver.FindElement(NgBy.Model("data.dateDropDownInput", "*[data-ng-app]"));
 			Assert.IsNotNull(ng_datepicker);
 			// ng_datepicker.Clear();
-			ngDriver.Highlight(ng_datepicker);
+			ngDriver.Highlight(ng_datepicker.WrappedElement);
 			IWebElement calendar = ngDriver.FindElement(By.CssSelector(".input-group-addon"));
 			ngDriver.Highlight(calendar);
-			Actions actions = new Actions(ngDriver.WrappedDriver);
+			actions = new Actions(ngDriver.WrappedDriver);
 			actions.MoveToElement(calendar).Click().Build().Perform();
 
 			IWebElement dropdown = driver.FindElement(By.CssSelector("div.dropdown.open ul.dropdown-menu"));
