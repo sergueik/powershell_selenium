@@ -441,13 +441,12 @@ function load_shared_assemblies {
 
   $shared_assemblies | ForEach-Object {
     $shared_assembly_filename = $_
-    $check = assembly_is_loaded -assembly_path ("${shared_assemblies_path}\\{0}" -f $shared_assembly_filename)
-    if ( $check) {
-      Write-Debug ('Skipping from  assembly "{0}":  check  = {1} ' -f $shared_assembly_filename, $check)
+    if ( assembly_is_loaded -assembly_path ("${shared_assemblies_path}\\{0}" -f $shared_assembly_filename)) {
+      write-debug ('Skipping from  assembly "{0}"' -f $shared_assembly_filename)
      } else {
       write-debug ('Loading assembly "{0}" ' -f $shared_assembly_filename)
       Unblock-File -Path $shared_assembly_filename;
-      Add-Type -Path $shared_assembly_filename 
+      Add-Type -Path $shared_assembly_filename
     }
   }
   popd
@@ -658,38 +657,42 @@ function assert_true {
 
 # based on https://github.com/PowerShellCrack/AdminRunasMenu/blob/master/App/AdminMenu.ps1
 # dealing with cache:
+# inspect if the assembly is already loaded:
+
 function assembly_is_loaded{
   param(
     [string[]]$defined_type_names = @(),
     [string]$assembly_path
   )
-  # inspect if the assembly is already loaded:
+
+  $loaded_project_specific_assemblies = @()
+  $loaded_defined_type_names = @()
 
   if ($defined_type_names.count -ne 0) {
     $loaded_defined_type_names = [appdomain]::currentdomain.getassemblies() |
-      where-object {$_.location -eq ''} |
-      select-object -expandproperty DefinedTypes |
-      select-object -property Name
-    # return if any of the types from Add-type is already there 
-    return ($loaded_defined_type_names -contains $assembly_path)
+        where-object {$_.location -eq ''} |
+        select-object -expandproperty DefinedTypes |
+        select-object -property Name
+    # TODO: return if any of the types from Add-type is already there
+    return ($loaded_defined_type_names -contains $defined_type_names[0])
   }
-  $loaded_project_specific_assemblies = @()
+
   if ($assembly_path -ne $null) {
-    # the location property may be $nul or an empty strong
+    [string]$check_assembly_path = ($assembly_path -replace '\\\\' , '/' ) -replace '/', '\'
+    # NOTE: the location property may both be $null or an empty string
     $loaded_project_specific_assemblies =
     [appdomain]::currentdomain.getassemblies() |
       where-object {$_.GlobalAssemblyCache -eq $false -and $_.Location -match '\S' } |
       select-object -expandproperty Location
-      [string]$check_assembly_path = ($assembly_path -replace '\\\\' , '/' ) -replace '/', '\'
-      write-debug ('Check if loaded: {0} {1}' -f $check_assembly_path,$assembly_path)
-      write-debug ("Loaded asseblies:  {0}" -f $loaded_project_specific_assemblies.count) 
-    if (($loaded_project_specific_assemblies -contains $check_assembly_path)) {
-      write-debug ('Already loaded: {0}' -f $assembly_path)
-      return $true
-    } else {
-      write-debug ('Not loaded: {0}' -f $assembly_path)
-      return $false 
-    }   
-    # return ($loaded_project_specific_assemblies -contains $assembly_path)
+      # write-debug ('Check if loaded: {0} {1}' -f $check_assembly_path,$assembly_path)
+    write-debug ("Loaded asseblies:  {0}" -f $loaded_project_specific_assemblies.count)
+    if ($DebugPreference -eq 'Continue') {
+     if (($loaded_project_specific_assemblies -contains $check_assembly_path)) {
+        write-debug ('Already loaded: {0}' -f $assembly_path)
+      } else {
+        write-debug ('Not loaded: {0}' -f $assembly_path)
+      }
+    }
+    return ($loaded_project_specific_assemblies -contains $assembly_path)
   }
 }
