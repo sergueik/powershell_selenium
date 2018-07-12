@@ -360,12 +360,25 @@ namespace Protractor.Test
 			/*
 			wait.Until(d => (d.FindElements(By.CssSelector("div[role='option']"))).Count > 0);
 			*/
+			/*
 			wait.Until(d => {
 				IWebElement element = null;
 				try {
+					
 					element = d.FindElement(By.CssSelector("div[role='option']"));
 					return element.Displayed && element.Enabled;
 				} catch (NoSuchElementException exception) {
+					return false;
+				}
+			});
+			 */
+			wait.Until(d => {
+				IWebElement element = null;
+				if (TryFindElement(By.CssSelector("div[role='option']"), out element)) {
+					
+					return element.Displayed && element.Enabled;
+					
+				} else {
 					return false;
 				}
 			});
@@ -385,6 +398,17 @@ namespace Protractor.Test
 		}
 
 
+		public bool TryFindElement(By by, out IWebElement element)
+		{
+			try {
+				element = driver.FindElement(by);
+			} catch (NoSuchElementException ex) {
+				element = null;
+				return false;
+			}
+			return true;
+		}
+		
 		[Test]
 		public void ShouldFindElementByRepeaterColumn()
 		{
