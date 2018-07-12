@@ -15,7 +15,7 @@
 	VERSION HISTORY
 	2015/06/07 Initial Version
 #>
-# use $debugpreference = 'continue'
+# use $debugpreference = 'continue'/'silentlycontinue' to show / hide debugging information
 
 # http://poshcode.org/2887
 # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
@@ -80,7 +80,7 @@ function launch_selenium {
     [string]$browser = '',
     [switch]$grid,
     [int]$version,
-    [string]$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies',
+    [string]$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies',
     [string[]]$shared_assemblies = @(
       'WebDriver.dll',
       'WebDriver.Support.dll',
@@ -101,21 +101,25 @@ function launch_selenium {
     $phantomjs_path = $env:PHANTOMJS_PATH
   }
 
-  $selenium_path =  'c:\java\selenium' 
+  # SELENIUM_DRIVERS_PATH environment overrides parameter, for Team City
+  $selenium_path =  'c:\java\selenium'
   if (($env:SELENIUM_PATH -ne $null) -and ($env:SELENIUM_PATH -ne '')) {
     $selenium_path = $env:SELENIUM_PATH
   }
 
-  # SHARED_ASSEMBLIES_PATH environment overrides parameter, for Team City
+  # SHARED_ASSEMBLIES_PATH environment overrides parameter, for Team City/Jenkinks
   if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
     $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
   }
 
-  $driver_folder_path = 'c:\java\selenium'
-  # SELENIUM_DRIVERS_PATH environment overrides parameter, for Team City
+  $selenium_drivers_path = 'c:\java\selenium'
+  # SELENIUM_DRIVERS_PATH environment overrides parameter, for Team City/Jenkinks
   if (($env:SELENIUM_DRIVERS_PATH -ne $null) -and ($env:SELENIUM_DRIVERS_PATH -ne '')) {
-    $driver_folder_path = $env:SELENIUM_DRIVERS_PATH
+    $selenium_drivers_path = $env:SELENIUM_DRIVERS_PATH
+  } elseif (($env:SELENIUM_PATH -ne $null) -and ($env:SELENIUM_PATH -ne '')) {
+    $selenium_drivers_path = $env:SELENIUM_PATH
   }
+
   # write-Debug "load_shared_assemblies -shared_assemblies_path ${shared_assemblies_path} -shared_assemblies ${shared_assemblies}"
   # start-sleep -milliseconds 1000
   load_shared_assemblies -shared_assemblies_path $shared_assemblies_path -shared_assemblies $shared_assemblies
@@ -153,8 +157,8 @@ function launch_selenium {
         $connection.Close()
       } catch {
         Write-Debug 'Launching grid'
-        Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -ArgumentList "start cmd.exe /c ${selenium_path}\hub.cmd"
-        Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -ArgumentList "start cmd.exe /c ${selenium_path}\node.cmd"
+        Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -argumentList "start cmd.exe /c ${selenium_path}\hub.cmd"
+        Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -argumentList "start cmd.exe /c ${selenium_path}\node.cmd"
         Start-Sleep -Millisecond 5000
       }
 
@@ -162,18 +166,18 @@ function launch_selenium {
       # launching Selenium jar in standalone execution is not needed
 
       # adding driver folder to the path environment
-      if (-not (Test-Path $driver_folder_path)) {
-        throw "Folder ${driver_folder_path} does not Exist, cannot be added to $env:PATH"
+      if (-not (Test-Path $selenium_drivers_path)) {
+        throw "Folder ${selenium_drivers_path} does not exist, cannot be added to $env:PATH"
       }
 
       # See if the new folder is already in the path.
-      if ($env:PATH | Select-String -SimpleMatch $driver_folder_path)
-      { Write-Debug "Folder ${driver_folder_path} already within `$env:PATH"
+      if ($env:PATH | Select-String -SimpleMatch $selenium_drivers_path)
+      { Write-Debug "Folder ${selenium_drivers_path} already within `$env:PATH"
 
       }
 
       # Set the new PATH environment
-      $env:PATH = $env:PATH + ';' + $driver_folder_path
+      $env:PATH = $env:PATH + ';' + $selenium_drivers_path
     }
 
 
@@ -185,9 +189,9 @@ function launch_selenium {
         $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
 
       } else {
-        $driver_environment_variable = 'webdriver.gecko.driver' 
+        $driver_environment_variable = 'webdriver.gecko.driver'
         if (-not [Environment]::GetEnvironmentVariable($driver_environment_variable, [System.EnvironmentVariableTarget]::Machine)){
-          [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${driver_folder_path}\geckodriver.exe")
+          [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${selenium_drivers_path}\geckodriver.exe")
         }
         #  $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
 
@@ -217,21 +221,21 @@ function launch_selenium {
         $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
         $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
       } else {
-        $driver_environment_variable = 'webdriver.chrome.driver' 
+        $driver_environment_variable = 'webdriver.chrome.driver'
         if (-not [Environment]::GetEnvironmentVariable($driver_environment_variable, [System.EnvironmentVariableTarget]::Machine)){
-          [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${driver_folder_path}\chromedriver.exe")
+          [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${selenium_drivers_path}\chromedriver.exe")
         }
 
         # override
 
-        # Oveview of extensions 
+        # Oveview of extensions
         # https://sites.google.com/a/chromium.org/chromedriver/capabilities
 
         $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
         # Profile creation
         # https://support.google.com/chrome/answer/142059?hl=en
         # http://www.labnol.org/software/create-family-profiles-in-google-chrome/4394/
-        # using Profile 
+        # using Profile
         # http://superuser.com/questions/377186/how-do-i-start-chrome-using-a-specified-user-profile/377195#377195
 
 
@@ -244,7 +248,7 @@ function launch_selenium {
         # no-op option - re-enforcing the default setting
         $options.addArguments(('user-data-dir={0}' -f ("${env:LOCALAPPDATA}\Google\Chrome\User Data" -replace '\\','/')))
         # if you like to specify another profile parent directory:
-        # $options.addArguments('user-data-dir=c:/TEMP'); 
+        # $options.addArguments('user-data-dir=c:/TEMP');
 
         $options.addArguments('--profile-directory=Default')
 
@@ -269,11 +273,11 @@ function launch_selenium {
 NOTE:
 New-Object : Exception calling ".ctor" with "1" argument(s): "Unexpected error launching Internet Explorer. Browser zoom level was set to 75%. It should be
 #>
-        $driver_environment_variable = 'webdriver.ie.driver' 
+        $driver_environment_variable = 'webdriver.ie.driver'
         if (-not [Environment]::GetEnvironmentVariable($driver_environment_variable, [System.EnvironmentVariableTarget]::Machine)){
-          [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${driver_folder_path}\chromedriver.exe")
+          [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${selenium_drivers_path}\chromedriver.exe")
         }
-        $selenium = New-Object OpenQA.Selenium.IE.InternetExplorerDriver($driver_folder_path)
+        $selenium = New-Object OpenQA.Selenium.IE.InternetExplorerDriver($selenium_drivers_path)
       }
     }
     elseif ($browser -match 'safari') {
@@ -311,7 +315,7 @@ New-Object : Exception calling ".ctor" with "1" argument(s): "Unexpected error l
 	
 .EXAMPLE
     cleanup ([ref]$selenium)
-    Will tell selenium to stop the browser window 
+    Will tell selenium to stop the browser window
 .LINK
 	
 	
@@ -344,7 +348,7 @@ function cleanup {
 	
 .EXAMPLE
 	custom_pause [-fullstop]
-    
+
 .LINK
 	
 	
@@ -378,7 +382,7 @@ function custom_pause {
 	
 .EXAMPLE
     set_timeouts ([ref]$selenium) [-exlicit <explicit timeout>] [-page_load <page load timeout>] [-script <script timeout>]
-    
+
 .LINK
 	
 	
@@ -396,11 +400,9 @@ function set_timeouts {
     [int]$page_load = 60,
     [int]$script = 60
   )
-
   [void]($selenium_ref.Value.Manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))
   [void]($selenium_ref.Value.Manage().timeouts().SetPageLoadTimeout([System.TimeSpan]::FromSeconds($pageload)))
   [void]($selenium_ref.Value.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script)))
-
 }
 
 
@@ -409,10 +411,10 @@ function set_timeouts {
 	Loads calller-provided list of .net assembly dlls or fails with a custom exception
 	
 .DESCRIPTION
-	Loads calller-provided list of .net assembly dlls or fails with a custom exception    
+	Loads calller-provided list of .net assembly dlls or fails with a custom exception
 .EXAMPLE
 	load_shared_assemblies -shared_assemblies_path 'c:\tools' -shared_assemblies @('WebDriver.dll','WebDriver.Support.dll','nunit.framework.dll')
-.LINK 
+.LINK
 	
 	
 .NOTES
@@ -424,8 +426,7 @@ function set_timeouts {
 function load_shared_assemblies {
 
   param(
-    [string]$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies',
-
+    [string]$shared_assemblies_path = 'C:\java\selenium\csharp\sharedassemblies',
     [string[]]$shared_assemblies = @(
       'WebDriver.dll',
       'WebDriver.Support.dll',
@@ -435,16 +436,22 @@ function load_shared_assemblies {
       )
   )
 
-  Write-Debug ('Loading "{0}" ' -f ($shared_assemblies -join ',' ))
+  Write-Debug ('Loading "{0}" from ' -f ($shared_assemblies -join ',' ), $shared_assemblies_path)
   pushd $shared_assemblies_path
 
   $shared_assemblies | ForEach-Object {
-    Write-Debug ('Loading "{0}" ' -f $_)
-    Unblock-File -Path $_;
-    Add-Type -Path $_ }
+    $shared_assembly_filename = $_
+    $check = assembly_is_loaded -assembly_path ("${shared_assemblies_path}\\{0}" -f $shared_assembly_filename)
+    if ( $check) {
+      Write-Debug ('Skipping from  assembly "{0}":  check  = {1} ' -f $shared_assembly_filename, $check)
+     } else {
+      write-debug ('Loading assembly "{0}" ' -f $shared_assembly_filename)
+      Unblock-File -Path $shared_assembly_filename;
+      Add-Type -Path $shared_assembly_filename 
+    }
+  }
   popd
 }
-
 
 <#
 .SYNOPSIS
@@ -454,7 +461,7 @@ function load_shared_assemblies {
   Fails with a custom exception when a paricular assembly is of the wrong version
 	
 .EXAMPLE
-	load_shared_assemblies_with_versions -shared_assemblies_path 'c:\tools'    
+	load_shared_assemblies_with_versions -shared_assemblies_path 'c:\tools'
 .LINK
 	
 	
@@ -465,38 +472,38 @@ function load_shared_assemblies {
 #>
 function load_shared_assemblies_with_versions {
   param(
-    [string]$shared_assemblies_path = 'C:\selenium\csharp\sharedassemblies',
+    [string]$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies',
     $shared_assemblies = @{
       'WebDriver.dll'         = '2.53';
       'WebDriver.Support.dll' = '2.53';
       'nunit.core.dll'        = $null;
       'nunit.framework.dll'   = $null;
-      'Newtonsoft.Json.dll'   = $null; 
+      'Newtonsoft.Json.dll'   = $null;
     }
   )
 
   pushd $shared_assemblies_path
   $shared_assemblies.Keys | ForEach-Object {
     # http://all-things-pure.blogspot.com/2009/09/assembly-version-file-version-product.html
-    $assembly = $_
-    $assembly_path = [System.IO.Path]::Combine($shared_assemblies_path,$assembly)
-    $assembly_version = [Reflection.AssemblyName]::GetAssemblyName($assembly_path).Version
+    $shared_assembly_filename = $_
+    $shared_assembly_pathname = [System.IO.Path]::Combine($shared_assemblies_path,$shared_assembly_filename)
+    $assembly_version = [Reflection.AssemblyName]::GetAssemblyName($shared_assembly_pathname).Version
     $assembly_version_string = ('{0}.{1}' -f $assembly_version.Major,$assembly_version.Minor)
-    if ($shared_assemblies[$assembly] -ne $null) {
+    if ($shared_assemblies[$shared_assembly_filename] -ne $null) {
 
-      if (-not ($shared_assemblies[$assembly] -match $assembly_version_string)) {
-        Write-Output ('Need version {0} of {1} - got {2} in {3}' -f $shared_assemblies[$assembly], $assembly, ( '{0}.{1}.{2}' -f $assembly_version.'Major', $assembly_version.'Minor', $assembly_version.'Build' ), $assembly_path)
+      if (-not ($shared_assemblies[$shared_assembly_filename] -match $assembly_version_string)) {
+        Write-Output ('Need version {0} of {1} - got {2} in {3}' -f $shared_assemblies[$shared_assembly_filename], $shared_assembly_filename, ( '{0}.{1}.{2}' -f $assembly_version.'Major', $assembly_version.'Minor', $assembly_version.'Build' ), $assembly_path)
         Write-Output $assembly_version
         popd
-        throw ('Invalid version of assembly: {0}' -f $assembly)
+        throw ('Invalid version of assembly: {0}' -f $shared_assembly_filename)
       }
     }
 
     if ($host.Version.Major -gt 2) {
-      Unblock-File -Path $_;
+      Unblock-File -Path $shared_assembly_filename;
     }
-    Write-Debug $_
-    Add-Type -Path $_
+    Write-Debug $shared_assembly_filename
+    Add-Type -Path $shared_assembly_filename
   }
   popd
 
@@ -598,7 +605,7 @@ function read_installed_programs_registry {
 	Common method to perform assertions
 .DESCRIPTION
 	Based on: https://gallery.technet.microsoft.com/scriptcenter/A-PowerShell-Assert-d383bf14
-	With pipeline support removed 
+	With pipeline support removed
 		
 .EXAMPLE
 		assert_true (1 -eq 0)
@@ -649,3 +656,40 @@ function assert_true {
   Write-Verbose -Message "Assertion passed: $info"
 }
 
+# based on https://github.com/PowerShellCrack/AdminRunasMenu/blob/master/App/AdminMenu.ps1
+# dealing with cache:
+function assembly_is_loaded{
+  param(
+    [string[]]$defined_type_names = @(),
+    [string]$assembly_path
+  )
+  # inspect if the assembly is already loaded:
+
+  if ($defined_type_names.count -ne 0) {
+    $loaded_defined_type_names = [appdomain]::currentdomain.getassemblies() |
+      where-object {$_.location -eq ''} |
+      select-object -expandproperty DefinedTypes |
+      select-object -property Name
+    # return if any of the types from Add-type is already there 
+    return ($loaded_defined_type_names -contains $assembly_path)
+  }
+  $loaded_project_specific_assemblies = @()
+  if ($assembly_path -ne $null) {
+    # the location property may be $nul or an empty strong
+    $loaded_project_specific_assemblies =
+    [appdomain]::currentdomain.getassemblies() |
+      where-object {$_.GlobalAssemblyCache -eq $false -and $_.Location -match '\S' } |
+      select-object -expandproperty Location
+      [string]$check_assembly_path = ($assembly_path -replace '\\\\' , '/' ) -replace '/', '\'
+      write-debug ('Check if loaded: {0} {1}' -f $check_assembly_path,$assembly_path)
+      write-debug ("Loaded asseblies:  {0}" -f $loaded_project_specific_assemblies.count) 
+    if (($loaded_project_specific_assemblies -contains $check_assembly_path)) {
+      write-debug ('Already loaded: {0}' -f $assembly_path)
+      return $true
+    } else {
+      write-debug ('Not loaded: {0}' -f $assembly_path)
+      return $false 
+    }   
+    # return ($loaded_project_specific_assemblies -contains $assembly_path)
+  }
+}
