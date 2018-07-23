@@ -19,7 +19,7 @@
 #THE SOFTWARE.
 
 param(
-  [string]$browser = '',
+  [string]$browser = 'chrome',
   [switch]$grid,
   [switch]$pause
 )

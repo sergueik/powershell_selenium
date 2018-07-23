@@ -133,20 +133,20 @@ return get_css_selector_of(arguments[0]);
 
 <#
 .SYNOPSIS
-	Extracts match
+  Extracts match
 .DESCRIPTION
-	Extracts match from a text, e.g. from some $element.Text or $element.GetAttribute('innerHTML')
-	
+  Extracts match from a text, e.g. from some $element.Text or $element.GetAttribute('innerHTML')
+  
 .EXAMPLE
-	$firstitem = $null
-	$capturing_match_expression = '(?<firstitem>\d+)$'
-	extract_match -Source $text -capturing_match_expression $capturing_match_expression -label 'firstitem' -result_ref ([ref]$firstitem)
+  $firstitem = $null
+  $capturing_match_expression = '(?<firstitem>\d+)$'
+  extract_match -Source $text -capturing_match_expression $capturing_match_expression -label 'firstitem' -result_ref ([ref]$firstitem)
 
 .LINK
-	
+  
 .NOTES
-	VERSION HISTORY
-	2015/06/07 Initial Version
+  VERSION HISTORY
+  2015/06/07 Initial Version
 #>
 
 function extract_match {
@@ -172,17 +172,17 @@ function extract_match {
 
 <#
 .SYNOPSIS
-	Highlights page element
+  Highlights page element
 .DESCRIPTION
-	Highlights page element by executing Javascript through Selenium
-	
+  Highlights page element by executing Javascript through Selenium
+  
 .EXAMPLE
         highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) [ -delay 1500 ] [-color 'red']
 .LINK
-	
+  
 .NOTES
-	VERSION HISTORY
-	2015/06/07 Initial Version
+  VERSION HISTORY
+  2015/06/07 Initial Version
 #>
 
 function highlight {
@@ -201,17 +201,17 @@ function highlight {
 
 <#
 .SYNOPSIS
-	Highlights page element
+  Highlights page element
 .DESCRIPTION
-	Highlights page element by executing Javascript through Selenium
-	
+  Highlights page element by executing Javascript through Selenium
+  
 .EXAMPLE
       highlight_new -element ([ref]$element)  -selenium_ref ([ref]$selenium)  -delay 1500 -color 'green'
 .LINK
-	
+  
 .NOTES
-	VERSION HISTORY
-	2015/06/07 Initial Version
+  VERSION HISTORY
+  2015/06/07 Initial Version
 #>
 
 function highlight_new {
@@ -234,17 +234,17 @@ function highlight_new {
 
 <#
 .SYNOPSIS
-	Flashes page element
+  Flashes page element
 .DESCRIPTION
-	Flashes page element by executing Javascript through Selenium
-	
+  Flashes page element by executing Javascript through Selenium
+  
 .EXAMPLE
   flash -element ([ref]$element) -selenium_ref ([ref]$selenium)
 .LINK
-	
+  
 .NOTES
-	VERSION HISTORY
-	2018/07/04 Initial Version
+  VERSION HISTORY
+  2018/07/04 Initial Version
 #>
 
 function flash {
@@ -285,23 +285,22 @@ function changeColor {
 
 <#
 .SYNOPSIS
-	Finds page element
+  Finds page element
 .DESCRIPTION
-	Finds page element by executing appropriate FindElement, By, Wait through Selenium
-	
+  Finds page element by executing appropriate FindElement, By, Wait through Selenium
+  
 .EXAMPLE
-	$link_alt_text = 'Shore Excursions'
-	$element = $null
-	$xpath = ('img[@alt="{0}"]' -f $link_alt_text)
-	find_page_element_by_xpath ([ref]$selenium) ([ref]$element) $xpath
+  $link_alt_text = 'Shore Excursions'
+  $element = $null
+  $xpath = ('img[@alt="{0}"]' -f $link_alt_text)
+  find_page_element_by_xpath ([ref]$selenium) ([ref]$element) $xpath
 
 .LINK
-	
+  
 .NOTES
-	VERSION HISTORY
-	2015/06/21 Initial Version
+  VERSION HISTORY
+  2015/06/21 Initial Version
 #>
-
 
 function find_page_element_by_xpath {
   param(
@@ -340,21 +339,21 @@ https://www.wikipedia.org/
 
 <#
 .SYNOPSIS
-	Finds page element
+  Finds page element
 .DESCRIPTION
-	Finds page element by executing appropriate FindElement, By, Wait through Selenium
-	
+  Finds page element by executing appropriate FindElement, By, Wait through Selenium
+  
 .EXAMPLE
-	$link_alt_text = 'Shore Excursions'
-	$element = $null
-	$css_selector = ('img[alt="{0}"]' -f $link_alt_text)
-	find_page_element_by_css_selector ([ref]$selenium) ([ref]$element) $css_selector
+  $link_alt_text = 'Shore Excursions'
+  $element = $null
+  $css_selector = ('img[alt="{0}"]' -f $link_alt_text)
+  find_page_element_by_css_selector ([ref]$selenium) ([ref]$element) $css_selector
 
 .LINK
-	
+  
 .NOTES
-	VERSION HISTORY
-	2015/06/21 Initial Version
+  VERSION HISTORY
+  2015/06/21 Initial Version
 #>
 
 function find_page_element_by_css_selector {
@@ -406,26 +405,26 @@ function sleep(milliseconds) {
 
 <#
 .SYNOPSIS
-	Finds element using specific method of finding : xpath, classname, css_selector etc.
+  Finds element using specific method of finding : xpath, classname, css_selector etc.
 .DESCRIPTION
   Receives aither of the core Selenium locator strategies as named argument
 .EXAMPLE
-	$element = find_element -classname $classname
-	$element = find_element -css_selector $css_selector
-	$element = find_element -id $id
-	$element = find_element -tagname $tagsname
-	$element = find_element -link_text $link_text
+  $element = find_element -classname $classname
+  $element = find_element -css_selector $css_selector
+  $element = find_element -id $id
+  $element = find_element -tagname $tagsname
+  $element = find_element -link_text $link_text
 
 .LINK
-	# https://chromium.googlesource.com/chromium/blink/+/master/Source/devtools/front_end/components/DOMPresentationUtils.js
+  # https://chromium.googlesource.com/chromium/blink/+/master/Source/devtools/front_end/components/DOMPresentationUtils.js
         # http://stackoverflow.com/questions/1767219/mutually-exclusive-powershell-parameters
         # https://seleniumhq.github.io/selenium/docs/api/java/org/openqa/selenium/By.html
-	
+  
 .NOTES
-	VERSION HISTORY
-	2015/07/03 Initial Version
-	2015/09/20 Removed old versions
-	2018/07/22 Upated documentation
+  VERSION HISTORY
+  2015/07/03 Initial Version
+  2015/09/20 Removed old versions
+  2018/07/22 Upated documentation
 
 #>
 
@@ -557,22 +556,19 @@ function find_element {
 }
 
 
-
-
-
 <#
 .SYNOPSIS
-	Finds a collection of elements using specific method of finding : xpath or css_selector
+  Finds a collection of elements using specific method of finding : xpath or css_selector
 .DESCRIPTION
-        Receives the 	
+        Receives the   
 .EXAMPLE
-	$elements = find_elements -css_selector $css_selector -parent $parent_element
+  $elements = find_elements -css_selector $css_selector -parent $parent_element
 
 .LINK
-	
+  
 .NOTES
-	VERSION HISTORY
-	2015/10/03 Initial Version
+  VERSION HISTORY
+  2015/10/03 Initial Version
 
 #>
 
@@ -656,22 +652,23 @@ function find_elements {
 
 <#
 .SYNOPSIS
-	     Finds a value or text of element using another element as a reference, and the selector of closest embedding element and the selector of the target element
+  Finds a value or text of element using another element as a reference, and the selector of closest embedding element and the selector of the target element
 .DESCRIPTION
-       Finds a value or text of element using another element as a reference, and the selector of closest embedding element and the selector of the target element.
-       Uses DOM `closest` method https://developer.mozilla.org/en-US/docs/Web/API/Element/closest that is similar to ancestor xpath
+  Finds a value or text of element using another element as a reference, and the selector of closest embedding element and the selector of the target element.
+  Uses DOM `closest` method https://developer.mozilla.org/en-US/docs/Web/API/Element/closest that is similar to ancestor xpath
 .EXAMPLE
-  # finds the 'add to card' button on http://store.demoqa.com/products-page/ starting from the price element
-  $element = find_page_element_by_xpath -selenium_ref ([ref]$selenium) -xpath 'span[@class="currentprice"]'
-	$result = find_via_closest -ancestor_locator 'form' -target_element_locator 'input[type="submit"]' -element_ref ([ref]$element)
-  # result is equal to 'Add to Card'
-.LINK
-	
+  Find the 'add to card' button on http://store.demoqa.com/products-page/ starting from the price element
+    $element = find_page_element_by_xpath -selenium_ref ([ref]$selenium) -xpath 'span[@class="currentprice"]'
+    $result = find_via_closest -ancestor_locator 'form' -target_element_locator 'input[type="submit"]' -element_ref ([ref]$element)
+  The result is equal to 'Add to Card'
+.LINK	
+  https://habr.com/company/ruvds/blog/416539/ (Russian)
+  https://developer.mozilla.org/en-US/docs/Web/API/Element/closest
 .NOTES
-	VERSION HISTORY
-	2018/07/23 Initial Version
-
+  VERSION HISTORY
+  2018/07/23 Initial Version
 #>
+
 function find_via_closest {
   param(
     [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref),
@@ -680,10 +677,10 @@ function find_via_closest {
   )
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
   [string]$local:result = $null
-
-# https://habr.com/company/ruvds/blog/416539/
-# https://developer.mozilla.org/en-US/docs/Web/API/Element/closest
-[string] $script = @"
+  <# 
+  # variable-interpolated no-extra-argument version of the script 
+  # is possible but is discoraged
+  [string] $script = @"
   var element = arguments[0];
   var ancestorLocator = arguments[1];
   var targetElementLocator = arguments[2];
@@ -694,6 +691,7 @@ function find_via_closest {
 "@
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript( $local:script, $local:element, $ancestor_locator, $target_element_locator )).ToString()
   write-debug ('Result = "{0}"' -f $local:result)
+#>  
 $script = @"
   var element = arguments[0];
   var ancestorLocator = '${ancestor_locator}';
@@ -708,6 +706,3 @@ $script = @"
 
   return $local:result
 }
-
-
-
