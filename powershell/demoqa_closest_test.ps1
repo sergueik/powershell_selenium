@@ -19,23 +19,13 @@
 #THE SOFTWARE.
 
 param(
-  [string]$hub_host = '127.0.0.1',
-  [string]$browser = 'firefox',
+  [string]$browser = '',
+  [switch]$grid,
   [switch]$pause
 )
 
-$shared_assemblies = @{
-  'WebDriver.dll' = '2.53';
-  'WebDriver.Support.dll' = '2.53';
-  'nunit.core.dll' = $null;
-  'nunit.framework.dll' = '2.6.3';
-}
-
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
-
-$verificationErrors = New-Object System.Text.StringBuilder
-
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
   $selenium = launch_selenium -browser $browser -grid
 
@@ -43,25 +33,17 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
   $selenium = launch_selenium -browser $browser
 
 }
-$DebugPreference = 'Continue'
+
 $base_url = 'http://store.demoqa.com/products-page/'
 
-if ($host.Version.Major -le 2) {
-
-  [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
-  $selenium.Manage().Window.Size = New-Object System.Drawing.Size (800,600)
-  $selenium.Manage().Window.Position = New-Object System.Drawing.Point (0,0)
-} else {
-  $selenium.Manage().Window.Size = @{ 'Height' = 600; 'Width' = 800; }
-  $selenium.Manage().Window.Position = @{ 'X' = 0; 'Y' = 0 }
-}
-set_timeouts ([ref]$selenium)
 $selenium.Navigate().GoToUrl($base_url)
-start-sleep -seconds 4
-[NUnit.Framework.StringAssert]::Contains('store.demoqa.com', $selenium.url,{})
+[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
+$wait.PollingInterval = 150
 
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait($selenium,[System.TimeSpan]::FromSeconds(120))
-$wait.PollingInterval = 500
+# set_timeouts ([ref]$selenium)
+# start-sleep -seconds 4
+# [NUnit.Framework.StringAssert]::Contains('store.demoqa.com', $selenium.url,{})
+
 $css_selector = 'span.currentprice:nth-of-type(1)'
 $css_selector = 'span.currentprice'
 
@@ -71,14 +53,40 @@ try {
   write-output ("Exception with {0}: {1} ...`n(ignored)" -f $id1,(($_.Exception.Message) -split "`n")[0])
 }
 
-[OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-
 $element = find_element -css_selector $css_selector
 highlight -element ([ref]$element) -selenium_ref ([ref]$selenium)
 
 $result = find_via_closest -ancestor_locator 'form' -target_element_locator 'input[type="submit"]' -element_ref ([ref]$element)
 
 write-output ('Found {0}' -f $result)
+
+$element = find_element -css_selector $css_selector
+highlight -element ([ref]$element) -selenium_ref ([ref]$selenium)
+
+$xpath = 'ancestor::form'
+
+[OpenQA.Selenium.IWebElement]$form_element = [OpenQA.Selenium.ILocatable]$element.FindElement([OpenQA.Selenium.By]::xpath($xpath))
+
+$result = $form_element.getAttribute('innerHTML')
+
+write-debug ('Found form {0}' -f $result)
+
+$xpath = 'ancestor::form//input[@type="submit"]'
+
+
+[OpenQA.Selenium.IWebElement]$button_element = [OpenQA.Selenium.ILocatable]$element.FindElement([OpenQA.Selenium.By]::xpath($xpath))
+highlight -element ([ref]$element) -selenium_ref ([ref]$selenium) -color 'pink'
+write-output ('Found button {0}' -f $button_element.getAttribute('value'))
+highlight -element ([ref]$button_element) -selenium_ref ([ref]$selenium) -color 'pink'
+
+
+[OpenQA.Selenium.IWebElement[]]$elements = $selenium.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
+$elements| foreach-object {
+  $element = $_
+  highlight -element ([ref]$element) -selenium_ref ([ref]$selenium) -color 'green'
+  $result = find_via_closest -ancestor_locator 'form' -target_element_locator 'input[type="submit"]' -element_ref ([ref]$element)
+  write-output ('Found {0}' -f $result)
+}
 
 if ($PSBoundParameters['pause']) {
 
