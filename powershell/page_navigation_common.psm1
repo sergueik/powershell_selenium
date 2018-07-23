@@ -57,7 +57,7 @@ function get_xpath_of {
 "@
 
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
-  Write-Debug ('Javascript-generated XPath = "{0}"' -f $local:result)
+  write-debug ('Javascript-generated XPath = "{0}"' -f $local:result)
 
   return $local:result
 }
@@ -125,7 +125,7 @@ return get_css_selector_of(arguments[0]);
 
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
 
-  Write-Debug ('Javascript-generated CSS selector: "{0}"' -f $local:result)
+  write-debug ('Javascript-generated CSS selector: "{0}"' -f $local:result)
   return $local:result
 
 }
@@ -156,15 +156,15 @@ function extract_match {
     [string]$label,
     [System.Management.Automation.PSReference]$result_ref = ([ref]$null)
   )
-  Write-Debug ('Extracting from {0}' -f $source)
-  Write-Debug ('Extracting expression {0}' -f $capturing_match_expression)
-  Write-Debug ('Extracting tag {0}' -f $label)
+  write-debug ('Extracting from {0}' -f $source)
+  write-debug ('Extracting expression {0}' -f $capturing_match_expression)
+  write-debug ('Extracting tag {0}' -f $label)
   $local:results = {}
   $local:results = $source | where { $_ -match $capturing_match_expression } |
   ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
   if  ( $local:results -ne $null ) {
-    Write-Debug 'extract_match:'
-    Write-Debug $local:results
+    write-debug 'extract_match:'
+    write-debug $local:results
   }
   $result_ref.Value = $local:results.Media
 }
@@ -239,7 +239,7 @@ function highlight_new {
 	Flashes page element by executing Javascript through Selenium
 	
 .EXAMPLE
-  flash -element ([ref]$element) -selenium_ref ([ref]$selenium) 
+  flash -element ([ref]$element) -selenium_ref ([ref]$selenium)
 .LINK
 	
 .NOTES
@@ -321,7 +321,7 @@ function find_page_element_by_xpath {
   try {
     [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
   } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
+    write-debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
   }
 
   $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::XPath($xpath))
@@ -377,7 +377,7 @@ function find_page_element_by_css_selector {
     [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
     $local:status = $true
   } catch [exception]{
-    Write-Debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
+    write-debug ("Exception : {0} ...`ncss_selector={1}" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
   }
   if ($local:status) {
     $local:element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
@@ -406,11 +406,15 @@ function sleep(milliseconds) {
 
 <#
 .SYNOPSIS
-	Finds element using speficic method of finding : xpath, classname, css_selector etc.
+	Finds element using specific method of finding : xpath, classname, css_selector etc.
 .DESCRIPTION
-        Receives the 	
+  Receives aither of the core Selenium locator strategies as named argument
 .EXAMPLE
 	$element = find_element -classname $classname
+	$element = find_element -css_selector $css_selector
+	$element = find_element -id $id
+	$element = find_element -tagname $tagsname
+	$element = find_element -link_text $link_text
 
 .LINK
 	# https://chromium.googlesource.com/chromium/blink/+/master/Source/devtools/front_end/components/DOMPresentationUtils.js
@@ -421,6 +425,7 @@ function sleep(milliseconds) {
 	VERSION HISTORY
 	2015/07/03 Initial Version
 	2015/09/20 Removed old versions
+	2018/07/22 Upated documentation
 
 #>
 
@@ -470,13 +475,12 @@ function find_element {
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
   $wait.PollingInterval = $wait_polling_interval
 
-
   if ($css_selector -ne $null) {
 
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`ncss_selector='{1}'" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
+      write-debug ("Exception : {0} ...`ncss_selector='{1}'" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
 
@@ -489,7 +493,7 @@ function find_element {
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nxpath='{1}'" -f (($_.Exception.Message) -split "`n")[0],$xpath)
+      write-debug ("Exception : {0} ...`nxpath='{1}'" -f (($_.Exception.Message) -split "`n")[0],$xpath)
     }
 
     $element = $selenium.FindElement([OpenQA.Selenium.By]::XPath($xpath))
@@ -502,7 +506,7 @@ function find_element {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::LinkText($link_text)))
 
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nlink_te='{1}'" -f (($_.Exception.Message) -split "`n")[0],$link_text)
+      write-debug ("Exception : {0} ...`nlink_te='{1}'" -f (($_.Exception.Message) -split "`n")[0],$link_text)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::LinkText($link_text))
   }
@@ -512,7 +516,7 @@ function find_element {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::TagName($tag_name)))
 
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`ntag_name='{1}'" -f (($_.Exception.Message) -split "`n")[0],$tag_name)
+      write-debug ("Exception : {0} ...`ntag_name='{1}'" -f (($_.Exception.Message) -split "`n")[0],$tag_name)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::TagName($tag_name))
   }
@@ -522,7 +526,7 @@ function find_element {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::PartialLinkText($partial_link_text)))
 
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`npartial_link_text='{1}'" -f (($_.Exception.Message) -split "`n")[0],$partial_link_text)
+      write-debug ("Exception : {0} ...`npartial_link_text='{1}'" -f (($_.Exception.Message) -split "`n")[0],$partial_link_text)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::PartialLinkText($partial_link_text))
   }
@@ -533,7 +537,7 @@ function find_element {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName($classname)))
 
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nclassname='{1}'" -f (($_.Exception.Message) -split "`n")[0],$classname)
+      write-debug ("Exception : {0} ...`nclassname='{1}'" -f (($_.Exception.Message) -split "`n")[0],$classname)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::ClassName($classname))
   }
@@ -544,7 +548,7 @@ function find_element {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id($id)))
 
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nid='{1}'" -f (($_.Exception.Message) -split "`n")[0],$id)
+      write-debug ("Exception : {0} ...`nid='{1}'" -f (($_.Exception.Message) -split "`n")[0],$id)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::Id($id))
   }
@@ -558,7 +562,7 @@ function find_element {
 
 <#
 .SYNOPSIS
-	Finds a collection of elements using speficic method of finding : xpath or css_selector
+	Finds a collection of elements using specific method of finding : xpath or css_selector
 .DESCRIPTION
         Receives the 	
 .EXAMPLE
@@ -623,7 +627,7 @@ function find_elements {
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($extended_css_selector)))
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`ncss_selector='{1}'" -f (($_.Exception.Message) -split "`n")[0],$extended_css_selector )
+      write-debug ("Exception : {0} ...`ncss_selector='{1}'" -f (($_.Exception.Message) -split "`n")[0],$extended_css_selector )
     }
     $elements = $parent.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))
   }
@@ -638,7 +642,7 @@ function find_elements {
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($extended_xpath)))
     } catch [exception]{
-      Write-Debug ("Exception : {0} ...`nxpath='{1}'" -f (($_.Exception.Message) -split "`n")[0],$extended_xpath)
+      write-debug ("Exception : {0} ...`nxpath='{1}'" -f (($_.Exception.Message) -split "`n")[0],$extended_xpath)
     }
 
     $elements = $parent.FindElements([OpenQA.Selenium.By]::XPath($xpath))
@@ -650,7 +654,60 @@ function find_elements {
 }
 
 
+<#
+.SYNOPSIS
+	     Finds a value or text of element using another element as a reference, and the selector of closest embedding element and the selector of the target element
+.DESCRIPTION
+       Finds a value or text of element using another element as a reference, and the selector of closest embedding element and the selector of the target element.
+       Uses DOM `closest` method https://developer.mozilla.org/en-US/docs/Web/API/Element/closest that is similar to ancestor xpath
+.EXAMPLE
+  # finds the 'add to card' button on http://store.demoqa.com/products-page/ starting from the price element
+  $element = find_page_element_by_xpath -selenium_ref ([ref]$selenium) -xpath 'span[@class="currentprice"]'
+	$result = find_via_closest -ancestor_locator 'form' -target_element_locator 'input[type="submit"]' -element_ref ([ref]$element)
+  # result is equal to 'Add to Card'
+.LINK
+	
+.NOTES
+	VERSION HISTORY
+	2018/07/23 Initial Version
 
+#>
+function find_via_closest {
+  param(
+    [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref),
+    [String] $ancestor_locator,
+    [String] $target_element_locator
+  )
+  [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
+  [string]$local:result = $null
+
+# https://habr.com/company/ruvds/blog/416539/
+# https://developer.mozilla.org/en-US/docs/Web/API/Element/closest
+[string] $script = @"
+  var element = arguments[0];
+  var ancestorLocator = arguments[1];
+  var targetElementLocator = arguments[2];
+  /* alert('ancestorLocator = ' + ancestorLocator); */
+  var targetElement = element.closest(ancestorLocator).querySelector(targetElementLocator);
+  targetElement.scrollIntoView({ behavior: 'smooth' });
+  return targetElement.text || targetElement.getAttribute('value');
+"@
+  $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript( $local:script, $local:element, $ancestor_locator, $target_element_locator )).ToString()
+  write-debug ('Result = "{0}"' -f $local:result)
+$script = @"
+  var element = arguments[0];
+  var ancestorLocator = '${ancestor_locator}';
+  var targetElementLocator = '${target_element_locator}';
+  /* alert('ancestorLocator = ' + ancestorLocator); */
+  var targetElement = element.closest(ancestorLocator).querySelector(targetElementLocator);
+  targetElement.scrollIntoView({ behavior: 'smooth' });
+  return targetElement.text || targetElement.getAttribute('value');
+"@
+  $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript( $local:script, $local:element,'')).ToString()
+  write-debug ('Result = "{0}"' -f $local:result)
+
+  return $local:result
+}
 
 
 
