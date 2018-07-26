@@ -79,6 +79,7 @@ function launch_selenium {
   param(
     [string]$browser = '',
     [switch]$grid,
+    [switch]$headless,
     [int]$version,
     [string]$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies',
     [string[]]$shared_assemblies = @(
@@ -96,6 +97,11 @@ function launch_selenium {
 
   # Write-Debug (Get-ScriptDirectory)
   $use_remote_driver = [bool]$PSBoundParameters['grid'].IsPresent
+  # Write-Debug (Get-ScriptDirectory)
+  $run_headless = [bool]$PSBoundParameters['headless'].IsPresent
+  if ($run_headless) {
+    write-debug 'launch_selenium: Running headless'
+  }
   $phantomjs_path = 'C:\tools\phantomjs\bin'
   if (($env:PHANTOMJS_PATH -ne $null) -and ($env:PHANTOMJS_PATH -ne '')) {
     $phantomjs_path = $env:PHANTOMJS_PATH
@@ -181,7 +187,7 @@ function launch_selenium {
     }
 
 
-    Write-Debug "Launching ${browser}"
+    write-debug "Launching ${browser}"
 
     if ($browser -match 'firefox') {
       if ($use_remote_driver) {
@@ -189,30 +195,38 @@ function launch_selenium {
         $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
 
       } else {
-        $driver_environment_variable = 'webdriver.gecko.driver'
-        if (-not [Environment]::GetEnvironmentVariable($driver_environment_variable, [System.EnvironmentVariableTarget]::Machine)){
-          [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${selenium_drivers_path}\geckodriver.exe")
+        # Need constructior with firefoxOptions for headless
+        # https://stackoverflow.com/questions/46848615/headless-firefox-in-selenium-c-sharp
+        if ($run_headless) {
+          [OpenQA.Selenium.Firefox.FirefoxOptions]$firefox_options = new-object OpenQA.Selenium.Firefox.FirefoxOptions
+          $firefox_options.addArguments('--headless')
+          $selenium = New-Object OpenQA.Selenium.Firefox.FirefoxDriver ($firefox_options)
+        } else {
+          $driver_environment_variable = 'webdriver.gecko.driver'
+          if (-not [Environment]::GetEnvironmentVariable($driver_environment_variable, [System.EnvironmentVariableTarget]::Machine)){
+            [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${selenium_drivers_path}\geckodriver.exe")
+          }
+          #  $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
+
+          [object]$profile_manager = New-Object OpenQA.Selenium.Firefox.FirefoxProfileManager
+
+          [OpenQA.Selenium.Firefox.FirefoxProfile]$selected_profile_object = $profile_manager.GetProfile($profile)
+          [OpenQA.Selenium.Firefox.FirefoxProfile]$selected_profile_object = New-Object OpenQA.Selenium.Firefox.FirefoxProfile ($profile)
+          $selected_profile_object.setPreference('general.useragent.override',"Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/34.0")
+
+          # https://code.google.com/p/selenium/issues/detail?id=40
+
+          $selected_profile_object.setPreference('browser.cache.disk.enable', $false)
+          $selected_profile_object.setPreference('browser.cache.memory.enable', $false)
+          $selected_profile_object.setPreference('browser.cache.offline.enable', $false)
+          $selected_profile_object.setPreference('network.http.use-cache', $false)
+
+          $selenium = New-Object OpenQA.Selenium.Firefox.FirefoxDriver ($selected_profile_object)
+          [OpenQA.Selenium.Firefox.FirefoxProfile[]]$profiles = $profile_manager.ExistingProfiles
+
+          # [NUnit.Framework.Assert]::IsInstanceOfType($profiles , new-object System.Type( FirefoxProfile[]))
+          # [NUnit.Framework.StringAssert]::AreEqualIgnoringCase($profiles.GetType().ToString(),'OpenQA.Selenium.Firefox.FirefoxProfile[]')
         }
-        #  $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
-
-        [object]$profile_manager = New-Object OpenQA.Selenium.Firefox.FirefoxProfileManager
-
-        [OpenQA.Selenium.Firefox.FirefoxProfile]$selected_profile_object = $profile_manager.GetProfile($profile)
-        [OpenQA.Selenium.Firefox.FirefoxProfile]$selected_profile_object = New-Object OpenQA.Selenium.Firefox.FirefoxProfile ($profile)
-        $selected_profile_object.setPreference('general.useragent.override',"Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/34.0")
-
-        # https://code.google.com/p/selenium/issues/detail?id=40
-
-        $selected_profile_object.setPreference("browser.cache.disk.enable", $false)
-        $selected_profile_object.setPreference("browser.cache.memory.enable", $false)
-        $selected_profile_object.setPreference("browser.cache.offline.enable", $false)
-        $selected_profile_object.setPreference("network.http.use-cache", $false)
-
-        $selenium = New-Object OpenQA.Selenium.Firefox.FirefoxDriver ($selected_profile_object)
-        [OpenQA.Selenium.Firefox.FirefoxProfile[]]$profiles = $profile_manager.ExistingProfiles
-
-        # [NUnit.Framework.Assert]::IsInstanceOfType($profiles , new-object System.Type( FirefoxProfile[]))
-        # [NUnit.Framework.StringAssert]::AreEqualIgnoringCase($profiles.GetType().ToString(),'OpenQA.Selenium.Firefox.FirefoxProfile[]')
       }
     }
     elseif ($browser -match 'chrome') {
@@ -243,18 +257,21 @@ function launch_selenium {
         # http://stackoverflow.com/questions/20401264/how-to-access-network-panel-on-google-chrome-developer-toools-with-selenium
 
         [OpenQA.Selenium.Chrome.ChromeOptions]$options = New-Object OpenQA.Selenium.Chrome.ChromeOptions
+        if ($run_headless) {
+          $options.addArgument('--headless')
+          $options.addArgument('--window-size=1200x800')
+        } else {
+          $options.addArguments('start-maximized')
+          # no-op option - re-enforcing the default setting
+          $options.addArguments(('user-data-dir={0}' -f ("${env:LOCALAPPDATA}\Google\Chrome\User Data" -replace '\\','/')))
+          # if you like to specify another profile parent directory:
+          # $options.addArguments('user-data-dir=c:/TEMP');
 
-        $options.addArguments('start-maximized')
-        # no-op option - re-enforcing the default setting
-        $options.addArguments(('user-data-dir={0}' -f ("${env:LOCALAPPDATA}\Google\Chrome\User Data" -replace '\\','/')))
-        # if you like to specify another profile parent directory:
-        # $options.addArguments('user-data-dir=c:/TEMP');
+          $options.addArguments('--profile-directory=Default')
 
-        $options.addArguments('--profile-directory=Default')
-
-        [OpenQA.Selenium.Remote.DesiredCapabilities]$capabilities = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
-        $capabilities.setCapability([OpenQA.Selenium.Chrome.ChromeOptions]::Capability,$options)
-
+          [OpenQA.Selenium.Remote.DesiredCapabilities]$capabilities = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
+          $capabilities.setCapability([OpenQA.Selenium.Chrome.ChromeOptions]::Capability,$options)
+          }
         $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver ($options)
       }
     }
@@ -291,7 +308,7 @@ New-Object : Exception calling ".ctor" with "1" argument(s): "Unexpected error l
   } else {
     $phantomjs_useragent = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34'
     Write-Host 'Running on phantomjs'
-    $headless = $true
+    $run_headless = $true
     if (-not (Test-Path -Path $phantomjs_path)) {
       throw 'Missing PhantomJS'
     }

@@ -21,17 +21,34 @@
 param(
   [string]$browser = '',
   [switch]$grid,
+  [switch]$headless,
   [switch]$pause
 )
 
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
-  $selenium = launch_selenium -browser $browser -grid
-
+  write-debug 'Running on grid'
+}
+if ([bool]$PSBoundParameters['headless'].IsPresent) {
+  write-debug 'Running headless'
+}
+if ([bool]$PSBoundParameters['grid'].IsPresent) {
+  # NOTE: can not simply pass a switch to the callee 
+  # launch_selenium : Cannot process argument transformation on parameter 'version'.
+  # Cannot convert the "True" value of type
+  # "System.Management.Automation.SwitchParameter" to type "System.Int32".
+  if ([bool]$PSBoundParameters['headless'].IsPresent) {
+    $selenium = launch_selenium -browser $browser -grid -headless
+  } else {
+    $selenium = launch_selenium -browser $browser -grid
+  }
 } else {
-  $selenium = launch_selenium -browser $browser
-
+  if ([bool]$PSBoundParameters['headless'].IsPresent) {
+    $selenium = launch_selenium -browser $browser -headless
+  } else {
+    $selenium = launch_selenium -browser $browser
+  }
 }
 
 [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
@@ -117,7 +134,7 @@ highlight ([ref]$selenium) ([ref]$text_input_element)
 # need to invoke through $action to avoid runtime error.
 # ^a has no effect on the input
 # [void]$actions.SendKeys($text_input_element,[System.Windows.Forms.SendKeys]::SendWait("^a"))
-# [void]$actions.SendKeys($text_input_element,[System.Windows.Forms.SendKeys]::SendWait("{BACKSPACE}{BACKSPACE}{BACKSPACE}")) 
+# [void]$actions.SendKeys($text_input_element,[System.Windows.Forms.SendKeys]::SendWait("{BACKSPACE}{BACKSPACE}{BACKSPACE}"))
 # start-sleep -millisecond 100
 # TODO : keyboard
 # [void]$selenium.Keyboard.SendKeys([System.Windows.Forms.SendKeys]::SendWait("{BACKSPACE}"))

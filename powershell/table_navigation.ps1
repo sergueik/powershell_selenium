@@ -24,17 +24,30 @@
 param(
   [string]$browser = '',
   [switch]$grid,
+  [switch]$headless,
   [switch]$pause
 )
 
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
-  $selenium = launch_selenium -browser $browser -grid
-
+  write-debug 'Running on grid'
+}
+if ([bool]$PSBoundParameters['headless'].IsPresent) {
+  write-debug 'Running headless'
+}
+if ([bool]$PSBoundParameters['grid'].IsPresent) {
+  if ([bool]$PSBoundParameters['headless'].IsPresent) {
+    $selenium = launch_selenium -browser $browser -grid -headless
+  } else {
+    $selenium = launch_selenium -browser $browser -grid
+  }
 } else {
-  $selenium = launch_selenium -browser $browser
-
+  if ([bool]$PSBoundParameters['headless'].IsPresent) {
+    $selenium = launch_selenium -browser $browser -headless
+  } else {
+    $selenium = launch_selenium -browser $browser
+  }
 }
 
 $base_url = 'https://datatables.net/examples/api/highlight.html'
