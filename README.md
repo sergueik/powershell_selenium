@@ -88,9 +88,9 @@ Add-Type -assembly 'system.io.compression.filesystem'
 [IO.Compression.ZipFile]::ExtractToDirectory("${env:TEMP}\${output_file}", $env:TEMP)
 copy-item -path .\lib\net35\WebDriver.Support.dll -destination $shared_assemblies_path
 ```
-NOTE: you will have to close the powershell window that was running Powershell Selenium scripts to avoid __The process cannot access the file because it is being used by another process__ error.
+NOTE: you will have to close the powershell window that has been running Powershell Selenium scripts to avoid __The process cannot access the file because it is being used by another process__ error.
 
-There is no strict enforcement to use Selenium 2.x - the Selenium 3.x libraries work as well.
+There is no strict enforcement to use Selenium 2.x - the Selenium 3.x libraries work as well. In particular, headless mode can be enabled by passing the `-headless` flag to the `launch_selenium` helper method.OB
 
 The Selenium jars and drivers are loaded from `$env:SELENIUM_DRIVERS_PATH` or from `$env:SELENIUM_PATH` (whichever is found set first) or from `c:\java\selenium` by default:
 ```
@@ -120,9 +120,34 @@ c:\java\jdk1.7.0_79
 c:\java\jre7
 c:\java\selenium
 ```
+
+The .net Selenium assemblies can be loaded from alternative location / withspeciic build versos via the following code:
+
+```powershell
+$shared_assemblies = @{
+  'WebDriver.dll'         = '3.13.0';
+  'WebDriver.Support.dll' = '3.13.0';
+  'nunit.core.dll'        = $null;
+  'nunit.framework.dll'   = '2.6.3';
+}
+
+$MODULE_NAME = 'selenium_utils.psd1'
+Import-Module -Name ('{0}/{1}' -f '.', $MODULE_NAME)
+
+$custom_shared_assemblies_path = 'c:\users\sergueik\Downloads'
+
+load_shared_assemblies_with_versions -path $custom_shared_assemblies_path -shared_assemblies $shared_assemblies
+
+
+```
+this has to be done before initializing the browser
+```poweshell
+  $selenium = launch_selenium -browser $browser
+```
+
 The phantomjs is supposed to be installed under `C:\tools\phantomjs-2.0.0\bin`.
 
-The Selenium is launched via `hub.cmd`, `node.cmd`:	
+The mockup of Selenium grid is launched on the local host TCP port `4444` via `hub.cmd`, `node.cmd`:	
 ```cmd
 set SELENIUM_VERSION=2.53.1
 set JAVA_VERSION=1.7.0_79

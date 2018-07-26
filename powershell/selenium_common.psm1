@@ -67,13 +67,17 @@ function Get-ScriptDirectory
 	
 .EXAMPLE
     $selenium = launch_selenium -browser 'chrome' -hub_host -hub_port
-    Will launch the selenium java hub and slave locally
+    Will launch the selenium java hub and slave locally using batch commands or will connect to remote host and port
+    $selenium = launch_selenium -browser 'chrome' -headless
+    Will launch chrome in headless mode via the selenium driver, chromedriver
 .LINK
 
 	
 .NOTES
 	VERSION HISTORY
 	2015/06/07 Initial Version
+  ... misc untracted updates
+	2018/07/26 added Headless support (only tested with Chrome))
 #>
 function launch_selenium {
   param(
@@ -196,8 +200,8 @@ function launch_selenium {
 
       } else {
         # Need constructior with firefoxOptions for headless
-        # https://stackoverflow.com/questions/46848615/headless-firefox-in-selenium-c-sharp
         if ($run_headless) {
+          # https://stackoverflow.com/questions/46848615/headless-firefox-in-selenium-c-sharp
           [OpenQA.Selenium.Firefox.FirefoxOptions]$firefox_options = new-object OpenQA.Selenium.Firefox.FirefoxOptions
           $firefox_options.addArguments('--headless')
           $selenium = New-Object OpenQA.Selenium.Firefox.FirefoxDriver ($firefox_options)
@@ -258,8 +262,8 @@ function launch_selenium {
 
         [OpenQA.Selenium.Chrome.ChromeOptions]$options = New-Object OpenQA.Selenium.Chrome.ChromeOptions
         if ($run_headless) {
-          $options.addArgument('--headless')
-          $options.addArgument('--window-size=1200x800')
+          # https://stackoverflow.com/questions/45130993/how-to-start-chromedriver-in-headless-mode
+          $options.addArguments([System.Collections.Generic.List[string]]@('--headless','--window-size=1200x800', '-disable-gpu'))
         } else {
           $options.addArguments('start-maximized')
           # no-op option - re-enforcing the default setting
@@ -287,9 +291,9 @@ function launch_selenium {
         $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
       } else {
         <#
-NOTE:
-New-Object : Exception calling ".ctor" with "1" argument(s): "Unexpected error launching Internet Explorer. Browser zoom level was set to 75%. It should be
-#>
+        NOTE:
+        New-Object : Exception calling ".ctor" with "1" argument(s): "Unexpected error launching Internet Explorer. Browser zoom level was set to 75%. It should be
+        #>
         $driver_environment_variable = 'webdriver.ie.driver'
         if (-not [Environment]::GetEnvironmentVariable($driver_environment_variable, [System.EnvironmentVariableTarget]::Machine)){
           [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${selenium_drivers_path}\chromedriver.exe")

@@ -1,18 +1,18 @@
 <#
 .SYNOPSIS
-	Returns the Xpath to the provided Selenium page element
+  Returns the Xpath to the provided Selenium page element
 .DESCRIPTION
-	Runs the javascript code through Selenium and returns the Xpath path to the provided Selenium page element
-	
+  Runs the javascript code through Selenium and returns the Xpath path to the provided Selenium page element
+
 .EXAMPLE
-	$javascript_generated_xpath_to_element = get_xpath_of ([ref] $element)
+  $javascript_generated_xpath_to_element = get_xpath_of ([ref] $element)
 
 .LINK
-	# https://chromium.googlesource.com/chromium/blink/+/master/Source/devtools/front_end/components/DOMPresentationUtils.js
-	
+  # https://chromium.googlesource.com/chromium/blink/+/master/Source/devtools/front_end/components/DOMPresentationUtils.js
+
 .NOTES
-	VERSION HISTORY
-	2015/07/03 Initial Version
+  VERSION HISTORY
+  2015/07/03 Initial Version
 #>
 
 
@@ -65,20 +65,20 @@ function get_xpath_of {
 
 <#
 .SYNOPSIS
-	Returns the CSS path to the provided Selenium page element
+  Returns the CSS path to the provided Selenium page element
 .DESCRIPTION
-	Runs the javascript code through Selenium and returns the CSS path to the provided Selenium page element
-		
+  Runs the javascript code through Selenium and returns the CSS path to the provided Selenium page element
+
 .EXAMPLE
-	$javascript_generated_css_selector_of_element = get_css_selector_of ([ref] $element)
+  $javascript_generated_css_selector_of_element = get_css_selector_of ([ref] $element)
 
 .LINK
-	# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed	
-	
+  # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed	
+
 .NOTES
-	TODO: http://joseoncode.com/2011/11/24/sharing-powershell-modules-easily/	
-	VERSION HISTORY
-	2015/06/07 Initial Version
+  TODO: http://joseoncode.com/2011/11/24/sharing-powershell-modules-easily/	
+  VERSION HISTORY
+  2015/06/07 Initial Version
 #>
 
 function get_css_selector_of {
@@ -136,14 +136,14 @@ return get_css_selector_of(arguments[0]);
   Extracts match
 .DESCRIPTION
   Extracts match from a text, e.g. from some $element.Text or $element.GetAttribute('innerHTML')
-  
+
 .EXAMPLE
   $firstitem = $null
   $capturing_match_expression = '(?<firstitem>\d+)$'
   extract_match -Source $text -capturing_match_expression $capturing_match_expression -label 'firstitem' -result_ref ([ref]$firstitem)
 
 .LINK
-  
+
 .NOTES
   VERSION HISTORY
   2015/06/07 Initial Version
@@ -175,11 +175,11 @@ function extract_match {
   Highlights page element
 .DESCRIPTION
   Highlights page element by executing Javascript through Selenium
-  
+
 .EXAMPLE
         highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) [ -delay 1500 ] [-color 'red']
 .LINK
-  
+
 .NOTES
   VERSION HISTORY
   2015/06/07 Initial Version
@@ -204,11 +204,11 @@ function highlight {
   Highlights page element
 .DESCRIPTION
   Highlights page element by executing Javascript through Selenium
-  
+
 .EXAMPLE
       highlight_new -element ([ref]$element)  -selenium_ref ([ref]$selenium)  -delay 1500 -color 'green'
 .LINK
-  
+
 .NOTES
   VERSION HISTORY
   2015/06/07 Initial Version
@@ -237,11 +237,11 @@ function highlight_new {
   Flashes page element
 .DESCRIPTION
   Flashes page element by executing Javascript through Selenium
-  
+
 .EXAMPLE
   flash -element ([ref]$element) -selenium_ref ([ref]$selenium)
 .LINK
-  
+
 .NOTES
   VERSION HISTORY
   2018/07/04 Initial Version
@@ -288,7 +288,7 @@ function changeColor {
   Finds page element
 .DESCRIPTION
   Finds page element by executing appropriate FindElement, By, Wait through Selenium
-  
+
 .EXAMPLE
   $link_alt_text = 'Shore Excursions'
   $element = $null
@@ -296,7 +296,7 @@ function changeColor {
   find_page_element_by_xpath ([ref]$selenium) ([ref]$element) $xpath
 
 .LINK
-  
+
 .NOTES
   VERSION HISTORY
   2015/06/21 Initial Version
@@ -342,7 +342,7 @@ https://www.wikipedia.org/
   Finds page element
 .DESCRIPTION
   Finds page element by executing appropriate FindElement, By, Wait through Selenium
-  
+
 .EXAMPLE
   $link_alt_text = 'Shore Excursions'
   $element = $null
@@ -350,7 +350,7 @@ https://www.wikipedia.org/
   find_page_element_by_css_selector ([ref]$selenium) ([ref]$element) $css_selector
 
 .LINK
-  
+
 .NOTES
   VERSION HISTORY
   2015/06/21 Initial Version
@@ -419,7 +419,7 @@ function sleep(milliseconds) {
   # https://chromium.googlesource.com/chromium/blink/+/master/Source/devtools/front_end/components/DOMPresentationUtils.js
         # http://stackoverflow.com/questions/1767219/mutually-exclusive-powershell-parameters
         # https://seleniumhq.github.io/selenium/docs/api/java/org/openqa/selenium/By.html
-  
+
 .NOTES
   VERSION HISTORY
   2015/07/03 Initial Version
@@ -560,12 +560,12 @@ function find_element {
 .SYNOPSIS
   Finds a collection of elements using specific method of finding : xpath or css_selector
 .DESCRIPTION
-        Receives the   
+        Receives the
 .EXAMPLE
   $elements = find_elements -css_selector $css_selector -parent $parent_element
 
 .LINK
-  
+
 .NOTES
   VERSION HISTORY
   2015/10/03 Initial Version
@@ -677,8 +677,8 @@ function find_via_closest {
   )
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
   [string]$local:result = $null
-  <# 
-  # variable-interpolated no-extra-argument version of the script 
+  <#
+  # variable-interpolated no-extra-argument version of the script
   # is possible but is discoraged
   [string] $script = @"
   var element = arguments[0];
@@ -691,7 +691,7 @@ function find_via_closest {
 "@
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript( $local:script, $local:element, $ancestor_locator, $target_element_locator )).ToString()
   write-debug ('Result = "{0}"' -f $local:result)
-#>  
+#>
 $script = @"
   var element = arguments[0];
   var ancestorLocator = '${ancestor_locator}';
@@ -701,6 +701,21 @@ $script = @"
   targetElement.scrollIntoView({ behavior: 'smooth' });
   return targetElement.text || targetElement.getAttribute('value');
 "@
+  <#
+  # WIP: refactoring
+[string] $script = @"
+  findViaClosest = function (element, ancestorLocator, targetElementLocator) {
+    /* alert('ancestorLocator = ' + ancestorLocator); */
+    var targetElement = element.closest(ancestorLocator).querySelector(targetElementLocator);
+    targetElement.scrollIntoView({ behavior: 'smooth' });
+    return targetElement.text || targetElement.getAttribute('value');
+  }
+  var element = arguments[0];
+  var ancestorLocator = arguments[1];
+  var targetElementLocator = arguments[2];
+  return findViaClosest (element, ancestorLocator, targetElementLocator);
+"@
+  #>
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript( $local:script, $local:element,'')).ToString()
   write-debug ('Result = "{0}"' -f $local:result)
 
