@@ -1,4 +1,4 @@
-#Copyright (c) 2014,2015,2016,2017 Serguei Kouzmine
+#Copyright (c) 2014,2015,2016,2017,2018 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -87,7 +87,6 @@ $hive = 'HKCU:'
 $propertyType = 'String'
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
 
-
 write-host -ForegroundColor 'green' @"
 This call clears "Display intranet sites in compatibility view" checkbox.
 "@
@@ -119,7 +118,6 @@ $hive = 'HKCU:'
 $path = '/Software/Microsoft/Internet Explorer/ContinuousBrowsing'
 $name = 'Enabled'
 $value = '0'
-
 
 # NOTE: keys may be absent:
 # '/Software/Microsoft/Internet Explorer/ContinuousBrowsing', '/Software/Microsoft/Internet Explorer/Privacy'
@@ -166,7 +164,7 @@ $zones | ForEach-Object {
   $hive = 'HKCU:'
   $path = ('/Software/Microsoft/Windows/CurrentVersion/Internet Settings/Zones/{0}' -f $zone)
   $propertyType = 'Dword'
-  $data = @{ 
+  $data = @{
     '2500' = '3';
     '2707' = '0'
   }
@@ -192,7 +190,7 @@ $zones | ForEach-Object {
   popd
 
 }
-# see also: https://github.com/conceptsandtraining/modernie_selenium/blob/master/Tools/ie_protectedmode.reg 
+# see also: https://github.com/conceptsandtraining/modernie_selenium/blob/master/Tools/ie_protectedmode.reg
 
 write-host -ForegroundColor 'green' @"
 This call confirms 'Protected Mode is Turned Off' alert
@@ -205,6 +203,32 @@ $value = '1'
 $propertyType = 'Dword'
 
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+
+write-host -ForegroundColor 'green' @"
+This allows passing basic auth username and password through url'.
+"@
+$hive = 'HKLM:'
+$path = '/Software/Microsoft/Internet Explorer/Main/FeatureControl/FEATURE_HTTP_USERNAME_PASSWORD_DISABLE'
+$name = 'iexplore.exe'
+$value = '0'
+$propertyType = 'Dword'
+change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Internet Explorer/Main/FeatureControl'
+$name = 'iexplore.exe'
+$value = '0'
+$propertyType = 'Dword'
+
+$path_key = 'FEATURE_HTTP_USERNAME_PASSWORD_DISABLE'
+# the key may not already exist
+pushd $hive
+$registry_path_status = Test-Path -Path ('{0}/{1}' -f $path, $path_key) -ErrorAction 'SilentlyContinue'
+if ($registry_path_status -ne $true) {
+new-item -path $path -name $path_key
+}
+popd
+change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType -path ('{0}/{1}' -f $path, $path_key)
 
 write-host -ForegroundColor 'green' @"
 This call turns off 'Popup Blocker'.
@@ -317,14 +341,14 @@ change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $pro
 $hive = 'HKCU:'
 $path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings/5.0/CACHE/Content'
 $name = 'CacheLimit'
-$value = '8192' # 0x2000 
+$value = '8192' # 0x2000
 $propertyType = 'Dword'
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
 
 $hive = 'HKCU:'
 $path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings/CACHE/Content'
 $name = 'CacheLimit'
-$value = '8192' # 0x2000 
+$value = '8192' # 0x2000
 $propertyType = 'Dword'
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
 
@@ -335,27 +359,27 @@ change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $pro
 # $value = '11001'
 # 11001 (0x2AF9)
 # Internet Explorer 11. Webpages are displayed in IE11 Standards mode, regardless of the !DOCTYPE directive.
-# 
+#
 # 11000 (0x2AF8)
 # Internet Explorer 11. Webpages containing standards-based !DOCTYPE directives are displayed in IE9 mode.
-# 
+#
 # 10001 (0x2AF7)
 # Internet Explorer 10. Webpages are displayed in IE10 Standards mode, regardless of the !DOCTYPE directive.
-# 
+#
 # 10000 (0x2710)
 # Internet Explorer 10. Webpages containing standards-based !DOCTYPE directives are displayed in IE9 mode.
-# 
+#
 # 9999 (0x270F)
 # Internet Explorer 9. Webpages are displayed in IE9 Standards mode, regardless of the !DOCTYPE directive.
-# 
+#
 # 9000 (0x2328)
 # Internet Explorer 9. Webpages containing standards-based !DOCTYPE directives are displayed in IE9 mode.
-# 
+#
 # 8888 (0x22B8)
 # Webpages are displayed in IE8 Standards mode, regardless of the !DOCTYPE directive.
-# 
+#
 # 8000 (0x1F40)
 # Webpages containing standards-based !DOCTYPE directives are displayed in IE8 mode.
-# 
+#
 # 7000 (0x1B58)
-# Webpages containing standards-based !DOCTYPE directives are displayed in IE7 Standards mode. 
+# Webpages containing standards-based !DOCTYPE directives are displayed in IE7 Standards mode.
