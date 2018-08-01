@@ -190,7 +190,99 @@ function launch_selenium {
       $env:PATH = $env:PATH + ';' + $selenium_drivers_path
     }
 
+<#
 
+$debugpreference='continue'
+$browser_versions = @{}
+@(
+'C:\Program Files (x86)\Google\Chrome\Application\chrome.exe' ,
+'C:\Program Files (x86)\Mozilla Firefox\firefox.exe' ,
+'C:\Program Files\Internet Explorer\iexplore.exe'
+) | foreach-object {
+  $application_path = $_
+  write-debug ('Probing "{0}"' -f $application_path)
+  $versiondata = get-item -path $application_path | select-object -expandproperty VersionInfo| select-object -property ProductVersion
+  $version = $versiondata.ProductVersion
+  write-debug ('Version: {0}' -f $version)
+  $browser_versions[($application_path -replace '^.*\\', '')] = $version
+}
+write-output $browser_versions
+
+
+Note : Powershell image `ProductVersion` property is ony useful with IEDriverServer:
+pushd $selenium_path
+get-item -path IEDriverServer.exe | select-object -expandproperty VersionInfo| select-object -property ProductVersion
+
+ProductVersion
+--------------
+3.1.0.0
+
+There is no way to determine the chromedriver.exe or geckodriver.exe version by similar command
+
+pushd $selenium_path
+format-list -inputobject (get-item -path chromedriver.exe| select-object -expandproperty VersionInfo )
+
+OriginalFilename  :
+FileDescription   :
+ProductName       :
+Comments          :
+CompanyName       :
+FileName          : C:\java\selenium\chromedriver.exe
+FileVersion       :
+ProductVersion    :
+IsDebug           : False
+IsPatched         : False
+IsPreRelease      : False
+IsPrivateBuild    : False
+IsSpecialBuild    : False
+Language          :
+LegalCopyright    :
+LegalTrademarks   :
+PrivateBuild      :
+SpecialBuild      :
+FileVersionRaw    : 0.0.0.0
+ProductVersionRaw : 0.0.0.0
+
+The uniform way is to call the driver
+
+
+$options = @{
+  'IEDriverServer.exe' = '/version';
+  'Chromedriver.exe' = '/version' ;
+  'geckodriver.exe' ='-V';
+}
+
+foreach ($o in $options.GetEnumerator()) {
+  $application = $o.Key
+  $commandline_flags = $o.Value
+  (& "${selenium_path}\${application}" $commandline_flags ) | tee-object -variable cmdline_output
+  write-debug ($cmdline_output -join '' )
+  # TODO: case insenitive match
+  $capture_expression = ('{0}(?:\.exe)* (?<version>\d+\.\d+\.\d+(?:\.\d+)*)\b .*' -f ($application -replace '.exe$', ''))
+  # $capture_expression = 'geckodriver (?<version>\d\.\d+\.\d)'
+  write-debug $capture_expression
+  [System.Text.RegularExpressions.MatchCollection]$match_collection = [System.Text.RegularExpressions.Regex]::Matches($cmdline_output, $capture_expression)
+  write-debug $match_collection.Groups[1].Value
+}
+
+(& "${selenium_path}\IEDriverServer.exe" '/version' ) | tee-object -variable iedriver_version
+IEDriverServer.exe 3.1.0.0 (64-bit)
+
+(& "${selenium_path}\chromedriver.exe" '/version' ) | tee-object -variable chromedriver_version
+ChromeDriver 2.40.565498 (ea082db3280dd6843ebfb08a625e3eb905c4f5ab)
+
+(& "${selenium_path}\geckodriver.exe" '-V' ) | tee-object -variable geckodriver_version_command_output
+geckodriver 0.15.0
+
+The source code of this program is available at
+https://github.com/mozilla/geckodriver.
+
+[System.Text.RegularExpressions.MatchCollection]$match_collection = [System.Text.RegularExpressions.Regex]::Matches($geckodriver_version_command_output, 'geckodriver (?<version>\d\.\d+\.\d)')
+$match_collection.Groups[1].Value
+
+which can be collaptsed into
+([System.Text.RegularExpressions.Regex]::Matches($geckodriver_version_command_output, 'geckodriver (?<version>\d\.\d+\.\d)')).Groups[1].Value
+#>
     write-debug "Launching ${browser}"
 
     if ($browser -match 'firefox') {
@@ -537,7 +629,7 @@ function netstat_check {
     [string]$selenium_http_port = 4444
   )
 
-  $local_tcpconnections = Invoke-Expression -Command ("C:\Windows\System32\netsh.exe interface ipv4 show tcpconnections localport={0}" -f $selenium_http_port)
+  $local_tcpconnections = Invoke-Expression -Command ('C:\Windows\System32\netsh.exe interface ipv4 show tcpconnections localport={0}'s -f $selenium_http_port)
 
   $established_tcpconnections = $local_tcpconnections | Where-Object { ($_ -match '\bEstablished\b') }
   (($established_tcpconnections -ne '') -and $established_tcpconnections -ne $null)
