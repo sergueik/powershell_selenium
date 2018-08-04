@@ -230,6 +230,39 @@ new-item -path $path -name $path_key
 popd
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType -path ('{0}/{1}' -f $path, $path_key)
 
+
+write-host -ForegroundColor 'green' @"
+This call makes 'Allow active content to run files on My Computer'.
+"@
+
+# https://support.microsoft.com/en-us/help/2002093/allow-active-content-to-run-files-on-my-computer-group-policy-setting
+
+$hive = 'HKLM:'
+$path = '/Software/Microsoft/Internet Explorer/Main/FeatureControl/FEATURE_LOCALMACHINE_LOCKDOWN'
+$name = 'iexplore.exe'
+$value = '0'
+$propertyType = 'Dword'
+change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Internet Explorer/Main/FeatureControl'
+$name = 'iexplore.exe'
+$value = '0'
+$propertyType = 'Dword'
+
+$path_key = 'FEATURE_LOCALMACHINE_LOCKDOWN'
+
+pushd $hive
+$registry_path_status = Test-Path -Path ('{0}/{1}' -f $path, $path_key) -ErrorAction 'SilentlyContinue'
+if ($registry_path_status -ne $true) {
+
+new-item -path $path -name $path_key
+# New-ItemProperty : Attempted to perform an unauthorized operation.
+}
+popd
+change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType -path ('{0}/{1}' -f $path, $path_key)
+
+
 write-host -ForegroundColor 'green' @"
 This call turns off 'Popup Blocker'.
 "@
