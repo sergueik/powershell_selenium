@@ -262,6 +262,24 @@ new-item -path $path -name $path_key
 popd
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType -path ('{0}/{1}' -f $path, $path_key)
 
+write-host -ForegroundColor 'green' @"
+This call removes the "Do you want to open or save this file?" prompt, though only partially.
+"@
+
+# https://9to5it.com/internet-explorer-disable-do-you-want-to-open-or-save-this-file-prompt/
+# NOTE: unfinished
+# TODO: combine with
+# https://superuser.com/questions/246553/how-to-disable-file-download-popup-in-internet-explorer
+# https://answers.microsoft.com/en-us/ie/forum/ie10-windows_7/how-can-i-disable-the-open-or-save-prompt-when-i/e490416d-7cb5-4661-9e9d-4881872ed29d
+
+$hive = 'HKCU:'
+$path = '/Software/Microsoft/Windows/Shell/AttachmentExecute/{0002DF01-0000-0000-C000-000000000046}'
+# CompressedFolder does not work
+$name = '{E88DCCE0-B7B3-11d1-A9F0-00AA0060FA31}'
+$value = ''
+$propertyType = 'String'
+# leads to change of the dialog
+change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
 
 write-host -ForegroundColor 'green' @"
 This call turns off 'Popup Blocker'.
