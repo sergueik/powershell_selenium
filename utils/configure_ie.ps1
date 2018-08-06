@@ -121,8 +121,7 @@ $value = '0'
 
 # NOTE: keys may be absent:
 # '/Software/Microsoft/Internet Explorer/ContinuousBrowsing', '/Software/Microsoft/Internet Explorer/Privacy'
-
-pushd $hive
+pushd ('{0}/' -f $hive )
 $registry_path_status = Test-Path -Path $path -ErrorAction 'SilentlyContinue'
 if ($registry_path_status -eq $true) {
   cd $path
@@ -221,8 +220,9 @@ $value = '0'
 $propertyType = 'Dword'
 
 $path_key = 'FEATURE_HTTP_USERNAME_PASSWORD_DISABLE'
-# the key may not already exist
-pushd $hive
+
+# NOTE: keys may be absent:
+pushd ('{0}/' -f $hive )
 $registry_path_status = Test-Path -Path ('{0}/{1}' -f $path, $path_key) -ErrorAction 'SilentlyContinue'
 if ($registry_path_status -ne $true) {
 new-item -path $path -name $path_key
@@ -252,7 +252,8 @@ $propertyType = 'Dword'
 
 $path_key = 'FEATURE_LOCALMACHINE_LOCKDOWN'
 
-pushd $hive
+# NOTE: keys may be absent:
+pushd ('{0}/' -f $hive )
 $registry_path_status = Test-Path -Path ('{0}/{1}' -f $path, $path_key) -ErrorAction 'SilentlyContinue'
 if ($registry_path_status -ne $true) {
 
@@ -291,6 +292,7 @@ $path = '/Software/Microsoft/Internet Explorer/New Windows'
 $name = 'PopupMgr'
 $value = 'No'
 
+# NOTE: keys may be absent:
 pushd $hive
 cd $path
 $setting = Get-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -ErrorAction 'SilentlyContinue'
