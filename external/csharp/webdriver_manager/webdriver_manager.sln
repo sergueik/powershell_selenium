@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+# SharpDevelop 5.1
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Program", "Program\Program.csproj", "{DDF73921-D0CD-4B7F-BAFB-021CEAC5FF73}"
+EndProject
+#
+# Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTests", "IntegrationTests\IntegrationTests.csproj", "{511CE4F3-DC62-41F9-8700-CA798302C4E7}"
+# EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DDF73921-D0CD-4B7F-BAFB-021CEAC5FF73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDF73921-D0CD-4B7F-BAFB-021CEAC5FF73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDF73921-D0CD-4B7F-BAFB-021CEAC5FF73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDF73921-D0CD-4B7F-BAFB-021CEAC5FF73}.Release|Any CPU.Build.0 = Release|Any CPU
+#		{511CE4F3-DC62-41F9-8700-CA798302C4E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+#		{511CE4F3-DC62-41F9-8700-CA798302C4E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+#		{511CE4F3-DC62-41F9-8700-CA798302C4E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+#		{511CE4F3-DC62-41F9-8700-CA798302C4E7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

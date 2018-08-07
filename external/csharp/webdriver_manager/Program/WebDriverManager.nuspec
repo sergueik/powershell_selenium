@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://github.com/rosolko/WebDriverManager.Net/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/rosolko/WebDriverManager.Net</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <summary>$description$</summary>
+    <releaseNotes>Update edge and interner explorer version selector.</releaseNotes>
+    <copyright>Copyright © Alexander Rosolko 2016-2018</copyright>
+    <tags>Selenium WebDriver ChromeDriver EdgeDriver InternetExplorerDriver MarionetteDriver OperaDriver PhantomJsDriver AppiumDriver</tags>
+  </metadata>
+</package>
