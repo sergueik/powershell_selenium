@@ -38,7 +38,8 @@ $content | out-file $tmp_file
 dir $tmp_file
 
 $o = [xml]$content
-# TODO: filtering
+
+# TODO: filtering by platform and CPU architecture
 $o.'ListBucketResult'.'Contents'[0].'Key'
 $download_url = ('{0}{1}' -f $url, $o.'ListBucketResult'.'Contents'[0].'Key')
 write-output $download_url
@@ -46,12 +47,12 @@ write-output $download_url
 # https://chromedriver.storage.googleapis.com/2.0/chromedriver_linux32.zip
 
 # firefox:
-#  invoke-webrequest : The request was aborted: Could not create SSL/TLS securechannel.
-# https://github.com/lukesampson/scoop/issues/2063
+
+# orogin: https://github.com/lukesampson/scoop/issues/2063
 $url = 'https://github.com/mozilla/geckodriver/releases'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-# this is too slow. appears to even be hanging
+# 'ParsedHtml' is too slow. appears to be hanging
 # (invoke-webrequest -uri $url).$o.ParsedHtml
 
 $cnt = get-random -maximum 100 -minimum 1
@@ -63,8 +64,8 @@ dir $tmp_file
 $html = New-Object -ComObject 'HTMLFile'
 
 # backing up
-# $source = Get-Content -Path $tmp_file -raw
-# $html.IHTMLDocument2_write($source)
+$source = Get-Content -Path $tmp_file -raw
+$html.IHTMLDocument2_write($source)
 
 $html.IHTMLDocument2_write( $content )
 
@@ -77,8 +78,8 @@ $html2   = New-Object -ComObject 'HTMLFile'
 # TODO: filtering
 $html2.IHTMLDocument2_write($nodes[0].innerhtml )
 $html2.getElementsByTagName('A')[0].innerText
-
 # e.g. v0.21.0
+
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($html) | out-null
 Remove-Variable html
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($html2) | out-null
@@ -94,8 +95,7 @@ select-object -property html_url,url,tag_name,prerelease,zipball_url,published_a
 format-list
 <#
 html_url     : https://github.com/mozilla/geckodriver/releases/tag/v0.21.0
-url          : https://api.github.com/repos/mozilla/geckodriver/releases/115083
-               22
+url          : https://api.github.com/repos/mozilla/geckodriver/releases/11508322
 tag_name     : v0.21.0
 prerelease   : False
 zipball_url  : https://api.github.com/repos/mozilla/geckodriver/zipball/v0.21.0
@@ -132,7 +132,8 @@ $o.'ListBucketResult'.'Contents'[0].'Key'
 
 # 2.39/IEDriverServer_Win32_2.39.0.zip
 $download_url = ('{0}{1}' -f $url, $o.'ListBucketResult'.'Contents'[0].'Key')
-# note no '//' separator
+
+# note no '/' separator in the format - 'invoke-webrequest' is sensitive
 # https://selenium-release.storage.googleapis.com//2.39/IEDriverServer_Win32_2.39.0.zip
 
 # To validate, download it
@@ -148,9 +149,9 @@ if ($currentBuildNumber -eq $null ) {
   $currentBuildNumber = '17134'
 }
 popd
-# debugging on Windows 7
-# mock
-  $currentBuildNumber = '17134'
+
+# mocking on Windows 7
+$currentBuildNumber = '17134'
 
 write-output ('CurrentBuildNumber: {0}' -f $currentBuildNumber)
 
@@ -165,8 +166,8 @@ dir $tmp_file
 $html = New-Object -ComObject 'HTMLFile'
 
 # backing up
-# $source = Get-Content -Path $tmp_file -raw
-# $html.IHTMLDocument2_write($source)
+$source = Get-Content -Path $tmp_file -raw
+$html.IHTMLDocument2_write($source)
 
 $html.IHTMLDocument2_write( $content )
 
@@ -175,35 +176,32 @@ $document =  $html.documentElement
 $nodes = $document.getelementsByClassName('driver-download')
 
 $html2   = New-Object -ComObject 'HTMLFile'
-
-# TODO: filter away $nodes[0] because it does not have structure as the rest
 <#
+NOTE:
   $nodes[0].innerhtml
   <P aria-label="WebDriver for Windows Insiders and future Windows releases" class=subtitle>Insiders and future releases</P>
   <P class=driver-download__meta>Microsoft WebDriver is now a Windows Feature on Demand.</P>
   <P class=driver-download__meta>To install run the following in an elevated command prompt:</P>
   <P class=driver-download__meta>DISM.exe /Online /Add-Capability /CapabilityName:Microsoft.WebDriver~~~~0.0.1.0</P>
 #>
-write-output $nodes.length
-# 0..($nodes.length -1)|
+write-output ('Examine {0} nodes' -f $nodes.length)
 
-$nodes |  foreach-object { 
+$nodes |  foreach-object {
   $node = $_
   $node_html = ($node | select-object -expandproperty 'outerHTML')
-  write-output 'Processing:'
-  write-output $node_html
-
+  if ($debugPReference -eq 'continue'){
+    write-output 'Processing the node HTML:'
+    write-output $node_html
+  }
   $html2.IHTMLDocument2_write($node_html )
 
-  # $html2.IHTMLDocument2_write($nodes[1].innerHTML )
   <#
-
+    # element data sample
     <a class="subtitle"
        href="https://download.microsoft.com/download/F/8/A/F8AF50AB-3C3A-4BC4-8773-DC27B32988DD/MicrosoftWebDriver.exe"
        aria-label="WebDriver for release number 17134">Release 17134</a>
     <p class="driver-download__meta">Version: 6.17134 | Edge version supported: 17.17134 |
   #>
-
 
   $elements = $html2.getElementsByTagName('A')
 
@@ -211,45 +209,18 @@ $nodes |  foreach-object {
   0..($elements.length) | foreach-object {
     $cnt = $_
     $element = $elements.item($cnt)
-  <#
-    # This does not work
-    $element_text = $element.innerText
-    $element_html = $element.outerHTML
-    write-output ('element inner text: ' -f  $element_text)
-    write-output ('element HTML: ' -f  $element_html)
-  #>
-  <#
-   # this works but can be misleading
 
-    $element | select-object -property 'outerHTML'
-    $element | select-object -property 'innerText'
-  #>
-  if ($debugpreference -eq 'continue' ){
-    $element
-  }
-  <#
-    # This also does not work
-    $element_html = ($element | select-object -property 'outerHTML')
-    $element_text = ($element | select-object -property 'innerText')
-    write-output ('element inner text: ' -f  $element_text)
-    write-output ('element HTML: ' -f  $element_html)
-  #>
+    if ($debugpreference -eq 'continue' ){
+      $element
+    }
     $element_text = ($element | select-object -expandproperty 'innerText')
     $element_html = ($element | select-object -expandproperty 'outerHTML')
-  <#
-    # This also does not work
-    write-output ('element inner text: ' -f  $element_text)
-    write-output ('element HTML: ' -f  $element_html)
-  #>
-    write-output 'element inner text: '
-    write-output $element_text
-    write-output 'element HTML: '
-    write-output $element_html
-    if ($element_text -match "Release ") {
-      write-output 'Found something'
-    }
     if ($element_text -match "Release ${currentBuildNumber}") {
-      write-output ('Found {0}' -f $currentBuildNumber)
+      write-output 'Found something'
+      write-output 'element inner text: '
+      write-output $element_text
+      write-output 'element HTML: '
+      write-output $element_html
     }
   }
 }
@@ -260,4 +231,3 @@ $html2.getElementsByTagName('A')[0].href
 Remove-Variable html
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($html2) | out-null
 Remove-Variable html2
-
