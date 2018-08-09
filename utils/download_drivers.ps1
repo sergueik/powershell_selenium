@@ -42,8 +42,6 @@ $o = [xml]$content
 $o.'ListBucketResult'.'Contents'[0].'Key'
 $download_url = ('{0}{1}' -f $url, $o.'ListBucketResult'.'Contents'[0].'Key')
 write-output $download_url
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($html) | out-null
-Remove-Variable html
 
 # https://chromedriver.storage.googleapis.com/2.0/chromedriver_linux32.zip
 
@@ -137,10 +135,24 @@ $download_url = ('{0}{1}' -f $url, $o.'ListBucketResult'.'Contents'[0].'Key')
 # note no '//' separator
 # https://selenium-release.storage.googleapis.com//2.39/IEDriverServer_Win32_2.39.0.zip
 
-(invoke-webrequest -uri $download_url ).RawContentLength
+# To validate, download it
+# (invoke-webrequest -url $download_url ).RawContentLength
 # 836478
 
 # edge
+
+pushd 'HKLM:/'
+cd 'SOFTWARE/Microsoft/Windows NT/CurrentVersion'
+$currentBuildNumber = (Get-ItemProperty -Path ('HKLM:/SOFTWARE/Microsoft/Windows NT/CurrentVersion' -f $hive,$path) -Name 'CurrentBuildNumber' -ErrorAction 'SilentlyContinue').CurrentBuildNumber
+if ($currentBuildNumber -eq $null ) {
+  $currentBuildNumber = '17134'
+}
+popd
+# debugging on Windows 7
+# mock
+  $currentBuildNumber = '17134'
+
+write-output ('CurrentBuildNumber: {0}' -f $currentBuildNumber)
 
 $url = 'https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver'
 
@@ -172,9 +184,78 @@ $html2   = New-Object -ComObject 'HTMLFile'
   <P class=driver-download__meta>To install run the following in an elevated command prompt:</P>
   <P class=driver-download__meta>DISM.exe /Online /Add-Capability /CapabilityName:Microsoft.WebDriver~~~~0.0.1.0</P>
 #>
-$html2.IHTMLDocument2_write($nodes[1].innerhtml )
-$html2.getElementsByTagName('A')[0].href
+write-output $nodes.length
+# 0..($nodes.length -1)|
 
+$nodes |  foreach-object { 
+  $node = $_
+  $node_html = ($node | select-object -expandproperty 'outerHTML')
+  write-output 'Processing:'
+  write-output $node_html
+
+  $html2.IHTMLDocument2_write($node_html )
+
+  # $html2.IHTMLDocument2_write($nodes[1].innerHTML )
+  <#
+
+    <a class="subtitle"
+       href="https://download.microsoft.com/download/F/8/A/F8AF50AB-3C3A-4BC4-8773-DC27B32988DD/MicrosoftWebDriver.exe"
+       aria-label="WebDriver for release number 17134">Release 17134</a>
+    <p class="driver-download__meta">Version: 6.17134 | Edge version supported: 17.17134 |
+  #>
+
+
+  $elements = $html2.getElementsByTagName('A')
+
+  write-output $elements.length
+  0..($elements.length) | foreach-object {
+    $cnt = $_
+    $element = $elements.item($cnt)
+  <#
+    # This does not work
+    $element_text = $element.innerText
+    $element_html = $element.outerHTML
+    write-output ('element inner text: ' -f  $element_text)
+    write-output ('element HTML: ' -f  $element_html)
+  #>
+  <#
+   # this works but can be misleading
+
+    $element | select-object -property 'outerHTML'
+    $element | select-object -property 'innerText'
+  #>
+  if ($debugpreference -eq 'continue' ){
+    $element
+  }
+  <#
+    # This also does not work
+    $element_html = ($element | select-object -property 'outerHTML')
+    $element_text = ($element | select-object -property 'innerText')
+    write-output ('element inner text: ' -f  $element_text)
+    write-output ('element HTML: ' -f  $element_html)
+  #>
+    $element_text = ($element | select-object -expandproperty 'innerText')
+    $element_html = ($element | select-object -expandproperty 'outerHTML')
+  <#
+    # This also does not work
+    write-output ('element inner text: ' -f  $element_text)
+    write-output ('element HTML: ' -f  $element_html)
+  #>
+    write-output 'element inner text: '
+    write-output $element_text
+    write-output 'element HTML: '
+    write-output $element_html
+    if ($element_text -match "Release ") {
+      write-output 'Found something'
+    }
+    if ($element_text -match "Release ${currentBuildNumber}") {
+      write-output ('Found {0}' -f $currentBuildNumber)
+    }
+  }
+}
+
+$html2.getElementsByTagName('A')[0].href
+# e.g. https://download.microsoft.com/download/F/8/A/F8AF50AB-3C3A-4BC4-8773-DC27B32988DD/MicrosoftWebDriver.exe
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($html) | out-null
 Remove-Variable html
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($html2) | out-null
