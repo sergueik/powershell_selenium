@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using System.Net;
+
 using AngleSharp;
 using AngleSharp.Parser.Html;
+using Nsoup;
 
 namespace WebDriverManager.DriverConfigs.Impl
 {

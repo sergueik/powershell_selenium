@@ -5,6 +5,9 @@ using System.Security.Cryptography.X509Certificates;
 using AngleSharp;
 using AngleSharp.Parser.Html;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 namespace WebDriverManager.DriverConfigs.Impl
 {
     public class FirefoxConfig : IDriverConfig

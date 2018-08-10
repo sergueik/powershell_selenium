@@ -7,6 +7,9 @@ using System.Text.RegularExpressions;
 using AngleSharp;
 using AngleSharp.Parser.Html;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 namespace WebDriverManager.DriverConfigs.Impl
 {
 	public class InternetExplorerConfig : IDriverConfig
@@ -39,7 +42,7 @@ namespace WebDriverManager.DriverConfigs.Impl
 				var parser = new HtmlParser(Configuration.Default.WithDefaultLoader());
 				var document = parser.Parse(htmlCode);
 				var version = document.QuerySelectorAll("#mainContent > p:nth-child(10)")
-                    .Select(element => element.TextContent)
+                    .Select(element => element.TextContent)	
                     .FirstOrDefault()
                     .Split(' ')[2];
 				string result = null;
