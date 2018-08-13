@@ -23,21 +23,21 @@
 # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-webrequest?view=powershell-6
 
 # chrome:
-$available_architectures = @(
+$available_plaforms = @(
   'mac32',
   'win32',
   # NOTE: no 'win64'
   'linux32',
   'linux64'
 )
-$architecture = 'win32'
+$plaform = 'win32'
 
 $release_url = 'https://chromedriver.storage.googleapis.com/'
 $latest_release_url = 'https://chromedriver.storage.googleapis.com/LATEST_RELEASE'
 $latest_version = (invoke-webrequest -uri $latest_release_url).Content
 $base_url = $release_url
 
-$download_url = ('{0}{1}/chromedriver_{2}.zip' -f $base_url, $latest_version,$architecture)
+$download_url = ('{0}{1}/chromedriver_{2}.zip' -f $base_url, $latest_version, $plaform)
 
 write-output ('Latest version: {0}' -f $latest_version)
 write-output ('Download url: {0}' -f $download_url)
@@ -70,7 +70,7 @@ $contents_element = $_
   if ($key -match 'debug' ) {
     return
   }
-  if ($key -match $architecture ) {
+  if ($key -match $plaform ) {
     $download_url = ('{0}{1}'-f $base_url, $key )
     if ($key -match '\b(?<version>[0-9]+\.[0-9]+)\b' ){
       $version = $matches['version']
@@ -86,11 +86,20 @@ $contents_element = $_
 }
 $latest_release = $releases.GetEnumerator() | sort -Property name -descending | select-object -first 1
 $latest_release.Value | format-list
-exit 0
 
 # firefox:
+$available_plaforms = @(
+  'arm7hf',
+  'linux32',
+  'linux64',
+  'macos',
+  'win32',
+  'win64',
+  'osx'
+)
 
-# orogin: https://github.com/lukesampson/scoop/issues/2063
+$platform = 'win32'
+# origin: https://github.com/lukesampson/scoop/issues/2063
 $url = 'https://github.com/mozilla/geckodriver/releases'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
@@ -128,22 +137,40 @@ Remove-Variable html
 Remove-Variable html2
 
 # geckodriver better way
-$url = 'https://api.github.com/repos/mozilla/geckodriver/releases'
+  $url = 'https://api.github.com/repos/mozilla/geckodriver/releases'
+$releases = @{}
 
 $content = (invoke-webrequest -uri $url).Content
-$o = $content | convertfrom-json
-$o[0] |
-select-object -property html_url,url,tag_name,prerelease,zipball_url,published_at |
-format-list
-<#
-html_url     : https://github.com/mozilla/geckodriver/releases/tag/v0.21.0
-url          : https://api.github.com/repos/mozilla/geckodriver/releases/11508322
-tag_name     : v0.21.0
-prerelease   : False
-zipball_url  : https://api.github.com/repos/mozilla/geckodriver/zipball/v0.21.0
-published_at : 2018-06-15T20:57:11Z
-
-#>
+$array_obj_json = $content | convertfrom-json
+if ($debugPReference -eq 'continue'){
+  $obj_json[11] | select-object -property *
+}
+$array_obj_json | foreach-object {
+  $obj_json = $_
+  $assets = $obj_json.assets
+  $assets | foreach-object { 
+    $key = $_.browser_download_url
+    if ($key -match $plaform ) {
+      if ($key -match '/\b(?<version>v[0-9]+\.[0-9]+\.[0-9]+)\b/' ){
+        $version = $matches['version']
+        $version_key = 0 + ($version -replace '^v','' -replace '.(\d)', '000$1')
+        $download_url = $key
+        <#
+        write-output $download_url
+        write-output $version_key
+        write-output $version
+        #>
+        $release_info = @{}
+        $release_info['version'] = $version
+        $release_info['download_url'] = $download_url
+        $releases[$version_key] = $release_info
+      }
+    }
+  }
+}
+$latest_release = $releases.GetEnumerator() | sort -Property name -descending | select-object -first 1
+$latest_release.Value | format-list
+exit 0
 
 # ie:
 # really ?
