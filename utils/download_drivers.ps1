@@ -99,8 +99,9 @@ $available_plaforms = @(
 )
 
 $platform = 'win32'
+
+$release_url = 'https://github.com/mozilla/geckodriver/releases'
 # origin: https://github.com/lukesampson/scoop/issues/2063
-$url = 'https://github.com/mozilla/geckodriver/releases'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # 'ParsedHtml' is too slow. appears to be hanging
@@ -108,9 +109,11 @@ $url = 'https://github.com/mozilla/geckodriver/releases'
 
 $cnt = get-random -maximum 100 -minimum 1
 $tmp_file = "${env:TEMP}/a${cnt}.html"
-$content = (invoke-webrequest -uri $url).Content
+$content = (invoke-webrequest -uri $release_url).Content
 $content | out-file $tmp_file
-dir $tmp_file
+if ($debugPReference -eq 'continue'){
+  dir $tmp_file
+}
 
 $html = New-Object -ComObject 'HTMLFile'
 
@@ -126,18 +129,421 @@ $nodes = $document.getelementsByClassName('release-title')
 
 $html2   = New-Object -ComObject 'HTMLFile'
 
-# TODO: filtering
 $html2.IHTMLDocument2_write($nodes[0].innerhtml )
 $html2.getElementsByTagName('A')[0].innerText
 # e.g. v0.21.0
-
-[System.Runtime.Interopservices.Marshal]::ReleaseComObject($html) | out-null
-Remove-Variable html
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($html2) | out-null
-Remove-Variable html2
+remove-variable html2
+
+
+# TODO: filtering
+0..($nodes.length) |
+foreach-object {
+$cnt = $_
+$node = $nodes.item($cnt)
+$html2   = New-Object -ComObject 'HTMLFile'
+$html2.IHTMLDocument2_write($node.innerhtml )
+$element =  $html2.getElementsByTagName('A')[0]
+# $element | get-member
+<#
+addBehavior                  Method     int addBehavior (string, Variant)
+addFilter                    Method     void addFilter (IUnknown)
+appendChild                  Method     IHTMLDOMNode appendChild (IHTMLDOMNode)
+applyElement                 Method     IHTMLElement applyElement (IHTMLElem...
+attachEvent                  Method     bool attachEvent (string, IDispatch)
+blur                         Method     void blur ()
+clearAttributes              Method     void clearAttributes ()
+click                        Method     void click ()
+cloneNode                    Method     IHTMLDOMNode cloneNode (bool)
+compareDocumentPosition      Method     ushort compareDocumentPosition (IHTM...
+componentFromPoint           Method     string componentFromPoint (int, int)
+contains                     Method     bool contains (IHTMLElement)
+createControlRange           Method     IDispatch createControlRange ()
+detachEvent                  Method     void detachEvent (string, IDispatch)
+doScroll                     Method     void doScroll (Variant)
+dragDrop                     Method     bool dragDrop ()
+FireEvent                    Method     bool FireEvent (string, Variant)
+focus                        Method     void focus ()
+getAdjacentText              Method     string getAdjacentText (string)
+getAttribute                 Method     Variant getAttribute (string, int)
+getAttributeNode             Method     IHTMLDOMAttribute getAttributeNode (...
+getAttributeNodeNS           Method     IHTMLDOMAttribute2 getAttributeNodeN...
+getAttributeNS               Method     Variant getAttributeNS (Variant, str...
+getBoundingClientRect        Method     IHTMLRect getBoundingClientRect ()
+getClientRects               Method     IHTMLRectCollection getClientRects ()
+getElementsByClassName       Method     IHTMLElementCollection getElementsBy...
+getElementsByTagName         Method     IHTMLElementCollection getElementsBy...
+getElementsByTagNameNS       Method     IHTMLElementCollection getElementsBy...
+getExpression                Method     Variant getExpression (string)
+hasAttribute                 Method     bool hasAttribute (string)
+hasAttributeNS               Method     bool hasAttributeNS (Variant, string)
+hasAttributes                Method     bool hasAttributes ()
+hasChildNodes                Method     bool hasChildNodes ()
+ie8_getAttribute             Method     Variant ie8_getAttribute (string)
+ie8_getAttributeNode         Method     IHTMLDOMAttribute2 ie8_getAttributeN...
+ie8_removeAttribute          Method     bool ie8_removeAttribute (string)
+ie8_removeAttributeNode      Method     IHTMLDOMAttribute2 ie8_removeAttribu...
+ie8_setAttribute             Method     void ie8_setAttribute (string, Variant)
+ie8_setAttributeNode         Method     IHTMLDOMAttribute2 ie8_setAttributeN...
+ie9_appendChild              Method     IHTMLDOMNode ie9_appendChild (IHTMLD...
+ie9_getAttribute             Method     Variant ie9_getAttribute (string)
+ie9_getAttributeNode         Method     IHTMLDOMAttribute2 ie9_getAttributeN...
+ie9_hasAttribute             Method     bool ie9_hasAttribute (string)
+ie9_hasAttributes            Method     bool ie9_hasAttributes ()
+ie9_insertBefore             Method     IHTMLDOMNode ie9_insertBefore (IHTML...
+ie9_removeAttribute          Method     void ie9_removeAttribute (string)
+ie9_removeAttributeNode      Method     IHTMLDOMAttribute2 ie9_removeAttribu...
+ie9_removeChild              Method     IHTMLDOMNode ie9_removeChild (IHTMLD...
+ie9_replaceChild             Method     IHTMLDOMNode ie9_replaceChild (IHTML...
+ie9_setAttribute             Method     void ie9_setAttribute (string, Variant)
+ie9_setAttributeNode         Method     IHTMLDOMAttribute2 ie9_setAttributeN...
+insertAdjacentElement        Method     IHTMLElement insertAdjacentElement (...
+insertAdjacentHTML           Method     void insertAdjacentHTML (string, str...
+insertAdjacentText           Method     void insertAdjacentText (string, str...
+insertBefore                 Method     IHTMLDOMNode insertBefore (IHTMLDOMN...
+isDefaultNamespace           Method     bool isDefaultNamespace (Variant)
+isEqualNode                  Method     bool isEqualNode (IHTMLDOMNode3)
+isSameNode                   Method     bool isSameNode (IHTMLDOMNode3)
+isSupported                  Method     bool isSupported (string, Variant)
+lookupNamespaceURI           Method     Variant lookupNamespaceURI (Variant)
+lookupPrefix                 Method     Variant lookupPrefix (Variant)
+mergeAttributes              Method     void mergeAttributes (IHTMLElement, ...
+msMatchesSelector            Method     bool msMatchesSelector (string)
+msReleasePointerCapture      Method     void msReleasePointerCapture (int)
+msSetPointerCapture          Method     void msSetPointerCapture (int)
+normalize                    Method     void normalize ()
+querySelector                Method     IHTMLElement querySelector (string)
+querySelectorAll             Method     IHTMLDOMChildrenCollection querySele...
+releaseCapture               Method     void releaseCapture ()
+removeAttribute              Method     bool removeAttribute (string, int)
+removeAttributeNode          Method     IHTMLDOMAttribute removeAttributeNod...
+removeAttributeNS            Method     void removeAttributeNS (Variant, str...
+removeBehavior               Method     bool removeBehavior (int)
+removeChild                  Method     IHTMLDOMNode removeChild (IHTMLDOMNode)
+removeExpression             Method     bool removeExpression (string)
+removeFilter                 Method     void removeFilter (IUnknown)
+removeNode                   Method     IHTMLDOMNode removeNode (bool)
+replaceAdjacentText          Method     string replaceAdjacentText (string, ...
+replaceChild                 Method     IHTMLDOMNode replaceChild (IHTMLDOMN...
+replaceNode                  Method     IHTMLDOMNode replaceNode (IHTMLDOMNode)
+scrollIntoView               Method     void scrollIntoView (Variant)
+setActive                    Method     void setActive ()
+setAttribute                 Method     void setAttribute (string, Variant, ...
+setAttributeNode             Method     IHTMLDOMAttribute setAttributeNode (...
+setAttributeNodeNS           Method     IHTMLDOMAttribute2 setAttributeNodeN...
+setAttributeNS               Method     void setAttributeNS (Variant, string...
+setCapture                   Method     void setCapture (bool)
+setExpression                Method     void setExpression (string, string, ...
+swapNode                     Method     IHTMLDOMNode swapNode (IHTMLDOMNode)
+toString                     Method     string toString ()
+accessKey                    Property   string accessKey () {get} {set}
+all                          Property   IDispatch all () {get}
+ariaActivedescendant         Property   string ariaActivedescendant () {get}...
+ariaBusy                     Property   string ariaBusy () {get} {set}
+ariaChecked                  Property   string ariaChecked () {get} {set}
+ariaControls                 Property   string ariaControls () {get} {set}
+ariaDescribedby              Property   string ariaDescribedby () {get} {set}
+ariaDisabled                 Property   string ariaDisabled () {get} {set}
+ariaExpanded                 Property   string ariaExpanded () {get} {set}
+ariaFlowto                   Property   string ariaFlowto () {get} {set}
+ariaHaspopup                 Property   string ariaHaspopup () {get} {set}
+ariaHidden                   Property   string ariaHidden () {get} {set}
+ariaInvalid                  Property   string ariaInvalid () {get} {set}
+ariaLabelledby               Property   string ariaLabelledby () {get} {set}
+ariaLevel                    Property   short ariaLevel () {get} {set}
+ariaLive                     Property   string ariaLive () {get} {set}
+ariaMultiselectable          Property   string ariaMultiselectable () {get} ...
+ariaOwns                     Property   string ariaOwns () {get} {set}
+ariaPosinset                 Property   short ariaPosinset () {get} {set}
+ariaPressed                  Property   string ariaPressed () {get} {set}
+ariaReadonly                 Property   string ariaReadonly () {get} {set}
+ariaRelevant                 Property   string ariaRelevant () {get} {set}
+ariaRequired                 Property   string ariaRequired () {get} {set}
+ariaSecret                   Property   string ariaSecret () {get} {set}
+ariaSelected                 Property   string ariaSelected () {get} {set}
+ariaSetsize                  Property   short ariaSetsize () {get} {set}
+ariaValuemax                 Property   string ariaValuemax () {get} {set}
+ariaValuemin                 Property   string ariaValuemin () {get} {set}
+ariaValuenow                 Property   string ariaValuenow () {get} {set}
+attributes                   Property   IDispatch attributes () {get}
+behaviorUrns                 Property   IDispatch behaviorUrns () {get}
+canHaveChildren              Property   bool canHaveChildren () {get}
+canHaveHTML                  Property   bool canHaveHTML () {get}
+charset                      Property   string charset () {get} {set}
+childNodes                   Property   IDispatch childNodes () {get}
+children                     Property   IDispatch children () {get}
+className                    Property   string className () {get} {set}
+clientHeight                 Property   int clientHeight () {get}
+clientLeft                   Property   int clientLeft () {get}
+clientTop                    Property   int clientTop () {get}
+clientWidth                  Property   int clientWidth () {get}
+constructor                  Property   IDispatch constructor () {get}
+contentEditable              Property   string contentEditable () {get} {set}
+coords                       Property   string coords () {get} {set}
+currentStyle                 Property   IHTMLCurrentStyle currentStyle () {g...
+dataFld                      Property   string dataFld () {get} {set}
+dataFormatAs                 Property   string dataFormatAs () {get} {set}
+dataSrc                      Property   string dataSrc () {get} {set}
+dir                          Property   string dir () {get} {set}
+disabled                     Property   bool disabled () {get} {set}
+document                     Property   IDispatch document () {get}
+filters                      Property   IHTMLFiltersCollection filters () {g...
+firstChild                   Property   IHTMLDOMNode firstChild () {get}
+hash                         Property   string hash () {get} {set}
+hideFocus                    Property   bool hideFocus () {get} {set}
+host                         Property   string host () {get} {set}
+hostname                     Property   string hostname () {get} {set}
+href                         Property   string href () {get} {set}
+hreflang                     Property   string hreflang () {get} {set}
+id                           Property   string id () {get} {set}
+ie8_attributes               Property   IHTMLAttributeCollection3 ie8_attrib...
+ie8_coords                   Property   string ie8_coords () {get} {set}
+ie8_href                     Property   string ie8_href () {get} {set}
+ie8_shape                    Property   string ie8_shape () {get} {set}
+ie9_nodeName                 Property   string ie9_nodeName () {get}
+ie9_tagName                  Property   string ie9_tagName () {get}
+innerHTML                    Property   string innerHTML () {get} {set}
+innerText                    Property   string innerText () {get} {set}
+isContentEditable            Property   bool isContentEditable () {get}
+isDisabled                   Property   bool isDisabled () {get}
+isMultiLine                  Property   bool isMultiLine () {get}
+isTextEdit                   Property   bool isTextEdit () {get}
+lang                         Property   string lang () {get} {set}
+language                     Property   string language () {get} {set}
+lastChild                    Property   IHTMLDOMNode lastChild () {get}
+localName                    Property   Variant localName () {get}
+Methods                      Property   string Methods () {get} {set}
+mimeType                     Property   string mimeType () {get}
+name                         Property   string name () {get} {set}
+nameProp                     Property   string nameProp () {get}
+namespaceURI                 Property   Variant namespaceURI () {get}
+nextSibling                  Property   IHTMLDOMNode nextSibling () {get}
+nodeName                     Property   string nodeName () {get}
+nodeType                     Property   int nodeType () {get}
+nodeValue                    Property   Variant nodeValue () {get} {set}
+offsetHeight                 Property   int offsetHeight () {get}
+offsetLeft                   Property   int offsetLeft () {get}
+offsetParent                 Property   IHTMLElement offsetParent () {get}
+offsetTop                    Property   int offsetTop () {get}
+offsetWidth                  Property   int offsetWidth () {get}
+onabort                      Property   Variant onabort () {get} {set}
+onactivate                   Property   Variant onactivate () {get} {set}
+onafterupdate                Property   Variant onafterupdate () {get} {set}
+onbeforeactivate             Property   Variant onbeforeactivate () {get} {s...
+onbeforecopy                 Property   Variant onbeforecopy () {get} {set}
+onbeforecut                  Property   Variant onbeforecut () {get} {set}
+onbeforedeactivate           Property   Variant onbeforedeactivate () {get} ...
+onbeforeeditfocus            Property   Variant onbeforeeditfocus () {get} {...
+onbeforepaste                Property   Variant onbeforepaste () {get} {set}
+onbeforeupdate               Property   Variant onbeforeupdate () {get} {set}
+onblur                       Property   Variant onblur () {get} {set}
+oncanplay                    Property   Variant oncanplay () {get} {set}
+oncanplaythrough             Property   Variant oncanplaythrough () {get} {s...
+oncellchange                 Property   Variant oncellchange () {get} {set}
+onchange                     Property   Variant onchange () {get} {set}
+onclick                      Property   Variant onclick () {get} {set}
+oncontextmenu                Property   Variant oncontextmenu () {get} {set}
+oncontrolselect              Property   Variant oncontrolselect () {get} {set}
+oncopy                       Property   Variant oncopy () {get} {set}
+oncuechange                  Property   Variant oncuechange () {get} {set}
+oncut                        Property   Variant oncut () {get} {set}
+ondataavailable              Property   Variant ondataavailable () {get} {set}
+ondatasetchanged             Property   Variant ondatasetchanged () {get} {s...
+ondatasetcomplete            Property   Variant ondatasetcomplete () {get} {...
+ondblclick                   Property   Variant ondblclick () {get} {set}
+ondeactivate                 Property   Variant ondeactivate () {get} {set}
+ondrag                       Property   Variant ondrag () {get} {set}
+ondragend                    Property   Variant ondragend () {get} {set}
+ondragenter                  Property   Variant ondragenter () {get} {set}
+ondragleave                  Property   Variant ondragleave () {get} {set}
+ondragover                   Property   Variant ondragover () {get} {set}
+ondragstart                  Property   Variant ondragstart () {get} {set}
+ondrop                       Property   Variant ondrop () {get} {set}
+ondurationchange             Property   Variant ondurationchange () {get} {s...
+onemptied                    Property   Variant onemptied () {get} {set}
+onended                      Property   Variant onended () {get} {set}
+onerror                      Property   Variant onerror () {get} {set}
+onerrorupdate                Property   Variant onerrorupdate () {get} {set}
+onfilterchange               Property   Variant onfilterchange () {get} {set}
+onfocus                      Property   Variant onfocus () {get} {set}
+onfocusin                    Property   Variant onfocusin () {get} {set}
+onfocusout                   Property   Variant onfocusout () {get} {set}
+onhelp                       Property   Variant onhelp () {get} {set}
+oninput                      Property   Variant oninput () {get} {set}
+oninvalid                    Property   Variant oninvalid () {get} {set}
+onkeydown                    Property   Variant onkeydown () {get} {set}
+onkeypress                   Property   Variant onkeypress () {get} {set}
+onkeyup                      Property   Variant onkeyup () {get} {set}
+onlayoutcomplete             Property   Variant onlayoutcomplete () {get} {s...
+onload                       Property   Variant onload () {get} {set}
+onloadeddata                 Property   Variant onloadeddata () {get} {set}
+onloadedmetadata             Property   Variant onloadedmetadata () {get} {s...
+onloadstart                  Property   Variant onloadstart () {get} {set}
+onlosecapture                Property   Variant onlosecapture () {get} {set}
+onmousedown                  Property   Variant onmousedown () {get} {set}
+onmouseenter                 Property   Variant onmouseenter () {get} {set}
+onmouseleave                 Property   Variant onmouseleave () {get} {set}
+onmousemove                  Property   Variant onmousemove () {get} {set}
+onmouseout                   Property   Variant onmouseout () {get} {set}
+onmouseover                  Property   Variant onmouseover () {get} {set}
+onmouseup                    Property   Variant onmouseup () {get} {set}
+onmousewheel                 Property   Variant onmousewheel () {get} {set}
+onmove                       Property   Variant onmove () {get} {set}
+onmoveend                    Property   Variant onmoveend () {get} {set}
+onmovestart                  Property   Variant onmovestart () {get} {set}
+onmsanimationend             Property   Variant onmsanimationend () {get} {s...
+onmsanimationiteration       Property   Variant onmsanimationiteration () {g...
+onmsanimationstart           Property   Variant onmsanimationstart () {get} ...
+onmsgesturechange            Property   Variant onmsgesturechange () {get} {...
+onmsgesturedoubletap         Property   Variant onmsgesturedoubletap () {get...
+onmsgestureend               Property   Variant onmsgestureend () {get} {set}
+onmsgesturehold              Property   Variant onmsgesturehold () {get} {set}
+onmsgesturestart             Property   Variant onmsgesturestart () {get} {s...
+onmsgesturetap               Property   Variant onmsgesturetap () {get} {set}
+onmsgotpointercapture        Property   Variant onmsgotpointercapture () {ge...
+onmsinertiastart             Property   Variant onmsinertiastart () {get} {s...
+onmslostpointercapture       Property   Variant onmslostpointercapture () {g...
+onmsmanipulationstatechanged Property   Variant onmsmanipulationstatechanged...
+onmspointercancel            Property   Variant onmspointercancel () {get} {...
+onmspointerdown              Property   Variant onmspointerdown () {get} {set}
+onmspointerhover             Property   Variant onmspointerhover () {get} {s...
+onmspointermove              Property   Variant onmspointermove () {get} {set}
+onmspointerout               Property   Variant onmspointerout () {get} {set}
+onmspointerover              Property   Variant onmspointerover () {get} {set}
+onmspointerup                Property   Variant onmspointerup () {get} {set}
+onmstransitionend            Property   Variant onmstransitionend () {get} {...
+onmstransitionstart          Property   Variant onmstransitionstart () {get}...
+onpage                       Property   Variant onpage () {get} {set}
+onpaste                      Property   Variant onpaste () {get} {set}
+onpause                      Property   Variant onpause () {get} {set}
+onplay                       Property   Variant onplay () {get} {set}
+onplaying                    Property   Variant onplaying () {get} {set}
+onprogress                   Property   Variant onprogress () {get} {set}
+onpropertychange             Property   Variant onpropertychange () {get} {s...
+onratechange                 Property   Variant onratechange () {get} {set}
+onreadystatechange           Property   Variant onreadystatechange () {get} ...
+onreset                      Property   Variant onreset () {get} {set}
+onresize                     Property   Variant onresize () {get} {set}
+onresizeend                  Property   Variant onresizeend () {get} {set}
+onresizestart                Property   Variant onresizestart () {get} {set}
+onrowenter                   Property   Variant onrowenter () {get} {set}
+onrowexit                    Property   Variant onrowexit () {get} {set}
+onrowsdelete                 Property   Variant onrowsdelete () {get} {set}
+onrowsinserted               Property   Variant onrowsinserted () {get} {set}
+onscroll                     Property   Variant onscroll () {get} {set}
+onseeked                     Property   Variant onseeked () {get} {set}
+onseeking                    Property   Variant onseeking () {get} {set}
+onselect                     Property   Variant onselect () {get} {set}
+onselectstart                Property   Variant onselectstart () {get} {set}
+onstalled                    Property   Variant onstalled () {get} {set}
+onsubmit                     Property   Variant onsubmit () {get} {set}
+onsuspend                    Property   Variant onsuspend () {get} {set}
+ontimeupdate                 Property   Variant ontimeupdate () {get} {set}
+onvolumechange               Property   Variant onvolumechange () {get} {set}
+onwaiting                    Property   Variant onwaiting () {get} {set}
+outerHTML                    Property   string outerHTML () {get} {set}
+outerText                    Property   string outerText () {get} {set}
+ownerDocument                Property   IDispatch ownerDocument () {get}
+parentElement                Property   IHTMLElement parentElement () {get}
+parentNode                   Property   IHTMLDOMNode parentNode () {get}
+parentTextEdit               Property   IHTMLElement parentTextEdit () {get}
+pathname                     Property   string pathname () {get} {set}
+port                         Property   string port () {get} {set}
+prefix                       Property   Variant prefix () {get} {set}
+previousSibling              Property   IHTMLDOMNode previousSibling () {get}
+protocol                     Property   string protocol () {get} {set}
+protocolLong                 Property   string protocolLong () {get}
+readyState                   Property   Variant readyState () {get}
+recordNumber                 Property   Variant recordNumber () {get}
+rel                          Property   string rel () {get} {set}
+rev                          Property   string rev () {get} {set}
+role                         Property   string role () {get} {set}
+runtimeStyle                 Property   IHTMLStyle runtimeStyle () {get}
+scopeName                    Property   string scopeName () {get}
+scrollHeight                 Property   int scrollHeight () {get}
+scrollLeft                   Property   int scrollLeft () {get} {set}
+scrollTop                    Property   int scrollTop () {get} {set}
+scrollWidth                  Property   int scrollWidth () {get}
+search                       Property   string search () {get} {set}
+shape                        Property   string shape () {get} {set}
+sourceIndex                  Property   int sourceIndex () {get}
+spellcheck                   Property   Variant spellcheck () {get} {set}
+style                        Property   IHTMLStyle style () {get}
+tabIndex                     Property   short tabIndex () {get} {set}
+tagName                      Property   string tagName () {get}
+tagUrn                       Property   string tagUrn () {get} {set}
+target                       Property   string target () {get} {set}
+textContent                  Property   Variant textContent () {get} {set}
+title                        Property   string title () {get} {set}
+type                         Property   string type () {get} {set}
+uniqueID                     Property   string uniqueID () {get}
+uniqueNumber                 Property   int uniqueNumber () {get}
+urn                          Property   string urn () {get} {set}
+xmsAcceleratorKey            Property   string xmsAcceleratorKey () {get} {s...
+
+#>
+$text = $element.innerText
+write-output $text
+try{
+  if ($debugPReference -eq 'continue'){
+    $attributes = $element.attributes
+    $attributes | where-object { $_.name -match 'href'} | select-object -first 1 | format-list
+    <#
+    # e.g.
+
+    nodeName        : href
+    nodeValue       : about:/mozilla/geckodriver/releases/tag/v0.16.0
+    specified       : True
+    name            : href
+    value           : about:/mozilla/geckodriver/releases/tag/v0.16.0
+    expando         : False
+    nodeType        : 2
+    parentNode      :
+    childNodes      :
+    firstChild      :
+    lastChild       :
+    previousSibling :
+    nextSibling     :
+    attributes      :
+    ownerDocument   : mshtml.HTMLDocumentClass
+    ie8_nodeValue   : /mozilla/geckodriver/releases/tag/v0.16.0
+    ie8_value       : /mozilla/geckodriver/releases/tag/v0.16.0
+    ie8_specified   : True
+    ownerElement    : System.__ComObject
+    ie9_nodeValue   : /mozilla/geckodriver/releases/tag/v0.16.0
+    ie9_nodeName    : href
+    ie9_name        : href
+    ie9_value       : /mozilla/geckodriver/releases/tag/v0.16.0
+    ie9_firstChild  : System.__ComObject
+    ie9_lastChild   : System.__ComObject
+    ie9_childNodes  : System.__ComObject
+    ie9_specified   : True
+    constructor     : System.__ComObject
+    prefix          :
+    localName       : href
+    namespaceURI    :
+    textContent     : /mozilla/geckodriver/releases/tag/v0.16.0
+
+    #>
+  }
+    $href = $element.getAttribute('href',0)
+    write-output ($href -replace '^about:','')
+    $attributes = $element.attributes
+    $attributes | where-object { $_.name -match 'href'} | select-object -first 1 | select-object -property textContent | format-list
+    # write-output ($href.textContent)
+  } catch [Exception] {
+    # ignore
+    write-Debug ( 'Exception : ' + $_.Exception.Message)
+  }
+  [System.Runtime.Interopservices.Marshal]::ReleaseComObject($html2) | out-null
+  remove-variable html2
+
+}
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($html) | out-null
+remove-variable html
 
 # geckodriver better way
-  $url = 'https://api.github.com/repos/mozilla/geckodriver/releases'
+$url = 'https://api.github.com/repos/mozilla/geckodriver/releases'
 $releases = @{}
 
 $content = (invoke-webrequest -uri $url).Content
@@ -148,7 +554,7 @@ if ($debugPReference -eq 'continue'){
 $array_obj_json | foreach-object {
   $obj_json = $_
   $assets = $obj_json.assets
-  $assets | foreach-object { 
+  $assets | foreach-object {
     $key = $_.browser_download_url
     if ($key -match $plaform ) {
       if ($key -match '/\b(?<version>v[0-9]+\.[0-9]+\.[0-9]+)\b/' ){
@@ -179,9 +585,11 @@ $cnt = get-random -maximum 100 -minimum 1
 $tmp_file = "${env:TEMP}/a${cnt}.html"
 $content = (invoke-webrequest -uri $url).Content
 $content | out-file $tmp_file
-dir $tmp_file
+if ($debugPReference -eq 'continue'){
+  dir $tmp_file
+}
 
-$html = New-Object -ComObject 'HTMLFile'
+$html = new-object -ComObject 'HTMLFile'
 
 $html.IHTMLDocument2_write( $content )
 
@@ -193,7 +601,9 @@ $cnt = get-random -maximum 100 -minimum 1
 $tmp_file = "${env:TEMP}/a${cnt}.html"
 $content = (invoke-webrequest -uri $url).Content
 $content | out-file $tmp_file
-dir $tmp_file
+if ($debugPReference -eq 'continue'){
+  dir $tmp_file
+}
 
 $o = [xml]$content
 
@@ -201,6 +611,7 @@ $o.'ListBucketResult'.'Contents'[0].'Key'
 
 # 2.39/IEDriverServer_Win32_2.39.0.zip
 $download_url = ('{0}{1}' -f $url, $o.'ListBucketResult'.'Contents'[0].'Key')
+exit 0
 
 # note no '/' separator in the format - 'invoke-webrequest' is sensitive
 # https://selenium-release.storage.googleapis.com//2.39/IEDriverServer_Win32_2.39.0.zip
@@ -230,7 +641,9 @@ $cnt = get-random -maximum 100 -minimum 1
 $tmp_file = "${env:TEMP}/a${cnt}.html"
 $content = (invoke-webrequest -uri $url).Content
 $content | out-file $tmp_file
-dir $tmp_file
+if ($debugPReference -eq 'continue'){
+  dir $tmp_file
+}
 
 $html = New-Object -ComObject 'HTMLFile'
 
@@ -297,6 +710,6 @@ $nodes |  foreach-object {
 $html2.getElementsByTagName('A')[0].href
 # e.g. https://download.microsoft.com/download/F/8/A/F8AF50AB-3C3A-4BC4-8773-DC27B32988DD/MicrosoftWebDriver.exe
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($html) | out-null
-Remove-Variable html
+remove-variable html
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($html2) | out-null
-Remove-Variable html2
+remove-variable html2
