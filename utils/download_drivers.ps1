@@ -18,33 +18,75 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-
 # This script extracts download link for latest version of Seleium driver from release page XML, JSON or HTML as applicable
 
 # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/invoke-webrequest?view=powershell-6
 
 # chrome:
-$url = 'https://chromedriver.storage.googleapis.com/LATEST_RELEASE'
-$version = (invoke-webrequest -uri $url).Content
-# e.g. 2.41
+$available_architectures = @(
+  'mac32',
+  'win32',
+  # NOTE: no 'win64'
+  'linux32',
+  'linux64'
+)
+$architecture = 'win32'
 
-# alternative chrome
+$release_url = 'https://chromedriver.storage.googleapis.com/'
+$latest_release_url = 'https://chromedriver.storage.googleapis.com/LATEST_RELEASE'
+$latest_version = (invoke-webrequest -uri $latest_release_url).Content
+$base_url = $release_url
 
-$url = 'https://chromedriver.storage.googleapis.com/'
+$download_url = ('{0}{1}/chromedriver_{2}.zip' -f $base_url, $latest_version,$architecture)
+
+write-output ('Latest version: {0}' -f $latest_version)
+write-output ('Download url: {0}' -f $download_url)
+<#
+e.g.
+  Latest version: 2.41
+  Download url: https://chromedriver.storage.googleapis.com/2.41/chromedriver_win32.zip
+#>
+# Alternative chrome
+
 $cnt = get-random -maximum 100 -minimum 1
 $tmp_file = "${env:TEMP}/a${cnt}.html"
-$content = (invoke-webrequest -uri $url).Content
+$content = (invoke-webrequest -uri $release_url).Content
 $content | out-file $tmp_file
-dir $tmp_file
-
+if ($debugPReference -eq 'continue'){
+  dir $tmp_file
+}
 $o = [xml]$content
 
 # TODO: filtering by platform and CPU architecture
-$o.'ListBucketResult'.'Contents'[0].'Key'
-$download_url = ('{0}{1}' -f $url, $o.'ListBucketResult'.'Contents'[0].'Key')
-write-output $download_url
-
-# https://chromedriver.storage.googleapis.com/2.0/chromedriver_linux32.zip
+$contents = $o.'ListBucketResult'.'Contents'
+$releases = @{}
+$contents |
+foreach-object {
+$contents_element = $_
+  if ($debugPReference -eq 'continue'){
+    $contents_element | select-object -property *
+  }
+  $key = $contents_element.Key
+  if ($key -match 'debug' ) {
+    return
+  }
+  if ($key -match $architecture ) {
+    $download_url = ('{0}{1}'-f $base_url, $key )
+    if ($key -match '\b(?<version>[0-9]+\.[0-9]+)\b' ){
+      $version = $matches['version']
+      $version_key = 0 + ($version -replace '.(\d)', '000$1')
+      # write-output $version
+      # write-output $download_url
+      $release_info = @{}
+      $release_info['version'] = $version
+      $release_info['download_url'] = $download_url
+      $releases[$version_key] = $release_info
+    }
+  }
+}
+$latest_release = $releases.GetEnumerator() | sort -Property name -descending | select-object -first 1
+$latest_release.Value | format-list
+exit 0
 
 # firefox:
 
