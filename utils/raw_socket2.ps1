@@ -25,7 +25,9 @@
   }
 
 #>
+
 Add-Type -TypeDefinition @"
+
 // based on: https://docs.microsoft.com/en-us/dotnet/framework/network-programming/synchronous-client-socket-example
 using System;
 using System.Net;
@@ -34,87 +36,104 @@ using System.Text;
 
 public class SynchronousSocketClient
 {
-
-	protected string port;
-	public string Port { 
-		get { return port; }
-		set { 
-			port = value; 
+		protected string port;
+		public string Port { 
+			get { return port; }
+			set { 
+				port = value; 
+			}
 		}
-	}
-	protected string ip_address;
-	public string IPAddress { 
-		get { return ip_address; }
-		set { 
-			ip_address = value; 
+		protected string message = "This is a test<EOF>";
+		public string Message { 
+			get { return message; }
+			set { 
+				message = value; 
+			}
 		}
-	}
-	public static void StartClient()
-	{  
-		// Data buffer for incoming data.  
-		byte[] bytes = new byte[1024];  
+		protected string ip_address;
+		// NOTE:  can not define property with the same name as the class, like. IPAddress
+		// or the compilation error
+		// 'string' does not contain a definition for 'Parse' and no extension method 'Parse'
+		// accepting a first argument of type 'string' could be found
+		public string Address { 
+			get { return ip_address; }
+			set { 
+				ip_address = value; 
+			}
+		}
+		public SynchronousSocketClient() {
+  
+		}
 
-		// Connect to a remote device.  
-		try {  
-			// Establish the remote endpoint for the socket.  
-			// This example uses port 11000 on the local computer.  
-			IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());  
-			IPAddress ipAddress = ipHostInfo.AddressList[0];  
-			IPEndPoint remoteEP = new IPEndPoint(ipAddress, 5985);  
+		public void StartClient()
+		{  
+			byte[] bytes = new byte[1024];  
+      // https://docs.microsoft.com/en-us/dotnet/api/system.net.ipaddress.parse?view=netframework-4.0
+			try {
+				IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());  
 
-			// Create a TCP/IP  socket.  
-			Socket sender = new Socket(ipAddress.AddressFamily,   
-				                         SocketType.Stream, ProtocolType.Tcp);  
+				IPAddress ipAddress = (String.IsNullOrEmpty(ip_address)) ? ipHostInfo.AddressList[0] : IPAddress.Parse(ip_address);  
+      
 
-			// Connect the socket to the remote endpoint. Catch any errors.  
-			try {  
-				sender.Connect(remoteEP);  
+				int portNumber = 5985;
+				Int32.TryParse(port, out portNumber);
+				IPEndPoint remoteEP = new IPEndPoint(ipAddress, portNumber);  
 
-				Console.WriteLine("Socket connected to {0}",  
-					sender.RemoteEndPoint.ToString());  
+				Socket sender = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);  
 
-				// Encode the data string into a byte array.  
-				byte[] msg = Encoding.ASCII.GetBytes("This is a test<EOF>");  
+				try {  
+					sender.Connect(remoteEP);  
 
-				// Send the data through the socket.  
-				int bytesSent = sender.Send(msg);  
+					Console.WriteLine("Socket connected to {0}",  
+						sender.RemoteEndPoint.ToString());  
 
-				// Receive the response from the remote device.  
-				int bytesRec = sender.Receive(bytes);  
-				Console.WriteLine("Echoed test = {0}",  
-					Encoding.ASCII.GetString(bytes, 0, bytesRec));  
+					byte[] msg = Encoding.ASCII.GetBytes(message);  
 
-				// Release the socket.  
-				sender.Shutdown(SocketShutdown.Both);  
-				sender.Close();  
+					Console.WriteLine("Sending = {0}", message); 
+					int bytesSent = sender.Send(msg);  
 
-			} catch (ArgumentNullException ane) {  
-				Console.WriteLine("ArgumentNullException : {0}", ane.ToString());  
-			} catch (SocketException se) {  
-				Console.WriteLine("SocketException : {0}", se.ToString());  
+					int bytesRec = sender.Receive(bytes);  
+					Console.WriteLine("Response = {0}",  
+						Encoding.ASCII.GetString(bytes, 0, bytesRec));  
+
+					sender.Shutdown(SocketShutdown.Both);  
+					sender.Close();  
+
+				} catch (ArgumentNullException ane) {  
+					Console.WriteLine("ArgumentNullException : {0}", ane.ToString());  
+				} catch (SocketException se) {  
+					Console.WriteLine("SocketException : {0}", se.ToString());  
+				} catch (Exception e) {  
+					Console.WriteLine("Unexpected exception : {0}", e.ToString());  
+				}  
+
 			} catch (Exception e) {  
-				Console.WriteLine("Unexpected exception : {0}", e.ToString());  
+				Console.WriteLine(e.ToString());  
 			}  
-
-		} catch (Exception e) {  
-			Console.WriteLine(e.ToString());  
-		}  
-	}
-
+		}
 }
 "@  -ReferencedAssemblies 'System.Windows.Forms.dll', 'System.Drawing.dll', 'System.Data.dll', 'System.Net.dll'
 
 $o =  new-object -typeName 'SynchronousSocketClient'
+$o.Port = "5985"
+$o.Address = "127.0.0.1"
+# $o.Message = "SHUTDOWN"
+$o.Message = "TEST<EOF>"
+# $o.Message = "GET / HTTP/1.1"
+# NOTE sending a valid GET  request to WinRM TCP port 5985 is not a good idea (hanging and SocketExeption)
+# https://blogs.msdn.microsoft.com/wmi/2009/07/22/new-default-ports-for-ws-management-and-powershell-remoting/
 
 # converting from static method
-# $o.StartClient();
-[SynchronousSocketClient]::StartClient();
+$o.StartClient()
+# [SynchronousSocketClient]::StartClient();
 
 <#
 Will respond with 
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN""http://www.w3.org/TR/html4/str
+ict.dtd">
 <HTML><HEAD><TITLE>Bad Request</TITLE>
 <META HTTP-EQUIV="Content-Type" Content="text/html; charset=us-ascii"></HEAD>
-<BODY><h2>Bad Request</h2>
-<hr><p>HTTP Error 400. The request is badly formed.</p>
+<BODY><h2>Bad Request - Invalid Verb</h2>
+<hr><p>HTTP Error 400. The request verb is invalid.</p>
 </BODY></HTML>
 #>
