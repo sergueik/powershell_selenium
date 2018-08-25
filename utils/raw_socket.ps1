@@ -2,7 +2,7 @@
 # it can be handy in a telnet-disabled Windows environment
 # if the set executionpolicy changes is not alowed (or being undone when changed)
 # call the script from a batch file
-# powershell.exe -executiopolicy remotesigner -file tmpfile.ps1
+# powershell.exe -executiopolicy remotesigned -file tmpfile.ps1
 
 
 # based on https://stackoverflow.com/questions/29759854/how-to-connect-to-tcp-socket-with-powershell-to-send-and-receive-data
@@ -24,7 +24,7 @@ if ($tcp_client.Connected)
 {
   # $bytes = $enc.GetBytes($command)
   # $writer.WriteLine($bytes) | out-null
-  # catalina will acknowledge receipt of System.Byte[]
+  # Catalina will acknowledge receipt of a `System.Byte[]` - the [String] argument is required with streamSWriter
 
   $writer.WriteLine($command) | Out-Null
   $writer.Close()

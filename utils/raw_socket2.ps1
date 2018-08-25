@@ -53,7 +53,6 @@ public class SynchronousSocketClient
       // https://docs.microsoft.com/en-us/dotnet/api/system.net.ipaddress.parse?view=netframework-4.0
 			try {
 				IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
-
 				IPAddress ipAddress = (String.IsNullOrEmpty(ip_address)) ? ipHostInfo.AddressList[0] : IPAddress.Parse(ip_address);
 
 
