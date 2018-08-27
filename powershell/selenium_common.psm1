@@ -629,7 +629,7 @@ function netstat_check {
     [string]$selenium_http_port = 4444
   )
 
-  $local_tcpconnections = Invoke-Expression -Command ('C:\Windows\System32\netsh.exe interface ipv4 show tcpconnections localport={0}'s -f $selenium_http_port)
+  $local_tcpconnections = Invoke-Expression -Command ('C:\Windows\System32\netsh.exe interface ipv4 show tcpconnections localport={0}' -f $selenium_http_port)
 
   $established_tcpconnections = $local_tcpconnections | Where-Object { ($_ -match '\bEstablished\b') }
   (($established_tcpconnections -ne '') -and $established_tcpconnections -ne $null)
