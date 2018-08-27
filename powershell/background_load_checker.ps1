@@ -49,13 +49,15 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
     $selenium = launch_selenium -browser $browser
   }
 }
+$debugpreference = 'continue'
+
 $base_url = 'https://www.intechnic.com/blog/20-beautiful-big-background-image-website-design-inspirations/'
 $selenium.Navigate().GoToUrl($base_url)
 [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
 $wait.PollingInterval = 150
 
 $image_link = '#hs_cos_wrapper_post_body > a:nth-child(3) > img'
-$result = check_image_ready -selenium_ref ([ref]$selenium) -element_locator $image_link -debug 
+$result = check_image_ready -selenium_ref ([ref]$selenium) -element_locator $image_link #  -debug 
 write-output ('Result = {0}' -f $result) 
 
 $base_url = 'http://ringvemedia.com/'
@@ -64,7 +66,7 @@ $selenium.Navigate().GoToUrl($base_url)
 
 # hanging with exception:
 # DOMException: Failed to execute 'postMessage' on 'Window': HTMLBodyElement object could not be cloned.
-$result = check_image_ready -selenium_ref ([ref]$selenium) -element_locator 'body' -debug
+$result = check_image_ready -selenium_ref ([ref]$selenium) -element_locator 'body' #  -debug
 write-output ('Result = {0}' -f $result) 
 # NOTE:  with debug settings be ready tofail the main script with 
 # Exception calling "ExecuteScript" with "3" argument(s): 
@@ -72,6 +74,7 @@ write-output ('Result = {0}' -f $result)
 
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 custom_pause -fullstop $fullstop
+$debugpreference = 'silentlycontinue'
 
 if (-not ($host.Name -match 'ISE')) {
   # Cleanup
