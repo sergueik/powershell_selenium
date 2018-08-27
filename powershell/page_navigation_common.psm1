@@ -133,7 +133,7 @@ return get_css_selector_of(arguments[0]);
 
 <#
 .SYNOPSIS
-  Extracts match
+    Extracts match
 .DESCRIPTION
   Extracts match from a text, e.g. from some $element.Text or $element.GetAttribute('innerHTML')
 
@@ -718,6 +718,74 @@ $script = @"
   #>
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript( $local:script, $local:element,'')).ToString()
   write-debug ('Result = "{0}"' -f $local:result)
+
+  return $local:result
+
+}
+
+
+<#
+.SYNOPSIS
+.DESCRIPTION
+.EXAMPLE
+   check_image_ready -selenium_ref ([ref]$selenium) [-element_locator $element_locator]
+.LINK	
+.NOTES
+  VERSION HISTORY
+  2018/08/27 Initial Version
+#>
+
+# based on: https://automated-testing.info/t/proverit-chto-background-image-zagruzilsya-na-stranicze/21424
+# HTML page background image does not have a dedicated tag.
+# https://www.w3schools.com/cssref/pr_background-image.asp
+# one can use this function to compute the naturalWidth property of  the div (e.g. of an image)
+# and detect when the background image is finished loading this way
+function check_image_ready {
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [switch]$debug,
+    [String]$element_locator = 'body'
+  )
+  if ($selenium_ref.Value -eq $null) {
+    throw 'Selenium object must be defined to check_image_ready'
+  }
+  # $run_debug = 1
+  $run_debug = [bool]$PSBoundParameters['debug'].IsPresent
+  if ($run_debug) {
+    write-debug 'in check_image_ready'
+  }
+# https://stackoverflow.com/questions/10076031/naturalheight-and-naturalwidth-property-new-or-deprecated
+# https://www.w3.org/TR/html5/embedded-content-0.html#the-img-element 
+[String]$local:script =
+@"
+
+var selector = arguments[0];
+var debug = arguments[1];
+var nodes = document.querySelectorAll(selector);
+var element = nodes[0];
+if (debug) {
+  /*
+    try {
+        alert(element.complete);
+    } catch (err) {
+        alert(erro.toString());
+    }
+    try {
+        alert(element.naturalWidth);
+    } catch (err) {
+        alert(erro.toString());
+    }
+  */
+}
+
+return (element.complete && typeof element.naturalWidth != "undefined" && element.naturalWidth > 0) ? element.naturalWidth : -1;
+"@
+
+  write-debug ('Running the script : {0}' -f $local:script )
+  # NOTE: with 'Microsoft.PowerShell.Commands.WriteErrorException,check_image_ready' will be thrown if write-erroris used here instead of write-debug
+
+  $local:result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value).ExecuteScript($local:script, $element_locator, $run_debug  )
+  write-debug ('Result = {0}' -f $local:result)
 
   return $local:result
 }
