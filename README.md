@@ -1,11 +1,51 @@
 ### Info
-Collection of Powershell scripts and modules for work with Selenium C# Client
-illustrating varios Selenium-related tasks in a problem-solution fashion.
-Common functionality is put into  `page_navigation_common.psm1` and `selenium_common.psm1` modules.
+
+Collection of scripts and modules for controling with the browser via
+[.net Selenium driver managed assembly](https://www.nuget.org/packages/Selenium.WebDriver)
+package from Powershell
+The project is illustrating various typical Selenium tasks in a problem-solution fashion.
+
+The code is using well known syntax of invoking public
+[C# Selenium API methods](https://seleniumhq.github.io/selenium/docs/api/dotnet/)
+from Powershell in a transparent fashion:
+```c#
+
+using NUnit.Framework;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Interactions;
+
+IWebDriver driver = new ChromeDriver();
+int timeout = 10;
+WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeout);
+driver.Navigate().GoToUrl(base_url);
+Actions actions = new Actions(driver);
+string selector = "div.dropdown.open ul.dropdown-menu";
+wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector(selector)));
+IWebElement element = driver.FindElement(By.CssSelector(selector));
+actions.MoveToElement(element).Click().Build().Perform();
+string script = "arguments[0].setAttribute('style', arguments[1]);";
+Object result = ((IJavaScriptExecutor)driver).ExecuteScript(script, element);
+```
+becomes
+```powershell
+
+[OpenQA.Selenium.Remote.WebDriver]$driver = new-object OpenQA.Selenium.Chrome.ChromeDriver
+$timeout = 10
+[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait ($driver,[System.TimeSpan]::FromSeconds($timeout))
+[OpenQA.Selenium.Interactions.Actions]$actions = new-object OpenQA.Selenium.Interactions.Actions ($driver)
+$selector = 'div.dropdown.open ul.dropdown-menu'
+$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($selector)))
+$element = $driver.FindElement([OpenQA.Selenium.By]::CssSelector($selector))
+$script = 'arguments[0].setAttribute("style", arguments[1]);'
+$result = (([OpenQA.Selenium.IJavaScriptExecutor]$driver).ExecuteScript($script,$element, ('color: {0}; border: 4px solid {0};' -f $color ))).ToString()
+```
+Naturally, Powershell version is somehow quite more verbose therefore the common / shared functionality is put into `selenium_common.psm1` and `page_navigation_common.psm1` modules.
 
 ![Developing Selenium Scripts in Powershell ISE](https://raw.githubusercontent.com/sergueik/powershell_selenium/master/screenshots/55a.png)
 
 ### Basic Usage:
+
 To run a Selenium test in Powershell, start with the following script:
 ```powershell
 
@@ -26,10 +66,10 @@ param(
   set_timeouts ([ref]$selenium)
   $selenium.Navigate().GoToUrl($base_url)
   # create Actions object
-  [OpenQA.Selenium.Interactions.Actions]$actions = new-object OpenQA.Selenium.Interactions.Actions($selenium)
+  $actions = new-object OpenQA.Selenium.Interactions.Actions($selenium)
 
   # create WebDriverWait object
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
+  $wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
   $wait.PollingInterval = 100
 
   # iterate over ingiegogo campains ...
@@ -43,8 +83,8 @@ param(
   $project_card_elements | ForEach-Object {
     $project_card_element = $_
     [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$project_card_element).Build().Perform()
-    Write-Output $project_card_element.Text
-    Write-Output '----'
+    write-output $project_card_element.Text
+    write-output '----'
     highlight ([ref]$selenium) ([ref]$project_card_element)
     [object]$project_card_title = $project_card_element.FindElement([OpenQA.Selenium.By]::CssSelector($project_card_title_selector))
     flash ([ref]$selenium) ([ref]$project_card_title)
