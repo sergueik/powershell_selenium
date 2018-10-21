@@ -326,9 +326,8 @@ which can be collaptsed into
       }
     }
     elseif ($browser -match 'chrome') {
-
+      $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
       if ($use_remote_driver) {
-        $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
         $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
       } else {
         $driver_environment_variable = 'webdriver.chrome.driver'
@@ -341,7 +340,6 @@ which can be collaptsed into
         # Oveview of extensions
         # https://sites.google.com/a/chromium.org/chromedriver/capabilities
 
-        $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
         # Profile creation
         # https://support.google.com/chrome/answer/142059?hl=en
         # http://www.labnol.org/software/create-family-profiles-in-google-chrome/4394/
