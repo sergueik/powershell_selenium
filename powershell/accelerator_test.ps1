@@ -20,6 +20,7 @@
 
 param(
   [string]$browser = '',
+  # only 'grid' version is currently working. 
   [switch]$grid,
   # [switch]$headless,
   [switch]$pause
@@ -59,11 +60,12 @@ $obj_accel::Add('ChromeDriver', [OpenQA.Selenium.Chrome.ChromeDriver])
 $obj_accel::Add('WebDriverWait', [OpenQA.Selenium.Support.UI.WebDriverWait])
 $obj_accel::Add('ExpectedConditions', [OpenQA.Selenium.Support.UI.ExpectedConditions])
 $obj_accel::Add('ExpectedConditions', [OpenQA.Selenium.Support.UI.ExpectedConditions])
+$obj_accel::Add('By', [OpenQA.Selenium.By])
+$obj_accel::Add('Actions', [OpenQA.Selenium.Interactions.Actions])
+$obj_accel::Add('SelectElement', [OpenQA.Selenium.Support.UI.SelectElement])
 # $obj_accel::Add('IWebElement', [OpenQA.Selenium.IWebElement])
 # cannot make accelerators to interfaces:
 # [8780:8704:1021/154106.756:ERROR:mf_helpers.cc(14)] Error in dxva_video_decode_accelerator_win.cc on line 510
-$obj_accel::Add('By', [OpenQA.Selenium.By])
-$obj_accel::Add('Actions', [OpenQA.Selenium.Interactions.Actions])
 
 if ($browser -match 'firefox') {
   if ($use_remote_driver) {
