@@ -1,4 +1,4 @@
-﻿#Copyright (c) 2015 Serguei Kouzmine
+﻿#Copyright (c) 2015, 2018 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -79,8 +79,14 @@ $shared_assemblies = @(
   'nunit.framework.dll'
 )
 
-$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies'
+$selenium_drivers_path = $shared_assemblies_path = "c:\Users\${env:USERNAME}\Downloads" 
 
+# natural to stuff nupkgs there
+# https://www.nuget.org/api/v2/package/Selenium.WebDriver/3.12.0
+# https://www.nuget.org/api/v2/package/Selenium.Support/3.12.0
+# https://www.nuget.org/api/v2/package/Selenium.WebDriver.ChromeDriver/2.43.0
+# https://www.nuget.org/api/v2/package/Selenium.WebDriver.GeckoDriver/0.23.0
+# https://www.nuget.org/api/v2/package/nunit.framework/2.63.0
 if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
   $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
 }
@@ -90,53 +96,62 @@ pushd $shared_assemblies_path
 
 $shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
 popd
-
+# pure C#
 $verificationErrors = New-Object System.Text.StringBuilder
-
-if ($browser -ne $null -and $browser -ne '') {
-  try {
-    $connection = (New-Object Net.Sockets.TcpClient)
-    $connection.Connect("127.0.0.1",4444)
-    $connection.Close()
-  } catch {
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\hub.cmd"
-    Start-Process -FilePath "C:\Windows\System32\cmd.exe" -ArgumentList "start /min cmd.exe /c c:\java\selenium\node.cmd"
-    Start-Sleep -Seconds 10
-  }
-  Write-Host "Running on ${browser}"
+Write-Host "Running on ${browser}"
   if ($browser -match 'firefox') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
+    if ($run_headless) {
+      # https://stackoverflow.com/questions/46848615/headless-firefox-in-selenium-c-sharp
+      [OpenQA.Selenium.Firefox.FirefoxOptions]$firefox_options = new-object OpenQA.Selenium.Firefox.FirefoxOptions
+      $firefox_options.addArguments('--headless')
+      $selenium = New-Object OpenQA.Selenium.Firefox.FirefoxDriver($firefox_options)
+    } else {
+      $driver_environment_variable = 'webdriver.gecko.driver'
+      if (-not [Environment]::GetEnvironmentVariable($driver_environment_variable, [System.EnvironmentVariableTarget]::Machine)){
+        [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${selenium_drivers_path}\geckodriver.exe")
+      }
+      [object]$profile_manager = New-Object OpenQA.Selenium.Firefox.FirefoxProfileManager
 
+      [OpenQA.Selenium.Firefox.FirefoxProfile]$selected_profile_object = $profile_manager.GetProfile($profile)
+      [OpenQA.Selenium.Firefox.FirefoxProfile]$selected_profile_object = New-Object OpenQA.Selenium.Firefox.FirefoxProfile ($profile)
+      $selected_profile_object.setPreference('general.useragent.override',"Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/34.0")
+
+      # https://code.google.com/p/selenium/issues/detail?id=40
+      $capabilities = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
+      $capabilities.setCapability('marionette', $true)
+      $selected_profile_object.setPreference('marionette', $true)
+      $selected_profile_object.setPreference('browser.cache.disk.enable', $false)
+      $selected_profile_object.setPreference('browser.cache.memory.enable', $false)
+      $selected_profile_object.setPreference('browser.cache.offline.enable', $false)
+      $selected_profile_object.setPreference('network.http.use-cache', $false)
+      $capabilities.setCapability([OpenQA.Selenium.Firefox.FirefoxDriver]::PROFILE, $selected_profile_object)
+      $selenium = new-object OpenQA.Selenium.Firefox.FirefoxDriver($selected_profile_object)
+      # $selenium = new-object OpenQA.Selenium.Firefox.FirefoxDriver($capabilities)
+    }
   }
   elseif ($browser -match 'chrome') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
+    $driver_environment_variable = 'webdriver.chrome.driver'
+    if (-not [Environment]::GetEnvironmentVariable($driver_environment_variable, [System.EnvironmentVariableTarget]::Machine)){
+      [Environment]::SetEnvironmentVariable( $driver_environment_variable, "${selenium_drivers_path}\chromedriver.exe")
+    }
+    [OpenQA.Selenium.Chrome.ChromeOptions]$options = New-Object OpenQA.Selenium.Chrome.ChromeOptions
+    if ($run_headless) {
+      # https://stackoverflow.com/questions/45130993/how-to-start-chromedriver-in-headless-mode
+      $options.addArguments([System.Collections.Generic.List[string]]@('--headless','--window-size=1200x800', '-disable-gpu'))
+    } else {
+      $options.addArguments('start-maximized')
+      # if you like to override profile
+      $options.addArguments(('user-data-dir={0}' -f ("c:\Users\${env:USERNAME}\AppData\Local\Google\Chrome\User Data" -replace '\\','/')))
+    }
+    $options.addArguments('--profile-directory=Default')
+    $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver($options)
   }
   elseif ($browser -match 'ie') {
     $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
     if ($version -ne $null -and $version -ne 0) {
       $capability.SetCapability("version",$version.ToString());
     }
-
   }
-  elseif ($browser -match 'safari') {
-    $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Safari()
-  }
-  else {
-    throw "unknown browser choice:${browser}"
-  }
-  $uri = [System.Uri]("http://127.0.0.1:4444/wd/hub")
-  $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
-} else {
-  Write-Host 'Running on phantomjs'
-  $phantomjs_executable_folder = "C:\tools\phantomjs"
-  $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
-  $selenium.Capabilities.SetCapability("ssl-protocol","any")
-  $selenium.Capabilities.SetCapability("ignore-ssl-errors",$true)
-  $selenium.Capabilities.SetCapability("takesScreenshot",$true)
-  $selenium.Capabilities.SetCapability("userAgent","Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.34 (KHTML, like Gecko) PhantomJS/1.9.7 Safari/534.34")
-  $options = New-Object OpenQA.Selenium.PhantomJS.PhantomJSOptions
-  $options.AddAdditionalCapability("phantomjs.executable.path",$phantomjs_executable_folder)
-}
 
 $base_url = 'http://www.carnival.com'
 
