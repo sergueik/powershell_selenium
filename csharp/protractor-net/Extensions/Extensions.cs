@@ -14,48 +14,48 @@ namespace Protractor.Extensions
 	public static class Extensions
 	{
 
-		private static string result = null;
-		private static Regex regex;
-		private static MatchCollection matches;
-
-		public static string FindMatch(this string text, string matchPattern, string matchTag)
-		{
-			result = null;
-			regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled
-			                  /* RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled */
-			);
-			matches = regex.Matches(text);
-			foreach (Match match in matches) {
-				if (match.Length != 0) {
-					foreach (Capture capture in match.Groups[matchTag].Captures) {
-						if (result == null) {
-							result = capture.ToString();
+			private static string result = null;
+			private static Regex regex;
+			private static MatchCollection matches;
+	
+			public static string FindMatch(this string text, string matchPattern, string matchTag)
+			{
+				result = null;
+				regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled
+				                  /* RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled */
+				);
+				matches = regex.Matches(text);
+				foreach (Match match in matches) {
+					if (match.Length != 0) {
+						foreach (Capture capture in match.Groups[matchTag].Captures) {
+							if (result == null) {
+								result = capture.ToString();
+							}
 						}
 					}
 				}
+				return result;
 			}
-			return result;
-		}
-
-		public static string FindMatch(this string text, string matchPattern)
-		{
-			string generated_tag = matchPattern.FindMatch("(?:<(?<result>[^>]+)>)", "result");
-			result = null;
-			regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled
-			                  /* RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled */
-			);
-			matches = regex.Matches(text);
-			foreach (Match match in matches) {
-				if (match.Length != 0) {
-					foreach (Capture capture in match.Groups[generated_tag].Captures) {
-						if (result == null) {
-							result = capture.ToString();
+	
+			public static string FindMatch(this string text, string matchPattern)
+			{
+				string generated_tag = matchPattern.FindMatch("(?:<(?<result>[^>]+)>)", "result");
+				result = null;
+				regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled
+				                  /* RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled */
+				);
+				matches = regex.Matches(text);
+				foreach (Match match in matches) {
+					if (match.Length != 0) {
+						foreach (Capture capture in match.Groups[generated_tag].Captures) {
+							if (result == null) {
+								result = capture.ToString();
+							}
 						}
 					}
 				}
+				return result;
 			}
-			return result;
-		}
 
 		public static void Highlight(this NgWebDriver ngDriver, IWebElement element, int highlight_timeout = 100, int px = 3, string color = "yellow")
 		{

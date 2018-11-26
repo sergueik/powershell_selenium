@@ -10,7 +10,7 @@ using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
-using OpenQA.Selenium.PhantomJS;
+// using OpenQA.Selenium.PhantomJS;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;

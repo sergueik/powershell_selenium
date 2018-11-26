@@ -17,6 +17,7 @@ using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
+// NOTE: removed from Selenium.WebDriver 3.14.0
 using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
@@ -402,7 +403,7 @@ namespace Protractor.Test
 		{
 			try {
 				element = driver.FindElement(by);
-			} catch (NoSuchElementException ex) {
+			} catch (NoSuchElementException) {
 				element = null;
 				return false;
 			}

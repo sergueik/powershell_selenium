@@ -136,9 +136,14 @@ namespace Protractor
 		public string Url {
 			get {
 				this.WaitForAngular();
+                string browserName = null;
 				IHasCapabilities hcDriver = this.driver as IHasCapabilities;
-				if (hcDriver != null && hcDriver.Capabilities.BrowserName == "internet explorer") {
-					// 'this.driver.Url' does not work on IE
+				if (hcDriver != null && hcDriver.Capabilities.HasCapability("browserName"))
+                {
+                    browserName = hcDriver.Capabilities.GetCapability("browserName").ToString();
+                }
+				if (browserName != null && (browserName == "internet explorer" || browserName == "MicrosoftEdge" || browserName == "phantomjs" || browserName.ToLower() == "safari")) {
+					// 'this.driver.Url' did not work on IE for some time
 					return this.jsExecutor.ExecuteScript(ClientSideScripts.GetLocationAbsUrl, this.rootElement) as string;
 				} else {
 					return this.driver.Url;
@@ -147,12 +152,14 @@ namespace Protractor
 			set {
 				// Reset URL
 				this.driver.Url = "about:blank";
-				// TODO: test Safari & Android
+                string browserName = null;
 				IHasCapabilities hcDriver = this.driver as IHasCapabilities;
-				if (hcDriver != null &&
-				    (hcDriver.Capabilities.BrowserName == "internet explorer" ||
-				    hcDriver.Capabilities.BrowserName == "phantomjs")) {
-					// Internet Explorer & PhantomJS
+				if (hcDriver != null && hcDriver.Capabilities.HasCapability("browserName"))
+                {
+                    browserName = hcDriver.Capabilities.GetCapability("browserName").ToString();
+                }
+				if (browserName != null && (browserName == "internet explorer" || browserName == "MicrosoftEdge" || browserName == "phantomjs" || browserName.ToLower() == "safari")) {
+					// Internet Explorer, Edge, PhantomJS
 					this.jsExecutor.ExecuteScript("window.name += '" + AngularDeferBootstrap + "';");
 					this.driver.Url = value;
 				} else {
