@@ -49,9 +49,11 @@ namespace Protractor.Test
 		private int port = 0;
 
 		[TestFixtureSetUp]
-		public void SetUp()
-		{
-
+		public void SetUp() {
+			// check that the prcess can create web servers
+			bool isProcessElevated =  ElevationChecker.IsProcessElevated();
+			Assert.IsTrue(isProcessElevated);
+			Console.Error.WriteLine(String.Format("Verified elevation: {0}" , isProcessElevated));
 			// initialize custom HttpListener subclass to host the local files
 			// https://docs.microsoft.com/en-us/dotnet/api/system.net.httplistener?redirectedfrom=MSDN&view=netframework-4.7.2
 			String filePath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", "");

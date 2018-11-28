@@ -26,16 +26,14 @@ using FluentAssertions;
 using Protractor.Extensions;
 using Protractor.TestUtils;
 
-namespace Protractor.Test
-{
+namespace Protractor.Test {
 
 	// NOTE:  after switch from PhantomJS to Chrome headless
 	// a big portion of tests run as one big group begin to report failure,
 	// while being successful if run individually - moved to separate class `LocalFilePart2Tests`
 	// where it passes
 	[TestFixture]
-	public class LocalFilePart1Tests
-	{
+	public class LocalFilePart1Tests {
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
 		private NgWebDriver ngDriver;
@@ -50,8 +48,11 @@ namespace Protractor.Test
 		private int port = 0;
 
 		[TestFixtureSetUp]
-		public void SetUp()
-		{
+		public void SetUp() {
+
+			// check that the prcess can create web servers
+			bool isProcessElevated =  ElevationChecker.IsProcessElevated();
+			Assert.IsTrue(isProcessElevated);
 
 			// initialize custom HttpListener subclass to host the local files
 			// https://docs.microsoft.com/en-us/dotnet/api/system.net.httplistener?redirectedfrom=MSDN&view=netframework-4.7.2

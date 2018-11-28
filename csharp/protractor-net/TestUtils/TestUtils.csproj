@@ -41,6 +41,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ElevationChecker.cs" />
     <Compile Include="SimpleHTTPServer.cs" />
   </ItemGroup>
   <ItemGroup>
