@@ -50,6 +50,32 @@ For desktop browser-hosted tests, start a web server locally and point web root 
 then update the code to  use `base_url = String.Format("http://localhost/{0}", testpage);`
 
 
+### PhantomJS vs. Chrome or Firefox in Headless mode
+
+The significant subset of Protractor.net test suite has been designed around static files accessed via `file:///` 
+with basically one Angular feature per page. 
+This seemed reasonable: no server behavior was examined by any of the 
+Protractor / Angular tests, all action took place in the browser.
+
+This shortcut never worked with real browsers, regardless they are visible or headless.
+
+Starting with version __3.14__  Selenium asseblies for .net sease to have PhantomJS support, therefore the *localfile tests* 
+are currently failing.
+
+After a very noticeable delay every local file test fails with an exception
+```cmd
+OpenQA.Selenium.WebDriverException : The HTTP request to the remote WebDriver server 
+for URL http://localhost:65087/session/721da078cad526a4acfa0a762a7b45d9/execute_async timed out after 60 seconds.
+  ----> System.Net.WebException : The request was aborted: The operation has timed out.
+```
+It was originally onsidered somewhat too much overhead to host the web server in .net application just to host those static pages, compared to Java where it is more than somewhat easier, yet was avoided while it could be. 
+One possible workaround is to host a [tiny http-only one shot web server](https://gist.github.com/aksakalli/9191056) 
+in each test setup.
+The minimal approach is frequently taken in Powershell for HTML parsing testing needs, 
+e.g. [simple web server in PowerShell ](https://4sysops.com/archives/building-a-web-server-with-powershell/)
+ or [creating PowerShell Web Server](https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/creating-powershell-web-server).
+
+
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
 Screen Recording converted to gif via [convert-to-gif](http://image.online-convert.com/convert-to-gif)

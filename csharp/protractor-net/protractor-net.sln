@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Extensions", "Extensions\Extensions.csproj", "{D83DFE64-32B2-406E-A9A2-E2AE61777C80}"
 EndProject
+Project("{a7be2db1-1b82-4626-bd8d-944e3dd28ec1}") = "TestUtils", "TestUtils\TestUtils.csproj", "{f7cf2221-6c80-4298-8d52-b00881aae3a}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -24,6 +24,7 @@ using OpenQA.Selenium.Support.UI;
 
 using FluentAssertions;
 using Protractor.Extensions;
+using Protractor.TestUtils;
 
 namespace Protractor.Test
 {
@@ -40,16 +41,30 @@ namespace Protractor.Test
 		private const long wait_poll_milliseconds = 300;
 
 		// private String testpage;
+		private Protractor.TestUtils.SimpleHTTPServer pageServer;
+		private const	int port = 8081;
 
 		[TestFixtureSetUp]
 		public void SetUp()
 		{
+			
+			String filePath = System.IO.Path.GetDirectoryName( 
+      System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
+			pageServer = new Protractor.TestUtils.SimpleHTTPServer(filePath, port);			
+			// implicitly does pageServer.Initialize() and  pageServer.Listen();
+			
 			// driver = new FirefoxDriver();
 			// System.InvalidOperationException : Access to 'file:///...' from script denied (UnexpectedJavaScriptError)
-			// driver = new ChromeDriver();
-			driver = new PhantomJSDriver();
+			var option = new ChromeOptions();
+      		// option.AddArgument("--headless");
+		    driver = new ChromeDriver(option);
 			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(60);
+			// driver = new PhantomJSDriver();
+			// driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(60);
 			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
+			// http://executeautomation.com/blog/running-chrome-in-headless-mode-with-selenium-c/
+			
+
 			ngDriver = new NgWebDriver(driver);
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
 			wait.PollingInterval = TimeSpan.FromMilliseconds(wait_poll_milliseconds);
@@ -59,6 +74,7 @@ namespace Protractor.Test
 		[TestFixtureTearDown]
 		public void TearDown()
 		{
+			pageServer.Stop();
 			try {
 				driver.Quit();
 			} catch (Exception) {
@@ -71,10 +87,17 @@ namespace Protractor.Test
 			ngDriver.Navigate().GoToUrl(base_url);
 		}
 
+		private void GetPageContentLocalHost(string testPage)
+		{
+			String base_url = new System.Uri(String.Format("http://localhost:{0}/{1}", port, testPage)).AbsoluteUri;
+			ngDriver.Navigate().GoToUrl(base_url);
+		}
+
+
 		[Test]
 		public void ShouldDropDown()
 		{
-			GetPageContent("ng_dropdown.htm");
+			GetPageContentLocalHost("ng_dropdown.htm");
 			string optionsCountry = "country for (country, states) in countries";
 			ReadOnlyCollection<NgWebElement> ng_countries = ngDriver.FindElements(NgBy.Options(optionsCountry));
 

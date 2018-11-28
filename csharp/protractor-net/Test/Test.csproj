@@ -103,6 +103,10 @@
       <Project>{DE9C82C5-EBB3-4A2B-A75E-CE3E68E2C866}</Project>
       <Name>Program</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TestUtils\TestUtils.csproj">
+      <Project>{f7cf2221-6c80-4298-8d52-b00881aae3a5}</Project>
+      <Name>TestUtils</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Samples\ng_basic.htm">
