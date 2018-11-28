@@ -52,28 +52,32 @@ then update the code to  use `base_url = String.Format("http://localhost/{0}", t
 
 ### PhantomJS vs. Chrome or Firefox in Headless mode
 
-The significant subset of Protractor.net test suite has been designed around static files accessed via `file:///` 
-with basically one Angular feature per page. 
-This seemed reasonable: no server behavior was examined by any of the 
+The significant subset of Protractor.net test suite has been designed around static files accessed via `file:///`
+with basically one Angular feature per page.
+This seemed reasonable: no server behavior was examined by any of the
 Protractor / Angular tests, all action took place in the browser.
 
 This shortcut never worked with real browsers, regardless they are visible or headless.
 
-Starting with version __3.14__  Selenium asseblies for .net sease to have PhantomJS support, therefore the *localfile tests* 
+Starting with version __3.14__  Selenium asseblies for .net sease to have PhantomJS support, therefore the *localfile tests*
 are currently failing.
 
 After a very noticeable delay every local file test fails with an exception
 ```cmd
-OpenQA.Selenium.WebDriverException : The HTTP request to the remote WebDriver server 
+OpenQA.Selenium.WebDriverException : The HTTP request to the remote WebDriver server
 for URL http://localhost:65087/session/721da078cad526a4acfa0a762a7b45d9/execute_async timed out after 60 seconds.
   ----> System.Net.WebException : The request was aborted: The operation has timed out.
 ```
-It was originally onsidered somewhat too much overhead to host the web server in .net application just to host those static pages, compared to Java where it is more than somewhat easier, yet was avoided while it could be. 
-One possible workaround is to host a [tiny http-only one shot web server](https://gist.github.com/aksakalli/9191056) 
-in each test setup.
-The minimal approach is frequently taken in Powershell for HTML parsing testing needs, 
+It was originally considered somewhat overhead to host the vanilla web server in .net application
+just to host those static pages, compared to Java where it is more than somewhat easier.
+To support Selenium assemblies moving forward, a simple one derived from
+[quick web server](https://gist.github.com/aksakalli/9191056)
+is now hosted during test run for LocalTests. This requires running IDE as administratoruser on Windows.
+
+The alternative approach considered for HTML parsing testing needs is to bundle into the project file a similar minimal server, but wrapped in Powershell script, and only run __it__ elevated.
 e.g. [simple web server in PowerShell ](https://4sysops.com/archives/building-a-web-server-with-powershell/)
  or [creating PowerShell Web Server](https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/creating-powershell-web-server).
+ This is work in progress.
 
 
 ### Author
