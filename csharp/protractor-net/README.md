@@ -70,15 +70,15 @@ for URL http://localhost:65087/session/721da078cad526a4acfa0a762a7b45d9/execute_
 ```
 It was originally considered somewhat overhead to host the vanilla web server in .net application
 just to host those static pages, compared to Java where it is more than somewhat easier.
-To support Selenium assemblies moving forward, a simple one derived from
-[quick web server](https://gist.github.com/aksakalli/9191056)
+To support Selenium   assemblies moving forward, a simple one derived from
+[quick web server](https://gist.github.com/aksakalli/9191056) (consdering if a more substantial investment
+like [nosquare/embedio](https://github.com/unosquare/embedio) is worthwhile).
 is now hosted during test run for LocalTests. This requires running IDE as administratoruser on Windows.
 
 The alternative approach considered for HTML parsing testing needs is to bundle into the project file a similar minimal server, but wrapped in Powershell script, and only run __it__ elevated.
-e.g. [simple web server in PowerShell ](https://4sysops.com/archives/building-a-web-server-with-powershell/)
+e.g. [simple web server in PowerShell](https://4sysops.com/archives/building-a-web-server-with-powershell/)
  or [creating PowerShell Web Server](https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/creating-powershell-web-server).
- This is work in progress.
-
+ This is a work in progress.
 
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)

@@ -225,10 +225,11 @@
   <ItemGroup>
     <Compile Include="BasicTests.cs" />
     <Compile Include="ButtonTests.cs" />
+    <Compile Include="LocalFilePart1Tests.cs" />
     <Compile Include="SelectTests.cs" />
     <Compile Include="CalculatorTests.cs" />
     <Compile Include="DatePickerTests.cs" />
-    <Compile Include="LocalFileTests.cs" />
+    <Compile Include="LocalFilePart2Tests.cs" />
     <Compile Include="MultiSelectTests.cs" />
     <Compile Include="PageObjectsTests.cs" />
     <Compile Include="QualityShepherdTests.cs" />

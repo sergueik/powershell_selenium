@@ -14,9 +14,12 @@ using System.Text;
 using System.Threading;
 
 // based on:
+// https://gist.github.com/aksakalli/9191056
 // MIT License - Copyright (c) 2016 Can Güney Aksakalli
 // https://aksakalli.github.io/2014/02/24/simple-http-server-with-csparp.html
-
+// see also:
+// https://github.com/unosquare/embedio
+// https://github.com/bonesoul/uhttpsharp
 namespace Protractor.TestUtils
 {
 	public class SimpleHTTPServer{
