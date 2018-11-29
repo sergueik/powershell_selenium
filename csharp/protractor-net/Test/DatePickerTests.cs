@@ -12,7 +12,6 @@ using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
-using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 
@@ -33,6 +32,7 @@ namespace Protractor.Test
 	{
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
+		private bool headless = true;
 		private NgWebDriver ngDriver;
 		private WebDriverWait wait;
 		private const int wait_seconds = 3;
@@ -71,7 +71,13 @@ namespace Protractor.Test
 			// driver = new FirefoxDriver(options);
 
 	//		driver = new ChromeDriver(System.IO.Directory.GetCurrentDirectory());
-			driver = new PhantomJSDriver();
+			if (headless) { 
+				var option = new ChromeOptions();
+				option.AddArgument("--headless");
+				driver = new ChromeDriver(option);
+			} else {
+				driver = new ChromeDriver();
+			}
 			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(60);
 			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
 			driver.Manage().Window.Size = new System.Drawing.Size(700, 400);

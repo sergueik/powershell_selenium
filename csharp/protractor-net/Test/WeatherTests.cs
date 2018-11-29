@@ -2,7 +2,6 @@
 using System.Text;
 using NUnit.Framework;
 using OpenQA.Selenium;
-// using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
@@ -16,12 +15,9 @@ using Protractor.Extensions;
 //using System.Drawing;
 //using System.Windows.Forms;
 
-
-namespace Protractor.Test
-{
+namespace Protractor.Test {
 	[TestFixture]
-	public class WeatherTests
-	{
+	public class WeatherTests {
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
 		private NgWebDriver ngDriver;

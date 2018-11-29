@@ -53,7 +53,7 @@
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
     <Reference Include="WebDriver">
-      <HintPath>..\packages\Selenium.WebDriver.3.13.0\lib\net40\WebDriver.dll</HintPath>
+      <HintPath>..\packages\Selenium.WebDriver.3.14.0\lib\net40\WebDriver.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -95,9 +95,9 @@
 if ERRORLEVEL 1 goto :NEXT1
 taskkill.exe /F /IM chromedriver.exe &gt; NUL 2&gt;NUL
 :NEXT1
-tasklist.exe /FI "IMAGENAME EQ phantomjs.exe" | findstr /i phantomjs.exe &gt; NUL 2&gt;NUL
+tasklist.exe /FI "IMAGENAME EQ geckodriver.exe" | findstr /i geckodriver.exe &gt; NUL 2&gt;NUL
 if ERRORLEVEL 1 goto :NEXT2
-taskkill.exe /F /IM phantomjs.exe &gt; NUL 2&gt;NUL
+taskkill.exe /F /IM geckodriver.exe &gt; NUL 2&gt;NUL
 :NEXT2
 exit 0
 </PreBuildEvent>

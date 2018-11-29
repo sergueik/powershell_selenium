@@ -2,7 +2,6 @@
 using System.Text;
 using NUnit.Framework;
 using OpenQA.Selenium;
-using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.IE;
 using OpenQA.Selenium.Edge;
@@ -15,17 +14,22 @@ namespace Protractor.Test
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
 		private NgWebDriver ngDriver;
+		private bool headless = true;
 		private String base_url = "http://www.angularjs.org";
 		
 		[SetUp]
 		public void SetUp()
 		{
-			driver = new PhantomJSDriver();
-            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(5);
 			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
 			
 			// Using NuGet Package 'WebDriver.ChromeDriver.win32'
-			//driver = new ChromeDriver();
+			if (headless) { 
+				var option = new ChromeOptions();
+				option.AddArgument("--headless");
+				driver = new ChromeDriver(option);
+			} else {
+				driver = new ChromeDriver();
+			}
 
 			// Using Internet Explorer
 			//var options = new InternetExplorerOptions() { IntroduceInstabilityByIgnoringProtectedModeSettings = true };

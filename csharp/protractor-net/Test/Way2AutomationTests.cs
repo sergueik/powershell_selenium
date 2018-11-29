@@ -10,7 +10,6 @@ using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
-// using OpenQA.Selenium.PhantomJS;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;
@@ -49,7 +48,6 @@ namespace Protractor.Test
 			// use at your own risk
 			// var options = new InternetExplorerOptions() { IntroduceInstabilityByIgnoringProtectedModeSettings = true };
 			// driver = new InternetExplorerDriver(options);
-			// driver = new PhantomJSDriver();
 			FirefoxOptions options = new FirefoxOptions();
 			options.UseLegacyImplementation = true;
 			System.Environment.SetEnvironmentVariable("webdriver.gecko.driver", String.Format(@"{0}\geckodriver.exe", System.IO.Directory.GetCurrentDirectory()));

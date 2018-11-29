@@ -2,7 +2,6 @@
 using System.Text;
 using NUnit.Framework;
 using OpenQA.Selenium;
-using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.IE;
 
@@ -13,13 +12,20 @@ namespace Protractor.Test
     {
     	private StringBuilder verificationErrors = new StringBuilder();
         private IWebDriver driver;
+	private bool headless = true;
         private NgWebDriver ngDriver;
         private String base_url = "http://www.google.com/";
 
     	[TestFixtureSetUp]
         public void SetUp()
         {
-            driver = new PhantomJSDriver();
+		if (headless) { 
+			var option = new ChromeOptions();
+			option.AddArgument("--headless");
+			driver = new ChromeDriver(option);
+		} else {
+			driver = new ChromeDriver();
+		}
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
             ngDriver = new NgWebDriver(driver);
         }

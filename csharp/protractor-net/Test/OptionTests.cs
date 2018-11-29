@@ -6,15 +6,14 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
-using OpenQA.Selenium.PhantomJS;
 using System.Collections.ObjectModel;
 using System.IO;
-namespace Protractor.Test
-{
 
+namespace Protractor.Test {
+
+    private bool headless = true;
     [TestFixture]
-    public class OptionTests
-    {
+    public class OptionTests {
         private StringBuilder verificationErrors = new StringBuilder();
         private IWebDriver driver;
         private NgWebDriver ngDriver;
@@ -24,7 +23,13 @@ namespace Protractor.Test
         [TestFixtureSetUp]
         public void SetUp()
         {
-            driver = new PhantomJSDriver();
+	if (headless) { 
+		var option = new ChromeOptions();
+		option.AddArgument("--headless");
+		driver = new ChromeDriver(option);
+	} else {
+		driver = new ChromeDriver();
+	}
             // driver = new FirefoxDriver();
             driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
             ngDriver = new NgWebDriver(driver);

@@ -142,7 +142,7 @@ namespace Protractor
                 {
                     browserName = hcDriver.Capabilities.GetCapability("browserName").ToString();
                 }
-				if (browserName != null && (browserName == "internet explorer" || browserName == "MicrosoftEdge" || browserName == "phantomjs" || browserName.ToLower() == "safari")) {
+				if (browserName != null && (browserName == "internet explorer" || browserName == "MicrosoftEdge" || browserName.ToLower() == "safari")) {
 					// 'this.driver.Url' did not work on IE for some time
 					return this.jsExecutor.ExecuteScript(ClientSideScripts.GetLocationAbsUrl, this.rootElement) as string;
 				} else {
@@ -158,7 +158,7 @@ namespace Protractor
                 {
                     browserName = hcDriver.Capabilities.GetCapability("browserName").ToString();
                 }
-				if (browserName != null && (browserName == "internet explorer" || browserName == "MicrosoftEdge" || browserName == "phantomjs" || browserName.ToLower() == "safari")) {
+				if (browserName != null && (browserName == "internet explorer" || browserName == "MicrosoftEdge" || browserName.ToLower() == "safari")) {
 					// Internet Explorer, Edge, PhantomJS
 					this.jsExecutor.ExecuteScript("window.name += '" + AngularDeferBootstrap + "';");
 					this.driver.Url = value;

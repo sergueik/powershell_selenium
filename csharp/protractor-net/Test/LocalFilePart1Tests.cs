@@ -17,8 +17,6 @@ using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
-// NOTE: removed from Selenium.WebDriver 3.14.0
-using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
 
@@ -28,10 +26,6 @@ using Protractor.TestUtils;
 
 namespace Protractor.Test {
 
-	// NOTE:  after switch from PhantomJS to Chrome headless
-	// a big portion of tests run as one big group begin to report failure,
-	// while being successful if run individually - moved to separate class `LocalFilePart2Tests`
-	// where it passes
 	[TestFixture]
 	public class LocalFilePart1Tests {
 		private StringBuilder verificationErrors = new StringBuilder();
@@ -51,8 +45,8 @@ namespace Protractor.Test {
 		public void SetUp() {
 
 			// check that the prcess can create web servers
-			bool isProcessElevated =  ElevationChecker.IsProcessElevated();
-			Assert.IsTrue(isProcessElevated);
+			bool isProcessElevated =  ElevationChecker.IsProcessElevated(false);
+			Assert.IsTrue(isProcessElevated, "This test needs to run from an elevated IDE or nunit console");
 
 			// initialize custom HttpListener subclass to host the local files
 			// https://docs.microsoft.com/en-us/dotnet/api/system.net.httplistener?redirectedfrom=MSDN&view=netframework-4.7.2
@@ -75,12 +69,6 @@ namespace Protractor.Test {
 				driver = new ChromeDriver();
 			}
 			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(60);
-
-			// driver = new PhantomJSDriver();
-			// driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(60);
-			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
-			// http://executeautomation.com/blog/running-chrome-in-headless-mode-with-selenium-c/
-			
 
 			ngDriver = new NgWebDriver(driver);
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));

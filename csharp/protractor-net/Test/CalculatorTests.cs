@@ -2,7 +2,6 @@
 using System.Text;
 using NUnit.Framework;
 using OpenQA.Selenium;
-using OpenQA.Selenium.PhantomJS;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.IE;
@@ -25,12 +24,13 @@ namespace Protractor.Test
 		private IWebDriver driver;
 		private NgWebDriver ngDriver;
 		private String base_url = "http://juliemr.github.io/protractor-demo/";
+		private bool headless = true;
 
 		[TestFixtureSetUp]
 		public void SetUp()
 		{
 			driver = new ChromeDriver();
-            driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(5);
+            		driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(5);
 			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
 			// driver.Manage().Window.Size = new System.Drawing.Size(700, 400);
 			ngDriver = new NgWebDriver(driver);
