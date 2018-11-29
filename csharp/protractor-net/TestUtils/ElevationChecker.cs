@@ -8,9 +8,10 @@ using System.Runtime.InteropServices;
 // origin:  https://stackoverflow.com/questions/1089046/in-net-c-test-if-process-has-administrative-privileges
 // https://www.sadrobot.co.nz/blog/2011/06/20/how-to-check-if-the-current-user-is-an-administrator-even-if-uac-is-on/
 // NOTE:  code is reached but fails to properly detect that process is not elevated
+// the simpler test seems to be discovering the intended scenario suffiently well
 namespace Protractor.TestUtils {
 	public class ElevationChecker {
-		public static bool IsProcessElevated() {
+		public static bool IsProcessElevated(bool extraCheck) {
 			var identity = WindowsIdentity.GetCurrent();
 			if (identity == null)
 				throw new InvalidOperationException("Couldn't get the current user identity");
@@ -20,7 +21,9 @@ namespace Protractor.TestUtils {
 			// If UAC is on, and the process is not elevated, then this will actually return false.
 			if (principal.IsInRole(WindowsBuiltInRole.Administrator))
 				return true;
-
+			else {
+				if (!extraCheck) return false;
+			}
 			// If we're not running in Vista onwards, we don't have to worry about checking for UAC.
 			if (Environment.OSVersion.Platform != PlatformID.Win32NT || Environment.OSVersion.Version.Major < 6) {
 				// Operating system does not support UAC; skipping elevation check.

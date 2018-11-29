@@ -51,8 +51,8 @@ namespace Protractor.Test {
 		public void SetUp() {
 
 			// check that the prcess can create web servers
-			bool isProcessElevated =  ElevationChecker.IsProcessElevated();
-			Assert.IsTrue(isProcessElevated);
+			bool isProcessElevated =  ElevationChecker.IsProcessElevated(false);
+			Assert.IsTrue(isProcessElevated, "This test needs to run from an elevated IDE or nunit console");
 
 			// initialize custom HttpListener subclass to host the local files
 			// https://docs.microsoft.com/en-us/dotnet/api/system.net.httplistener?redirectedfrom=MSDN&view=netframework-4.7.2
