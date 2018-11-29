@@ -10,7 +10,6 @@ using System.Runtime.InteropServices;
 // NOTE: code is executed but fails to properly detect that process is not elevated on Windows 8.1
 // the simpler probe in the beginning appears to be discovering the situation suffiently well. 
 // Windows 10 testing is pending
-namespace Protractor.TestUtils {
 	public class ElevationChecker {
 		public static bool IsProcessElevated(bool extraCheck) {
 			var identity = WindowsIdentity.GetCurrent();
