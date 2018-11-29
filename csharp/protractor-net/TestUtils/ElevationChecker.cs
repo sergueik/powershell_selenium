@@ -8,8 +8,10 @@ using System.Runtime.InteropServices;
 // origin:  https://stackoverflow.com/questions/1089046/in-net-c-test-if-process-has-administrative-privileges
 // https://www.sadrobot.co.nz/blog/2011/06/20/how-to-check-if-the-current-user-is-an-administrator-even-if-uac-is-on/
 // NOTE: code is executed but fails to properly detect that process is not elevated on Windows 8.1
-// the simpler probe in the beginning appears to be discovering the situation suffiently well. 
-// Windows 10 testing is pending
+// the simpler probe in the beginning appears to be discovering the situation suffiently well and the advanced part which appears effectively a kind of typeof check, does not.
+// the Windows 10 testing is pending
+
+namespace Protractor.TestUtils {
 	public class ElevationChecker {
 		public static bool IsProcessElevated(bool extraCheck) {
 			var identity = WindowsIdentity.GetCurrent();
