@@ -351,9 +351,12 @@ which can be collaptsed into
         # http://stackoverflow.com/questions/20401264/how-to-access-network-panel-on-google-chrome-developer-toools-with-selenium
 
         [OpenQA.Selenium.Chrome.ChromeOptions]$options = New-Object OpenQA.Selenium.Chrome.ChromeOptions
+
         if ($run_headless) {
+          $width = 1200;
+          $height = 800;
           # https://stackoverflow.com/questions/45130993/how-to-start-chromedriver-in-headless-mode
-          $options.addArguments([System.Collections.Generic.List[string]]@('--headless','--window-size=1200x800', '-disable-gpu'))
+          $options.addArguments([System.Collections.Generic.List[string]]@('--headless',"--window-size=${width}x${height}", '-disable-gpu'))
         } else {
           $options.addArguments('start-maximized')
           # no-op option - re-enforcing the default setting
@@ -365,8 +368,13 @@ which can be collaptsed into
 
           [OpenQA.Selenium.Remote.DesiredCapabilities]$capabilities = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
           $capabilities.setCapability([OpenQA.Selenium.Chrome.ChromeOptions]::Capability,$options)
-          }
-        $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver ($options)
+        }
+        $locale = 'en-us'
+        # http://knowledgevault-sharing.blogspot.com/2017/05/selenium-webdriver-with-powershell.html
+        $options.addArguments([System.Collections.Generic.List[string]]@('--allow-running-insecure-content', '--disable-infobars', '--enable-automation', '--kiosk', "--lang=${locale}"))
+        $options.AddUserProfilePreference('credentials_enable_service', $false)
+        $options.AddUserProfilePreference('profile.password_manager_enabled', $false)
+        $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver($options)
       }
     }
     elseif ($browser -match 'ie') {

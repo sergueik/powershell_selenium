@@ -217,7 +217,6 @@ Older scripts contained the same functionality inline, few scripts still do, for
 The Powershell named function arguments "calling convention" is used in the project e.g:
 
 ```powershell
-
 [string]$css_selector = 'input#mainSearch'
 [object]$element = find_element -css_selector $css_selector
 highlight ([ref]$selenium) ([ref]$element)
@@ -225,8 +224,11 @@ highlight ([ref]$selenium) ([ref]$element)
 or
 ```powershell
 highlight -element ([ref]$element) -color 'green' -selenium_ref ([ref]$selenium)
-
 ```
+
+* [PhantomJS development halted and project to be archived](https://groups.google.com/forum/#!topic/selenium-developers/YMuCPtX6dyg)
+* [Groovy REPL](https://groups.google.com/forum/#!topic/selenium-developers/Z44lwr95Kzs)
+* [old Knowledge Vault article about Selenium WebDriver with Powershell](http://knowledgevault-sharing.blogspot.com/2017/05/selenium-webdriver-with-powershell.html)
 
 ![Selenium Execution Pipeline](https://raw.githubusercontent.com/sergueik/powershell_selenium/master/screenshots/selenium_execution_pipeline.png)
 
