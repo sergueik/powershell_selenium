@@ -35,9 +35,9 @@ namespace Protractor.Test
 		private String base_url = "http://amitava82.github.io/angular-multiselect/";
 
 		[TestFixtureSetUp]
-		public void SetUp()
-		{
-			driver = new FirefoxDriver();
+		public void SetUp() {
+			driver = new ChromeDriver();
+			// driver = new FirefoxDriver();
             driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(5);
 			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
 			// driver.Manage().Window.Size = new System.Drawing.Size(700, 400);

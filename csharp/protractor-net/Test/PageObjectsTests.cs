@@ -25,7 +25,8 @@ namespace Protractor.Test
         [SetUp]
         public void SetUp()
         {
-            driver = new FirefoxDriver();
+            // driver = new FirefoxDriver();
+            driver = new ChromeDriver();
             // NOTE: SetScriptTimeout is obsolete
             driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(5);
             // driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));

@@ -21,6 +21,7 @@ using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
 
 using FluentAssertions;
+
 using Protractor.Extensions;
 using Protractor.TestUtils;
 
@@ -44,7 +45,7 @@ namespace Protractor.Test {
 		[TestFixtureSetUp]
 		public void SetUp() {
 
-			// check that the prcess can create web servers
+			// check that the process can create web servers
 			bool isProcessElevated =  ElevationChecker.IsProcessElevated(false);
 			Assert.IsTrue(isProcessElevated, "This test needs to run from an elevated IDE or nunit console");
 
@@ -55,7 +56,7 @@ namespace Protractor.Test {
 			// Console.Error.WriteLine(String.Format("Using Webroot path: {0}", filePath));
 			pageServer = new SimpleHTTPServer(filePath);
 			// implicitly does pageServer.Initialize() and  pageServer.Listen();
-			port = pageServer.Port;
+			Common.Port = pageServer.Port;
 			// Console.Error.WriteLine(String.Format("Using Port {0}", port));
 
 			// initialize the Selenium driver
@@ -70,7 +71,7 @@ namespace Protractor.Test {
 			}
 			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(60);
 
-			ngDriver = new NgWebDriver(driver);
+			Common.NgDriver= ngDriver = new NgWebDriver(driver);
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
 			wait.PollingInterval = TimeSpan.FromMilliseconds(wait_poll_milliseconds);
 			actions = new Actions(driver);
@@ -87,19 +88,9 @@ namespace Protractor.Test {
 			Assert.IsEmpty(verificationErrors.ToString());
 		}
 
-		private void GetPageContent(string filename)
-		{
-			ngDriver.Navigate().GoToUrl(new System.Uri(Path.Combine(Directory.GetCurrentDirectory(), filename)).AbsoluteUri);
-		}
-
-		private void GetLocalHostPageContent(string filename)
-		{
-			ngDriver.Navigate().GoToUrl(String.Format("http://127.0.0.1:{0}/{1}", port, filename));
-		}
-
 		[Test]
 		public void ShouldDropDown() {
-			GetLocalHostPageContent("ng_dropdown.htm");
+			Common.GetLocalHostPageContent("ng_dropdown.htm");
 			string optionsCountry = "country for (country, states) in countries";
 			ReadOnlyCollection<NgWebElement> ng_countries = ngDriver.FindElements(NgBy.Options(optionsCountry));
 
@@ -121,7 +112,7 @@ namespace Protractor.Test {
 
 		[Test]
 		public void ShouldDropDownWatch() {
-			GetLocalHostPageContent("ng_dropdown_watch.htm");
+			Common.GetLocalHostPageContent("ng_dropdown_watch.htm");
 			string optionsCountry = "country for country in countries";
 			ReadOnlyCollection<NgWebElement> ng_countries = ngDriver.FindElements(NgBy.Options(optionsCountry));
 
@@ -143,7 +134,7 @@ namespace Protractor.Test {
 
 		[Test]
 		public void ShouldEvaluateIf() {
-			GetLocalHostPageContent("ng_watch_ng_if.htm");
+			Common.GetLocalHostPageContent("ng_watch_ng_if.htm");
 			IWebElement button = ngDriver.FindElement(By.CssSelector("button.btn"));
 			NgWebElement ng_button = new NgWebElement(ngDriver, button);
 			Object state = ng_button.Evaluate("!house.frontDoor.isOpen");
@@ -155,7 +146,7 @@ namespace Protractor.Test {
 
 		[Test]
 		public void ShouldChangeRepeaterSelectedtOption() {
-			GetLocalHostPageContent("ng_repeat_selected.htm");
+			Common.GetLocalHostPageContent("ng_repeat_selected.htm");
 			NgWebElement ng_element = ngDriver.FindElement(NgBy.SelectedRepeaterOption("fruit in Fruits"));
 			StringAssert.IsMatch("Mango", ng_element.Text);
 			ReadOnlyCollection<NgWebElement> ng_elements = ngDriver.FindElements(NgBy.Repeater("fruit in Fruits"));
@@ -172,7 +163,7 @@ namespace Protractor.Test {
 
 		[Test]
 		public void ShouldChangeSelectedtOption() {
-			GetLocalHostPageContent("ng_select_array.htm");
+			Common.GetLocalHostPageContent("ng_select_array.htm");
 			ReadOnlyCollection<NgWebElement> ng_elements = ngDriver.FindElements(NgBy.Repeater("option in options"));
 			NgWebElement ng_element = ng_elements.First(o => String.Compare("two", o.Text,
 				                          StringComparison.InvariantCulture) == 0);
@@ -188,7 +179,7 @@ namespace Protractor.Test {
 
 		[Test]
 		public void ShouldDirectSelectFromDatePicker() {
-			GetLocalHostPageContent("ng_datepicker.htm");
+			Common.GetLocalHostPageContent("ng_datepicker.htm");
 			// http://dalelotts.github.io/angular-bootstrap-datetimepicker/
 			NgWebElement ng_result = ngDriver.FindElement(NgBy.Model("data.inputOnTimeSet"));
 			ng_result.Clear();
@@ -247,7 +238,7 @@ namespace Protractor.Test {
 		public void ShouldFindOptions()
 		{
 			// base_url = "http://www.java2s.com/Tutorials/AngularJSDemo/n/ng_options_with_object_example.htm";
-			GetLocalHostPageContent("ng_options_with_object.htm");
+			Common.GetLocalHostPageContent("ng_options_with_object.htm");
 			ReadOnlyCollection<NgWebElement> elements = ngDriver.FindElements(NgBy.Options("c.name for c in colors"));
 			Assert.AreEqual(5, elements.Count);
 			try {
@@ -266,13 +257,13 @@ namespace Protractor.Test {
 		[Test]
 		public void ShouldUpload()
 		{
-			GetLocalHostPageContent("ng_upload1.htm");
-			// NOTE: does not work with GetPageContent("ng_upload1.htm");
+			Common.GetLocalHostPageContent("ng_upload1.htm");
+			// NOTE: does not work with Common.GetPageContent("ng_upload1.htm");
 
 			IWebElement file = driver.FindElement(By.CssSelector("div[ng-controller = 'myCtrl'] > input[type='file']"));
 			Assert.IsNotNull(file);
 			StringAssert.AreEqualIgnoringCase(file.GetAttribute("file-model"), "myFile");
-			String localPath = CreateTempFile("lorem ipsum dolor sit amet");
+			String localPath = Common.CreateTempFile("lorem ipsum dolor sit amet");
 
 
 			IAllowsFileDetection fileDetectionDriver = driver as IAllowsFileDetection;
@@ -316,7 +307,7 @@ namespace Protractor.Test {
 		[Test]
 		public void ShouldAngularTodoApp()
 		{
-			GetLocalHostPageContent("ng_todo.htm");
+			Common.GetLocalHostPageContent("ng_todo.htm");
 			ReadOnlyCollection<NgWebElement> ng_todo_elements = ngDriver.FindElements(NgBy.Repeater("todo in todoList.todos"));
 			String ng_identity = ng_todo_elements[0].IdentityOf();
 			// <input type="checkbox" ng-model="todo.done" class="ng-pristine ng-untouched ng-valid">
@@ -336,7 +327,7 @@ namespace Protractor.Test {
 		[Test]
 		public void ShouldDragAndDrop()
 		{
-			GetLocalHostPageContent("ng_drag_and_drop1.htm");
+			Common.GetLocalHostPageContent("ng_drag_and_drop1.htm");
 			ReadOnlyCollection<NgWebElement> ng_cars = ngDriver.FindElements(NgBy.Repeater("car in models.cars"));
 			Assert.AreEqual(5, ng_cars.Count);
 			foreach (NgWebElement ng_car in ng_cars) {
@@ -363,16 +354,5 @@ namespace Protractor.Test {
 			}
 		}
 		
-		private string CreateTempFile(string content)
-		{
-			FileInfo testFile = new FileInfo("webdriver.tmp");
-			if (testFile.Exists) {
-				testFile.Delete();
-			}
-			StreamWriter testFileWriter = testFile.CreateText();
-			testFileWriter.WriteLine(content);
-			testFileWriter.Close();
-			return testFile.FullName;
-		}
 	}
 }

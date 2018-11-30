@@ -9,17 +9,14 @@ using System.Threading;
 using NUnit.Framework;
 using OpenQA.Selenium;
 
-namespace Protractor.Extensions
-{
-	public static class Extensions
-	{
+namespace Protractor.Extensions {
+	public static class Extensions {
 
 			private static string result = null;
 			private static Regex regex;
 			private static MatchCollection matches;
 	
-			public static string FindMatch(this string text, string matchPattern, string matchTag)
-			{
+			public static string FindMatch(this string text, string matchPattern, string matchTag) {
 				result = null;
 				regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled
 				                  /* RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled */

@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections;
-using System.Threading;
 using System.Linq;
 
 using NUnit.Framework;
@@ -22,17 +19,18 @@ using System.Drawing;
 // using System.Windows.Forms;
 
 using Protractor.Extensions;
+using Protractor.TestUtils;
 
 // Angular UI  DatePicker tests
-namespace Protractor.Test
-{
+namespace Protractor.Test {
 
 	[TestFixture]
-	public class DatePickerTests
-	{
+	public class DatePickerTests {
+		private SimpleHTTPServer pageServer;
+		private int port = 0;
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
-		private bool headless = true;
+		private bool headless = false;
 		private NgWebDriver ngDriver;
 		private WebDriverWait wait;
 		private const int wait_seconds = 3;
@@ -42,17 +40,21 @@ namespace Protractor.Test
 		private int highlight_timeout = 1000;
 		private Actions actions;
 
-		// only works with Chrome:
-		// SetUp : System.InvalidOperationException : Access to 'file:///C:/developer/sergueik/powershell_selenium/csharp/protractor-net/Test/bin/Debug/ng_datepicker.htm' from script denied
-		private void GetPageContent(string testpage)
-		{
-			String base_url = new System.Uri(Path.Combine(Directory.GetCurrentDirectory(), testpage)).AbsoluteUri;
-			ngDriver.Navigate().GoToUrl(base_url);
-		}
 		[TestFixtureSetUp]
-		public void SetUp()
-		{
+		public void SetUp() {
 
+			// check that the process can create web servers
+			bool isProcessElevated =  ElevationChecker.IsProcessElevated(false);
+			Assert.IsTrue(isProcessElevated, "This test needs to run from an elevated IDE or nunit console");
+
+			// initialize custom HttpListener subclass to host the local files
+			// https://docs.microsoft.com/en-us/dotnet/api/system.net.httplistener?redirectedfrom=MSDN&view=netframework-4.7.2
+			String filePath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", "");
+			
+			// Console.Error.WriteLine(String.Format("Using Webroot path: {0}", filePath));
+			pageServer = new SimpleHTTPServer(filePath);
+			// implicitly does pageServer.Initialize() and  pageServer.Listen();
+			Common.Port = pageServer.Port;
 			/*
 			// options.IsMarionette = true;
 			// There is already an option for the marionette capability. Please use the  instead.
@@ -78,24 +80,33 @@ namespace Protractor.Test
 			} else {
 				driver = new ChromeDriver();
 			}
+
 			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(60);
 			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(60));
 			driver.Manage().Window.Size = new System.Drawing.Size(700, 400);
-			ngDriver = new NgWebDriver(driver);
+			Common.NgDriver= ngDriver = new NgWebDriver(driver);
 			driver.Manage().Window.Size = new System.Drawing.Size(window_width, window_heght);
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
 
 			// ngDriver.Navigate().GoToUrl(base_url);
 			// Tests will fail due to page redesign	- use the
-			GetPageContent("ng_datepicker.htm");
+			Common.GetLocalHostPageContent("ng_datepicker.htm");
 
 			actions = new Actions(driver);
 		}
 
+		[TestFixtureTearDown]
+		public void TearDown() {
+			try {
+				driver.Quit();
+			} catch (Exception) {
+			} /* Ignore cleanup errors */
+			Assert.AreEqual("", verificationErrors.ToString());
+		}
+
 		// uses Embedded calendar
 		[Test]
-		public void ShouldHighlightCurrentMonthDays()
-		{
+		public void ShouldHighlightCurrentMonthDays() {
 			// Arrange
 			try {
 				wait.Until(e => e.FindElements(
@@ -131,8 +142,7 @@ namespace Protractor.Test
 		// NOTE: Test passes when run alone, but randomly fails when run as a group
 		// uses Drop-down Datetime with input box
 		[Test]
-		public void ShouldDirectSelect()
-		{
+		public void ShouldDirectSelect() {
 			// Arrange
 			try {
 				wait.Until(e => e.FindElements(
@@ -191,8 +201,7 @@ namespace Protractor.Test
 
 		// uses Drop-down Datetime with input box
 		[Test]
-		public void ShouldBrowse()
-		{
+		public void ShouldBrowse() {
 			// Open datepicker directive
 			String searchText = "Drop-down Datetime with input box";
 			IWebElement contaiter = null;
@@ -259,15 +268,6 @@ namespace Protractor.Test
 			Console.Error.WriteLine("Next month: " + ng_display.Text);
 		}
 
-
-		[TestFixtureTearDown]
-		public void TearDown()
-		{
-			try {
-				driver.Quit();
-			} catch (Exception) {
-			} /* Ignore cleanup errors */
-			Assert.AreEqual("", verificationErrors.ToString());
-		}
+		
 	}
 }
