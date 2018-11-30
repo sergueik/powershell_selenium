@@ -7,9 +7,12 @@ using System.Runtime.InteropServices;
 
 // origin:  https://stackoverflow.com/questions/1089046/in-net-c-test-if-process-has-administrative-privileges
 // https://www.sadrobot.co.nz/blog/2011/06/20/how-to-check-if-the-current-user-is-an-administrator-even-if-uac-is-on/
-// NOTE: code is executed but fails to properly detect that process is not elevated on Windows 8.1
-// the simpler probe in the beginning appears to be discovering the situation suffiently well and the advanced part which appears effectively a kind of typeof check, does not.
-// the Windows 10 testing is pending
+// NOTE: code is executed but fails to properly detect that process is not elevated on Windows 8.1 and Windows 10
+// the simple "principal.IsInRole(Administrator)" probe in the beginning of the method
+// appears to be discovering the situation correctly
+// however the advanced part that follows
+// which appears effectively a kind of typeof check, does not work right
+// to prevent misdetection, a safety switch "extraCheck" has been added.
 
 namespace Protractor.TestUtils {
 	public class ElevationChecker {
@@ -45,7 +48,7 @@ namespace Protractor.TestUtils {
 				}
 
 				var elevationType = (TokenElevationType)Marshal.ReadInt32(tokenInformation);
-    
+
 				switch (elevationType) {
 					case TokenElevationType.TokenElevationTypeDefault:
 			            // TokenElevationTypeDefault - User is not using a split token, so they cannot elevate.
@@ -60,7 +63,7 @@ namespace Protractor.TestUtils {
 			            // Unknown token elevation type.
 						return false;
 				}
-			} finally {     
+			} finally {
 				if (tokenInformation != IntPtr.Zero)
 					Marshal.FreeHGlobal(tokenInformation);
 			}
