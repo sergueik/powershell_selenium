@@ -57,6 +57,8 @@
     <Compile Include="SElementActionsTests.cs" />
     <Compile Include="IndexedSElementSearchTests.cs" />
     <Compile Include="FoundByConditionSElementSearchTests.cs" />
+    <Compile Include="SElementXPathTextCssTest.cs" />
+    <Compile Include="SeleniumInteroperability\SElementConditionsTests.cs" />
     <Compile Include="UtilsTests.cs" />
     <Compile Include="FilteredSCollectionSearchTests.cs" />
     <Compile Include="SCollectionConditionsTests.cs" />

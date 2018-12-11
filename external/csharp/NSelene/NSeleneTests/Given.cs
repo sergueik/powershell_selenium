@@ -5,39 +5,34 @@ using System.Reflection;
 using NSelene;
 using OpenQA.Selenium;
 
-namespace NSeleneTests
-{
-	public static class When
-	{
-		private static String PrepareBodyHTML(string text)
-		{
+namespace NSeleneTests {
+	public static class When {
+		private static String PrepareBodyHTML(string text) {
+			// TODO: convert body quotes
+			// like e.g. "<h1 name=\"hello\">Hello Babe!</h1>"
 			return "\"" + text.Replace("\r", "").Replace("\n", "") + "\"";
 		}
 		
-		public static void WithBody(string html)
-		{
+		public static void WithBody(string html) {
 			Selene.ExecuteScript(
 				"document.getElementsByTagName('body')[0].innerHTML = " + PrepareBodyHTML(html) + ";");
 			
 		}
 
-		public static void WithBody(string html, IWebDriver driver)
-		{
+		public static void WithBody(string html, IWebDriver driver) {
 			(driver as IJavaScriptExecutor).ExecuteScript(
 				"document.getElementsByTagName('body')[0].innerHTML = " + PrepareBodyHTML(html) + ";");
 		}
 
 		// TODO: consider renaming to WithBodyTimedOut
-		public static void WithBodyTimedOut(string html, int timeout)
-		{
+		public static void WithBodyTimedOut(string html, int timeout) {
 			Selene.ExecuteScript(@"
                 setTimeout(
                     function(){
                         document.getElementsByTagName('body')[0].innerHTML = " + PrepareBodyHTML(html) + "}, " + timeout + ");");
 		}
 
-		public static void WithBodyTimedOut(string html, int timeout, IWebDriver driver)
-		{
+		public static void WithBodyTimedOut(string html, int timeout, IWebDriver driver) {
 			(driver as IJavaScriptExecutor).ExecuteScript(@"
                 setTimeout(
                     function(){
@@ -45,8 +40,7 @@ namespace NSeleneTests
 			);
 		}
 
-		public static void ExecuteScriptWithTimeout(string js, int timeout)
-		{
+		public static void ExecuteScriptWithTimeout(string js, int timeout) {
 			Selene.ExecuteScript(@"
                 setTimeout(
                     function(){
@@ -56,8 +50,7 @@ namespace NSeleneTests
 			);
 		}
 
-		public static void ExecuteScriptWithTimeout(string js, int timeout, IWebDriver driver)
-		{
+		public static void ExecuteScriptWithTimeout(string js, int timeout, IWebDriver driver) {
 			(driver as IJavaScriptExecutor).ExecuteScript(@"
                 setTimeout(
                     function(){
@@ -68,8 +61,7 @@ namespace NSeleneTests
 		}
 	}
 
-	public static class Given
-	{
+	public static class Given {
 		const String emptyPage = "../../Resources/empty.html";
 		/*
 			ERR_FILE_NOT_FOUND

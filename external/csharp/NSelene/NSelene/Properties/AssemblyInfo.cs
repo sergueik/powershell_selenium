@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyConfiguration ("")]
 [assembly: AssemblyCompany ("")]
 [assembly: AssemblyProduct ("")]
-[assembly: AssemblyCopyright ("Iakiv Kramarenko")]
+[assembly: AssemblyCopyright ("Iakiv Kramarenko, Serguei Kouzmine")]
 [assembly: AssemblyTrademark ("")]
 [assembly: AssemblyCulture ("")]
 

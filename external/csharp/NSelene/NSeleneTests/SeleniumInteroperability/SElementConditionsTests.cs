@@ -2,17 +2,14 @@
 using NSelene;
 // using static NSelene.Selene;
 
-namespace NSeleneTests
-{
+namespace NSeleneTests {
 	[TestFixture]
-	public class SElementConditionTests : BaseTest
-	{
+	public class SElementConditionsTests : BaseTest{
 
 		// TODO: TBD
 
 		[Test]
-		public void SElementShouldBeVisible()
-		{
+		public void SElementShouldBeVisible() {
 			Given.OpenedPageWithBody("<h1 style='display:none'>ku ku</h1>");
 			Selene.S("h1").ShouldNot(Be.Visible);
 			When.WithBody("<h1 style='display:block'>ku ku</h1>");
@@ -21,8 +18,7 @@ namespace NSeleneTests
 		}
 
 		[Test]
-		public void SElementShouldBeEnabled()
-		{
+		public void SElementShouldBeEnabled() {
 			Given.OpenedPageWithBody("<input type='text' disabled/>");
 			Selene.S("input").ShouldNot(Be.Enabled);
 			When.WithBody("<input type='text'/>");
@@ -30,8 +26,7 @@ namespace NSeleneTests
 		}
 
 		[Test]
-		public void SElementShouldBeInDOM()
-		{
+		public void SElementShouldBeInDOM() {
 			Given.OpenedEmptyPage();
 			Selene.S("h1").ShouldNot(Be.InDom);
 			When.WithBody("<h1 style='display:none'>ku ku</h1>");
@@ -39,8 +34,7 @@ namespace NSeleneTests
 		}
 
 		[Test]
-		public void SElementShouldHaveText()
-		{
+		public void SElementShouldHaveText() {
 			Given.OpenedPageWithBody("<h1>Hello Babe!</h1>");
 			Selene.S("h1").Should(Have.Text("Hello"));
 			Selene.S("h1").ShouldNot(Have.Text("Hello world!"));
@@ -49,8 +43,7 @@ namespace NSeleneTests
 		}
 
 		[Test]
-		public void SElementShouldHaveCssClass()
-		{
+		public void SElementShouldHaveCssClass() {
 			Given.OpenedPageWithBody("<h1 class='big-title'>Hello Babe!</h1>");
 			Selene.S("h1").ShouldNot(Have.CssClass("title"));
 			When.WithBody("<h1 class='big title'>Hello world!</h1>");
@@ -58,8 +51,7 @@ namespace NSeleneTests
 		}
 
 		[Test]
-		public void SElementShouldHaveAttribute()
-		{
+		public void SElementShouldHaveAttribute() {
 			Given.OpenedPageWithBody("<h1 class='big-title'>Hello Babe!</h1>");
 			Selene.S("h1").ShouldNot(Have.Attribute("class", "big title"));
 			When.WithBody("<h1 class='big title'>Hello world!</h1>");
@@ -67,8 +59,7 @@ namespace NSeleneTests
 		}
 
 		[Test]
-		public void SElementShouldHaveValue()
-		{
+		public void SElementShouldHaveValue() {
 			Given.OpenedEmptyPage();
 			Selene.S("input").ShouldNot(Have.Value("Yo"));
 			When.WithBody("<input value='Yo'></input>");
