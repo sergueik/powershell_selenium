@@ -11,12 +11,12 @@ namespace NSeleneTests
         // TODO: TBD
 
         [Test]
-        public void SElementShouldBeVisible()
-        {
+        public void SElementShouldBeVisible() {
             Given.OpenedPageWithBody("<h1 style='display:none'>ku ku</h1>");
             Selene.S("h1").ShouldNot(Be.Visible);
             When.WithBody("<h1 style='display:block'>ku ku</h1>");
-            Selene.S("h1").Should(Be.Visible);
+            var e = Selene.S("h1");
+            e.Should(Be.Visible);
         }
 
         [Test]

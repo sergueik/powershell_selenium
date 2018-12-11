@@ -89,12 +89,16 @@ namespace NSeleneTests.SeleniumInteroperability
         class PageWithDeferredWebElement
         {
             [FindsBy(How = How.CssSelector, Using = "a")]
+            #pragma warning disable 649
             public IWebElement Element;
+            #pragma warning restore 649
 
             public PageWithDeferredWebElement(IWebDriver driver)
             {
                 this.driver = driver;
+	            #pragma warning disable 618
                 PageFactory.InitElements(this.driver, this);
+	            #pragma warning restore 618
             }
 
             IWebDriver driver;
@@ -146,7 +150,9 @@ namespace NSeleneTests.SeleniumInteroperability
         [Test]
         public void ClassicPageWithSeleniumDriverFailsToLocateDeferredElementOfListByAppearance()
         {
+            #pragma warning disable 618
             var page = PageFactory.InitElements<PageWithDeferredWebElementOfList>(driver);
+            #pragma warning restore 618
             Assert.Throws(Is.TypeOf(typeof(TargetInvocationException))
                           .And.InnerException.TypeOf(typeof(ArgumentOutOfRangeException)), () => {
                 page.Elements[1].Click();
@@ -157,7 +163,9 @@ namespace NSeleneTests.SeleniumInteroperability
         [Test]
         public void ClassicPageWithSeleniumDriverFailsToLocateDeferredElementOfListByVisibility()
         {
+            #pragma warning disable 618
             var page = PageFactory.InitElements<PageWithDeferredWebElementOfList>(driver);
+            #pragma warning restore 618
             Thread.Sleep(300);
             Assert.Throws(Is.TypeOf(typeof(ElementNotVisibleException)), () => {
                 page.Elements[1].Click();
@@ -168,7 +176,9 @@ namespace NSeleneTests.SeleniumInteroperability
         [Test]
         public void ClassicPageWithDecoratedByNSeleneDriverFailsToLocateDeferredElementByAppearance()
         {
+            #pragma warning disable 618
             var page = PageFactory.InitElements<PageWithDeferredWebElementOfList>(new SeleneDriver(driver));
+            #pragma warning restore 618
             /* same as the following
             var page = PageFactory.InitElements<PageWithDeferredWebElementOfList>(new DefaultElementLocator(new SDriver(driver)));
              */
@@ -182,7 +192,10 @@ namespace NSeleneTests.SeleniumInteroperability
         [Test]
         public void ClassicPageWithDecoratedByNSeleneDriverLocatesDeferredElementByVisibility()
         {
-            var page = PageFactory.InitElements<PageWithDeferredWebElementOfList>(new SeleneDriver(driver));
+
+            #pragma warning disable 618
+        	var page = PageFactory.InitElements<PageWithDeferredWebElementOfList>(new SeleneDriver(driver));
+            #pragma warning restore 618
             /* same as the following
             var page = PageFactory.InitElements<PageWithDeferredWebElementOfList>(new DefaultElementLocator(new SDriver(driver)));
              */
@@ -195,7 +208,9 @@ namespace NSeleneTests.SeleniumInteroperability
         public void ClassicPageWithDecoratedByNSeleneDriverAndCustomLocatorLocatesDeferredElement()
         {
             var page = new PageWithDeferredWebElementOfListAndCustomFindsBy(new SeleneDriver(driver));
+            #pragma warning disable 618
             PageFactory.InitElements(page, new My.CustomElementLocator(new SeleneDriver(driver)), new My.CustomPageObjectMemberDecorator());
+            #pragma warning restore 618
             page.Elements[1].Click();
             Assert.IsTrue(driver.Url.Contains("second"));
         }
@@ -203,7 +218,9 @@ namespace NSeleneTests.SeleniumInteroperability
         class PageWithDeferredWebElementOfList
         {
             [FindsBy(How = How.CssSelector, Using = "a")]
+            #pragma warning disable 649
             public IList<IWebElement> Elements;
+            #pragma warning restore 649
 
             public PageWithDeferredWebElementOfList(IWebDriver driver) // Just emulating passing driver to constructor, so 
             {
@@ -216,7 +233,9 @@ namespace NSeleneTests.SeleniumInteroperability
         class PageWithDeferredWebElementOfListAndCustomFindsBy
         {
             [My.FindsBy(How = How.CssSelector, Using = "a")]
+            #pragma warning disable 649
             public IList<IWebElement> Elements;
+            #pragma warning restore 649
 
             public PageWithDeferredWebElementOfListAndCustomFindsBy(IWebDriver driver)
             {
