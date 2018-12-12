@@ -7,19 +7,16 @@ namespace NSeleneTests
 {
 
     [TestFixture]
-    public class BaseTest
-    {
+    public class BaseTest {
 //         [OneTimeSetUp]
         [SetUp]
-        public void initDriver()
-        {
+        public void initDriver() {
             Selene.SetWebDriver(new ChromeDriver());
         }
 
         // [OneTimeTearDown]
         [TearDown]
-        public void disposeDriver()
-        {
+        public void disposeDriver(){
             Selene.GetWebDriver().Quit();
         }
     }

@@ -4,15 +4,12 @@ using NSelene;
 using OpenQA.Selenium;
 using System.Threading;
 
-namespace NSeleneTests
-{
+namespace NSeleneTests {
     [TestFixture]
-    public class FilteredSCollectionSearchTests : BaseTest
-    {
+    public class FilteredSCollectionSearchTests : BaseTest {
 
         [TearDown]
-        public void TeardownTest()
-        {
+        public void TeardownTest() {
             Configuration.Timeout = 4;
         }
         

@@ -7,7 +7,7 @@
     <ProjectGuid>{8151DF05-741C-4DF2-A227-203B827F2B75}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>NSeleneExamples</RootNamespace>
-    <AssemblyName>NSeleneExamples</AssemblyName>
+    <AssemblyName>Examples</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <ReleaseVersion>0.0.0.7</ReleaseVersion>
     <NuGetPackageImportStamp>

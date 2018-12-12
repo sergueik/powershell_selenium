@@ -54,8 +54,7 @@ namespace NSelene
 
         readonly SeleneDriver driver;
 
-        internal SeleneElement(SeleneLocator<IWebElement> locator, SeleneDriver driver)
-        {
+        internal SeleneElement(SeleneLocator<IWebElement> locator, SeleneDriver driver) {
             this.locator = locator;
             this.driver = driver;
         }
@@ -82,41 +81,34 @@ namespace NSelene
             }
         }
 
-        public override string ToString()
-        {
+        public override string ToString() {
             return this.locator.Description;
         }
 
-        public SeleneElement Should(Condition<SeleneElement> condition)
-        {
+        public SeleneElement Should(Condition<SeleneElement> condition) {
             return Selene.WaitFor(this, condition);
         }
 
-        public SeleneElement ShouldNot(Condition<SeleneElement> condition)
-        {
+        public SeleneElement ShouldNot(Condition<SeleneElement> condition) {
             return Selene.WaitForNot(this, condition);
         }
 
-        public SeleneElement PressEnter()
-        {
+        public SeleneElement PressEnter() {
             SendKeys(Keys.Enter);
             return this;
         }
 
-        public SeleneElement PressTab()
-        {
+        public SeleneElement PressTab() {
             SendKeys(Keys.Tab);
             return this;
         }
 
-        public SeleneElement PressEscape()
-        {
+        public SeleneElement PressEscape() {
             SendKeys(Keys.Escape);
             return this;
         }
 
-        public SeleneElement SetValue(string keys)
-        {
+        public SeleneElement SetValue(string keys) {
             Should(Be.Visible);
             var webelement = this.ActualWebElement;
             webelement.Clear();
@@ -125,42 +117,35 @@ namespace NSelene
         }
 
         // TODO: consider moving to Extensions
-        public SeleneElement Set(string value)
-        {
+        public SeleneElement Set(string value) {
             return SetValue(value);
         }
 
-        public SeleneElement Hover()
-        {
+        public SeleneElement Hover() {
             Should(Be.Visible);
             this.Actions.MoveToElement(this.ActualWebElement).Perform();
             return this;
         }
 
-        public SeleneElement DoubleClick()
-        {
+        public SeleneElement DoubleClick() {
             Should(Be.Visible);
             this.Actions.DoubleClick(this.ActualWebElement).Perform();
             return this;
         }
 
-        public SeleneElement Find(By locator)
-        {
+        public SeleneElement Find(By locator) {
             return new SeleneElement(new SearchContextWebElementSLocator(locator, this), this.driver);
         }
 
-        public SeleneElement Find(string cssSelector)
-        {
+        public SeleneElement Find(string cssSelector) {
             return this.Find(By.CssSelector(cssSelector));
         }
 
-        public SeleneCollection FindAll(By locator)
-        {
+        public SeleneCollection FindAll(By locator) {
             return new SeleneCollection(new SearchContextWebElementsCollectionSLocator(locator, this), this.driver);
         }
 
-        public SeleneCollection FindAll(string cssSelector)
-        {
+        public SeleneCollection FindAll(string cssSelector) {
             return this.FindAll(By.CssSelector(cssSelector));
         }
 
@@ -168,36 +153,31 @@ namespace NSelene
         // SElement chainable alternatives to IWebElement void methods
         //
 
-        public SeleneElement Clear()
-        {
+        public SeleneElement Clear() {
             Should(Be.Visible);
             this.ActualWebElement.Clear();
             return this;
         }
 
-        public SeleneElement SendKeys(string keys)
-        {
+        public SeleneElement SendKeys(string keys) {
             Should(Be.Visible);
             this.ActualWebElement.SendKeys(keys);
             return this;
         }
 
-        public SeleneElement Submit()
-        {
+        public SeleneElement Submit() {
             Should(Be.Visible);
             this.ActualWebElement.Submit();
             return this;
         }
 
-        public SeleneElement Click()
-        {
+        public SeleneElement Click() {
             Should(Be.Visible);
             this.ActualWebElement.Click();
             return this;
         }
 
-        public string Value
-        {
+        public string Value {
             get {
                 return GetAttribute("value");
             }
@@ -207,56 +187,49 @@ namespace NSelene
         // IWebElement Properties
         //
 
-        public bool Enabled
-        {
+        public bool Enabled {
             get {
                 Should(Be.Visible);
                 return this.ActualWebElement.Enabled;
             }
         }
 
-        public Point Location
-        {
+        public Point Location {
             get {
                 Should(Be.Visible);
                 return this.ActualWebElement.Location;
             }
         }
 
-        public bool Selected
-        {
+        public bool Selected {
             get {
                 Should(Be.Visible);
                 return this.ActualWebElement.Selected;
             }
         }
 
-        public Size Size
-        {
+        public Size Size {
             get {
                 Should(Be.Visible);
                 return this.ActualWebElement.Size;
             }
         }
 
-        public string TagName
-        {
+        public string TagName {
             get {
                 Should(Be.Visible);
                 return this.ActualWebElement.TagName;
             }
         }
 
-        public string Text
-        {
+        public string Text {
             get {
                 Should(Be.Visible);
                 return this.ActualWebElement.Text;
             }
         }
 
-        public bool Displayed
-        {
+        public bool Displayed {
             get {
                 Should(Be.InDom);
                 return this.ActualWebElement.Displayed;
@@ -267,40 +240,33 @@ namespace NSelene
         // IWebElement Methods
         //
 
-        void IWebElement.Clear()
-        {
+        void IWebElement.Clear() {
             Clear();
         }
 
-        void IWebElement.SendKeys(string keys)
-        {
+        void IWebElement.SendKeys(string keys) {
             SendKeys(keys);
         }
 
-        void IWebElement.Submit()
-        {
+        void IWebElement.Submit() {
             Submit();
         }
 
-        void IWebElement.Click()
-        {
+        void IWebElement.Click() {
             Click();
         }
 
-        public string GetAttribute(string name)
-        {
+        public string GetAttribute(string name) {
             Should(Be.InDom);
             return this.ActualWebElement.GetAttribute(name);
         }
 
-        public string GetProperty (string propertyName)
-        {
+        public string GetProperty (string propertyName) {
             Should(Be.InDom);
             return this.ActualWebElement.GetProperty(propertyName);
         }
 
-        public string GetCssValue(string property)
-        {
+        public string GetCssValue(string property) {
             Should(Be.InDom);
             return this.ActualWebElement.GetCssValue(property);
         }
@@ -309,15 +275,13 @@ namespace NSelene
         // ISearchContext methods
         //
 
-        IWebElement ISearchContext.FindElement (By by)
-        {
+        IWebElement ISearchContext.FindElement (By by) {
             //Should(Be.Visible);
             //return this.ActualWebElement.FindElement(by);
             return new SeleneElement(new SearchContextWebElementSLocator(by, this), this.driver);
         }
 
-        ReadOnlyCollection<IWebElement> ISearchContext.FindElements (By by)
-        {
+        ReadOnlyCollection<IWebElement> ISearchContext.FindElements (By by) {
             //Should(Be.Visible);
             //return this.ActualWebElement.FindElements(by);
             return new SeleneCollection(new SearchContextWebElementsCollectionSLocator(by, this), this.driver).ToReadOnlyWebElementsCollection();
@@ -327,14 +291,12 @@ namespace NSelene
         // SContext methods
         //
 
-        IWebElement SeleneContext.FindElement (By by)
-        {
+        IWebElement SeleneContext.FindElement (By by) {
             Should(Be.Visible);
             return this.ActualWebElement.FindElement(by);
         }
 
-        ReadOnlyCollection<IWebElement> SeleneContext.FindElements (By by)
-        {
+        ReadOnlyCollection<IWebElement> SeleneContext.FindElements (By by) {
             Should(Be.Visible);
             return this.ActualWebElement.FindElements(by);
         }
@@ -344,63 +306,54 @@ namespace NSelene
         //
 
         [Obsolete("GetSize is deprecated and will be removed in next version, please use Size property instead.")]
-        public Size GetSize()
-        {
+        public Size GetSize() {
             Should(Be.Visible);
             return this.ActualWebElement.Size;
         }
 
         [Obsolete("GetTagName is deprecated and will be removed in next version, please use TagName property instead.")]
-        public string GetTagName()
-        {
+        public string GetTagName() {
             Should(Be.Visible);
             return this.ActualWebElement.TagName;
         }
 
         [Obsolete("GetLocation is deprecated and will be removed in next version, please use Location property instead.")]
-        public Point GetLocation()
-        {
+        public Point GetLocation() {
             Should(Be.Visible);
             return this.ActualWebElement.Location;
         }
 
         [Obsolete("IsEnabled is deprecated and will be removed in next version, please use Enabled property instead.")]
-        public bool IsEnabled()
-        {
+        public bool IsEnabled() {
             Should(Be.Visible);
             return this.ActualWebElement.Enabled;
         }
 
         [Obsolete("IsDisplayed is deprecated and will be removed in next version, please use Displayed property instead.")]
-        public bool IsDisplayed()
-        {
+        public bool IsDisplayed() {
             Should(Be.InDom);
             return this.ActualWebElement.Displayed;
         }
 
         [Obsolete("IsSelected is deprecated and will be removed in next version, please use Selected property instead.")]
-        public bool IsSelected()
-        {
+        public bool IsSelected() {
             Should(Be.Visible);
             return this.ActualWebElement.Selected;
         }
 
         [Obsolete("GetText is deprecated and will be removed in next version, please use Text property instead.")]
-        public string GetText()
-        {
+        public string GetText() {
             Should(Be.Visible);
             return this.ActualWebElement.Text;
         }
 
         [Obsolete("GetValue is deprecated and will be removed in next version, please use Value property instead.")]
-        public string GetValue()
-        {
+        public string GetValue() {
             return GetAttribute("value");
         }
     }
 
-    namespace Support.Extensions 
-    {
+    namespace Support.Extensions {
         public static class SeleneElementExtensions 
         {
             public static SeleneElement AssertTo(this SeleneElement selement, Condition<SeleneElement> condition)

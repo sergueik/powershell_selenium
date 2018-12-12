@@ -6,16 +6,13 @@ using NSelene.Conditions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
 
-namespace NSelene
-{
+namespace NSelene{
 
-    public interface IWebDriverSource : IDisposable
-    {
+    public interface IWebDriverSource : IDisposable {
         IWebDriver Driver { get; set; }
     }
 
-    public class SharedThreadLocalDriverSource : IWebDriverSource, IDisposable
-    {
+    public class SharedThreadLocalDriverSource : IWebDriverSource, IDisposable {
 
         ThreadLocal<IWebDriver> driver = new ThreadLocal<IWebDriver>();
 
@@ -34,13 +31,11 @@ namespace NSelene
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
 
-        protected virtual void Dispose (bool disposing)
-        {
+        protected virtual void Dispose (bool disposing) {
             if (!disposedValue) {
                 if (disposing) {
                     // dispose managed state (managed objects).
-                    foreach(IWebDriver local in this.driver.Values)
-                    {
+                    foreach(IWebDriver local in this.driver.Values) {
                         local.Quit();
                     }
                     /* TODO: is this.driver - managed or not managed? :D
@@ -63,8 +58,7 @@ namespace NSelene
         // }
 
         // This code added to correctly implement the disposable pattern.
-        void IDisposable.Dispose ()
-        {
+        void IDisposable.Dispose () {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose (true);
             // TODO: uncomment the following line if the finalizer is overridden above.
@@ -73,8 +67,7 @@ namespace NSelene
         #endregion
     }
 
-    public class ExplicitDriverSource : IWebDriverSource, IDisposable
-    {
+    public class ExplicitDriverSource : IWebDriverSource, IDisposable {
 
         public IWebDriver Driver { get; set; }
 
@@ -86,8 +79,7 @@ namespace NSelene
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
 
-        protected virtual void Dispose (bool disposing)
-        {
+        protected virtual void Dispose (bool disposing) {
             if (!disposedValue) {
                 if (disposing) {
                     // dispose managed state (managed objects).
@@ -112,8 +104,7 @@ namespace NSelene
         // }
 
         // This code added to correctly implement the disposable pattern.
-        void IDisposable.Dispose ()
-        {
+        void IDisposable.Dispose () {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose (true);
             // TODO: uncomment the following line if the finalizer is overridden above.
@@ -123,8 +114,7 @@ namespace NSelene
     }
 
     //TODO: consider implementing IJavaScriptExecutor
-    public class SeleneDriver : IWebDriver, ISearchContext, IDisposable, INavigation, SeleneContext
-    {
+    public class SeleneDriver : IWebDriver, ISearchContext, IDisposable, INavigation, SeleneContext {
         IWebDriverSource source;
 
         public IWebDriver Value {   // TODO: maybe other name? Driver over Value? else? Current over Value?
@@ -137,8 +127,7 @@ namespace NSelene
             }
         }
 
-        public SeleneDriver(IWebDriverSource source)
-        {
+        public SeleneDriver(IWebDriverSource source) {
             this.source = source;
         }
 
@@ -146,8 +135,7 @@ namespace NSelene
 
         public SeleneDriver(IWebDriver driver) : this(new ExplicitDriverSource(driver)) {} 
 
-        IWebDriver asWebDriver()
-        {
+        IWebDriver asWebDriver() {
             return this;
         }
 
@@ -157,39 +145,32 @@ namespace NSelene
 
         // TODO: consider moving Element/Elements to SDriverExtensions, and leaving Find/FindAll here
         // becuase SDriver#Find sounds better than SDriver#Element (Element sounded when we had Browser#Element in the past...)
-        public SeleneElement Find(By by)
-        {
+        public SeleneElement Find(By by) {
             return new SeleneElement(by, this);
         }
 
-        public SeleneElement Find(string cssSelector)
-        {
+        public SeleneElement Find(string cssSelector) {
             return Find(By.CssSelector(cssSelector));
         }
 
-        public SeleneElement Find(IWebElement pageFactoryElement)
-        {
+        public SeleneElement Find(IWebElement pageFactoryElement) {
             return new SeleneElement(pageFactoryElement, this);
         }
 
-        public SeleneCollection FindAll(By by)
-        {
+        public SeleneCollection FindAll(By by) {
             return new SeleneCollection(by, this);
         }
 
-        public SeleneCollection FindAll(string cssSelector)
-        {
+        public SeleneCollection FindAll(string cssSelector) {
             return FindAll(By.CssSelector(cssSelector));
         }
 
-        public SeleneCollection FindAll(IList<IWebElement> pageFactoryElements)
-        {
+        public SeleneCollection FindAll(IList<IWebElement> pageFactoryElements) {
             return new SeleneCollection(pageFactoryElements, this);
         }
 
         // TODO: this method works with driver's value, not source... this make it possibly not thread safe... 
-        public Actions Actions()
-        {
+        public Actions Actions() {
             return new Actions(this.Value);
         }
 
@@ -349,8 +330,7 @@ namespace NSelene
         // SContext methods
         //
 
-        IWebElement SeleneContext.FindElement (By by)
-        {
+        IWebElement SeleneContext.FindElement (By by) {
             return this.Value.FindElement(by);
         }
 
