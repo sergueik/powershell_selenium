@@ -162,6 +162,47 @@ namespace NSelene{
         }
 
         public SeleneCollection FindAll(string cssSelector) {
+        	/*
+        	selectorKind = null;
+			selectorValue = null;
+			seleneElementCollection = null;
+			regex = new Regex("^(?<kind>xpath|css|text) *= *(?<value>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+			matches = regex.Matches(selector);
+			foreach (Match match in matches) {
+				if (match.Length != 0) {
+					foreach (Capture capture in match.Groups["kind"].Captures) {
+						if (selectorKind == null) {
+							selectorKind = capture.ToString();
+						}
+					}
+					foreach (Capture capture in match.Groups["value"].Captures) {
+						if (selectorValue == null) {
+							selectorValue = capture.ToString();
+						}
+					}
+				}
+			}
+			if (selectorKind != null) {
+				switch (selectorKind) {
+					case "css":
+						seleneElementCollection = SS(By.CssSelector(selectorValue));
+						break;
+					case "xpath":
+						seleneElementCollection = SS(By.XPath(selectorValue));
+						break;
+					case "text":
+						seleneElementCollection = SS(By.XPath(String.Format("//*[contains(text(),'%s')]", selectorValue)));
+						break;
+					default:
+						seleneElementCollection = SS(By.CssSelector(selector));
+						break;
+				}	
+			} else {
+				seleneElementCollection = SS(By.CssSelector(selector));
+			}
+			return seleneElementCollection;
+
+        	*/
             return FindAll(By.CssSelector(cssSelector));
         }
 

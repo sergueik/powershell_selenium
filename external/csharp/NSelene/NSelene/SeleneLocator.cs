@@ -168,13 +168,11 @@ namespace NSelene
     {
     }
 
-    sealed class SearchContextWebElementsCollectionSLocator : WebElementsCollectionSLocator
-    {
+    sealed class SearchContextWebElementsCollectionSLocator : WebElementsCollectionSLocator {
         readonly SeleneContext context;
         readonly By driverLocator;
 
-        public SearchContextWebElementsCollectionSLocator(By driverLocator, SeleneContext context)
-        {
+        public SearchContextWebElementsCollectionSLocator(By driverLocator, SeleneContext context) {
             this.driverLocator = driverLocator;
             this.context = context;
         }
@@ -191,8 +189,7 @@ namespace NSelene
         }
     }
 
-    sealed class WrappedWebElementsCollectionSLocator : WebElementsCollectionSLocator
-    {
+    sealed class WrappedWebElementsCollectionSLocator : WebElementsCollectionSLocator {
         readonly string description;
         readonly IList<IWebElement> webelements;
 

@@ -26,16 +26,13 @@ namespace NSelene
         SeleneElement ElementAt(int index);
     }
 
-    public sealed class SeleneCollection 
-        : SCollection, 
-          WrapsWebElementsCollection, IReadOnlyList<SeleneElement>, IReadOnlyCollection<SeleneElement>, IList<SeleneElement>, IList<IWebElement>, ICollection<SeleneElement>, IEnumerable<SeleneElement>, IEnumerable
-    {
+    public sealed class SeleneCollection : SCollection, 
+          WrapsWebElementsCollection, IReadOnlyList<SeleneElement>, IReadOnlyCollection<SeleneElement>, IList<SeleneElement>, IList<IWebElement>, ICollection<SeleneElement>, IEnumerable<SeleneElement>, IEnumerable {
         readonly SeleneLocator<ReadOnlyCollection<IWebElement>> locator;
 
         readonly SeleneDriver driver;
 
-        internal SeleneCollection(SeleneLocator<ReadOnlyCollection<IWebElement>> locator, SeleneDriver driver)
-        {
+        internal SeleneCollection(SeleneLocator<ReadOnlyCollection<IWebElement>> locator, SeleneDriver driver) {
             this.locator = locator;
             this.driver = driver;
         }
@@ -49,15 +46,13 @@ namespace NSelene
         internal SeleneCollection(IList<IWebElement> elementsListToWrap, IWebDriver driver)
             : this(new WrappedWebElementsCollectionSLocator(elementsListToWrap), new SeleneDriver(driver)) {}
         
-        public ReadOnlyCollection<IWebElement> ActualWebElements
-        {
+        public ReadOnlyCollection<IWebElement> ActualWebElements {
             get {
                 return locator.Find();
             }
         }
 
-        SeleneLocator<ReadOnlyCollection<IWebElement>> SLocator 
-        {
+        SeleneLocator<ReadOnlyCollection<IWebElement>> SLocator {
             get {
                 return this.locator;
             }
@@ -68,28 +63,23 @@ namespace NSelene
             return this.locator.Description;
         }
 
-        public SeleneCollection Should(Condition<SeleneCollection> condition)
-        {
+        public SeleneCollection Should(Condition<SeleneCollection> condition) {
             return Selene.WaitFor(this, condition);
         }
 
-        public SeleneCollection ShouldNot(Condition<SeleneCollection> condition)
-        {
+        public SeleneCollection ShouldNot(Condition<SeleneCollection> condition) {
             return Selene.WaitForNot(this, condition);
         }
 
-        public SeleneElement FindBy(Condition<SeleneElement> condition)
-        {
+        public SeleneElement FindBy(Condition<SeleneElement> condition) {
             return new SeleneElement(new SCollectionWebElementByConditionSLocator(condition, this, this.driver), this.driver);
         }
 
-        public SeleneCollection FilterBy(Condition<SeleneElement> condition)
-        {
+        public SeleneCollection FilterBy(Condition<SeleneElement> condition){
             return new SeleneCollection(new SCollectionFilteredWebElementsCollectionSLocator(condition, this, this.driver), this.driver);
         }
 
-        public ReadOnlyCollection<IWebElement> ToReadOnlyWebElementsCollection()
-        {
+        public ReadOnlyCollection<IWebElement> ToReadOnlyWebElementsCollection(){
             return new ReadOnlyCollection<IWebElement>(this);
         }
 

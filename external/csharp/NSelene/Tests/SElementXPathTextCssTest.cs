@@ -1,5 +1,8 @@
 ﻿using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+
 
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
@@ -50,7 +53,53 @@ namespace NSeleneTests
 			IWebElement element = Selene.GetWebDriver().FindElement(By.XPath("//*[contains(text(),'Hello World')]"));
 			StringAssert.Contains("Hello World!" , element.Text);
 			// Console.Error.WriteLine(element.Text);
-			Selene.I.Find(By.XPath("//*[contains(text(),'Hello World')]"));
+			// NSelene.Selene no longer has a definiton for 'I'
+			// Selene.I.Find(By.XPath("//*[contains(text(),'Hello World')]"));
 		}
+
+		[Test]
+        public void SeleneCollectionsShouldWorkWithText() { 
+            Given.OpenedPageWithBody("<ul>Hello to:<li>Dear Bob</li><li>Dear Frank</li><li>Lovely Kate</li></ul>");
+            // Begin with  bare bones Selenium WebDriver and assert XPath is valid
+			ReadOnlyCollection<IWebElement> webElements = Selene.GetWebDriver().FindElements(By.XPath("//*[contains(text(),'Dear')]"));
+			Assert.NotNull(webElements);
+			Assert.Greater(webElements.Count,0);
+			StringAssert.Contains("Dear" , webElements[0].Text);
+			// inspect the underlying collection - 
+			// not commonly done in the test
+			String seleneLocator = "text = Dear";
+			SeleneCollection seleWebElements = Selene.SS(seleneLocator);
+            Assert.NotNull(seleWebElements);
+			Assert.Greater(seleWebElements.Count,0);
+			StringAssert.Contains("Dear" , seleWebElements[0].Text);
+
+			// exercise NSelene extension methods
+            Selene.SS(seleneLocator).Should(Have.CountAtLeast(1));
+            Selene.SS(seleneLocator).Should(Have.Texts("Bob", "Frank"));
+            Selene.SS(seleneLocator).ShouldNot(Have.Texts("Bob"));
+            Selene.SS(seleneLocator).ShouldNot(Have.Texts("Bob", "Kate", "Frank"));
+	        Selene.SS(seleneLocator).Should(Have.ExactTexts("Dear Bob", "Dear Frank"));
+        }
+
+        public void SeleneCollectionsShouldWorkWithXPath() { 
+            Given.OpenedPageWithBody("<ul>Hello to:<li>Dear Bob</li><li>Dear Frank</li><li>Lovely Kate</li></ul>");
+            String xpath = "/ul/li";
+			// Begin with  bare bones Selenium WebDriver and assert XPath is valid
+			ReadOnlyCollection<IWebElement> webElements = Selene.GetWebDriver().FindElements(By.XPath(xpath));
+			Assert.NotNull(webElements);
+			Assert.Greater(webElements.Count,0);
+			StringAssert.Equals("li" , webElements[0].TagName);
+			// check the underlying collection - commonly not sent to the test  
+			SeleneCollection seleWebElements = null;
+			String seleneLocator = String.Format("xpath = {0}", xpath);
+			seleWebElements = Selene.SS(seleneLocator);
+            Assert.NotNull(seleWebElements);
+			Assert.Greater(seleWebElements.Count,0);
+			StringAssert.Equals("li" , seleWebElements[0].TagName);
+            // exercise NSelene extension methods
+	        Selene.SS(seleneLocator).Should(Have.ExactTexts("Dear Bob", "Dear Frank"));
+            Selene.SS(seleneLocator).Should(Have.CountAtLeast(1));
+        }
+
 	}
 }
