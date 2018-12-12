@@ -1,6 +1,6 @@
 ### Info
 
-This directory contains a replica of [NSelene - Selenide "from scratch port" to .NET](https://github.com/yashaka/NSelene), modified to build with C# 5.0 and Nuget 2.6.4. This allowing development in the [SharpDevelop IDE](http://www.icsharpcode.net/OpenSource/SD/Default.aspx) which is far less resource-aggressive then Visual Studio.
+This directory contains a replica of [NSelene - Selenide "from scratch port" to .NET](https://github.com/yashaka/NSelene) of Яков Крамаренко, modified to build with C# 5.0 and Nuget 2.6.4. This allowing development in the [SharpDevelop IDE](http://www.icsharpcode.net/OpenSource/SD/Default.aspx) which is far less resource-aggressive then Visual Studio.
 
 The fork for upstreaam pulls and pull requests is located in [standalone fork of the same repository](https://github.com/sergueik/NSelene).
 ### Added Features
@@ -26,8 +26,6 @@ In this version of the project temporarily dropped support for [using "static" f
   * [selenide article (in Russian)](https://habr.com/company/jugru/blog/416757/)
   * [selenide presentation](https://docs.google.com/presentation/d/1kuzqR8JGnVKIs2r0Bm83LdOfbZkSkoR93f1c8wd26ns/edit?usp=sharing)
 
-
-# // Разрабатывает NSelene Яков Крамаренко.  
 
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
