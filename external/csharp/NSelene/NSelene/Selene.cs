@@ -57,7 +57,7 @@ namespace NSelene {
 					default:
 						seleneElement = S(By.CssSelector(selectorValue));
 						break;
-				}	
+				}
 			} else {
 				seleneElement = S(By.CssSelector(selectorValue));
 			}
@@ -98,7 +98,7 @@ namespace NSelene {
 					default:
 						seleneElement = S(By.CssSelector(selector));
 						break;
-				}	
+				}
 			} else {
 				seleneElement = S(By.CssSelector(selector));
 			}
@@ -114,7 +114,7 @@ namespace NSelene {
 		}
 
 		public static SeleneElement S(string selector, IWebDriver driver) {
-			// TODO: branch 
+			// TODO: branch
 			selectorKind = null;
 			selectorValue = null;
 			seleneElement = null;
@@ -148,11 +148,11 @@ namespace NSelene {
 					default:
 						seleneElement = S(By.CssSelector(selectorValue), driver);
 						break;
-				}	
+				}
 			} else {
 				seleneElement = S(By.CssSelector(selector), driver);
 			}
-			return seleneElement; 
+			return seleneElement;
 		}
 
 		public static SeleneCollection SS(By locator) {
@@ -194,7 +194,7 @@ namespace NSelene {
 					default:
 						seleneElementCollection = SS(By.CssSelector(selector));
 						break;
-				}	
+				}
 			} else {
 				seleneElementCollection = SS(By.CssSelector(selector));
 			}
@@ -209,8 +209,46 @@ namespace NSelene {
 			return new SeleneCollection(locator, new SeleneDriver(driver));
 		}
 
-		public static SeleneCollection SS(string cssSelector, IWebDriver driver) {
-			return SS(By.CssSelector(cssSelector), driver);
+		public static SeleneCollection SS(string selector, IWebDriver driver) {
+			selectorKind = null;
+			selectorValue = null;
+			seleneElementCollection = null;
+			regex = new Regex("^(?<kind>xpath|css|text) *= *(?<value>.*)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+			matches = regex.Matches(selector);
+			foreach (Match match in matches) {
+				if (match.Length != 0) {
+					foreach (Capture capture in match.Groups["kind"].Captures) {
+						if (selectorKind == null) {
+							selectorKind = capture.ToString();
+						}
+					}
+					foreach (Capture capture in match.Groups["value"].Captures) {
+						if (selectorValue == null) {
+							selectorValue = capture.ToString();
+						}
+					}
+				}
+			}
+			if (selectorKind != null) {
+				switch (selectorKind) {
+					case "css":
+						seleneElementCollection = SS(By.CssSelector(selectorValue), driver);
+						break;
+					case "xpath":
+						seleneElementCollection = SS(By.XPath(selectorValue), driver);
+						break;
+					case "text":
+						String xpath = String.Format("//*[contains(text(),'{0}')]", selectorValue);
+						seleneElementCollection = SS(By.XPath(xpath), driver);
+						break;
+					default:
+						seleneElementCollection = SS(By.CssSelector(selector), driver);
+						break;
+				}
+			} else {
+				seleneElementCollection = SS(By.CssSelector(selector), driver);
+			}
+			return seleneElementCollection;
 		}
 
 		public static void Open(string url) {
@@ -248,7 +286,7 @@ namespace NSelene {
 		}
 
 		private static OpenQA.Selenium.Support.UI.SystemClock clock = null;
-		
+
 		public static TResult WaitFor<TResult>(TResult sEntity, Condition<TResult> condition, double timeout) {
 			Exception lastException = null;
 			if (clock == null) {
@@ -256,8 +294,8 @@ namespace NSelene {
 			}
 			var timeoutSpan = TimeSpan.FromSeconds(timeout);
 			DateTime otherDateTime = clock.LaterBy(timeoutSpan);
-			var ignoredExceptionTypes = new [] { 
-				typeof(WebDriverException), 
+			var ignoredExceptionTypes = new [] {
+				typeof(WebDriverException),
 				typeof(IndexOutOfRangeException),
 				typeof(ArgumentOutOfRangeException)
 			};
