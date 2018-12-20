@@ -47,8 +47,11 @@ namespace NSelene
     }
 
     // TODO: consider extracting SElement as interface... 
+    #pragma warning disable 618
     public sealed class SeleneElement : SElement,
         WrapsWebElement, IWebElement, ISearchContext, SeleneContext
+        	#pragma warning restore 618
+
     {
         readonly SeleneLocator<IWebElement> locator;
 

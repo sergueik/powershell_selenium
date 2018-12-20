@@ -25,11 +25,11 @@ namespace NSelene
         SeleneElement Get(int index);
         SeleneElement ElementAt(int index);
     }
-
+#pragma warning disable 618
     public sealed class SeleneCollection : SCollection, 
           WrapsWebElementsCollection, IReadOnlyList<SeleneElement>, IReadOnlyCollection<SeleneElement>, IList<SeleneElement>, IList<IWebElement>, ICollection<SeleneElement>, IEnumerable<SeleneElement>, IEnumerable {
         readonly SeleneLocator<ReadOnlyCollection<IWebElement>> locator;
-
+#pragma warning restore 618
         readonly SeleneDriver driver;
 
         internal SeleneCollection(SeleneLocator<ReadOnlyCollection<IWebElement>> locator, SeleneDriver driver) {

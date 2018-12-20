@@ -1,60 +1,57 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
 
-using System.Reflection;
 using NSelene;
 using OpenQA.Selenium;
 
+// TODO: extract common methods to TestUtils namespace
 namespace NSeleneTests {
 	public static class When {
-		private static String PrepareBodyHTML(string text) {
-			// TODO: convert body quotes
-			// like e.g. "<h1 name=\"hello\">Hello Babe!</h1>"
-			return "\"" + text.Replace("\r", "").Replace("\n", "") + "\"";
+		
+		private static String PrepareBodyHTML(string pageBody) {
+			// convert body quotes and chomp line endings
+			return "\"" + Regex.Replace(Regex.Replace(pageBody, "\"", "\\\""),"\r?\n", " ") + "\"";
 		}
 		
-		public static void WithBody(string html) {
+		public static void WithBody(string pageBody) {
 			Selene.ExecuteScript(
-				"document.getElementsByTagName('body')[0].innerHTML = " + PrepareBodyHTML(html) + ";");
+				"document.getElementsByTagName('body')[0].innerHTML = " + PrepareBodyHTML(pageBody) + ";");
 			
 		}
 
-		public static void WithBody(string html, IWebDriver driver) {
-			(driver as IJavaScriptExecutor).ExecuteScript(
-				"document.getElementsByTagName('body')[0].innerHTML = " + PrepareBodyHTML(html) + ";");
+		public static void WithBody(string pageBody, IWebDriver driver) { (driver as IJavaScriptExecutor).ExecuteScript(
+				"document.getElementsByTagName('body')[0].innerHTML = " + PrepareBodyHTML(pageBody) + ";");
 		}
 
 		// TODO: consider renaming to WithBodyTimedOut
-		public static void WithBodyTimedOut(string html, int timeout) {
+		public static void WithBodyTimedOut(string pageBody, int timeout) {
 			Selene.ExecuteScript(@"
                 setTimeout(
                     function(){
-                        document.getElementsByTagName('body')[0].innerHTML = " + PrepareBodyHTML(html) + "}, " + timeout + ");");
+                        document.getElementsByTagName('body')[0].innerHTML = " + PrepareBodyHTML(pageBody) + "}, " + timeout + ");");
 		}
 
-		public static void WithBodyTimedOut(string html, int timeout, IWebDriver driver) {
+		public static void WithBodyTimedOut(string pageBody, int timeout, IWebDriver driver) {
 			(driver as IJavaScriptExecutor).ExecuteScript(@"
                 setTimeout(
                     function(){
-                        document.getElementsByTagName('body')[0].innerHTML = " + PrepareBodyHTML(html) + "}, " + timeout + ");"
+                        document.getElementsByTagName('body')[0].innerHTML = " + PrepareBodyHTML(pageBody) + "}, " + timeout + ");"
 			);
 		}
 
-		public static void ExecuteScriptWithTimeout(string js, int timeout) {
+		public static void ExecuteScriptWithTimeout(string script, int timeout) {
+			// NOTE: script may contain newlines
 			Selene.ExecuteScript(@"
-                setTimeout(
-                    function(){
-                        " + js + @"
-                    }, 
-                    " + timeout + ");"
-			);
+	       		  setTimeout(
+	                    function(){ " + script + @" }, " + timeout + ");" );
 		}
 
-		public static void ExecuteScriptWithTimeout(string js, int timeout, IWebDriver driver) {
+		public static void ExecuteScriptWithTimeout(string script, int timeout, IWebDriver driver) {
 			(driver as IJavaScriptExecutor).ExecuteScript(@"
                 setTimeout(
                     function(){
-                        " + js + @"
+                        " + script + @"
                     }, 
                     " + timeout + ");"
 			);
@@ -79,14 +76,14 @@ namespace NSeleneTests {
 			); 
 		}
 
-		public static void OpenedPageWithBody(string html) {
+		public static void OpenedPageWithBody(string pageBody) {
 			Given.OpenedEmptyPage();
-			When.WithBody(html);
+			When.WithBody(pageBody);
 		}
 
-		public static void OpenedPageWithBody(string html, IWebDriver driver) {
+		public static void OpenedPageWithBody(string pageBody, IWebDriver driver) {
 			Given.OpenedEmptyPage(driver);
-			When.WithBody(html, driver);
+			When.WithBody(pageBody, driver);
 		}
 	}
 }

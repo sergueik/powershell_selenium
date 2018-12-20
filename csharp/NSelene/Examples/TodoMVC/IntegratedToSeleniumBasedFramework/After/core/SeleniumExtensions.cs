@@ -25,12 +25,13 @@ namespace NSeleneExamples.TodoMVC.IntegratedToSeleniumBasedFramework.After.Core
          */
         public SeleneDriver I { get; private set;}
 
-        public PageObject(IWebDriver driver)
-        {
+        public PageObject(IWebDriver driver) {
             this.driver = driver;
             this.I = new SeleneDriver(this.driver);
             Configuration.Timeout = 6;
-            PageFactory.InitElements(this.driver, this);
+			#pragma warning disable 618
+			PageFactory.InitElements(this.driver, this);			
+			#pragma warning restore 618
         }
 
         public void Open(string url)

@@ -20,8 +20,8 @@ namespace NSeleneTests
 
 		[Test]
 		public void SElementAlternativeCssSearch() {
-			Given.OpenedPageWithBody("<h1 name='hello'>Hello Babe!</h1>");
-			Selene.S("css = h1[name='hello']").Should(Have.Attribute("name", "hello"));
+			Given.OpenedPageWithBody("<h1 name=\"hello\">Hello Babe!</h1>");
+			Selene.S("css = h1[name=\"hello\"]").Should(Have.Attribute("name", "hello"));
 			Selene.S("h1:nth-of-type(1)").Should(Have.Text("Hello"));
 			// access directly
 			// NOTE: will look like pass
@@ -51,19 +51,21 @@ namespace NSeleneTests
 			Selene.S("text = world!", webDriver).ShouldNot(Have.ExactText("Hello"));
 			// up casting back to SeleneDriver will be a wrong move:
 			// it will internally switch back to cssSelector
-			// SeleneElement element = (new SeleneDriver(Selene.GetWebDriver())).Find(By.XPath("//*[contains(text(),'Hello World')]"));
-			IWebElement element = webDriver.FindElement(By.XPath("//*[contains(text(),'Hello World')]"));
+			// SeleneElement element = (new SeleneDriver(Selene.GetWebDriver())).Find(By.XPath("//*[contains(text(),\"Hello World\")]"));
+			IWebElement element = webDriver.FindElement(By.XPath("//*[contains(text(), 'Hello World')]"));
 			StringAssert.Contains("Hello World!" , element.Text);
 			// Console.Error.WriteLine(element.Text);
-			// NSelene.Selene no longer has a definiton for 'I'
-			// Selene.I.Find(By.XPath("//*[contains(text(),'Hello World')]"));
+			// NSelene.Selene no longer has a definiton for \"I\"
+			// Selene.I.Find(By.XPath("//*[contains(text(),\"Hello World\")]"));
+			element = webDriver.FindElement(By.XPath("//*[contains(text(), \"Hello World\")]"));
+			StringAssert.Contains("Hello World!" , element.Text);
 		}
 
 		[Test]
         public void SeleneCollectionsShouldWorkWithText() {
             Given.OpenedPageWithBody("<ul>Hello to:<li>Dear Bob</li><li>Dear Frank</li><li>Lovely Kate</li></ul>");
             // Begin with bare bones Selenium WebDriver and assert XPath is valid
-			ReadOnlyCollection<IWebElement> webElements = Selene.GetWebDriver().FindElements(By.XPath("//*[contains(text(),'Dear')]"));
+			ReadOnlyCollection<IWebElement> webElements = Selene.GetWebDriver().FindElements(By.XPath("//*[contains(text(),\"Dear\")]"));
 			Assert.NotNull(webElements);
 			Assert.Greater(webElements.Count,0);
 			StringAssert.Contains("Dear" , webElements[0].Text);

@@ -21,7 +21,9 @@ namespace NSeleneExamples.TodoMVC.IntegratedToSeleniumBasedFramework.Before.Core
         public PageObject(IWebDriver driver)
         {
             this.driver = driver;
+            #pragma warning disable 618
             PageFactory.InitElements(this.driver, this);
+            #pragma warning restore 618
         }
 
         public void Open(string url)

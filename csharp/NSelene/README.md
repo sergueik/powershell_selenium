@@ -73,14 +73,59 @@ The following [example](https://github.com/sergueik/selenium_tests/blob/master/s
 			}
 			cnt++;
 		}
-    // String attributeTest = cssValidator.getAttributeTest();
+    // String conditionTest = cssValidator.getConditionTest();
    // unmodified. optimization is likely possible
-   String attributeTest = "^((-?[_a-zA-Z]+[_a-zA-Z0-9-]*)|([*]))?((:[a-z][a-z\\-]*([(][^)]+[)])?)|(\\[\\s*(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)\\s*((\\=)|(\\~=)|(\\|=)|(\\^=)|(\\$=)|(\\*=))?\\s*(((["'])([-_.#a-zA-Z0-9:\\/ ]+)(["']))|(([-_.#a-zA-Z0-9:\\/]+)))?\\s*\\]))*$";
+   String conditionTest = "^((-?[_a-zA-Z]+[_a-zA-Z0-9-]*)|([*]))?((:[a-z][a-z\\-]*([(][^)]+[)])?)|(\\[\\s*(-?[_a-zA-Z]+[_a-zA-Z0-9-]*)\\s*((\\=)|(\\~=)|(\\|=)|(\\^=)|(\\$=)|(\\*=))?\\s*(((["'])([-_.#a-zA-Z0-9:\\/ ]+)(["']))|(([-_.#a-zA-Z0-9:\\/]+)))?\\s*\\]))*$";
 		for (String cssSelectorTokenString : tokenBuffer) {
 			assertTrue(
-					cssSelectorTokenString.matches(attributeTest));
+					cssSelectorTokenString.matches(conditionTest));
 		}
 }
+```
+similar for XPath candidate expression (currently, sans ConditionTest):
+```java
+		// TODO: convert into xpathValidator public method
+		String xpathString = "a[@class='main']/b//c[contains(text(),'hello world')]";
+		// final String tokenValidator = xpathValidator.getTokenValidator();
+    final String tokenValidator = "^\\s*(/?/?\\s*[^ /\\[]+(?:\\[[^\\]]+\\])*)($|\\s*//?\\s*[^ /\\[]+.*$)";
+		Pattern pattern = Pattern.compile(tokenValidator);
+		Matcher match = pattern.matcher(xpathString);
+
+		boolean found_token = true;
+		boolean foundRemainder = true;
+		List<String> tokenBuffer = new ArrayList<>();
+		List<String> tailBuffer = new ArrayList<>();
+		int cnt = 0; // paranoid
+		while (match.find() && found_token && foundRemainder && cnt < 100) {
+
+			if (match.group(1) == null || match.group(1) == "") {
+				found_token = false;
+			}
+			if (match.group(2) == null || match.group(2) == "") {
+				foundRemainder = false;
+			}
+			if (found_token) {
+				tokenBuffer.add(match.group(1));
+				if (debug) {
+					System.err.println(
+							String.format("Extracted token: \"%s\"", tokenBuffer.get(cnt)));
+				}
+			}
+			if (foundRemainder) {
+				String remainder = match.group(2);
+				tailBuffer.add(remainder);
+				if (debug) {
+					System.err.println(
+							String.format("Remaining of the xpath: \"%s\"", remainder));
+				}
+				match = pattern.matcher(remainder);
+			} else {
+				if (debug) {
+					System.err.println("Tail fails to match. ");
+				}
+			}
+			cnt++;
+		}
 ```
 
 ### Limitations

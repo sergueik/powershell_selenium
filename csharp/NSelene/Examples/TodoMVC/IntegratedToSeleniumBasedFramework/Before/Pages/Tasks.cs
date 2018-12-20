@@ -6,23 +6,31 @@ using System.Linq;
 using NUnit.Framework;
 using NSeleneExamples.TodoMVC.IntegratedToSeleniumBasedFramework.Before.Core;
 
-namespace NSeleneExamples.TodoMVC.IntegratedToSeleniumBasedFramework.Before.Pages
-{
+namespace NSeleneExamples.TodoMVC.IntegratedToSeleniumBasedFramework.Before.Pages {
     public class Tasks : PageObject
     {
         public Tasks(IWebDriver driver) : base(driver) {}
         
         [FindsBy(How = How.Id, Using = "new-todo")]
-        IWebElement newTodo;
+    	#pragma warning disable 649
+    	IWebElement newTodo;
+		#pragma warning restore 649
+
 
         [FindsBy(How = How.CssSelector, Using = "#todo-list>li")]
+	 	#pragma warning disable 649
         IList<IWebElement> list;
+		#pragma warning restore 649
 
         [FindsBy(How = How.LinkText, Using = "Active")]
+    	#pragma warning disable 649
         IWebElement activeFilter;
+		#pragma warning restore 649
 
         [FindsBy(How = How.LinkText, Using = "Completed")]
+    	#pragma warning disable 649
         IWebElement completedFilter;
+		#pragma warning restore 649
 
         public void Visit()
         {
