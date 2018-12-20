@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text.RegularExpressions;
-
+using System.Reflection;
 using NSelene;
 using OpenQA.Selenium;
 
@@ -59,19 +59,36 @@ namespace NSeleneTests {
 	}
 
 	public static class Given {
+
 		const String emptyPage = "../../Resources/empty.html";
-		/*
-			ERR_FILE_NOT_FOUND
-			file:///C:/Users/../AppData/Local/Temp/nunit20/ShadowCopyCache/6708_636800834277927465/Tests_27597609/assembly/dl3/Resources/empty.html 
-			Your file was not found It may have been moved or deleted.
-		*/
+
+		// Loading the empty page with RunFromAssemblyLocation set to "true" does not seem to work:
+		// ERR_FILE_NOT_FOUND
+		// file:///C:/Users/../AppData/Local/Temp/nunit20/ShadowCopyCache/6708_636800834277927465/Tests_27597609/assembly/dl3/Resources/empty.html 
+		// Your file was not found It may have been moved or deleted.
+
+		// Therefore the class initialzed with the default value of "false"
+
+		private static Boolean runFromAssemblyLocation = false;
+		
+		public static Boolean RunFromAssemblyLocation {                                                                               
+			get {                                                                           
+				return runFromAssemblyLocation;                                                      
+			}                                                                           
+			set {                                                                           
+				runFromAssemblyLocation = value;                                                     
+			}                                                                           
+		}
+
+
 		public static void OpenedEmptyPage() {
-			Selene.Open(new System.Uri(Path.Combine(Directory.GetCurrentDirectory(), emptyPage)).AbsoluteUri);
-			// new Uri(Assembly.GetExecutingAssembly().Location), "../../Resources/empty.html"
+			String uri = new Uri(Path.Combine(
+				runFromAssemblyLocation ? Assembly.GetExecutingAssembly().Location : Directory.GetCurrentDirectory(), emptyPage)).AbsoluteUri;
+			Selene.Open(uri);
 		}
 
 		public static void OpenedEmptyPage(IWebDriver driver) {
-			driver.Navigate().GoToUrl(new System.Uri(Path.Combine(Directory.GetCurrentDirectory(), emptyPage)).AbsoluteUri
+			driver.Navigate().GoToUrl(new Uri(Path.Combine(Directory.GetCurrentDirectory(), emptyPage)).AbsoluteUri
 				// new Uri(  new Uri(Assembly.GetExecutingAssembly().Location),  "../../Resources/empty.html" ).AbsoluteUri
 			); 
 		}

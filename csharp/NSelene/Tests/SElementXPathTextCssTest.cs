@@ -20,6 +20,8 @@ namespace NSeleneTests
 
 		[Test]
 		public void SElementAlternativeCssSearch() {
+			// Given.RunFromAssemblyLocation = true;  
+			// the above would create a flash "Your file was not found"
 			Given.OpenedPageWithBody("<h1 name=\"hello\">Hello Babe!</h1>");
 			Selene.S("css = h1[name=\"hello\"]").Should(Have.Attribute("name", "hello"));
 			Selene.S("h1:nth-of-type(1)").Should(Have.Text("Hello"));
