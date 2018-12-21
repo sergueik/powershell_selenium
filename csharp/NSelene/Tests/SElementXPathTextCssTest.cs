@@ -23,8 +23,8 @@ namespace NSeleneTests
 			// Given.RunFromAssemblyLocation = true;  
 			// the above would create a flash "Your file was not found"
 			Given.OpenedPageWithBody("<h1 name=\"hello\">Hello Babe!</h1>");
-			Selene.S("css = h1[name=\"hello\"]").Should(Have.Attribute("name", "hello"));
-			Selene.S("h1:nth-of-type(1)").Should(Have.Text("Hello"));
+			Selene.S(With.Css("h1[name=\"hello\"]")).Should(Have.Attribute("name", "hello"));
+			Selene.S(With.Css("h1:nth-of-type(1)")).Should(Have.Text("Hello"));
 			// access directly
 			// NOTE: will look like pass
 			// SeleneElement element = (new SeleneDriver(Selene.GetWebDriver())).Find(By.CssSelector("h1:nth-of-type(1)"));
@@ -37,25 +37,51 @@ namespace NSeleneTests
 		[Test]
 		public void SElementXpathSearch() {
 			Given.OpenedPageWithBody("<h1>Hello Babe!</h1>");
-			Selene.S("xpath = //h1").ShouldNot(Have.Text("Hello world!"));
-			Selene.S("xpath = /h1[1]").ShouldNot(Have.Text("Hello world!"));
+			Selene.S(With.XPath("//h1")).ShouldNot(Have.Text("Hello world!"));
+			Selene.S(With.XPath("/h1[1]")).ShouldNot(Have.Text("Hello world!"));
 			IWebDriver driver = Selene.GetWebDriver();
 			IWebElement element = driver.FindElement(By.XPath("//h1[1]"));
-			// Console.Error.WriteLine();
 			StringAssert.AreEqualIgnoringCase("h1" , element.TagName);
 		}
 
 		[Test]
+		public void SElementLocalizedTextSearch() {
+			String alienName = "абвгдежзийклмнопрстуфхцчшщъыьэюя";
+			Given.OpenedPageWithBody(String.Format("<h1>Hello {0}!</h1>", alienName));
+			Selene.S(With.Text(alienName)).Should(Have.Text(String.Format("Hello {0}!", alienName)));
+			IWebDriver driver = Selene.GetWebDriver();
+			IWebElement element = driver.FindElement(By.XPath(String.Format("//h1[contains(text(), '{0}')]", alienName)));
+			StringAssert.AreEqualIgnoringCase("h1" , element.TagName);
+		}
+
+
+		[Test]
+		public void SYandexTextSearch() {
+			String emptySearchResponse = "Задан пустой поисковый запрос";
+			Selene.GoToUrl("https://yandex.ru/search");
+			Selene.S(With.Text(emptySearchResponse)).Should(Have.Text(emptySearchResponse));
+		}
+
+[Test]
+		public void SCP1251TextSearch() {
+			String searchString = "Информация для заявителей"; // <br>  и исполнителей проектов
+			Selene.GoToUrl("http://www.rfbr.ru/rffi/ru/");
+			Selene.S(With.Text(searchString)).Should(Have.Text(searchString));
+		}
+
+		
+		[Test]
 		public void SElementTextSearch() {
 			Given.OpenedPageWithBody("<h1>Hello World!</h1>");
 			IWebDriver webDriver = Selene.GetWebDriver();
-			Selene.S("text = Hello").ShouldNot(Have.ExactText("Hello"));
-			Selene.S("text = world!", webDriver).ShouldNot(Have.ExactText("Hello"));
+			Selene.S(NSelene.With.Text("Hello")).ShouldNot(Have.ExactText("Hello"));
+			Selene.S(NSelene.With.Text("world!"), webDriver).ShouldNot(Have.ExactText("Hello"));
 			// up casting back to SeleneDriver will be a wrong move:
 			// it will internally switch back to cssSelector
 			// SeleneElement element = (new SeleneDriver(Selene.GetWebDriver())).Find(By.XPath("//*[contains(text(),\"Hello World\")]"));
 			IWebElement element = webDriver.FindElement(By.XPath("//*[contains(text(), 'Hello World')]"));
 			StringAssert.Contains("Hello World!" , element.Text);
+			Selene.S(NSelene.With.ExactText(element.Text), webDriver).Should(Have.ExactText(element.Text));
 			// Console.Error.WriteLine(element.Text);
 			// NSelene.Selene no longer has a definiton for \"I\"
 			// Selene.I.Find(By.XPath("//*[contains(text(),\"Hello World\")]"));
@@ -73,7 +99,7 @@ namespace NSeleneTests
 			StringAssert.Contains("Dear" , webElements[0].Text);
 			// inspect the underlying collection -
 			// not commonly done in the test
-			String seleneLocator = "text = Dear";
+			By seleneLocator = NSelene.With.Text("Dear");
 			IWebDriver webDriver = Selene.GetWebDriver();
 			SeleneCollection seleWebElements = Selene.SS(seleneLocator, webDriver);
             Assert.NotNull(seleWebElements);
@@ -99,7 +125,7 @@ namespace NSeleneTests
 			StringAssert.IsMatch("li" , webElements[0].TagName);
 			// check the underlying collection - commonly not sent to the test
 			SeleneCollection seleWebElements = null;
-			String seleneLocator = String.Format("xpath = {0}", xpath);
+			By seleneLocator = With.XPath(xpath);
 			seleWebElements = Selene.SS(seleneLocator);
             Assert.NotNull(seleWebElements);
 			Assert.Greater(seleWebElements.Count,0);
@@ -121,7 +147,7 @@ namespace NSeleneTests
 			StringAssert.IsMatch("li" , webElements[0].TagName);
 			// check the underlying collection - commonly not sent to the test
 			SeleneCollection seleWebElements = null;
-			String seleneLocator = String.Format("xpath = {0}", xpath);
+			By seleneLocator = With.XPath( xpath);
 			seleWebElements = Selene.SS(seleneLocator, webDriver);
             Assert.NotNull(seleWebElements);
 			Assert.Greater(seleWebElements.Count,0);
