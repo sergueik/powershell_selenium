@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="BaseTest.cs" />
     <Compile Include="Given.cs" />
+    <Compile Include="SCollectionSearchUsingWithTests.cs" />
     <Compile Include="SElementConditionsTests.cs" />
     <Compile Include="InnerSElementSearchTests.cs" />
     <Compile Include="ErrorMessagesTests.cs" />
@@ -57,7 +58,8 @@
     <Compile Include="SElementActionsTests.cs" />
     <Compile Include="IndexedSElementSearchTests.cs" />
     <Compile Include="FoundByConditionSElementSearchTests.cs" />
-    <Compile Include="SElementXPathTextCssTest.cs" />
+    <Compile Include="SElementSearchUsingWithTests.cs" />
+    <Compile Include="SElementTextMultiLineSearchTests.cs" />
     <Compile Include="SeleniumInteroperability\SElementConditionsTests.cs" />
     <Compile Include="UtilsTests.cs" />
     <Compile Include="FilteredSCollectionSearchTests.cs" />
