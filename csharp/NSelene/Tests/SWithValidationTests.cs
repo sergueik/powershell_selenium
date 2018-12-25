@@ -21,7 +21,6 @@ namespace NSeleneTests
 	public class SWithValidationTests
 	{
 
-		// [Ignore("The argument control is missing - ignore the test")]
 		[TestCase("a.class > b#id  c:nth-of-type(1)")]
 		[TestCase("div.class ~ input#id")]
 		[TestCase("body > h1[name='hello'] h2:nth-of-type(1) div")]

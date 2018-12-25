@@ -25,28 +25,25 @@ namespace NSelene {
 		private static MatchCollection matches;
 		private static Regex regex;
 		private const String findByCssSelectorAndInnerText = @"
- /**
- * Find elements by css selector and inner Textual content. Alternative to xpath locator //*[contains(text(),'...'))
- * Derived from: Protractor clientLibrary API
+/**
+ * Find elements by cssSelector and text content. 
+ * Derived from: Protractor clientLibrary API functions.findByCssContainingText
  * https://github.com/angular/protractor/blob/master/lib/clientsidescripts.js#L686
  * @param {string} cssSelector The css selector to send to document.querySelectorAll. Default is a 'body *'  
  * @param {string} innerText exact text or a serialized RegExp to search for
  *
- * @return last element in the array of matching elements (the innermost matching element is taken to the caller).
+ * @return the last element in the array of matching elements (the innermost matching element).
  */
-var findByCssSelectorAndInnerText = function(сssSelector, innerText) {
-  if (сssSelector == null || сssSelector == '') {
+var findByCssSelectorAndInnerText = function(сssSelector, innerText, debug) {
+  if (!сssSelector) {
     сssSelector = 'body *';
   }
-  if (debug != null && debug) {
-    alert('cssSelector: ' +сssSelector);
-  }
-  if (debug != null && debug) {
-	alert('text: ' + innerText );
+  if (debug) {
+    alert('cssSelector: ' + сssSelector + '\n' + 'text: ' + innerText + '\n' + 'debug: ' + debug);
   }
   if (innerText.indexOf('__REGEXP__') === 0) {
     var match = innerText.split('__REGEXP__')[1].match(/\/(.*)\/(.*)?/);
-    innerText = new RegExp(match[1], match[2] || '');	  
+    innerText = new RegExp(match[1], match[2] || '');
   }
 
   var elements = document.querySelectorAll(сssSelector);
@@ -62,21 +59,16 @@ var findByCssSelectorAndInnerText = function(сssSelector, innerText) {
     }
   }
   var result = matches[matches.length - 1];
-  if (debug != null && debug) {
-	  if (result!= null ){
-			 alert('Result: ' + /* result.outerHTML */ result.textContent );
-	  } else {
-		  alert('nothing found');		  
-	  }
+  if (debug) {
+    alert((result) ? ('Result:\n' + 'HTML: ' + result.outerHTML + '\n' + 'Text: ' + result.textContent) : 'nothing found');
   }
   return result;
 };
 
-var debug = false;
 var cssSelector = arguments[0];
 var innerText = arguments[1];
-return findByCssSelectorAndInnerText(cssSelector, innerText);
-						";
+var debug = arguments[2];
+return findByCssSelectorAndInnerText(cssSelector, innerText, debug);";
 
 		public static void SetWebDriver(IWebDriver driver) {
 			PrivateConfiguration.SharedDriver.Value = driver;
@@ -85,9 +77,17 @@ return findByCssSelectorAndInnerText(cssSelector, innerText);
 		public static IWebDriver GetWebDriver() {
 			return PrivateConfiguration.SharedDriver.Value;
 		}
-		// need to learn to pass args.
-		public static object ExecuteScript(string script) {
+
+		public static object ExecuteScript(string script) {			
 			return (GetWebDriver() as IJavaScriptExecutor).ExecuteScript(script);
+		}
+
+		// calling script with arguments. NOTE: may wish to get rid of the above		
+		// https://seleniumhq.github.io/selenium/docs/api/dotnet/html/M_OpenQA_Selenium_IJavaScriptExecutor_ExecuteScript.htm
+		// using the params c# keyword to specify a method parameter that takes a variable number of arguments
+		// https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/params
+		public static object ExecuteScript(string script, params Object[] args) {
+			return (GetWebDriver() as IJavaScriptExecutor).ExecuteScript(script, args);
 		}
 
 		public static SeleneElement S(By by) {
@@ -105,7 +105,7 @@ return findByCssSelectorAndInnerText(cssSelector, innerText);
 						seleneElement = S(By.XPath(selectorValue));
 						break;
 					case "text":
-						seleneElement = ExecuteScript(findByCssSelectorAndInnerText) as SeleneElement;
+						seleneElement = ExecuteScript(findByCssSelectorAndInnerText, new object[] {null, selectorValue, false}) as SeleneElement;
 						// seleneElement = S(By.XPath(String.Format("//*[contains(text(),'%s')]", selectorValue)));
 						break;
 					default:
@@ -147,7 +147,7 @@ return findByCssSelectorAndInnerText(cssSelector, innerText);
 						seleneElement = S(By.XPath(selectorValue));
 						break;
 					case "text":
-						seleneElement = ExecuteScript(findByCssSelectorAndInnerText) as SeleneElement;
+						seleneElement = ExecuteScript(findByCssSelectorAndInnerText, new object[] {null, selectorValue, false}) as SeleneElement;
 						// seleneElement = S(By.XPath(String.Format("//*[contains(text(),'%s')]", selectorValue)));
 						break;
 					default:
