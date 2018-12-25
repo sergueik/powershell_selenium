@@ -61,6 +61,7 @@
     <Compile Include="SElementSearchUsingWithTests.cs" />
     <Compile Include="SElementTextMultiLineSearchTests.cs" />
     <Compile Include="SeleniumInteroperability\SElementConditionsTests.cs" />
+    <Compile Include="SWithValidationTests.cs" />
     <Compile Include="UtilsTests.cs" />
     <Compile Include="FilteredSCollectionSearchTests.cs" />
     <Compile Include="SCollectionConditionsTests.cs" />

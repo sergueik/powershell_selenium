@@ -24,9 +24,7 @@ namespace NSeleneTests
 		[SetUp]
 		public void initPage()
 		{
-			// base.initDriver();
-			// Given.RunFromAssemblyLocation = true;  
-			// NOTE: the above would create a flash "Your file was not found"
+			// NOTE: the Given.RunFromAssemblyLocation = true would create a flash "Your file was not found"
 			Given.OpenedPageWithBody(@"
                        <h1 name=""greeting"">Hello there!</h1>
                          <ul>Hello to:
@@ -66,10 +64,9 @@ namespace NSeleneTests
 		}
 
 		[Test]
-		[Ignore("The argument control is missing - ignore the test")]
-		[ExpectedException(typeof(Exception))]
-		public void BadXpathArgumentSearch()
-		{
+		// [Ignore("The argument control is missing - ignore the test")]
+		[ExpectedException(typeof(ArgumentException))]
+		public void BadXpathArgumentSearch() {
 			Selene.S(With.XPath("div span")).ShouldNot(Be.InDom);
 		}
 
