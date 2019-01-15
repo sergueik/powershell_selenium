@@ -1,4 +1,4 @@
-#Copyright (c) 2014,2015,2016,2017,2018 Serguei Kouzmine
+#Copyright (c) 2014-2019 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -80,6 +80,7 @@ write-host -ForegroundColor 'green' @"
 This call clears "Tell me if Internert Explorer is not the default web Browser" checkbox
 "@
 
+# https://www.technipages.com/ie-default-browser-prompt
 $path = '/Software/Microsoft/Internet Explorer/Main'
 $name = 'Check_Associations'
 $value = 'no'
@@ -356,7 +357,9 @@ write-host -ForegroundColor 'green' @"
 This call applies misc. settings from
 https://github.com/conceptsandtraining/modernie_selenium
 "@
-
+# IE11-only, on 64 bit Windows need to also handle
+# $path = 'SOFTWARE/Wow6432Node/Microsoft/Internet Explorer/Main/FeatureControl/FEATURE_BFCACHE'
+# see also https://automated-testing.info/t/internet-explorer-ne-mozhet-najti-element-na-stranicze/21972/8 (in Russian)
 $hive = 'HKLM:'
 $path = 'SOFTWARE/Microsoft/Internet Explorer/MAIN/FeatureControl/FEATURE_BFCACHE'
 $name = 'iexplore.exe'
