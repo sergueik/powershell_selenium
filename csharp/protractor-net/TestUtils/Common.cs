@@ -5,8 +5,7 @@ using System.IO;
 using System.Linq;
 
 namespace Protractor.TestUtils {
-	
-	
+
 	public class Common {
 
 		private static NgWebDriver ngDriver;
@@ -36,16 +35,14 @@ namespace Protractor.TestUtils {
 			return testFile.FullName;
 		}
 
-		// only works with Chrome:
-		// SetUp : System.InvalidOperationException : Access to 'file:///C:/developer/sergueik/powershell_selenium/csharp/protractor-net/Test/bin/Debug/ng_datepicker.htm' from script denied
-		public static void GetPageContent(string filename)
-		{
-			ngDriver.Navigate().GoToUrl(new System.Uri(Path.Combine(Directory.GetCurrentDirectory(), filename)).AbsoluteUri);
+ 		// only works with Chrome:
+		// SetUp : System.InvalidOperationException : Access to 'file:///C:/developer/sergueik/powershell_selenium/csharp/protractor-net/Test/bin/Debug/resources/ng_datepicker.htm' from script denied
+		public static void GetPageContent(string filename){
+			ngDriver.Navigate().GoToUrl(new System.Uri(Path.Combine(Path.Combine(Directory.GetCurrentDirectory(), resources), filename)).AbsoluteUri);
 		}
 
-		public static void GetLocalHostPageContent(string filename)
-		{
-			ngDriver.Navigate().GoToUrl(String.Format("http://127.0.0.1:{0}/{1}", port, filename));
+		public static void GetLocalHostPageContent(string filename) {
+			ngDriver.Navigate().GoToUrl(String.Format("http://127.0.0.1:{0}/{1}{2}", port, resources, filename));
 		}
 
 	}

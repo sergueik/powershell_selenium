@@ -648,6 +648,7 @@ namespace Protractor.Test
 			ngDriver.FindElement(NgBy.ButtonText("Login")).Click();
 			ngDriver.FindElements(NgBy.Options("account for account in Accounts")).First(account => Regex.IsMatch(account.Text, "1001")).Click();
 
+	
 			// switch to transactions
 			NgWebElement ng_transaction_button = ngDriver.FindElement(NgBy.PartialButtonText("Transactions"));
 			StringAssert.Contains("Transactions", ng_transaction_button.Text);
