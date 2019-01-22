@@ -358,7 +358,8 @@ which can be collaptsed into
           # https://stackoverflow.com/questions/45130993/how-to-start-chromedriver-in-headless-mode
           $options.addArguments([System.Collections.Generic.List[string]]@('--headless',"--window-size=${width}x${height}", '-disable-gpu'))
         } else {
-          $options.addArguments('start-maximized')
+	# TODO: makse configurable through a switch 
+       #   $options.addArguments('start-maximized')
           # no-op option - re-enforcing the default setting
           $options.addArguments(('user-data-dir={0}' -f ("${env:LOCALAPPDATA}\Google\Chrome\User Data" -replace '\\','/')))
           # if you like to specify another profile parent directory:
