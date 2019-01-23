@@ -18,15 +18,17 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-# NOTE:  currently ol works right ith grid option
-# NOTE:  copied from script that uses some profile and maximized the browses
-#   . .\swagbucks_test.ps1 -pause -grid -password 12345
+
 param(
   [string]$base_url = 'http://www.swagbucks.com/',
   [string]$username = 'kouzmine_serguei@yahoo.com',
   [string]$password,
+  # NOTE: can set to anythingg -will notbe able to go as far as to vertify
   [string]$browser = 'chrome',
   [switch]$grid,
+  # NOTE:  currently ol works right ith grid option -  local Chrome opens full screen, working but annoying
+  # NOTE: this is because  this is a replica od table_tnery.ps1 which apatently sets some profile and maximized the browser
+
   [switch]$headless,
   [switch]$pause
 )
@@ -106,10 +108,27 @@ try{
 	# NOTE: no exception
 }
 
-# will launche the unparsable recapcha dialog
+# will make visible the recapcha dialog div
+
 custom_pause -fullstop $fullstop
 
+# launch survey
+$answer_button_xpath = "//*[@id="sbStarterCard9"]/div/a[contains(text(), 'Answer')]"
+$answer_button_element = find_element -xpath $answer_button_xpath
+highlight ([ref]$selenium) ([ref]$$answer_button_element) -timeout 3000
+$answer_button_element.click()
+$survey_link_selectoer = "#surveyList > tbody#profilerSurveyTBody > tr:nth-child(46) > td.surveyLink.startSurveyLink > a[class *='surveyClick']"
+# TODO: clear the target attribute "_blank", optionally strip onClick attributes:
+# return surveyClick(this, '/g/survey-click?projectid=49937411&amp;sourceid=7&amp;memberid=49938381&amp;oid=1', 65, false);
 
+
+# example survery checkbox element:
+$survey_link_checkbox_html = @'
+<label class="checkbox" style="width: 697px;">
+  <input type="checkbox" id="option-100184-5" name="question_100184[]" value="2">
+  <span>DirecTV Satellite television</span>
+</label>
+'@
 
 if (-not ($host.Name -match 'ISE')) {
   # Cleanup
