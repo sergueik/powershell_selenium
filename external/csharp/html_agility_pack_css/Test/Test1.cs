@@ -10,25 +10,37 @@ namespace HapCss.UnitTests {
 		
 		[TestFixtureSetUp]
 		public void SetUp() {
-			doc = LoadHtml();
+			doc = new HtmlAgilityPack.HtmlDocument();
+			doc.LoadHtml(Resource.GetString("Test1.html"));
 		}
 
-		[Test]
-		public void IdSelectorMustReturnOnlyFirstElement() {
-			var elements = doc.QuerySelectorAll("#myDiv");
+		
+		[TestCase("#myDiv", "myDiv")]
+		[TestCase("div[id=myDiv]", "myDiv")]
+		[TestCase("div[id^=myDiv]", "myDiv")]
+	//	[TestCase("div[id = 'myDiv']", "myDiv")]
+	//	[TestCase("div[id = myDiv]", "myDiv")]
+	// invalid token exception
+	// System.InvalidOperationException : Token inválido: = 
+	// needs  to be made whitespace tolerant
+	//	[TestCase("div[id *= 'myDiv']", "myDiv")]
+		public void IdSelectorMustReturnOnlyFirstElement(String cssSelector, String elementId) {
+			var elements = doc.QuerySelectorAll(cssSelector);
 
-			Assert.IsTrue(elements.Count == 1);
-			Assert.IsTrue(elements[0].Id == "myDiv");
+			Assert.IsTrue(elements.Count >= 1);
+			Assert.IsTrue(elements[0].Id == elementId);
 			Assert.IsTrue(elements[0].Attributes["first"].Value == "1");
 		}
 
-		[Test]
-		public void GetElementsByAttribute() {
-			var elements = doc.QuerySelectorAll("*[id=myDiv]");
-
+		// NOTE: bad example, see e.g. https://www.w3.org/TR/WCAG20-TECHS/H93.html
+		// about uniqueness of the id of the Web page DOM 
+		[TestCase("*[id=myDiv]", "myDiv")]
+		[TestCase("div[id=myDiv]", "myDiv")]
+		public void GetElementsByAttribute(String cssSelector, String elementId) {
+			var elements = doc.QuerySelectorAll(cssSelector);
 			Assert.IsTrue(elements.Distinct().Count() == 2 && elements.Count == 2);
 			for (int i = 0; i < elements.Count; i++)
-				Assert.IsTrue(elements[i].Id == "myDiv");
+				Assert.IsTrue(elements[i].Id == elementId);
 		}
 
 		[Test]
@@ -57,14 +69,5 @@ namespace HapCss.UnitTests {
 			Assert.IsTrue(elements.Count == 1);
 			Assert.IsTrue(elements[0].Id == "spanB");
 		}
-
-		private static HtmlAgilityPack.HtmlDocument LoadHtml()
-		{
-			var doc = new HtmlAgilityPack.HtmlDocument();
-			doc.LoadHtml(Resource.GetString("Test1.html"));
-
-			return doc;
-		}
-
 	}
 }
