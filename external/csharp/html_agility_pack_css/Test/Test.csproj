@@ -57,11 +57,12 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Resource.cs" />
-    <Compile Include="Test1.cs" />
+    <Compile Include="Original.cs" />
+    <Compile Include="CoreInline.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Test1.html">
+    <EmbeddedResource Include="test1.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="test2.html">
