@@ -10,12 +10,14 @@ namespace HapCss
     {
         public string Filter { get; set; }
         public IList<Token> SubTokens { get; set; }
-
+        public string Word { get; set; }
+		
         public Token(string word)
         {
             if (string.IsNullOrEmpty(word))
                 throw new ArgumentNullException("word");
 
+            this.Word = word;
             var tokens = SplitTokens(word).ToList();
 
             this.Filter = tokens.First();

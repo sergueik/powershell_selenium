@@ -6,25 +6,24 @@ using System.IO;
 namespace HapCss.UnitTests {
 	[TestFixture]
 	// original class integrted from upstream (almost)
-	public class Original
-	{
+	public class Original {
 		static HtmlAgilityPack.HtmlDocument doc = null;
 		
 		[TestFixtureSetUp]
 		public void SetUp() {
 			doc = new HtmlAgilityPack.HtmlDocument();
-			String name  = "test1.html";
+			String name = "test1.html";
 			var asm = typeof(Original).Assembly;
-            string resourceName = Path.GetFileNameWithoutExtension(asm.GetLoadedModules()[0].Name) + "." + name;
-Stream stream = asm.GetManifestResourceStream(resourceName);
+			string resourceName = Path.GetFileNameWithoutExtension(asm.GetLoadedModules()[0].Name) + "." + name;
+			Stream stream = asm.GetManifestResourceStream(resourceName);
 
-            doc.LoadHtml(Resource.GetString(name, stream));
+			doc.LoadHtml(Resource.GetString(name, stream));
 		}
 
-		// special test, implemetnation detail 
-		// NOTE: using id here is not the best example, 
+		// special test, implemetnation detail
+		// NOTE: using id here is not the best example,
 		// see e.g. https://www.w3.org/TR/WCAG20-TECHS/H93.html
-		// about uniqueness of the id of the Web page DOM 
+		// about uniqueness of the id of the Web page DOM
 		[Test]
 		public void IdSelectorMustReturnOnlyFirstElement() {
 			String elementId = "myDiv";
@@ -49,12 +48,15 @@ Stream stream = asm.GetManifestResourceStream(resourceName);
 				Assert.IsTrue(elements[i].Id == elementId);
 		}
 
+		// works
+		// [TestCase("div[id='myDiv']", "myDiv")]
 		// NOTE: driver still has to be made whitespace tolerant
 		// https://developer.mozilla.org/en-US/docs/Web/CSS/Attribute_selectors
-		// System.InvalidOperationException : Token inválido: = 
-		[TestCase("div[id = 'myDiv']", "myDiv")]
-		[TestCase("div[id = myDiv]", "myDiv")]
-		[ExpectedException( typeof( System.InvalidOperationException ) )]
+		// System.InvalidOperationException : Token inválido: =
+		// [TestCase("div[id = 'myDiv']", "myDiv")]
+		 [TestCase("div[id = myDiv]", "myDiv")]
+		// [ExpectedException( typeof( System.InvalidOperationException ) )]
+		// System.NotSupportedException : Uso inválido de seletor por atributo
 		public void GetElementsByConditionCss(String cssSelector, String elementId) {
 			var elements = doc.QuerySelectorAll(cssSelector);
 			Assert.IsTrue(elements.Distinct().Count() == 2);
@@ -66,11 +68,11 @@ Stream stream = asm.GetManifestResourceStream(resourceName);
 
 		// https://developer.mozilla.org/en-US/docs/Web/CSS/:nth-of-type
 		// System.NotSupportedException : Pseudo classe não suportada: nth-of-type
-		[ExpectedException( typeof( System.NotSupportedException ) )]
+		[ExpectedException(typeof(System.NotSupportedException))]
 		[Test]
-		public void GetElementsByPseudoClass1Css( ) {
-		String cssSelector = "div:nth-of-type(1)";
-		String elementId = "myDiv";
+		public void GetElementsByPseudoClass1Css() {
+			String cssSelector = "div:nth-of-type(1)";
+			String elementId = "myDiv";
 			var elements = doc.QuerySelectorAll(cssSelector);
 			Assert.IsTrue(elements.Distinct().Count() == 1);
 			Assert.IsTrue(elements.Count == 1);
