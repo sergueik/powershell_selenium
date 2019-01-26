@@ -18,18 +18,6 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-
-# will pick an older downlevel to prevent framework dependency waterfall
-$version = '1.7.0'
-$version = '1.4.9'
-
-$download_base_url = 'https://www.nuget.org/packages/HtmlAgilityPack/'
-
-$download_base_url = 'https://www.nuget.org/packages/HtmlAgilityPack.CssSelector.Core/'
-
-$version = '1.0.1'
-
-
 # http://poshcode.org/2887
 # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
 # https://msdn.microsoft.com/en-us/library/system.management.automation.invocationinfo.pscommandpath%28v=vs.85%29.aspx
@@ -76,6 +64,7 @@ function load_shared_assemblies {
   param(
     [String]$shared_assemblies_path = "${env:USERPROFILE}\Downloads",
     [string[]]$shared_assemblies = @(
+     # 'nunit.core.dll',
       'nunit.framework.dll'
     )
   )
@@ -142,6 +131,7 @@ function assembly_is_loaded{
 
 [String[]]$shared_assemblies = @(
   'HtmlAgilityPack.dll',
+  'HtmlAgilityPack.CssSelectors.dll',
   'Newtonsoft.Json.dll',
   'nunit.framework.dll'
 )
@@ -185,17 +175,20 @@ $doc.LoadHtml(@'
 '@
 )
 
+# exercises https://html-agility-pack.net/selectors
+
 @(
 '//body/div[1]/span[@id="spanA"]',
 '//body/div[1]/span[contains(@class, "clsb")]'
 ) | foreach-object {
   $xpath = $_
-  $body = $doc.DocumentNode.SelectSingleNode($xpath)
-  [NUnit.Framework.Assert]::NotNull($body)
-  [NUnit.Framework.Assert]::IsInstanceOf([HtmlAgilityPack.HtmlNode], $body, 'Strongly typed response expected')
-  [NUnit.Framework.Assert]::NotNull($body.OuterHtml)
-  write-output ("XPath:`n{0}`nResult:`n{1}" -f $xpath, $body.OuterHtml.ToString())
+  $node = $doc.DocumentNode.SelectSingleNode($xpath)
+  [NUnit.Framework.Assert]::NotNull($node)
+  [NUnit.Framework.Assert]::IsInstanceOf([HtmlAgilityPack.HtmlNode], $node, 'Strongly typed response expected')
+  [NUnit.Framework.Assert]::NotNull($node.OuterHtml)
+  write-output ("XPath:`n{0}`nResult:`n{1}" -f $xpath, $node.OuterHtml.ToString())
 }
+
 @(
 '//body/div[1]/span[@id="spanA"]',
 '//body/div[1]/span[contains(@class, "clsb")]'
@@ -205,8 +198,7 @@ $doc.LoadHtml(@'
   [NUnit.Framework.Assert]::NotNull($nodes)
   # Unable to find type [System.Collections.IList[HtmlAgilityPack.HtmlNode]]
   # [NUnit.Framework.Assert]::IsInstanceOf([System.Collections.IList[HtmlAgilityPack.HtmlNode]], $nodes, 'Strongly typed response expected')
-  # see also https://www.leeholmes.com/blog/2007/06/19/invoking-generic-methods-on-non-generic-classes-in-powershell/
-  # as a workaround, unwind the collection
+
   $nodes | foreach-object  {
     $node = $_
     [NUnit.Framework.Assert]::IsInstanceOf([HtmlAgilityPack.HtmlNode], $node, 'Strongly typed response expected')
@@ -216,4 +208,15 @@ $doc.LoadHtml(@'
   [NUnit.Framework.Assert]::NotNull($nodes[0].OuterHtml)
 }
 
+# TODO: The following will not work, the HtmlAgilityPack.CssSelectors.dll is using extension methods to provide API: 
+# Method invocation failed because [HtmlAgilityPack.HtmlDocument] does not contain a method named 'QuerySelectorAll'.
+<#
+@(
+'div[id=myDiv]'
+)  | foreach-object {
+  $css = $_
+  $nodes = $doc.QuerySelectorAll($css)
+  [NUnit.Framework.Assert]::NotNull($nodes)
+}
+#>
 $doc = $null

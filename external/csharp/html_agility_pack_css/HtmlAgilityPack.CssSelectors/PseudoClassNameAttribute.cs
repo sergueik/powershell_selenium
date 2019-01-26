@@ -4,15 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HapCss
-{
+namespace HapCss {
     [AttributeUsage(AttributeTargets.Class)]
-    public class PseudoClassNameAttribute : Attribute
-    {
+    public class PseudoClassNameAttribute : Attribute {
         public string FunctionName { get; private set; }
 
-        public PseudoClassNameAttribute(string name)
-        {
+        public PseudoClassNameAttribute(string name) {
             this.FunctionName = name;
         }
     }

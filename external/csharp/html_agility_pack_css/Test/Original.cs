@@ -65,7 +65,6 @@ namespace HapCss.UnitTests {
 				Assert.IsTrue(elements[i].Id == elementId);
 		}
 
-
 		// https://developer.mozilla.org/en-US/docs/Web/CSS/:nth-of-type
 		// System.NotSupportedException : Pseudo classe não suportada: nth-of-type
 		[ExpectedException(typeof(System.NotSupportedException))]
