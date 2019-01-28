@@ -286,6 +286,9 @@ static System.Collections.Generic.IList[HtmlAgilityPack.HtmlNode] QuerySelectorA
   $nodes2 = [System.HapCssExtensionMethods]::QuerySelectorAll([HtmlAgilityPack.HtmlNode]$node1, $css2)
   [NUnit.Framework.Assert]::NotNull($nodes2)
   write-output ("Css(2):`n{0}`nResult(2):`n{1}" -f $css2, $nodes2.Item(0).OuterHtml.ToString())
+  $nodes3 = [System.HapCssExtensionMethods]::QuerySelectorAll([HtmlAgilityPack.HtmlNode[]]$nodes1, $css2)
+  [NUnit.Framework.Assert]::NotNull($nodes3)
+  write-output ("Css(3):`n{0}`nResult(3):`n{1}" -f $css2, $nodes3.Item(0).OuterHtml.ToString())
 }
 
 
