@@ -64,12 +64,15 @@ namespace HapCss {
 				char c = (char)v;
 
 				if (c == '[' ){
-					// can we put back ? 
-					sb.Append('[');
-					sb.Append(ReadConditionToken(reader));
-					sb.Append(']');
+					// can we put back ?
+
+					StringBuilder cTSb = new StringBuilder();
+					cTSb.Append('[');
+					cTSb.Append(ReadConditionToken(reader));
+					cTSb.Append(']');
 					// yield 
-						return  sb.ToString();
+					sb.Append(cTSb.ToString());
+					return  sb.ToString();
 					// too difficult to reset the position i guess.
 				}
 				

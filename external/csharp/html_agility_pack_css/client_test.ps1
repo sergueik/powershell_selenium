@@ -206,6 +206,7 @@ $doc.LoadHtml(@'
   # Unable to find type [System.Collections.IList[HtmlAgilityPack.HtmlNode]]
   # [NUnit.Framework.Assert]::IsInstanceOf([System.Collections.IList[HtmlAgilityPack.HtmlNode]], $nodes, 'Strongly typed response expected')
   # see also https://www.leeholmes.com/blog/2007/06/19/invoking-generic-methods-on-non-generic-classes-in-powershell/
+  # https://stackoverflow.com/questions/4241985/calling-generic-static-method-in-powershell
   # as a workaround, unwind the collection
   $nodes | foreach-object  {
     $node = $_

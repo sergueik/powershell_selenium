@@ -136,7 +136,6 @@ function assembly_is_loaded{
   'nunit.framework.dll'
 )
 [String]$shared_assemblies_path = "${env:USERPROFILE}\Downloads"
-
 # SHARED_ASSEMBLIES_PATH environment overrides parameter, for Team City/Jenkinks
 if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
   $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
@@ -144,7 +143,7 @@ if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -n
 
 load_shared_assemblies -shared_assemblies_path $shared_assemblies_path -shared_assemblies $shared_assemblies
 
-$doc = new-object -typeName 'HtmlAgilityPack.HtmlDocument'
+[HtmlAgilityPack.HtmlDocument] $doc = new-object -typeName 'HtmlAgilityPack.HtmlDocument'
 $doc.LoadHtml(@'
 <?xml version="1.0"?>
 <!DOCTYPE html>
@@ -207,16 +206,87 @@ $doc.LoadHtml(@'
   write-output ("XPath:`n{0}`nResult:`n{1}" -f $xpath, $nodes.Item(0).OuterHtml.ToString())
   [NUnit.Framework.Assert]::NotNull($nodes[0].OuterHtml)
 }
-
-# TODO: The following will not work, the HtmlAgilityPack.CssSelectors.dll is using extension methods to provide API: 
-# Method invocation failed because [HtmlAgilityPack.HtmlDocument] does not contain a method named 'QuerySelectorAll'.
+if ($DebugPreference -eq 'Continue') {
+  $debug = $true
+}
+if ($debug){
+  [Reflection.Assembly]::LoadFile("${shared_assemblies_path}\HtmlAgilityPack.CssSelectors.dll") |  select -ExpandProperty ExportedTypes
+}
 <#
+IsPublic IsSerial Name                                     BaseType
+-------- -------- ----                                     --------
+True     False    HapCssExtensionMethods                   System.Object
+True     False    PseudoClass                              System.Object
+True     False    PseudoClassNameAttribute                 System.Attribute
+True     False    CssSelector                              System.Object
+True     False    Token                                    System.Object
+True     False    Tokenizer                                System.Object
+
+
+#>
+
+# TODO: The following will not work, the HtmlAgilityPack.CssSelectors.dll is using extension methods to provide API:
+# https://stackoverflow.com/questions/25915450/how-to-use-extension-methods-in-powershell
+# http://community.bartdesmet.net/blogs/bart/archive/2007/09/06/extension-methods-in-windows-powershell.aspx
+# [System.HapCssExtensionMethods]$h = new-object -typeName 'System.HapCssExtensionMethods'
+
+# no constructor:
+# new-object : A constructor was not found. Cannot find an appropriate constructor for type System.HapCssExtensionMethods.
+
+if ($debug){
+   [System.HapCssExtensionMethods]::QuerySelector
+}
+<#
+OverloadDefinitions
+-------------------
+static HtmlAgilityPack.HtmlNode QuerySelector(HtmlAgilityPack.HtmlDocumentdoc, string cssSelector)
+static HtmlAgilityPack.HtmlNode QuerySelector(HtmlAgilityPack.HtmlNode node,string cssSelector)
+#>
+
 @(
 'div[id=myDiv]'
 )  | foreach-object {
-  $css = $_
-  $nodes = $doc.QuerySelectorAll($css)
-  [NUnit.Framework.Assert]::NotNull($nodes)
+  $css1 = $_
+  # $node1 = [HtmlAgilityPack.HtmlDocument]$doc.QuerySelector($css)
+  # NOTE: Method invocation failed because [HtmlAgilityPack.HtmlDocument] does not contain a method named 'QuerySelectorAll'.
+  [HtmlAgilityPack.HtmlNode]$node1 = [System.HapCssExtensionMethods]::QuerySelector([HtmlAgilityPack.HtmlDocument]$doc, $css)
+  #  Multiple ambiguous overloads found for "QuerySelector" and the argument count: "2".
+  [NUnit.Framework.Assert]::NotNull($node1)
+  write-output ("Css(1):`n{0}`nResult(1):`n{1}" -f $css1, $node1.OuterHtml.ToString())
+  $css2 = 'span'
+  $node2 = [System.HapCssExtensionMethods]::QuerySelector([HtmlAgilityPack.HtmlNode]$node1, $css2)
+  [NUnit.Framework.Assert]::NotNull($node2)
+  write-output ("Css(2):`n{0}`nResult(2):`n{1}" -f $css2, $node2.OuterHtml.ToString())
 }
+
+
+if ($debug){
+   [System.HapCssExtensionMethods]::QuerySelectorAll
+}
+
+<#
+OverloadDefinitions
+-------------------
+static System.Collections.Generic.IList[HtmlAgilityPack.HtmlNode] QuerySelectorAll(HtmlAgilityPack.HtmlDocument doc, string cssSelector)
+static System.Collections.Generic.IList[HtmlAgilityPack.HtmlNode] QuerySelectorAll(HtmlAgilityPack.HtmlNode node, string cssSelector)
+static System.Collections.Generic.IList[HtmlAgilityPack.HtmlNode] QuerySelectorAll(System.Collections.Generic.IEnumerable[HtmlAgilityPack.HtmlNode] nodes, string cssSelector)
 #>
+@(
+'div'
+)  | foreach-object {
+  $css1 = $_
+  # $nodes1 = [HtmlAgilityPack.HtmlDocument]$doc.QuerySelector($css)
+  # NOTE: Method invocation failed because [HtmlAgilityPack.HtmlDocument] does not contain a method named 'QuerySelectorAll'.
+  [HtmlAgilityPack.HtmlNode[]]$nodes1 = [System.HapCssExtensionMethods]::QuerySelectorAll([HtmlAgilityPack.HtmlDocument]$doc, $css)
+  #  Multiple ambiguous overloads found for "QuerySelector" and the argument count: "2".
+  [NUnit.Framework.Assert]::NotNull($nodes1)
+  [HtmlAgilityPack.HtmlNode]$node1 = $nodes1.Item(0)
+  write-output ("Css(1):`n{0}`nResult(1):`n{1}" -f $css1, $node1.OuterHtml.ToString())
+  $css2 = 'span'
+  $nodes2 = [System.HapCssExtensionMethods]::QuerySelectorAll([HtmlAgilityPack.HtmlNode]$node1, $css2)
+  [NUnit.Framework.Assert]::NotNull($nodes2)
+  write-output ("Css(2):`n{0}`nResult(2):`n{1}" -f $css2, $nodes2.Item(0).OuterHtml.ToString())
+}
+
+
 $doc = $null
