@@ -1,21 +1,22 @@
-@echo off
 @REM lighthouse wrapper script
-@REM lighthouse https://developers.google.com/web/tools/lighthouse/
-@REM itself is a nodejs app, most likely "run" as batch itself thus could ruin the setlocal
+@echo off
 @REM https://nodejs.org/download/release/latest-v11.x/node-v11.10.1-x86.msi
-setLocal EnableDelayedExpansion
-
+setLocal ENABLEDELAYEDEXPANSION
+set TIMEOUT=5
 for /f "delims=" %%a in (%USERPROFILE%\Documents\NTQ\lighthouse\urlsall.txt) DO (
 
 set "urlName=%%~NXa"
-REM it is very likely that lighthouse is a cmd script, like other npm "apps"
-REM C:\Windows\system32>where lighthouse.*
-REM C:\Users\sergueik\AppData\Roaming\npm\lighthouse
-REM C:\Users\sergueik\AppData\Roaming\npm\lighthouse.cmd
-echo Output to !urlName!.json
-start /wait cmd /c call lighthouse.cmd --quiet --output=json > !urlName!.json --chrome-flags="-headless" %%a
+set OUTPUT_FILE=!urlName!.json
+echo Output to !OUTPUT_FILE!
+@REM lighthouse https://developers.google.com/web/tools/lighthouse/ 
+@REM itself is a nodejs app, appear to be a batch itself thus could ruin the setlocal
+start /wait cmd /c call lighthouse.cmd --quiet --output=json --output-path=!OUTPUT_FILE! --chrome-flags="-headless" %%a
 REM equivalent of sleep
-CHOICE /T 10 /C ync /CS /D y
-
+CHOICE /T %TIMEOUT% /C ync /CS /D y
+dir !OUTPUT_FILE!
+REM Count the lines in output file, raise an error when empty
+rem set OUTPUT_FILE="bad.txt"
+for /F %%s in ('type !OUTPUT_FILE! ^| find /c /v "" ^|findstr "\^<0\^>"') do set OUTPUT_FILE_SIZE=%%s
+if "!OUTPUT_FILE_SIZE!" equ "0" echo 1>&2 Warning: truncated !OUTPUT_FILE!
 )
 
