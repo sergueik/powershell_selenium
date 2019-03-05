@@ -1,0 +1,4 @@
+drop table if exists url_lighthouse_data; 
+CREATE TABLE url_lighthouse_data(url, status, count);
+.separator ;
+.import url_lighthouse_data.csv url_lighthouse_data
