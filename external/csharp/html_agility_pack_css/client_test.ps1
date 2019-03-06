@@ -20,6 +20,7 @@
 
 
 # will pick an older downlevel to prevent framework dependency waterfall
+#
 $version = '1.7.0'
 $version = '1.4.9'
 
@@ -218,3 +219,33 @@ $doc.LoadHtml(@'
 }
 
 $doc = $null
+
+# see also:
+#
+# https://github.com/kbrammer/kevinbrammer.azurewebsites.net/wiki/Using-HtmlAgilityPack-With-Powershell
+# https://github.com/zzzprojects/html-agility-pack
+# https://www.nuget.org/packages/HtmlAgilityPack/
+
+[HtmlAgilityPack.HtmlWeb]$web_doc = new-object -typeName 'HtmlAgilityPack.HtmlWeb'
+
+# alternative cast:
+# see https://github.com/glego/PSGlego/blob/master/Playground/Web/Get-Immo.ps1
+# [HtmlAgilityPack.HtmlWeb]$web = @{}
+
+$web_doc.OverrideEncoding = [System.Text.Encoding]::UTF8
+$url = 'https://github.com/'
+$xpath = '//header/div/div[1]'
+# NOTE: Exception calling "Load" with "1" argument(s): "The request was aborted: Could not create SSL/TLS secure channel."
+
+$url = 'https://www.wikipedia.org/'
+$xpath1 = '//*[@id="www-wikipedia-org"]/div[@class="central-featured"]'
+[HtmlAgilityPack.HtmlDocument]$doc = $web_doc.Load($url)
+[HtmlAgilityPack.HtmlNodeCollection]$nodes = $doc.DocumentNode.SelectNodes($xpath1)
+$node = $nodes | select-object -first 1
+$xpath2 = 'div/a/small/bdi'
+$node.SelectNodes($xpath2) | foreach-object {
+  $node2 = $_
+  write-output $node2.SelectSingleNode('../../strong').InnerText;
+  # GetAttributeValue('data',''))
+  write-output ($node2.InnerText -replace '&nbsp;', '' )
+}
