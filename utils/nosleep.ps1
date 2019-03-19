@@ -18,7 +18,10 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-# based onof utility to prevent workstations from going to sleep (during long running processes) from the article [Give your computer sleep apnea - Don't let it go](https://www.codeproject.com/KB/winsdk/No_Sleep/Prevent_Sleep.zip)
+# based on of utility to prevent workstations from going to sleep (during long running processes) from the article [Give your computer sleep apnea - Don't let it go](https://www.codeproject.com/KB/winsdk/No_Sleep/Prevent_Sleep.zip)
+# see also: https://docs.microsoft.com/en-us/windows/desktop/api/winbase/nf-winbase-powercreaterequest
+# https://github.com/dahall/Vanara/blob/master/PInvoke/Kernel32/CorrelationReport.md
+# https://stackoverflow.com/questions/629240/prevent-windows-from-going-into-sleep-when-my-program-is-running
 $guid = [guid]::NewGuid()
 
 
@@ -28,7 +31,7 @@ Add-Type -Name 'SleepControl' -Namespace 'Util' -MemberDefinition @'
 public static extern long SetThreadExecutionState(long esflags);
 '@
 
-# TODO: fandomie the namespace
+# TODO: randomize the namespace
 $helper_type_namespace = ('Util_{0}' -f ($guid -replace '-',''))
 $helper_type_name = 'SleepControl'
 
