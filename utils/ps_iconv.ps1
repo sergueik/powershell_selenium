@@ -6,6 +6,7 @@ param(
 )
 
 Add-Type -TypeDefinition @"
+using System;
 using System.IO;
 using System.Text;
 
@@ -31,7 +32,9 @@ namespace ansi2utf8{
     Encoding _out = Encoding.UTF8;
     // Encoding _out = Encoding.GetEncoding("windows-1251");
     // Encoding _in = Encoding.UTF8;
+      Console.Error.WriteLine("Reading " + _inputFile);
       var text = File.ReadAllText(_inputFile, _in);
+      Console.Error.WriteLine("Writing " + _outputFile);
       File.WriteAllText(_outputFile, text, _out);
     }
     }
@@ -42,3 +45,20 @@ $iconv = New-Object ansi2utf8.Convert
 $iconv.InputFile = resolve-path $in
 $iconv.OutputFile = $out
 $iconv.convert()
+<#
+@echo OFF
+REM based on http://forum.oszone.net/thread-339798.html
+REM pure cmd solution:
+REM can only handle UTF16 encoded files
+chcp 1251
+set "DATADIR=%~dp0"
+set "FILENAME=text_utf8.txt"
+pushd "%DATADIR%"
+for /f "delims=" %%. in ('dir /b/s/a-d "%FILENAME%"') do (
+chcp 1251 > nul
+    CMD /U /C Type "%%." > "%%.temp"
+del "%%."
+move "%%.temp" "%%."
+)
+goto :EOF
+#>
