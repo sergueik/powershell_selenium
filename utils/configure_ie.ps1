@@ -408,6 +408,33 @@ $value = '8192' # 0x2000
 $propertyType = 'Dword'
 change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
 
+write-host -ForegroundColor 'green' @"
+This sets IE9 Zoom factor
+"@
+
+# origin: https://support.microsoft.com/en-us/help/2689447/how-to-set-the-zoom-level-in-internet-explorer-9
+# NOTE: the registry setting is still present with later versions of IE. May have no effect though
+$path = '/SOFTWARE/Microsoft/Internet Explorer/Zoom'
+$hive = 'HKCU:'
+$name = 'ZoomFactor'
+$value = '100000' # 0x186a0
+$propertyType = 'Dword'
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
+# See also: https://answers.microsoft.com/en-us/ie/forum/all/ie-11-how-do-i-get-a-default-zoom-to-stick/19510f5a-c339-45d1-b74e-edc885ef5517
+# > "@C:\\Windows\\System32\\inetcpl.cpl,-4907"="Reset zoom level for new windows and tabs"
+# > "ResetTextSizeOnStartup"=dword:00000000
+# > "ResetZoomOnStartup2"=dword:00000001
+
+write-host -ForegroundColor 'green' @"
+This resets zoom level for new windows and tabs
+"@
+$path = '/SOFTWARE/Microsoft/Internet Explorer/AdvancedOptions/ACCESSIBILITY/ZOOMLEVEL'
+$hive = 'HKLM:'
+$name = 'CheckedValue'
+$value = '1'
+$propertyType = 'Dword'
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
+
 # https://www.codeproject.com/Articles/1189642/Browser-Update-for-WebBrowser-control-in-VB-NET
 # $hive = 'HKLM:'
 # $path = 'HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION'
