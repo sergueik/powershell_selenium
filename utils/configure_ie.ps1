@@ -434,6 +434,54 @@ $name = 'CheckedValue'
 $value = '1'
 $propertyType = 'Dword'
 change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
+# These registry settings describe "Advanced IE configuration"
+# interesting that these setting contain other registry settiging, paths and values, e.g.:
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\ACCESSIBILITY
+<#
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\ACCESSIBILITY\ZOOMLEVEL]
+"UncheckedValue"=dword:00000000
+"CheckedValue"=dword:00000001
+"PlugUIText"="@C:\\Windows\\System32\\inetcpl.cpl,-4907"
+"PlugUITextHideIE"="@C:\\Windows\\System32\\inetcpl.cpl,-6711"
+"RegPath"="SOFTWARE\\Microsoft\\Internet Explorer\\Zoom"
+"HKeyRoot"=dword:80000001
+"HelpID"="iexplore.hlp#5990"
+"DefaultValue"=dword:00000000
+"TextHideIE"="Reset zoom level"
+"ValueName"="ResetZoomOnStartup2"
+"Text"="Reset zoom level for new windows and tabs"
+"Type"="checkbox"
+
+#>
+# and there is a  matching user setting
+<#
+[HKEY_USERS\S-1-5-21-3828517485-1467542541-3583938822-1001\Software\Microsoft\Internet Explorer\Zoom]
+"ZoomFactor"=dword:000186a0
+"ResetTextSizeOnStartup"=dword:00000000
+"ResetZoomOnStartup2"=dword:00000001
+
+#>
+# or
+<#
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\CRYPTO\CACHE_FLUSH]
+"UncheckedValue"=dword:00000001
+"CheckedValue"=dword:00000000
+"PlugUIText"="@C:\\Windows\\System32\\inetcpl.cpl,-4750"
+"RegPoliciesPath"="SOFTWARE\\Policies\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Cache"
+"RegPath"="SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Cache"
+"HKeyRoot"=dword:80000001
+"HelpID"="iexplore.hlp#50293"
+"DefaultValue"=dword:00000001
+"ValueName"="Persistent"
+"Text"="Empty Temporary Internet Files folder when browser is closed"
+"Type"="checkbox"
+#>
+# and there is a  matching user setting
+<#
+[HKEY_USERS\S-1-5-21-3828517485-1467542541-3583938822-1001\Software\Microsoft\Windows\CurrentVersion\Internet Settings\CACHE]
+"Persistent"=dword:00002000
+#>
+
 
 # https://www.codeproject.com/Articles/1189642/Browser-Update-for-WebBrowser-control-in-VB-NET
 # $hive = 'HKLM:'
