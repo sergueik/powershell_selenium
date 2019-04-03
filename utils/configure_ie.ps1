@@ -20,10 +20,10 @@
 # $DebugPreference = 'Continue'
 
 # see also: http://www.oszone.net/15060/ie9_tweaks
+# https://github.com/SeleniumHQ/selenium/wiki/InternetExplorerDriver#required-configuration
 param(
   [switch]$all # For clearing 'Protected Mode' for allInternet 'Zones'
 )
-
 
 function change_registry_setting {
 
@@ -40,16 +40,16 @@ function change_registry_setting {
   )
   pushd $hive
   cd $path
-  $local:setting = Get-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -ErrorAction 'SilentlyContinue'
+  $local:setting = Get-ItemProperty -path ('{0}/{1}' -f $hive,$path) -name $name -ErrorAction 'SilentlyContinue'
   if ($local:setting -ne $null) {
     if ([bool]$PSBoundParameters['debug'].IsPresent) {
-      Select-Object -ExpandProperty $name -InputObject $local:setting
+      select-object -expandproperty $name -inputobject $local:setting
     }
     if ($local:setting -ne $value) {
-      Set-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value
+      set-itemproperty -path ('{0}/{1}' -f $hive,$path) -name $name -value $value
     }
   } else {
-    New-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value -PropertyType $propertyType
+    new-itemproperty -path ('{0}/{1}' -f $hive,$path) -name $name -value $value -propertytype $propertyType
   }
   popd
 
@@ -66,14 +66,14 @@ This call suppresses IE updates
 # seems to work with IE 11 as well
 # http://www.liutilities.com/products/registrybooster/tweaklibrary/tweaks/10290/
 
-$path = '/Software/Microsoft/Internet Explorer/Main'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/Main'
 $name = 'EnableAutoUpgrade'
 $value = '0'
 $propertyType = 'Dword'
 
-@( 'HKCU:','HKLM:') | ForEach-Object {
+@( 'HKCU:','HKLM:') | foreach-object {
   $hive = $_
-  change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+  change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 }
 
 write-host -ForegroundColor 'green' @"
@@ -81,24 +81,24 @@ This call clears "Tell me if Internert Explorer is not the default web Browser" 
 "@
 
 # https://www.technipages.com/ie-default-browser-prompt
-$path = '/Software/Microsoft/Internet Explorer/Main'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/Main'
 $name = 'Check_Associations'
 $value = 'no'
 $hive = 'HKCU:'
 $propertyType = 'String'
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 write-host -ForegroundColor 'green' @"
 This call clears "Display intranet sites in compatibility view" checkbox.
 "@
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Internet Explorer/BrowserEmulation'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/BrowserEmulation'
 $name = 'IntranetCompatibilityMode'
 $value = '0'
 $propertyType = 'Dword'
 
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 
 write-host -ForegroundColor 'green' @"
@@ -106,7 +106,7 @@ This call disables warning when multiple browser tabs is open checkbox.
 "@
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Internet Explorer/TabbedBrowsing'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/TabbedBrowsing'
 $name = 'WarnOnClose'
 $value = '0'
 $propertyType = 'Dword'
@@ -116,34 +116,34 @@ These calls enable "Delete browsing History on exit" - checkbox
 "@
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Internet Explorer/ContinuousBrowsing'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/ContinuousBrowsing'
 $name = 'Enabled'
 $value = '0'
 
 # NOTE: keys may be absent:
-# '/Software/Microsoft/Internet Explorer/ContinuousBrowsing', '/Software/Microsoft/Internet Explorer/Privacy'
+# '/SOFTWARE/Microsoft/Internet Explorer/ContinuousBrowsing', '/SOFTWARE/Microsoft/Internet Explorer/Privacy'
 pushd ('{0}/' -f $hive )
-$registry_path_status = Test-Path -Path $path -ErrorAction 'SilentlyContinue'
+$registry_path_status = test-path -path $path -ErrorAction 'SilentlyContinue'
 if ($registry_path_status -eq $true) {
   cd $path
-  $setting = Get-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -ErrorAction 'SilentlyContinue'
+  $setting = Get-ItemProperty -path ('{0}/{1}' -f $hive,$path) -name $name ErrorAction 'SilentlyContinue'
   if ($setting -ne $null) {
-    Set-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value
+    Set-ItemProperty -path ('{0}/{1}' -f $hive,$path) -name $name -value $value
   } else {
     if ($setting -ne $value) {
-      New-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value -PropertyType DWORD
+      New-ItemProperty -path ('{0}/{1}' -f $hive,$path) -name $name -value $value -PropertyType DWORD
     }
   }
 }
 popd
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Internet Explorer/Privacy'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/Privacy'
 $name = 'ClearBrowsingHistoryOnExit'
 $value = '1'
 $propertyType = 'Dword'
 
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
-# TODO: Ensure the subkeys under '/Software/Microsoft/Internet Explorer/DOMStorage' to be destroyed:
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
+# TODO: Ensure the subkeys under '/SOFTWARE/Microsoft/Internet Explorer/DOMStorage' to be destroyed:
 
 write-host -ForegroundColor 'green' @"
 This call clears 'Enable Protected Mode' checkboxes for the following internet 'Zones':
@@ -158,11 +158,11 @@ if ($PSBoundParameters['all']) {
 }
 
 
-$zones | ForEach-Object {
+$zones | foreach-object {
 
   $zone = $_
   $hive = 'HKCU:'
-  $path = ('/Software/Microsoft/Windows/CurrentVersion/Internet Settings/Zones/{0}' -f $zone)
+  $path = ('/SOFTWARE/Microsoft/Windows/CurrentVersion/Internet Settings/Zones/{0}' -f $zone)
   $propertyType = 'Dword'
   $data = @{
     '2500' = '3';
@@ -172,7 +172,7 @@ $zones | ForEach-Object {
   pushd $hive
   cd $path
 
-  $description = Get-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name 'DisplayName' -ErrorAction 'SilentlyContinue'
+  $description = Get-ItemProperty -path ('{0}/{1}' -f $hive,$path) -name 'DisplayName' -ErrorAction 'SilentlyContinue'
   if ($description -eq $null) {
     $description = '???'
 
@@ -181,11 +181,11 @@ $zones | ForEach-Object {
 
   write-host -ForegroundColor 'green' ('Configuring Zone {0} - "{1}"' -f $zone,$description)
 
-  $data.Keys | ForEach-Object {
+  $data.Keys | foreach-object {
     $name = $_
     $value = $data.Item($name)
     write-host -ForegroundColor 'green' ('Writing Settings {0}' -f $name)
-    change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+    change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
   }
   popd
 
@@ -197,25 +197,25 @@ This call confirms 'Protected Mode is Turned Off' alert
 "@
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Internet Explorer/Main'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/Main'
 $name = 'NoProtectedModeBanner'
 $value = '1'
 $propertyType = 'Dword'
 
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 write-host -ForegroundColor 'green' @"
 This allows passing basic auth username and password through url'.
 "@
 $hive = 'HKLM:'
-$path = '/Software/Microsoft/Internet Explorer/Main/FeatureControl/FEATURE_HTTP_USERNAME_PASSWORD_DISABLE'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/Main/FeatureControl/FEATURE_HTTP_USERNAME_PASSWORD_DISABLE'
 $name = 'iexplore.exe'
 $value = '0'
 $propertyType = 'Dword'
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Internet Explorer/Main/FeatureControl'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/Main/FeatureControl'
 $name = 'iexplore.exe'
 $value = '0'
 $propertyType = 'Dword'
@@ -224,12 +224,12 @@ $path_key = 'FEATURE_HTTP_USERNAME_PASSWORD_DISABLE'
 
 # NOTE: keys may be absent:
 pushd ('{0}/' -f $hive )
-$registry_path_status = Test-Path -Path ('{0}/{1}' -f $path, $path_key) -ErrorAction 'SilentlyContinue'
+$registry_path_status = Test-Path -path ('{0}/{1}' -f $path, $path_key) -ErrorAction 'SilentlyContinue'
 if ($registry_path_status -ne $true) {
 new-item -path $path -name $path_key
 }
 popd
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType -path ('{0}/{1}' -f $path, $path_key)
+change_registry_setting -hive $hive -name $name -value $value -propertytype $propertyType -path ('{0}/{1}' -f $path, $path_key)
 
 
 write-host -ForegroundColor 'green' @"
@@ -239,14 +239,14 @@ This call makes 'Allow active content to run files on My Computer'.
 # https://support.microsoft.com/en-us/help/2002093/allow-active-content-to-run-files-on-my-computer-group-policy-setting
 
 $hive = 'HKLM:'
-$path = '/Software/Microsoft/Internet Explorer/Main/FeatureControl/FEATURE_LOCALMACHINE_LOCKDOWN'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/Main/FeatureControl/FEATURE_LOCALMACHINE_LOCKDOWN'
 $name = 'iexplore.exe'
 $value = '0'
 $propertyType = 'Dword'
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Internet Explorer/Main/FeatureControl'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/Main/FeatureControl'
 $name = 'iexplore.exe'
 $value = '0'
 $propertyType = 'Dword'
@@ -255,14 +255,14 @@ $path_key = 'FEATURE_LOCALMACHINE_LOCKDOWN'
 
 # NOTE: keys may be absent:
 pushd ('{0}/' -f $hive )
-$registry_path_status = Test-Path -Path ('{0}/{1}' -f $path, $path_key) -ErrorAction 'SilentlyContinue'
+$registry_path_status = Test-Path -path ('{0}/{1}' -f $path, $path_key) -ErrorAction 'SilentlyContinue'
 if ($registry_path_status -ne $true) {
 
 new-item -path $path -name $path_key
 # New-ItemProperty : Attempted to perform an unauthorized operation.
 }
 popd
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType -path ('{0}/{1}' -f $path, $path_key)
+change_registry_setting -hive $hive -name $name -value $value -propertytype $propertyType -path ('{0}/{1}' -f $path, $path_key)
 
 write-host -ForegroundColor 'green' @"
 This call removes the "Do you want to open or save this file?" prompt, though only partially.
@@ -275,13 +275,13 @@ This call removes the "Do you want to open or save this file?" prompt, though on
 # https://answers.microsoft.com/en-us/ie/forum/ie10-windows_7/how-can-i-disable-the-open-or-save-prompt-when-i/e490416d-7cb5-4661-9e9d-4881872ed29d
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Windows/Shell/AttachmentExecute/{0002DF01-0000-0000-C000-000000000046}'
+$path = '/SOFTWARE/Microsoft/Windows/Shell/AttachmentExecute/{0002DF01-0000-0000-C000-000000000046}'
 # CompressedFolder does not work
 $name = '{E88DCCE0-B7B3-11d1-A9F0-00AA0060FA31}'
 $value = ''
 $propertyType = 'String'
 # leads to change of the dialog
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 write-host -ForegroundColor 'green' @"
 This call turns off 'Popup Blocker'.
@@ -289,19 +289,19 @@ This call turns off 'Popup Blocker'.
 
 # NOTE: The registry 'HKCU:\Software\Microsoft\Internet Explorer\New Windows' does not exist for IE 8
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Internet Explorer/New Windows'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/New Windows'
 $name = 'PopupMgr'
 $value = 'No'
 
 # NOTE: keys may be absent:
 pushd $hive
 cd $path
-$setting = Get-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -ErrorAction 'SilentlyContinue'
+$setting = Get-ItemProperty -path ('{0}/{1}' -f $hive,$path) -name $name -ErrorAction 'SilentlyContinue'
 if ($setting -ne $null) {
-  Set-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value
+  Set-ItemProperty -path ('{0}/{1}' -f $hive,$path) -name $name -value $value
 } else {
   if ($setting -ne $value) {
-    New-ItemProperty -Path ('{0}/{1}' -f $hive,$path) -Name $name -Value $value
+    New-ItemProperty -path ('{0}/{1}' -f $hive,$path) -name $name -value $value
 
   }
 }
@@ -323,12 +323,12 @@ $settings = @{
 }
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings'
+$path = '/SOFTWARE/Microsoft/Windows/CurrentVersion/Internet Settings'
 $name = 'SecureProtocols'
 $value = '2728'
 $propertyType = 'Dword'
 
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 # http://www.sevenforums.com/tutorials/112232-internet-explorer-change-default-download-location.html
 $download_directory = 'C:\windows\temp'
@@ -337,10 +337,10 @@ This call sets default IE download location to ${download_directory}
 "@
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Internet Explorer/Main'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/Main'
 $name = 'Default Download Directory'
 $value = $download_directory
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType 'String'
+change_registry_setting -hive $hive -name $name -path $path -value $value -PropertyType 'String'
 
 # http://www.sevenforums.com/tutorials/271795-internet-explorer-notify-when-downloads-complete-turn-off.html?filter=&#91;2]=Networking%20Internet
 write-host -ForegroundColor 'green' @"
@@ -348,71 +348,71 @@ This call suppresses IE download notifications
 "@
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Internet Explorer/Main'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/Main'
 $name = 'NotifyDownloadComplete'
 $value = 'no'
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType 'String'
+change_registry_setting -hive $hive -name $name -path $path -value $value -PropertyType 'String'
 
 write-host -ForegroundColor 'green' @"
 This call applies misc. settings from
 https://github.com/conceptsandtraining/modernie_selenium
 "@
 # IE11-only, on 64 bit Windows need to also handle
-# $path = 'SOFTWARE/Wow6432Node/Microsoft/Internet Explorer/Main/FeatureControl/FEATURE_BFCACHE'
+# $path = '/SOFTWARE/Wow6432Node/Microsoft/Internet Explorer/Main/FeatureControl/FEATURE_BFCACHE'
 # see also https://automated-testing.info/t/internet-explorer-ne-mozhet-najti-element-na-stranicze/21972/8 (in Russian)
 $hive = 'HKLM:'
-$path = 'SOFTWARE/Microsoft/Internet Explorer/MAIN/FeatureControl/FEATURE_BFCACHE'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/MAIN/FeatureControl/FEATURE_BFCACHE'
 $name = 'iexplore.exe'
 $value = '0'
 $propertyType = 'Dword'
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Internet Explorer/Main'
+$path = '/SOFTWARE/Microsoft/Internet Explorer/Main'
 $name = 'Start Page'
 $value = 'about:blank'
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType 'String'
+change_registry_setting -hive $hive -name $name -path $path -value $value -PropertyType 'String'
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings/CACHE'
+$path = '/SOFTWARE/Microsoft/Windows/CurrentVersion/Internet Settings/CACHE'
 $name = 'Persistent'
 $value = '0'
 $propertyType = 'Dword'
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings'
+$path = '/SOFTWARE/Microsoft/Windows/CurrentVersion/Internet Settings'
 $name = 'SyncMode5'
 $value = '3'
 $propertyType = 'Dword'
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings/Url History'
+$path = '/SOFTWARE/Microsoft/Windows/CurrentVersion/Internet Settings/Url History'
 $name = 'DaysToKeep'
 $value = '0'
 $propertyType = 'Dword'
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings/5.0/CACHE/Content'
+$path = '/SOFTWARE/Microsoft/Windows/CurrentVersion/Internet Settings/5.0/CACHE/Content'
 $name = 'CacheLimit'
 $value = '8192' # 0x2000
 $propertyType = 'Dword'
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 $hive = 'HKCU:'
-$path = '/Software/Microsoft/Windows/CurrentVersion/Internet Settings/CACHE/Content'
+$path = '/SOFTWARE/Microsoft/Windows/CurrentVersion/Internet Settings/CACHE/Content'
 $name = 'CacheLimit'
 $value = '8192' # 0x2000
 $propertyType = 'Dword'
-change_registry_setting -hive $hive -Name $name -Value $value -PropertyType $propertyType
+change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 write-host -ForegroundColor 'green' @"
 This sets IE9 Zoom factor
 "@
 
-# origin: https://support.microsoft.com/en-us/help/2689447/how-to-set-the-zoom-level-in-internet-explorer-9
+# origin: https://support.microsoft.com/en-us/help/2689447/how-to-set-the-zoom-level-in-internet-explorer-9 
 # NOTE: the registry setting is still present with later versions of IE. May have no effect though
 $path = '/SOFTWARE/Microsoft/Internet Explorer/Zoom'
 $hive = 'HKCU:'
