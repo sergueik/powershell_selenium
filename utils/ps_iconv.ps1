@@ -5,24 +5,22 @@ param(
   [String]$out = 'text_utf8.txt'
 )
 
-Add-Type -TypeDefinition @"
+Add-Type -TypeDefinition @'
 using System;
 using System.IO;
 using System.Text;
 
 namespace ansi2utf8{
-    public class Convert {
+  public class Convert {
 
     private string _inputFile;
 
     public string InputFile {
-        get { return _inputFile; }
-        set { _inputFile = value; }
+      set { _inputFile = value; }
     }
     private string _outputFile;
     public string OutputFile {
-        get { return _outputFile; }
-        set { _outputFile = value; }
+      set { _outputFile = value; }
     }
 
     public void convert(){
@@ -37,13 +35,13 @@ namespace ansi2utf8{
       Console.Error.WriteLine("Writing " + _outputFile);
       File.WriteAllText(_outputFile, text, _out);
     }
-    }
+  }
 }
-"@ -ReferencedAssemblies 'System.Text.Encoding.dll', 'mscorlib.dll'
+'@ -ReferencedAssemblies 'System.Text.Encoding.dll', 'mscorlib.dll'
 
-$iconv = New-Object ansi2utf8.Convert
+$iconv = new-object ansi2utf8.Convert
 $iconv.InputFile = resolve-path $in
-$iconv.OutputFile = $out
+$iconv.OutputFile = join-path -path (resolve-path -path '.' ) -childpath  $out
 $iconv.convert()
 <#
 @echo OFF
