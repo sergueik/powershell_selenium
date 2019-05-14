@@ -37,6 +37,40 @@ namespace Protractor.Test
 		private int highlight_timeout = 1000;
 		private Actions actions;
 		private const String base_url = "http://www.way2automation.com/angularjs-protractor/banking";
+		const int maxAttempts = 5;
+		const int interval = 500;
+
+		// see: https://automated-testing.info/t/c-problema-s-poiskom-elementa-i-ozhidaniem/22644/15
+		public IWebElement FindVisibleElement(By by, int timeoutInSeconds) {
+				int attempt = 0;
+				try {
+					wait.Until(d => driver.FindElements(by).Any(o => o.Displayed) == true);
+				} catch (Exception) {
+					if (attempt == (int)( timeoutInSeconds * 1000/ interval)) {
+						Console.Error.WriteLine("Failed after " + timeoutInSeconds +  " seconds to locate with: " + by.ToString());
+						throw;
+					}
+					attempt ++;
+					Thread.Sleep(interval);
+				}
+			return driver.FindElements(by).First(o => o.Displayed);
+		}
+
+		// 'Protractor.NgBy': static types cannot be used as parameters (CS0721)
+		public NgWebElement NgFindVisibleElement(By by, int timeoutInSeconds) {
+				int attempt = 0;
+				try {
+					wait.Until(d => ngDriver.FindElements(by).Any(o => o.Displayed) == true);
+				} catch (Exception) {
+					if (attempt == (int)( timeoutInSeconds * 1000/ interval)) {
+						Console.Error.WriteLine("Failed after " + timeoutInSeconds +  " seconds to locate with: " + by.ToString());
+						throw;
+					}
+					attempt ++;
+					Thread.Sleep(interval);
+				}
+			return ngDriver.FindElements(by).First(o => o.Displayed);
+		}
 
 		[TestFixtureSetUp]
 		public void SetUp()
@@ -120,7 +154,9 @@ namespace Protractor.Test
 		[Test]
 		public void ShouldDeposit()
 		{
-			ngDriver.FindElement(NgBy.ButtonText("Customer Login")).Click();
+			// ngDriver.FindElement(NgBy.ButtonText("Customer Login")).Click();
+			NgFindVisibleElement(NgBy.ButtonText("Customer Loginz"),10).Click();
+			
 			ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElement(NgBy.Model("custId")).FindElements(NgBy.Repeater("cust in Customers"));
 			// select customer to log in
 			ng_customers.First(cust => Regex.IsMatch(cust.Text, "Harry Potter")).Click();
@@ -174,7 +210,7 @@ namespace Protractor.Test
 			Assert.AreEqual(updated_account_balance, account_balance + 100);
 		}
 
-		// NOTE: this test has issues with test ordering. Passes when run alone 
+		// NOTE: this test has issues with test ordering. Passes when run alone
 		[Test]
 		public void ShouldWithdraw()
 		{
@@ -713,3 +749,4 @@ namespace Protractor.Test
 		}
 	}
 }
+	
