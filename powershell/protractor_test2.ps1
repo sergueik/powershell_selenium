@@ -22,8 +22,11 @@
 # https://github.com/sergueik/protractor-net
 # https://github.com/anthonychu/Protractor-Net-Demo
 
+# NOTE: With chrome 73 fails to navigate from the login page to the online banking test page 
+# NOTE: phantomjs is deprecated
 param(
-  [string]$browser = '',
+
+  [string]$browser = 'firefox',
   [string]$base_url = 'http://www.way2automation.com/demo.html',
   [string]$login_url = 'http://way2automation.com/way2auto_jquery/index.php',
   [string]$username = 'sergueik',
@@ -118,13 +121,15 @@ $login_password_element.SendKeys($login_password_data)
 highlight ([ref]$selenium) ([ref]$login_button_element)
 [void]$actions.MoveToElement([OpenQA.Selenium.IWebElement]$login_button_element).Click().Build().Perform()
 
-Write-Output 'Log in'
+write-output 'Log in'
 
 $protractor_test_base_url = 'http://www.way2automation.com/protractor-angularjs-practice-website.html'
 
 $selenium.Navigate().GoToUrl($protractor_test_base_url)
 
 [OpenQA.Selenium.Internal.ReturnedCookie[]]$cookies = $selenium.Manage().Cookies.AllCookies
+
+write-Output 'Processing Cookies'
 
 $cookie_data = @{}
 

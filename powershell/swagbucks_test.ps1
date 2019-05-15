@@ -26,9 +26,8 @@ param(
   # NOTE: can set to anythingg -will notbe able to go as far as to vertify
   [string]$browser = 'chrome',
   [switch]$grid,
-  # NOTE:  currently ol works right ith grid option -  local Chrome opens full screen, working but annoying
-  # NOTE: this is because  this is a replica od table_tnery.ps1 which apatently sets some profile and maximized the browser
-
+  # NOTE:  currently ol works right ith grid option - locally launched Chrome opens in a full screen mode, working but annoying
+  # NOTE: this is because  this is a replica of the table_tnery.ps1 which apatently sets some profile and maximized the browser
   [switch]$headless,
   [switch]$pause
 )

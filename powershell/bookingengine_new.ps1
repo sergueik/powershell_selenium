@@ -69,7 +69,7 @@ function be3_button_process {
       Write-Output ('Clicking: {0} => {1}' -f $local:button.Text,($local:button.GetAttribute('data-tag-page-suffix')))
 
       [string]$get_xpath_script = @"
-function get_xpath_of(element) {
+function XpathOf(element) {
     if (element.id !== '')
         return '*[@id="' + element.id + '"]';
     if (element === document.body)
@@ -79,12 +79,12 @@ function get_xpath_of(element) {
     for (var i= 0; i<siblings.length; i++) {
         var sibling = siblings[i];
         if (sibling === element)
-            return get_xpath_of(element.parentNode) + '/' + element.tagName + '[' + ( ix + 1 ) + ']';
+            return XpathOf(element.parentNode) + '/' + element.tagName + '[' + ( ix + 1 ) + ']';
         if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
             ix++;
     }
 }
-return get_xpath_of(arguments[0]);
+return XpathOf(arguments[0]);
 "@
       $local:xpath_selector1 = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_xpath_script,$local:button,'')).ToString()
 
@@ -93,7 +93,7 @@ return get_xpath_of(arguments[0]);
 
       [string]$get_css_selector_function = @"
 
-function get_css_selector_of(el) {
+function cssSelectorOf(el) {
         if (!(el instanceof Element))
             return;
         var path = [];
@@ -127,7 +127,7 @@ function get_css_selector_of(el) {
         return path.join(' > ');
     }
     // invoke
-return get_css_selector_of(arguments[0]);
+return cssSelectorOf(arguments[0]);
 "@
 
       $local:css_selector_generated = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_css_selector_function,$local:button,'')).ToString()
@@ -206,7 +206,7 @@ function be2_button_process {
       Write-Output ('Clicking: {0} => {1}' -f $local:button.Text,($local:button.GetAttribute('data-tag-page-suffix')))
 
       [string]$get_xpath_script = @"
-function get_xpath_of(element) {
+function XpathOf(element) {
     if (element.id !== '')
         return '*[@id="' + element.id + '"]';
     if (element === document.body)
@@ -216,12 +216,12 @@ function get_xpath_of(element) {
     for (var i= 0; i<siblings.length; i++) {
         var sibling = siblings[i];
         if (sibling === element)
-            return get_xpath_of(element.parentNode) + '/' + element.tagName + '[' + ( ix + 1 ) + ']';
+            return XpathOf(element.parentNode) + '/' + element.tagName + '[' + ( ix + 1 ) + ']';
         if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
             ix++;
     }
 }
-return get_xpath_of(arguments[0]);
+return XpathOf(arguments[0]);
 "@
       $local:xpath_selector1 = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_xpath_script,$local:button,'')).ToString()
 
@@ -230,7 +230,7 @@ return get_xpath_of(arguments[0]);
 
       [string]$get_css_selector_function = @"
 
-function get_css_selector_of(el) {
+function cssSelectorOf(el) {
         if (!(el instanceof Element))
             return;
         var path = [];
@@ -264,7 +264,7 @@ function get_css_selector_of(el) {
         return path.join(' > ');
     }
     // invoke
-return get_css_selector_of(arguments[0]);
+return cssSelectorOf(arguments[0]);
 "@
 
       $local:css_selector_generated = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_css_selector_function,$local:button,'')).ToString()

@@ -1,4 +1,4 @@
-#Copyright (c) 2015 Serguei Kouzmine
+#Copyright (c) 2015,2019 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,8 @@ param(
   [switch]$headless,
   [switch]$pause
 )
+
+[bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
 $MODULE_NAME = 'selenium_utils.psd1'
 Import-Module -Name ('{0}/{1}' -f '.',$MODULE_NAME)
@@ -58,13 +60,25 @@ $selenium.Navigate().GoToUrl($base_url)
 [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
 $wait.PollingInterval = 150
 
-
 try {
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName("logo")))
 } catch [exception]{
   Write-Debug ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
 }
+custom_pause -fullstop $fullstop
+write-output 'Unmazimize'
 
+# TODO: debug now runs maximized.. and after changing size runs again
+# un-maximize 
+if ($host.Version.Major -le 2) {
+
+  [void][System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms')
+  $selenium.Manage().Window.Size = New-Object System.Drawing.Size (480,600)
+  $selenium.Manage().Window.Position = New-Object System.Drawing.Point (0,0)
+} else {
+  $selenium.Manage().Window.Size = @{ 'Height' = 600; 'Width' = 480; }
+  $selenium.Manage().Window.Position = @{ 'X' = 0; 'Y' = 0 }
+}
 
 $table_id = 'example';
 $table_element = find_element -Id $table_id
@@ -113,9 +127,6 @@ foreach ($item in $availableOptions)
   }
   $index++
 }
-
-
-
 
 # One-step input
 $text_input_css_selector = 'input[id="row-19-age"]'
@@ -187,7 +198,6 @@ $select_element.SendKeys($move_to_target)
 
 Start-Sleep -Millisecond 100
 
-[bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 custom_pause -fullstop $fullstop
 
 if (-not ($host.Name -match 'ISE')) {

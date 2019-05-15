@@ -1,11 +1,130 @@
 <#
 .SYNOPSIS
+	Determines script directory
+.DESCRIPTION
+	Determines script directory
+
+.EXAMPLE
+	$script_directory = Get-ScriptDirectory
+
+.LINK
+	# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed	
+
+.NOTES
+	TODO: http://joseoncode.com/2011/11/24/sharing-powershell-modules-easily/	
+	VERSION HISTORY
+	2015/06/07 Initial Version
+#>
+# use $debugpreference = 'continue'/'silentlycontinue' to show / hide debugging information
+
+# http://poshcode.org/2887
+# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
+# https://msdn.microsoft.com/en-us/library/system.management.automation.invocationinfo.pscommandpath%28v=vs.85%29.aspx
+# https://gist.github.com/glombard/1ae65c7c6dfd0a19848c
+
+function Get-ScriptDirectory {
+
+  if ($global:scriptDirectory -eq $null) {
+    [string]$global:scriptDirectory = $null
+
+    if ($host.Version.Major -gt 2) {
+      $global:scriptDirectory = (Get-Variable PSScriptRoot).Value
+      write-debug ('$PSScriptRoot: {0}' -f $global:scriptDirectory)
+      if ($global:scriptDirectory -ne $null) {
+        return $global:scriptDirectory;
+      }
+      $global:scriptDirectory = [System.IO.Path]::GetDirectoryName($MyInvocation.PSCommandPath)
+      write-debug ('$MyInvocation.PSCommandPath: {0}' -f $global:scriptDirectory)
+      if ($global:scriptDirectory -ne $null) {
+        return $global:scriptDirectory;
+      }
+
+      $global:scriptDirectory = Split-Path -Parent $PSCommandPath
+      write-debug ('$PSCommandPath: {0}' -f $global:scriptDirectory)
+      if ($global:scriptDirectory -ne $null) {
+        return $global:scriptDirectory;
+      }
+    } else {
+      $global:scriptDirectory = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
+      if ($global:scriptDirectory -ne $null) {
+        return $global:scriptDirectory;
+      }
+      $Invocation = (Get-Variable MyInvocation -Scope 1).Value
+      if ($Invocation.PSScriptRoot) {
+        $global:scriptDirectory = $Invocation.PSScriptRoot
+      } elseif ($Invocation.MyCommand.Path) {
+        $global:scriptDirectory = Split-Path $Invocation.MyCommand.Path
+      } else {
+        $global:scriptDirectory = $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf('\'))
+      }
+      return $global:scriptDirectory
+    }
+  } else {
+      write-debug ('Returned cached value: `$global:scriptDirectory = "{0}"' -f $global:scriptDirectory)
+      return $global:scriptDirectory
+  }
+}
+
+
+<#
+.SYNOPSIS
+  Returns the content of the script file from to the provided filename as text
+.DESCRIPTION
+  Loads the javascript code from the provided path - looks in current directory then in each of $shared_scripts_paths
+
+.EXAMPLE
+  $highlightScript = loadScript 'highlight.js'
+
+.LINK
+
+.NOTES
+  VERSION HISTORY
+  2019/05/15 Initial Version
+#>
+
+function loadScript {
+  param(
+    [string]$scriptName = $null,
+    [int]$version,
+    [string[]]$shared_scripts_paths = @( 'c:\java\selenium\csharp\sharedassemblies'),
+    [switch]$debug
+  )
+  if ($scriptName -eq $null) {
+    throw [System.IO.FileNotFoundException] 'Script name can not be null.'
+  }
+  [string]$local:scriptDirectory = Get-ScriptDirectory
+  [string]$local:scriptdata = $null
+  write-debug ('Loading script "{0}"' -f $scriptName)
+
+  $local:scriptPath = ("{0}\{1}" -f $local:scriptDirectory, $scriptName)
+  if ( test-path -path $local:scriptPath){
+    write-debug ('Found script in "{0}"' -f $local:scriptPath)
+    $local:scriptdata = [IO.File]::ReadAllText($local:scriptPath)
+  } else {
+    foreach ($local:scriptDirectory in $shared_scripts_paths) {
+      $local:scriptPath = ("{0}\{1}" -f $local:scriptDirectory, $scriptName)
+      if ( test-path -path $local:scriptPath) {
+        write-debug ('Found script in "{0}"' -f $local:scriptPath)
+        $local:scriptdata = [IO.File]::ReadAllText($local:scriptPat)
+      }
+    }
+  }
+  write-debug ('Loaded "{0}"' -f $local:scriptdata)
+  if ($local:scriptdata -eq $null -or $local:scriptdata -eq '' ) {
+    throw [System.IO.FileNotFoundException] "Script file ${scriptName} was not be found or is empty."
+  }
+  return $local:scriptdata
+}
+
+
+<#
+.SYNOPSIS
   Returns the Xpath to the provided Selenium page element
 .DESCRIPTION
   Runs the javascript code through Selenium and returns the Xpath path to the provided Selenium page element
 
 .EXAMPLE
-  $javascript_generated_xpath_to_element = get_xpath_of ([ref] $element)
+  $javascript_generated_xpath_to_element = XpathOf ([ref] $element)
 
 .LINK
   # https://chromium.googlesource.com/chromium/blink/+/master/Source/devtools/front_end/components/DOMPresentationUtils.js
@@ -15,47 +134,14 @@
   2015/07/03 Initial Version
 #>
 
-
-function get_xpath_of {
+function XpathOf {
   param(
     [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
   )
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
   [string]$local:result = $null
 
-  [string]$local:script = @"
- function get_xpath_of(element) {
-     var elementTagName = element.tagName.toLowerCase();
-     if (element.id != '') {
-         return '//' + elementTagName + '[@id="' + element.id + '"]';
-         // alternative ?
-         // return 'id("' + element.id + '")';
-     } else if (element.name && document.getElementsByName(element.name).length === 1) {
-         return '//' + elementTagName + '[@name="' + element.name + '"]';
-     }
-     if (element === document.body) {
-         return '/html/' + elementTagName;
-     }
-     var sibling_count = 0;
-     var siblings = element.parentNode.childNodes;
-     siblings_length = siblings.length;
-     for (cnt = 0; cnt < siblings_length; cnt++) {
-         var sibling_element = siblings[cnt];
-         if (sibling_element.nodeType !== 1) { // not ELEMENT_NODE
-             continue;
-         }
-         if (sibling_element === element) {
-             return sibling_count > 0 ? get_xpath_of(element.parentNode) + '/' + elementTagName + '[' + (sibling_count + 1) + ']' : get_xpath_of(element.parentNode) + '/' + elementTagName;
-         }
-         if (sibling_element.nodeType === 1 && sibling_element.tagName.toLowerCase() === elementTagName) {
-             sibling_count++;
-         }
-     }
-     return;
- };
- return get_xpath_of(arguments[0]);
-"@
-
+  [string]$local:script = loadScript -scriptName 'xpath.js'
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
   write-debug ('Javascript-generated XPath = "{0}"' -f $local:result)
 
@@ -70,7 +156,7 @@ function get_xpath_of {
   Runs the javascript code through Selenium and returns the CSS path to the provided Selenium page element
 
 .EXAMPLE
-  $javascript_generated_css_selector_of_element = get_css_selector_of ([ref] $element)
+  $javascript_generated_css_selector_of_element = cssSelectorOf ([ref] $element)
 
 .LINK
   # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed	
@@ -81,53 +167,17 @@ function get_xpath_of {
   2015/06/07 Initial Version
 #>
 
-function get_css_selector_of {
+function cssSelectorOf {
 
   param(
     [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
   )
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
   [string]$local:result = $null
-
-  [string]$local:script = @"
-function get_css_selector_of(element) {
-
-    if (!(element instanceof Element))
-        return;
-    var path = [];
-    while (element.nodeType === Node.ELEMENT_NODE) {
-        var selector = element.nodeName.toLowerCase();
-        if (element.id) {
-            if (element.id.indexOf('-') > -1) {
-                selector += '[id = "' + element.id + '"]';
-            } else {
-                selector += '#' + element.id;
-            }
-            path.unshift(selector);
-            break;
-        } else {
-            var element_sibling = element;
-            var sibling_cnt = 1;
-            while (element_sibling = element_sibling.previousElementSibling) {
-                if (element_sibling.nodeName.toLowerCase() == selector)
-                    sibling_cnt++;
-            }
-            if (sibling_cnt != 1)
-                selector += ':nth-of-type(' + sibling_cnt + ')';
-        }
-        path.unshift(selector);
-        element = element.parentNode;
-    }
-    return path.join(' > ');
-} // invoke
-return get_css_selector_of(arguments[0]);
-"@
-
+  [string]$local:script = loadScript -scriptName 'cssSelector.js'
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
-
   write-debug ('Javascript-generated CSS selector: "{0}"' -f $local:result)
   return $local:result
-
 }
 
 
@@ -609,8 +659,8 @@ function find_elements {
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
   $wait.PollingInterval = $wait_polling_interval
   if ($parent) {
-     $parent_css_selector = get_css_selector_of ([ref] $parent )
-     $parent_xpath = get_xpath_of([ref] $parent )
+     $parent_css_selector = cssSelectorOf ([ref] $parent )
+     $parent_xpath = XpathOf([ref] $parent )
 
   } else {
      $parent= $selenium
@@ -799,7 +849,7 @@ return check_image_ready(selector, debug);
 "@
 
   write-debug ('Running the script : {0}' -f $local:script )
-  # NOTE: with 'Microsoft.PowerShell.Commands.WriteErrorException,check_image_ready' will be thrown if write-erroris used here instead of write-debug
+  # NOTE: with 'Microsoft.PowerShell.Commands.WriteErrorException,check_image_ready' will be thrown if write-error is used here instead of write-debug
 
   $local:result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value).ExecuteScript($local:script, $element_locator, $run_debug  )
   write-debug ('Result = {0}' -f $local:result)

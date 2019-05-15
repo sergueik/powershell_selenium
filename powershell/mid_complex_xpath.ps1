@@ -24,11 +24,10 @@ param(
   [string]$hub_port = '4444'
 )
 
-$MODULE_NAME = 'selenium_utils.psd1'
+$MODULE_NAME = 'selenium_utils.psd1';
 import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
 
 $selenium = launch_selenium -browser $browser -hub_host $hub_host -hub_port $hub_port
-
 
 $base_url = ('file:///{0}\{1}' -f (Get-ScriptDirectory), 'forms_test.html' ) -replace '\\', '/'
 write-output $base_url 
@@ -196,7 +195,7 @@ Write-Output ('{0} id = {1}' -f $element.TagName,$element.GetAttribute('id'))
 [OpenQA.Selenium.ILocatable]$loc = ([OpenQA.Selenium.ILocatable]$element)
 
 [string]$script = @"
-function get_xpath_of(element) {
+function XpathOf(element) {
     if (element.id !== '')
         return '*[@id="' + element.id + '"]';
     if (element === document.body)
@@ -206,12 +205,12 @@ function get_xpath_of(element) {
     for (var i= 0; i<siblings.length; i++) {
         var sibling = siblings[i];
         if (sibling === element)
-            return get_xpath_of(element.parentNode) + '/' + element.tagName + '[' + ( ix + 1 ) + ']';
+            return XpathOf(element.parentNode) + '/' + element.tagName + '[' + ( ix + 1 ) + ']';
         if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
             ix++;
     }
 }
-return get_xpath_of(arguments[0]);
+return XpathOf(arguments[0]);
 "@
 $result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($script,$element,'')).ToString()
 
@@ -240,7 +239,7 @@ Start-Sleep 1
 # locator # 6 css version
 [string]$get_css_selector_function = @"
 
-function get_css_selector_of(el) {
+function cssSelectorOf(el) {
     if (!(el instanceof Element))
         return;
     var path = [];
@@ -269,14 +268,14 @@ function get_css_selector_of(el) {
     }
     return path.join(' > ');
 } // invoke 
-return get_css_selector_of(arguments[0]);
+return cssSelectorOf(arguments[0]);
 "@
 
 $result_css = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_css_selector_function,$element,'')).ToString()
 
 
 Write-Output ('Javascript-generated CSS selector = "{0}"' -f $result_css)
-$result_css = get_css_selector_of ([ref] $element)
+$result_css = cssSelectorOf ([ref] $element)
 
 $css_selector = $result_css
 Write-Output ('Javascript-generated CSS selector = "{0}"' -f $result_css)
@@ -319,7 +318,7 @@ Write-Output ('{0} id = {1}' -f $element.TagName,$element.GetAttribute('id'))
 [OpenQA.Selenium.ILocatable]$loc = ([OpenQA.Selenium.ILocatable]$element)
 
 [string]$get_xpath_script = @"
-function get_xpath_of(element) {
+function XpathOf(element) {
     if (element.id !== '')
         return 'id("' + element.id + '")';
     if (element === document.body)
@@ -330,17 +329,17 @@ function get_xpath_of(element) {
     for (var i = 0; i < siblings.length; i++) {
         var sibling = siblings[i];
         if (sibling === element)
-            return get_xpath_of(element.parentNode) + '/' + element.tagName + '[' + (ix + 1) + ']';
+            return XpathOf(element.parentNode) + '/' + element.tagName + '[' + (ix + 1) + ']';
         if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
             ix++;
     }
 }
-return get_xpath_of(arguments[0]);
+return XpathOf(arguments[0]);
 "@
 $result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($get_xpath_script,$element,'')).ToString()
 
 Write-Output ('Javascript-generated XPath = "{0}"' -f $result)
-$resul = get_xpath_of ([ref] $element)
+$resul = XpathOf ([ref] $element)
 
 Write-Output ('Javascript-generated XPath = "{0}"' -f $result)
 try {

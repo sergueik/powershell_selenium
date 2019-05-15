@@ -21,41 +21,47 @@
 # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
 # https://msdn.microsoft.com/en-us/library/system.management.automation.invocationinfo.pscommandpath%28v=vs.85%29.aspx
 # https://gist.github.com/glombard/1ae65c7c6dfd0a19848c
-function Get-ScriptDirectory
-{
-  [string]$scriptDirectory = $null
 
-  if ($host.Version.Major -gt 2) {
-    $scriptDirectory = (Get-Variable PSScriptRoot).Value
-    Write-Debug ('$PSScriptRoot: {0}' -f $scriptDirectory)
-    if ($scriptDirectory -ne $null) {
-      return $scriptDirectory;
-    }
-    $scriptDirectory = [System.IO.Path]::GetDirectoryName($MyInvocation.PSCommandPath)
-    Write-Debug ('$MyInvocation.PSCommandPath: {0}' -f $scriptDirectory)
-    if ($scriptDirectory -ne $null) {
-      return $scriptDirectory;
-    }
+function Get-ScriptDirectory {
 
-    $scriptDirectory = Split-Path -Parent $PSCommandPath
-    Write-Debug ('$PSCommandPath: {0}' -f $scriptDirectory)
-    if ($scriptDirectory -ne $null) {
-      return $scriptDirectory;
+  if ($global:scriptDirectory -eq $null) {
+    [string]$global:scriptDirectory = $null
+
+    if ($host.Version.Major -gt 2) {
+      $global:scriptDirectory = (Get-Variable PSScriptRoot).Value
+      write-debug ('$PSScriptRoot: {0}' -f $global:scriptDirectory)
+      if ($global:scriptDirectory -ne $null) {
+        return $global:scriptDirectory;
+      }
+      $global:scriptDirectory = [System.IO.Path]::GetDirectoryName($MyInvocation.PSCommandPath)
+      write-debug ('$MyInvocation.PSCommandPath: {0}' -f $global:scriptDirectory)
+      if ($global:scriptDirectory -ne $null) {
+        return $global:scriptDirectory;
+      }
+
+      $global:scriptDirectory = Split-Path -Parent $PSCommandPath
+      write-debug ('$PSCommandPath: {0}' -f $global:scriptDirectory)
+      if ($global:scriptDirectory -ne $null) {
+        return $global:scriptDirectory;
+      }
+    } else {
+      $global:scriptDirectory = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
+      if ($global:scriptDirectory -ne $null) {
+        return $global:scriptDirectory;
+      }
+      $Invocation = (Get-Variable MyInvocation -Scope 1).Value
+      if ($Invocation.PSScriptRoot) {
+        $global:scriptDirectory = $Invocation.PSScriptRoot
+      } elseif ($Invocation.MyCommand.Path) {
+        $global:scriptDirectory = Split-Path $Invocation.MyCommand.Path
+      } else {
+        $global:scriptDirectory = $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf('\'))
+      }
+      return $global:scriptDirectory
     }
   } else {
-    $scriptDirectory = [System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Definition)
-    if ($scriptDirectory -ne $null) {
-      return $scriptDirectory;
-    }
-    $Invocation = (Get-Variable MyInvocation -Scope 1).Value
-    if ($Invocation.PSScriptRoot) {
-      $scriptDirectory = $Invocation.PSScriptRoot
-    } elseif ($Invocation.MyCommand.Path) {
-      $scriptDirectory = Split-Path $Invocation.MyCommand.Path
-    } else {
-      $scriptDirectory = $Invocation.InvocationName.Substring(0,$Invocation.InvocationName.LastIndexOf('\'))
-    }
-    return $scriptDirectory
+      write-debug ('Returned cached value: {0}' -f $global:scriptDirectory)
+      return $global:scriptDirectory
   }
 }
 
@@ -99,9 +105,9 @@ function launch_selenium {
     [switch]$debug
   )
 
-  # Write-Debug (Get-ScriptDirectory)
+  # write-debug (Get-ScriptDirectory)
   $use_remote_driver = [bool]$PSBoundParameters['grid'].IsPresent
-  # Write-Debug (Get-ScriptDirectory)
+  # write-debug (Get-ScriptDirectory)
   $run_headless = [bool]$PSBoundParameters['headless'].IsPresent
   if ($run_headless) {
     write-debug 'launch_selenium: Running headless'
@@ -130,7 +136,7 @@ function launch_selenium {
     $selenium_drivers_path = $env:SELENIUM_PATH
   }
 
-  # write-Debug "load_shared_assemblies -shared_assemblies_path ${shared_assemblies_path} -shared_assemblies ${shared_assemblies}"
+  # write-debug "load_shared_assemblies -shared_assemblies_path ${shared_assemblies_path} -shared_assemblies ${shared_assemblies}"
   # start-sleep -milliseconds 1000
   load_shared_assemblies -shared_assemblies_path $shared_assemblies_path -shared_assemblies $shared_assemblies
 <#
@@ -140,7 +146,7 @@ function launch_selenium {
     if ($host.Version.Major -gt 2) {
       Unblock-File -Path $_
     }
-    Write-Debug $_
+    write-debug $_
     Add-Type -Path $_
   }
   popd
@@ -162,11 +168,11 @@ function launch_selenium {
       try {
         $connection = (New-Object Net.Sockets.TcpClient)
         $connection.Connect($hub_host,[int]$hub_port)
-        Write-Debug 'Grid is already running'
+        write-debug 'Grid is already running'
 
         $connection.Close()
       } catch {
-        Write-Debug 'Launching grid'
+        write-debug 'Launching grid'
         Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -argumentList "start cmd.exe /c ${selenium_path}\hub.cmd"
         Start-Process -FilePath 'C:\Windows\System32\cmd.exe' -argumentList "start cmd.exe /c ${selenium_path}\node.cmd"
         Start-Sleep -Millisecond 5000
@@ -181,9 +187,8 @@ function launch_selenium {
       }
 
       # See if the new folder is already in the path.
-      if ($env:PATH | Select-String -SimpleMatch $selenium_drivers_path)
-      { Write-Debug "Folder ${selenium_drivers_path} already within `$env:PATH"
-
+      if ($env:PATH | Select-String -SimpleMatch $selenium_drivers_path) {
+        write-debug "Folder ${selenium_drivers_path} already within `$env:PATH"
       }
 
       # Set the new PATH environment
@@ -351,14 +356,23 @@ which can be collaptsed into
         # http://stackoverflow.com/questions/20401264/how-to-access-network-panel-on-google-chrome-developer-toools-with-selenium
 
         [OpenQA.Selenium.Chrome.ChromeOptions]$options = New-Object OpenQA.Selenium.Chrome.ChromeOptions
+        $disable_image_loading = $false
+        if ($disable_image_loading ) {
+          #  https://stackoverflow.com/questions/18657976/disable-images-in-selenium-google-chromedriver
+          # https://stackoverflow.com/questions/35128850/java-selenium-chrome-driver-disable-image-loading
+	  # https://toster.ru/q/604458 (in Russian)
 
+          $options.AddUserProfilePreference('profile.default_content_setting_values.images',2)
+	}
+	# Chrome extensions
+	# $options.AddExtension("path_to_crx_file")
         if ($run_headless) {
           $width = 1200;
           $height = 800;
           # https://stackoverflow.com/questions/45130993/how-to-start-chromedriver-in-headless-mode
           $options.addArguments([System.Collections.Generic.List[string]]@('--headless',"--window-size=${width}x${height}", '-disable-gpu'))
         } else {
-	# TODO: makse configurable through a switch 
+	# TODO: make configurable through a switch
        #   $options.addArguments('start-maximized')
           # no-op option - re-enforcing the default setting
           $options.addArguments(('user-data-dir={0}' -f ("${env:LOCALAPPDATA}\Google\Chrome\User Data" -replace '\\','/')))
@@ -556,7 +570,7 @@ function load_shared_assemblies {
       )
   )
 
-  Write-Debug ('Loading "{0}" from ' -f ($shared_assemblies -join ',' ), $shared_assemblies_path)
+  write-debug ('Loading "{0}" from ' -f ($shared_assemblies -join ',' ), $shared_assemblies_path)
   pushd $shared_assemblies_path
 
   $shared_assemblies | ForEach-Object {
@@ -621,7 +635,7 @@ function load_shared_assemblies_with_versions {
     if ($host.Version.Major -gt 2) {
       Unblock-File -Path $shared_assembly_filename;
     }
-    Write-Debug $shared_assembly_filename
+    write-debug $shared_assembly_filename
     Add-Type -Path $shared_assembly_filename
   }
   popd
@@ -698,7 +712,7 @@ function read_installed_programs_registry {
         $displayname_result = $registry_key.GetValue($_).ToString()
 
       } catch [exception]{
-        Write-Debug $_
+        write-debug $_
       }
 
       if ($displayname_result -ne $null -and $displayname_result -match "\b${package_name}\b") {
@@ -745,31 +759,31 @@ function assert_true {
   $info = '{0}, file {1}, line {2}' -f @( $MyInvocation.Line.Trim(),$MyInvocation.ScriptName,$MyInvocation.ScriptLineNumber)
   if ($null -eq $InputObject) {
     $message = "Assertion failed: $info"
-    Write-Debug -Message $message
+    write-debug -Message $message
     if (-not ($debugpreference -match 'continue')) {
       throw $message
     } else {
-      Write-Debug -Message 'Continue'
+      write-debug -Message 'Continue'
     }
   }
   if (($InputObject -isnot [System.Boolean]) -and ($InputObject -isnot $null)) {
     $type = $InputObject.GetType().FullName
     $value = if ($InputObject -is [System.String]) { "'$InputObject'" } else { "{$InputObject}" }
     $message = "Assertion failed (`$InputObject is of type $type with value $value): $info"
-    Write-Debug -Message $message
+    write-debug -Message $message
     if (-not ($debugpreference -match 'continue')) {
       throw $message
     } else {
-      Write-Debug -Message 'Continue'
+      write-debug -Message 'Continue'
     }
   }
   if (($InputObject -is [System.Boolean]) -and (-not $InputObject)) {
     $message = "Assertion failed: $info"
-    Write-Debug -Message $message
+    write-debug -Message $message
     if (-not ($debugpreference -match 'continue')) {
       throw $message
     } else {
-      Write-Debug -Message 'Continue'
+      write-debug -Message 'Continue'
     }
   }
   Write-Verbose -Message "Assertion passed: $info"
