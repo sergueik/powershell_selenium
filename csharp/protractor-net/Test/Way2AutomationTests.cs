@@ -23,52 +23,53 @@ namespace Protractor.Test
 	[TestFixture]
 	public class Way2AutomationTests
 	{
+		private const String base_url = "http://www.way2automation.com/angularjs-protractor/banking";
+
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
 		private NgWebDriver ngDriver;
 		private WebDriverWait wait;
 		private IAlert alert;
-		private string alert_text;
+		private String alert_text;
 		private Regex theReg;
 		private const int window_width = 800;
 		private const int window_height = 600;
 		private const int script_wait_seconds = 60;
 		private const int wait_seconds = 3;
-		private int highlight_timeout = 1000;
+		private const int highlight_timeout = 1000;
 		private Actions actions;
-		private const String base_url = "http://www.way2automation.com/angularjs-protractor/banking";
-		const int maxAttempts = 5;
-		const int interval = 500;
+		private const int max_retry_attempts = 5; // unused
+		private const int retry_delay = 500;
 
 		// see: https://automated-testing.info/t/c-problema-s-poiskom-elementa-i-ozhidaniem/22644/15
-		public IWebElement FindVisibleElement(By by, int timeoutInSeconds) {
-				int attempt = 0;
+		// NOTE: 'Protractor.NgBy': static types cannot be used as parameters (CS0721)
+		public NgWebElement NgFindVisibleElement(/*  this NgWebDriver ngDriver, */ By by, int custom_timeout_seconds) {
+			int attempt = 0;
+			// optional:
+			// wait.IgnoreExceptionTypes(typeof(StaleElementReferenceException), typeof(NoSuchElementException));
+			while (attempt * wait_seconds <= (int)(custom_timeout_seconds * 1000)) {
 				try {
-					wait.Until(d => driver.FindElements(by).Any(o => o.Displayed) == true);
-				} catch (Exception) {
-					if (attempt == (int)( timeoutInSeconds * 1000/ interval)) {
-						Console.Error.WriteLine("Failed after " + timeoutInSeconds +  " seconds to locate with: " + by.ToString());
-						throw;
-					}
-					attempt ++;
-					Thread.Sleep(interval);
-				}
-			return driver.FindElements(by).First(o => o.Displayed);
-		}
-
-		// 'Protractor.NgBy': static types cannot be used as parameters (CS0721)
-		public NgWebElement NgFindVisibleElement(By by, int timeoutInSeconds) {
-				int attempt = 0;
-				try {
+					// Exist:
+					// wait.Until(d => ngDriver.FindElements(by).Any());
+					// Visible: 
+					// wait.Until(d => ngDriver.FindElements(by).Any(e => e.Displayed)== true)
+					// Clickable:
+					// wait.Until(d => ngDriver.FindElements(by).Any(e => e.Displayed && e.Enabled)== true)
 					wait.Until(d => ngDriver.FindElements(by).Any(o => o.Displayed) == true);
-				} catch (Exception) {
-					if (attempt == (int)( timeoutInSeconds * 1000/ interval)) {
-						Console.Error.WriteLine("Failed after " + timeoutInSeconds +  " seconds to locate with: " + by.ToString());
-						throw;
+					// System.InvalidOperationException : Sequence contains no matching element
+					// OpenQA.Selenium.WebDriverTimeoutException: Timed out after 3 seconds
+				} catch (Exception e) {
+					if (attempt * wait_seconds >= (int)(custom_timeout_seconds * 1000)) {
+						throw e;
+					} else {
+						Console.WriteLine(String.Format("Attempt # {0} to slurp exception: {1}" , attempt, e.Message));
+						attempt++;
+						Thread.Sleep(retry_delay);
+						continue;
 					}
-					attempt ++;
-					Thread.Sleep(interval);
 				}
+				break;
+			}
 			return ngDriver.FindElements(by).First(o => o.Displayed);
 		}
 
@@ -155,7 +156,7 @@ namespace Protractor.Test
 		public void ShouldDeposit()
 		{
 			// ngDriver.FindElement(NgBy.ButtonText("Customer Login")).Click();
-			NgFindVisibleElement(NgBy.ButtonText("Customer Loginz"),10).Click();
+			NgFindVisibleElement(NgBy.ButtonText("Customer Login"),5).Click();
 			
 			ReadOnlyCollection<NgWebElement> ng_customers = ngDriver.FindElement(NgBy.Model("custId")).FindElements(NgBy.Repeater("cust in Customers"));
 			// select customer to log in
