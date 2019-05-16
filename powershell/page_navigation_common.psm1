@@ -286,10 +286,25 @@ function highlight {
   )
   # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,"color: ${color}; border: 4px solid ${color};")
-  Start-Sleep -Millisecond $delay
+  start-sleep -Millisecond $delay
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
 }
 
+
+<#
+.SYNOPSIS
+  Highlights page element
+.DESCRIPTION
+  Highlights page element by executing Javascript through Selenium
+
+.EXAMPLE
+      highlightElement ([ref]$selenium) ([ref]$element) -delay 1500 -color 'green'
+.LINK
+
+.NOTES
+  VERSION HISTORY
+  2019/05/16 Initial Version
+#>
 
 function highlightElement {
   param(
@@ -298,6 +313,10 @@ function highlightElement {
     [String]$color = 'yellow', # unused
     [int]$delay = 300
   )
+
+
+  [string]$local:script = loadScript -scriptName 'highlightElement.js'
+
   [void][System.Reflection.Assembly]::LoadWithPartialName('System.Drawing')
 
   # [org.openqa.selenium.Rectangle]$elementRect = $element_ref.Value.getRect()
@@ -305,20 +324,20 @@ function highlightElement {
 
   [System.Drawing.Point]$elementLocation = $element_ref.Value.Location
   [System.Drawing.Size]$elementSize = $element_ref.Value.Size
-  # TODO: switch to .Coordinates property
-
-  [string]$local:script = loadScript -scriptName 'highlightElement.js'
+  # alternative is .Coordinates property + .LocationInViewport property
+  # [OpenQA.Selenium.Interactions.Internal.ICoordinates]$elementCoordinates = $element_ref.Value.Coordinates
+  # [System.Drawing.Point]$elementLocation = $elementCoordinates.LocationInViewport
 
   # TODO: try...catch
 
   write-debug ("{0}`nhighlight_create(arguments[0],arguments[1],arguments[2],arguments[3]);" -f $local:script)
   write-debug ('y = {0}' -f $elementLocation.y)
-  write-debug     ('x = {0}' -f $elementLocation.x)
-  write-debug  ('width = {0}' -f $elementSize.width)
-  write-debug  ('height = {0}' -f $elementSize.height)
+  write-debug ('x = {0}' -f $elementLocation.x)
+  write-debug ('width = {0}' -f $elementSize.width)
+  write-debug ('height = {0}' -f $elementSize.height)
 
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript(("{0}`nhighlight_create(arguments[0],arguments[1],arguments[2],arguments[3]);" -f $local:script), $elementLocation.y, $elementLocation.x, $elementSize.width, $elementSize.height)
-  Start-Sleep    $delay
+  start-sleep -Millisecond $delay
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript(("{0}`nhighlight_remove();" -f $local:script))
 }
 
@@ -351,7 +370,7 @@ function highlight_new {
   }
   [string]$local:script =  ('color: {0}; border: 4px solid {0};' -f $color )
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,$local:script)
-  Start-Sleep -Millisecond $delay
+  start-sleep -Millisecond $delay
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,'')
 }
 

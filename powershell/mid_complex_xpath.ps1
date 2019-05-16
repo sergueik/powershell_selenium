@@ -141,14 +141,14 @@ try {
 }
 
 [OpenQA.Selenium.IWebElement[]]$elements = $selenium.FindElements([OpenQA.Selenium.By]::XPath($xpath))
-$elements | ForEach-Object {
+$elements | foreach-object {
   $element = $_
   Write-Output ('Highlighting element: {0} class={1}' -f $element.TagName,$element.GetAttribute('class'))
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,'color: #CC6600; border: 4px solid #CC3300;')
   Start-Sleep 1
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,'')
   Start-Sleep 1
-  highlightElement ([ref]$selenium) ([ref] $element)
+  highlightElement ([ref]$selenium) ([ref] $element) -delay 1500 -color 'green'
 }
 
 
