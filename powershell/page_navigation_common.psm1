@@ -8,10 +8,10 @@
 	$script_directory = Get-ScriptDirectory
 
 .LINK
-	# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed	
+	# http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed
 
 .NOTES
-	TODO: http://joseoncode.com/2011/11/24/sharing-powershell-modules-easily/	
+	TODO: http://joseoncode.com/2011/11/24/sharing-powershell-modules-easily/
 	VERSION HISTORY
 	2015/06/07 Initial Version
 #>
@@ -124,7 +124,7 @@ function loadScript {
   Runs the javascript code through Selenium and returns the Xpath path to the provided Selenium page element
 
 .EXAMPLE
-  $javascript_generated_xpath_to_element = XpathOf ([ref] $element)
+  $javascript_generated_xpath_to_element = xpathOfElement ([ref] $element)
 
 .LINK
   # https://chromium.googlesource.com/chromium/blink/+/master/Source/devtools/front_end/components/DOMPresentationUtils.js
@@ -134,14 +134,14 @@ function loadScript {
   2015/07/03 Initial Version
 #>
 
-function XpathOf {
+function xpathOfElement {
   param(
     [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
   )
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
   [string]$local:result = $null
 
-  [string]$local:script = loadScript -scriptName 'xpath.js'
+  [string]$local:script = loadScript -scriptName 'xpathOfElement.js'
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
   write-debug ('Javascript-generated XPath = "{0}"' -f $local:result)
 
@@ -156,7 +156,7 @@ function XpathOf {
   Runs the javascript code through Selenium and returns the CSS path to the provided Selenium page element
 
 .EXAMPLE
-  $javascript_generated_css_selector_of_element = cssSelectorOf ([ref] $element)
+  $javascript_generated_css_selector_of_element = cssSelectorOfElement ([ref] $element)
 
 .LINK
   # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed	
@@ -167,14 +167,14 @@ function XpathOf {
   2015/06/07 Initial Version
 #>
 
-function cssSelectorOf {
+function cssSelectorOfElement {
 
   param(
     [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
   )
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
   [string]$local:result = $null
-  [string]$local:script = loadScript -scriptName 'cssSelector.js'
+  [string]$local:script = loadScript -scriptName 'cssSelectorOfElement.js'
   $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
   write-debug ('Javascript-generated CSS selector: "{0}"' -f $local:result)
   return $local:result
@@ -659,8 +659,8 @@ function find_elements {
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
   $wait.PollingInterval = $wait_polling_interval
   if ($parent) {
-     $parent_css_selector = cssSelectorOf ([ref] $parent )
-     $parent_xpath = XpathOf([ref] $parent )
+     $parent_css_selector = cssSelectorOfElement ([ref] $parent )
+     $parent_xpath = xpathOfElement([ref] $parent )
 
   } else {
      $parent= $selenium

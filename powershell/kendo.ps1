@@ -168,7 +168,7 @@ $element = find_element -css $css_selector
 # fails in hext line ?
 $element
 # highlight ([ref]$selenium) ([ref]$element )
-$xpath_of_element = XpathOf ([ref]$element)
+$xpath_of_element = xpathOfElement ([ref]$element)
 # next : path
 Write-Output ('Javascript-generated XPath = "{0}"' -f $xpath_of_element)
 $path_css_selector = 'path[fill = "#fff"]'
@@ -190,7 +190,7 @@ $paths | ForEach-Object {
   $path_element = $_
   # Write-Output $path_element.GetAttribute('d')
   # CSS Selector can be used to locate the elements
-  $css_selector_of_path_element = cssSelectorOf ([ref]$path_element)
+  $css_selector_of_path_element = cssSelectorOfElement ([ref]$path_element)
   Write-Output ('CSS "{0}"' -f $css_selector_of_path_element)
   $assert_element = find_element -css $css_selector_of_path_element
   # -wait_seconds 2
