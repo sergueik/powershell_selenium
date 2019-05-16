@@ -19,7 +19,7 @@
 #THE SOFTWARE.
 
 param(
-  [string]$browser,
+  [string]$browser = 'chrome',
   [string]$hub_host = '127.0.0.1',
   [string]$hub_port = '4444'
 )
@@ -148,7 +148,7 @@ $elements | ForEach-Object {
   Start-Sleep 1
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element,'')
   Start-Sleep 1
-
+  highlightElement ([ref]$selenium) ([ref] $element)
 }
 
 

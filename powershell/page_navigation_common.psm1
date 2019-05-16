@@ -208,7 +208,7 @@ function getAttributes {
 
   [string]$local:script = loadScript -scriptName 'getAttributes.js'
 
-  # TODO: optionally drop JSON.stringify 
+  # TODO: optionally drop JSON.stringify
   # System.Collections.Generic.Dictionary`2[System.String,System.Object]
   # $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,$true)).ToString()
   # write-debug 'Javascript-generated Attributes'
@@ -290,6 +290,37 @@ function highlight {
   [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
 }
 
+
+function highlightElement {
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [System.Management.Automation.PSReference]$element_ref,
+    [String]$color = 'yellow', # unused
+    [int]$delay = 300
+  )
+  [void][System.Reflection.Assembly]::LoadWithPartialName('System.Drawing')
+
+  # [org.openqa.selenium.Rectangle]$elementRect = $element_ref.Value.getRect()
+  # Method invocation failed because [OpenQA.Selenium.Remote.RemoteWebElement] does not contain a method named 'getRect'.
+
+  [System.Drawing.Point]$elementLocation = $element_ref.Value.Location
+  [System.Drawing.Size]$elementSize = $element_ref.Value.Size
+  # TODO: switch to .Coordinates property
+
+  [string]$local:script = loadScript -scriptName 'highlightElement.js'
+
+  # TODO: try...catch
+
+  write-debug ("{0}`nhighlight_create(arguments[0],arguments[1],arguments[2],arguments[3]);" -f $local:script)
+  write-debug ('y = {0}' -f $elementLocation.y)
+  write-debug     ('x = {0}' -f $elementLocation.x)
+  write-debug  ('width = {0}' -f $elementSize.width)
+  write-debug  ('height = {0}' -f $elementSize.height)
+
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript(("{0}`nhighlight_create(arguments[0],arguments[1],arguments[2],arguments[3]);" -f $local:script), $elementLocation.y, $elementLocation.x, $elementSize.width, $elementSize.height)
+  Start-Sleep    $delay
+  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript(("{0}`nhighlight_remove();" -f $local:script))
+}
 
 <#
 .SYNOPSIS
