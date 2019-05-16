@@ -139,13 +139,13 @@ function xpathOfElement {
     [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
   )
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
-  [string]$local:result = $null
+  [string]$local:rawjson = $null
 
   [string]$local:script = loadScript -scriptName 'xpathOfElement.js'
-  $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
-  write-debug ('Javascript-generated XPath = "{0}"' -f $local:result)
+  $local:rawjson = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
+  write-debug ('Javascript-generated XPath = "{0}"' -f $local:rawjson)
 
-  return $local:result
+  return $local:rawjson
 }
 
 
@@ -173,12 +173,54 @@ function cssSelectorOfElement {
     [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
   )
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
-  [string]$local:result = $null
+  [string]$local:rawjson = $null
   [string]$local:script = loadScript -scriptName 'cssSelectorOfElement.js'
-  $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
-  write-debug ('Javascript-generated CSS selector: "{0}"' -f $local:result)
+  $local:rawjson = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,'')).ToString()
+  write-debug ('Javascript-generated CSS selector: "{0}"' -f $local:rawjson)
+  return $local:rawjson
+}
+
+
+<#
+.SYNOPSIS
+  Returns the PSCustomObject of attributes of the provided Selenium page element
+.DESCRIPTION
+  Runs the javascript code through Selenium and returns the PSCustomObject of attributes of the provided Selenium page element
+
+.EXAMPLE
+  format-list -inputObject (getAttributes ([ref] $element))
+  type      : checkbox
+  value     : None
+  id        : 7a18efeb-427c-4eec-880d-13cbec2bec17
+  name      : check
+
+.NOTES
+  VERSION HISTORY
+  2019/05/15 Initial Version
+#>
+
+function getAttributes {
+  param(
+    [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
+  )
+  [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
+  [string]$local:rawjson = $null
+
+  [string]$local:script = loadScript -scriptName 'getAttributes.js'
+
+  # TODO: optionally drop JSON.stringify 
+  # System.Collections.Generic.Dictionary`2[System.String,System.Object]
+  # $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,$true)).ToString()
+  # write-debug 'Javascript-generated Attributes'
+  # if ($DebugPreference -eq 'Continue') {
+  #  write-output $local:result | format-table
+  # }
+  $local:rawjson = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($local:script,$local:element,$true)).ToString()
+  write-debug ('Javascript-generated Attribute json = "{0}"' -f $local:rawjson)
+  $local:result = ConvertFrom-Json -InputObject $local:rawjson
   return $local:result
 }
+
 
 
 <#
@@ -209,14 +251,14 @@ function extract_match {
   write-debug ('Extracting from {0}' -f $source)
   write-debug ('Extracting expression {0}' -f $capturing_match_expression)
   write-debug ('Extracting tag {0}' -f $label)
-  $local:results = {}
-  $local:results = $source | where { $_ -match $capturing_match_expression } |
+  $local:rawjsons = {}
+  $local:rawjsons = $source | where { $_ -match $capturing_match_expression } |
   ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
-  if  ( $local:results -ne $null ) {
+  if  ( $local:rawjsons -ne $null ) {
     write-debug 'extract_match:'
-    write-debug $local:results
+    write-debug $local:rawjsons
   }
-  $result_ref.Value = $local:results.Media
+  $result_ref.Value = $local:rawjsons.Media
 }
 
 
@@ -726,7 +768,7 @@ function find_via_closest {
     [String] $target_element_locator
   )
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
-  [string]$local:result = $null
+  [string]$local:rawjson = $null
   <#
   # variable-interpolated no-extra-argument version of the script
   # is possible but is discoraged
@@ -739,8 +781,8 @@ function find_via_closest {
   targetElement.scrollIntoView({ behavior: 'smooth' });
   return targetElement.text || targetElement.getAttribute('value');
 "@
-  $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript( $local:script, $local:element, $ancestor_locator, $target_element_locator )).ToString()
-  write-debug ('Result = "{0}"' -f $local:result)
+  $local:rawjson = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript( $local:script, $local:element, $ancestor_locator, $target_element_locator )).ToString()
+  write-debug ('Result = "{0}"' -f $local:rawjson)
 #>
 $script = @"
   var element = arguments[0];
@@ -766,10 +808,10 @@ $script = @"
   return findViaClosest (element, ancestorLocator, targetElementLocator);
 "@
   #>
-  $local:result = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript( $local:script, $local:element,'')).ToString()
-  write-debug ('Result = "{0}"' -f $local:result)
+  $local:rawjson = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript( $local:script, $local:element,'')).ToString()
+  write-debug ('Result = "{0}"' -f $local:rawjson)
 
-  return $local:result
+  return $local:rawjson
 
 }
 
@@ -851,8 +893,8 @@ return check_image_ready(selector, debug);
   write-debug ('Running the script : {0}' -f $local:script )
   # NOTE: with 'Microsoft.PowerShell.Commands.WriteErrorException,check_image_ready' will be thrown if write-error is used here instead of write-debug
 
-  $local:result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value).ExecuteScript($local:script, $element_locator, $run_debug  )
-  write-debug ('Result = {0}' -f $local:result)
+  $local:rawjson = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value).ExecuteScript($local:script, $element_locator, $run_debug  )
+  write-debug ('Result = {0}' -f $local:rawjson)
 
-  return $local:result
+  return $local:rawjson
 }

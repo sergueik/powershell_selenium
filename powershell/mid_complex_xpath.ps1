@@ -280,6 +280,11 @@ $result_css = cssSelectorOfElement ([ref] $element)
 $css_selector = $result_css
 Write-Output ('Javascript-generated CSS selector = "{0}"' -f $result_css)
 
+
+$o = getAttributes  ([ref] $element)
+Write-Output ('Javascript-generated attributes selector = "{0}"' -f $o)
+$o | format-list 
+
   [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(1))
   $wait.PollingInterval = 100
 
