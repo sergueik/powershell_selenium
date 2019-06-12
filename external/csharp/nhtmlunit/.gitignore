@@ -1,0 +1,17 @@
+*/bin
+*/*/bin
+*/obj
+*/*/obj
+*.ReSharper
+*.suo
+*.user
+*.dotCover
+*.nupkg
+.DS_Store
+/_ReSharper.NHtmlUnit/
+/packages/*
+!/packages/repositories.config
+!/tools/*
+/tools/.DS_Store
+/*.tss
+/TestResult.xml
