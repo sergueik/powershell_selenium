@@ -19,15 +19,14 @@
 #THE SOFTWARE.
 
 param(
-  [switch]$debug,
-  [string]$hub_port = '4444'
+  [switch]$debug
 )
 
-# https://www.nuget.org/packages/AngleSharp/0.9.10
 # http://anglesharp.github.io/docs/Examples.html
 # https://www.codeproject.com/Articles/609053/AngleSharp
 # https://stackoverflow.com/questions/45396219/trying-to-parse-and-interact-with-content-from-a-web-page-using-powershell
 # https://www.powershellgallery.com/packages/IonFar.SharePoint.PowerShell/0.2.1/Content/IonFar.SharePoint.PowerShell\AngleSharp.xml
+# see also: http://hostciti.net/faq/c-sharp/parsing-s-c-anglesharp.html
 # async-lean examples
 
 [string]$shared_assemblies_path = 'C:\java\selenium\csharp\sharedassemblies'
@@ -37,7 +36,7 @@ function load_shared_assemblies {
   param(
     [string]$shared_assemblies_path = 'C:\java\selenium\csharp\sharedassemblies',
     [string[]]$shared_assemblies = @(
-      'AngleSharp.dll', # using .Net 4.5 assembly
+      'AngleSharp.dll', # using .Net 4.5 assembly downloaded from https://www.nuget.org/packages/AngleSharp/0.9.10
       'Newtonsoft.Json.dll',
       'nunit.core.dll',
       'nunit.core.interfaces.dll',
@@ -63,15 +62,11 @@ function load_shared_assemblies {
 
 load_shared_assemblies
 
-<#
-# NOTE: Add-Type : Cannot bind argument to parameter 'TypeDefinition' because it is an empty string.
-#>
-
-Add-Type -TypeDefinition @'
+# origin: http://anglesharp.github.io/docs/Basics.html#first-steps
+add-type -TypeDefinition @'
 using System;
 using AngleSharp;
-// using AngleSharp.Html.Parser;
-// Add-Type : c:\Users\Serguei\AppData\Local\Temp\nbgafdpu.0.cs(3) : The type or namespace name 'Parser' does not exist in the namespace 'AngleSharp.Html' (areyou missing an assembly reference?)
+
 public class AngleSharpFirstStepClass {
 	public static async void Main(){
 		var config = Configuration.Default;
