@@ -19,8 +19,7 @@
 #THE SOFTWARE.
 
 param(
-  [string]$browser = 'chrome',
-  [string]$hub_host = '127.0.0.1',
+  [switch]$debug,
   [string]$hub_port = '4444'
 )
 
@@ -31,11 +30,70 @@ param(
 # https://www.powershellgallery.com/packages/IonFar.SharePoint.PowerShell/0.2.1/Content/IonFar.SharePoint.PowerShell\AngleSharp.xml
 # async-lean examples
 
-$MODULE_NAME = 'selenium_utils.psd1';
-import-module -name ('{0}/{1}' -f '.',  $MODULE_NAME)
-# using .Net 4.5 assembly
-load_shared_assemblies  -shared_assemblies  @('AngleSharp.dll','nunit.framework.dll', 'nunit.core.dll', 'nunit.core.interfaces.dll' )
+[string]$shared_assemblies_path = 'C:\java\selenium\csharp\sharedassemblies'
 
+function load_shared_assemblies {
+
+  param(
+    [string]$shared_assemblies_path = 'C:\java\selenium\csharp\sharedassemblies',
+    [string[]]$shared_assemblies = @(
+      'AngleSharp.dll', # using .Net 4.5 assembly
+      'Newtonsoft.Json.dll',
+      'nunit.core.dll',
+      'nunit.core.interfaces.dll',
+      'nunit.framework.dll'
+      )
+  )
+
+  write-debug ('Loading "{0}" from ' -f ($shared_assemblies -join ',' ), $shared_assemblies_path)
+  pushd $shared_assemblies_path
+
+  $shared_assemblies | ForEach-Object {
+    $shared_assembly_filename = $_
+    if ( assembly_is_loaded -assembly_path ("${shared_assemblies_path}\\{0}" -f $shared_assembly_filename)) {
+      write-debug ('Skipping from  assembly "{0}"' -f $shared_assembly_filename)
+     } else {
+      write-debug ('Loading assembly "{0}" ' -f $shared_assembly_filename)
+      Unblock-File -Path $shared_assembly_filename;
+      Add-Type -Path $shared_assembly_filename
+    }
+  }
+  popd
+}
+
+load_shared_assemblies
+
+<#
+# NOTE: Add-Type : Cannot bind argument to parameter 'TypeDefinition' because it is an empty string.
+#>
+
+Add-Type -TypeDefinition @'
+using System;
+using AngleSharp;
+// using AngleSharp.Html.Parser;
+// Add-Type : c:\Users\Serguei\AppData\Local\Temp\nbgafdpu.0.cs(3) : The type or namespace name 'Parser' does not exist in the namespace 'AngleSharp.Html' (areyou missing an assembly reference?)
+public class AngleSharpFirstStepClass {
+	public static async void Main(){
+		var config = Configuration.Default;
+		var context = BrowsingContext.New(config);
+		var source = "<h1>Some example source</h1><p>This is a paragraph element";
+		var document = await context.OpenAsync(req => req.Content(source));
+		Console.WriteLine("Serializing the (original) document:");
+		Console.WriteLine(document.DocumentElement.OuterHtml);
+
+		var p = document.CreateElement("p");
+		p.TextContent = "This is another paragraph.";
+
+		Console.WriteLine("Inserting another element in the body ...");
+		document.Body.AppendChild(p);
+
+		Console.WriteLine("Serializing the document again:");
+		Console.WriteLine(document.DocumentElement.OuterHtml);
+	}
+}
+'@  -ReferencedAssemblies "${shared_assemblies_path}\AngleSharp.dll","${shared_assemblies_path}\nunit.framework.dll",'System.dll','System.Data.dll','Microsoft.CSharp.dll','System.Xml.Linq.dll','System.Xml.dll'
+
+[AngleSharpFirstStepClass]::Main()
 [String]$data = @'
 <html lang=en>
 <meta charset=utf-8>
