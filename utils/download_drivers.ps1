@@ -323,6 +323,9 @@ $download_url = ('{0}{1}' -f $url, $o.'ListBucketResult'.'Contents'[0].'Key')
 # 836478
 
 # edge
+# TODO: select relevant version to prevent the error:
+# This version of MicrosoftWebDriver.exe is not compatible with the installed version of Windows 10.
+
 
 pushd 'HKLM:/'
 cd 'SOFTWARE/Microsoft/Windows NT/CurrentVersion'
