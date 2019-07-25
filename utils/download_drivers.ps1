@@ -74,6 +74,7 @@ $contents_element = $_
     $download_url = ('{0}{1}'-f $base_url, $key )
     if ($key -match '\b(?<version>[0-9]+\.[0-9]+)\b' ){
       $version = $matches['version']
+      # TODO: support build
       $version_key = 0 + ($version -replace '.(\d)', '000$1')
       # write-output $version
       # write-output $download_url
@@ -125,7 +126,7 @@ $html.IHTMLDocument2_write( $content )
 
 $document =  $html.documentElement
 
-$nodes = $document.getelementsByClassName('release-title')
+$nodes = $document.getElementsByClassName('release-title')
 
 $html2   = New-Object -ComObject 'HTMLFile'
 
@@ -261,6 +262,11 @@ $document =  $html.documentElement
 
 
 # IEDriverServer better way
+
+# NOTE: releases of several products:
+# selenium-standalone, selenium-server, selenium-java, selenium-dotnet and IEDriverServer
+# are all described in https://selenium-release.storage.googleapis.com/
+
 $url = 'https://selenium-release.storage.googleapis.com/'
 $cnt = get-random -maximum 100 -minimum 1
 $tmp_file = "${env:TEMP}/a${cnt}.html"
@@ -271,12 +277,12 @@ if ($debugPReference -eq 'continue'){
 }
 
 $o = [xml]$content
-
+# see also https://www.petri.com/search-xml-files-powershell-using-select-xml
 $contents = $o.'ListBucketResult'.'Contents'
 $releases = @{}
 $contents |
 foreach-object {
-$contents_element = $_
+  $contents_element = $_
   if ($debugPReference -eq 'continue'){
     $contents_element | select-object -property *
   }
@@ -351,7 +357,7 @@ $html.IHTMLDocument2_write( $content )
 
 $document =  $html.documentElement
 
-$nodes = $document.getelementsByClassName('driver-download')
+$nodes = $document.getElementsByClassName('driver-download')
 
 $html2   = New-Object -ComObject 'HTMLFile'
 <#
