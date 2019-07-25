@@ -92,6 +92,10 @@ function launch_selenium {
     [switch]$headless,
     [int]$version,
     [string]$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies',
+    # Flat directory seems a better choice for Selenium dlls
+    # than a subfolder-heavy C:\Windows\System32\WindowsPowerShell\v1.0\Modules
+    # or ${env:LOCALAPPDATA}\Microsoft\Windows\PowerShell
+    # ${env:USERPROFILE}\Downloads is popular alternative
     [string[]]$shared_assemblies = @(
       'WebDriver.dll',
       'WebDriver.Support.dll',
