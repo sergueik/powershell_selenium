@@ -205,9 +205,13 @@ $propertyType = 'Dword'
 change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
 write-host -ForegroundColor 'green' @"
-This allows passing basic auth username and password through url'.
+This allows passing basic auth username and password through url
 "@
+# for current user
+$hive = 'HKCU:'
+# for all users
 $hive = 'HKLM:'
+# see also: http://forum.oszone.net/thread-339116.html (in Russian), listing them in the opposite order, probably by mistake
 $path = '/SOFTWARE/Microsoft/Internet Explorer/Main/FeatureControl/FEATURE_HTTP_USERNAME_PASSWORD_DISABLE'
 $name = 'iexplore.exe'
 $value = '0'
@@ -283,9 +287,9 @@ $propertyType = 'String'
 # leads to change of the dialog
 change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
-write-host -ForegroundColor 'green' @"
-This call turns off 'Popup Blocker'.
-"@
+write-host -ForegroundColor 'green' @'
+This call turns off Popup Blocker
+'@
 
 # NOTE: The registry 'HKCU:\Software\Microsoft\Internet Explorer\New Windows' does not exist for IE 8
 $hive = 'HKCU:'
@@ -308,9 +312,9 @@ if ($setting -ne $null) {
 popd
 
 
-write-host -ForegroundColor 'green' @"
+write-host -ForegroundColor 'green' @'
 This call Enalbes full SSL / TLS  support
-"@
+'@
 $settings = @{
 
   'all' = 2728;
@@ -343,9 +347,9 @@ $value = $download_directory
 change_registry_setting -hive $hive -name $name -path $path -value $value -PropertyType 'String'
 
 # http://www.sevenforums.com/tutorials/271795-internet-explorer-notify-when-downloads-complete-turn-off.html?filter=&#91;2]=Networking%20Internet
-write-host -ForegroundColor 'green' @"
+write-host -ForegroundColor 'green' @'
 This call suppresses IE download notifications
-"@
+'@
 
 $hive = 'HKCU:'
 $path = '/SOFTWARE/Microsoft/Internet Explorer/Main'
@@ -353,10 +357,10 @@ $name = 'NotifyDownloadComplete'
 $value = 'no'
 change_registry_setting -hive $hive -name $name -path $path -value $value -PropertyType 'String'
 
-write-host -ForegroundColor 'green' @"
+write-host -ForegroundColor 'green' @'
 This call applies misc. settings from
 https://github.com/conceptsandtraining/modernie_selenium
-"@
+'@
 # IE11-only, on 64 bit Windows need to also handle
 # $path = '/SOFTWARE/Wow6432Node/Microsoft/Internet Explorer/Main/FeatureControl/FEATURE_BFCACHE'
 # see also https://automated-testing.info/t/internet-explorer-ne-mozhet-najti-element-na-stranicze/21972/8 (in Russian)
@@ -408,11 +412,11 @@ $value = '8192' # 0x2000
 $propertyType = 'Dword'
 change_registry_setting -hive $hive -name $name -path $path -value $value -propertytype $propertyType
 
-write-host -ForegroundColor 'green' @"
+write-host -ForegroundColor 'green' @'
 This sets IE9 Zoom factor
-"@
+'@
 
-# origin: https://support.microsoft.com/en-us/help/2689447/how-to-set-the-zoom-level-in-internet-explorer-9 
+# origin: https://support.microsoft.com/en-us/help/2689447/how-to-set-the-zoom-level-in-internet-explorer-9
 # NOTE: the registry setting is still present with later versions of IE. May have no effect though
 $path = '/SOFTWARE/Microsoft/Internet Explorer/Zoom'
 $hive = 'HKCU:'
@@ -425,9 +429,9 @@ change_registry_setting -hive $hive -name $name -path $path -value $value -prope
 # > "ResetTextSizeOnStartup"=dword:00000000
 # > "ResetZoomOnStartup2"=dword:00000001
 
-write-host -ForegroundColor 'green' @"
+write-host -ForegroundColor 'green' @'
 This resets zoom level for new windows and tabs
-"@
+'@
 $path = '/SOFTWARE/Microsoft/Internet Explorer/AdvancedOptions/ACCESSIBILITY/ZOOMLEVEL'
 $hive = 'HKLM:'
 $name = 'CheckedValue'
@@ -514,3 +518,4 @@ HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Internet Explorer\AdvancedOptions\ACCESSIB
 #
 # 7000 (0x1B58)
 # Webpages containing standards-based !DOCTYPE directives are displayed in IE7 Standards mode.
+
