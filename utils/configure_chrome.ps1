@@ -11,9 +11,14 @@ $po = get-content -Path $po_filepath | convertfrom-json
 
 # TODO: handle 'null' 
 if(-not $po.download.default_directory) {
-  Add-Member -inputObject $po.download -NotePropertyName 'default_directory' -NotePropertyValue $download
+  add-member -inputObject $po.download -NotePropertyName 'default_directory' -NotePropertyValue $download
 } else {
   $po.download.default_directory = $download
 }
+if(-not $po.savefile.default_directory) {
+  add-member -inputObject $po.savefile -NotePropertyName 'default_directory' -NotePropertyValue $download
+} else {
+  $po.savefile.default_directory = $download
+}
 
-convertto-json -InputObject $po -Compress | set-content -Path $po_filepath
+convertto-json -InputObject $po -Compress -Depth 10 | set-content -Path $po_filepath
