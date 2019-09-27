@@ -2,6 +2,8 @@
 using System.Text;
 using NUnit.Framework;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Interactions;
+using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.IE;
 using OpenQA.Selenium.Edge;
@@ -103,5 +105,33 @@ namespace Protractor.Test
 			Assert.AreEqual(false, ngDriver.TestForAngular());
 			ngDriver.IgnoreSynchronization = false;
 		}
-	}
+	
+		[Test]
+		public void ShouldExerciseCustomWaitMethod()
+		{
+			WaitInDomElement(By.TagName("div"));
+		}
+	public void WaitInDomElement(By by) {
+        var wait = new WebDriverWait(driver, TimeSpan.FromMilliseconds(60)){
+                PollingInterval = TimeSpan.FromMilliseconds(500),
+        };
+
+        wait.Until(d =>
+            {
+                try
+                {
+                    d.FindElement(by);
+                    return true;
+                }
+                catch (NoSuchElementException)
+                {
+                    return false;
+                }
+                catch (StaleElementReferenceException)
+                {
+                    return false;
+                }
+            });
+        }
+	}	
 }
