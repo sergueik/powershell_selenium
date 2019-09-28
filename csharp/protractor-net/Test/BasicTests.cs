@@ -8,11 +8,9 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.IE;
 using OpenQA.Selenium.Edge;
 
-namespace Protractor.Test
-{
+namespace Protractor.Test {
 	[TestFixture]
-	public class BasicTests
-	{
+	public class BasicTests {
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
 		private NgWebDriver ngDriver;
@@ -20,8 +18,7 @@ namespace Protractor.Test
 		private String base_url = "http://www.angularjs.org";
 		
 		[SetUp]
-		public void SetUp()
-		{
+		public void SetUp() {
 			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
 			
 			// Using NuGet Package 'WebDriver.ChromeDriver.win32'
@@ -48,8 +45,7 @@ namespace Protractor.Test
 		}
 
 		[TearDown]
-		public void TearDown()
-		{
+		public void TearDown() {
 			try {
 				driver.Quit();
 			} catch (Exception) {
@@ -58,15 +54,13 @@ namespace Protractor.Test
 		}
 
 		[Test]
-		public void ShouldWaitForAngular()
-		{
+		public void ShouldWaitForAngular() {
 			IWebElement element = ngDriver.FindElement(NgBy.Model("yourName"));
 			Assert.IsTrue(((NgWebElement)element).Displayed);
 		}
 
 		[Test]
-		public void ShouldSetLocation()
-		{
+		public void ShouldSetLocation() {
 			String loc = "misc/faq";
 			NgNavigation nav = new NgNavigation(ngDriver, ngDriver.Navigate());
 			nav.SetLocation(null, loc);
@@ -75,29 +69,25 @@ namespace Protractor.Test
 
 		// NOTE: Test passes when run alone, but randomly fails when run as a group
 		[Test]
-		public void ShouldGreetUsingBinding()
-		{
+		public void ShouldGreetUsingBinding() {
 			ngDriver.FindElement(NgBy.Model("yourName")).SendKeys("Julie");
 			Assert.AreEqual("Hello Julie!", ngDriver.FindElement(NgBy.Binding("yourName")).Text);
 		}
 		
 		[Test]
-		public void ShouldTestForAngular()
-		{
+		public void ShouldTestForAngular() {
 			Assert.AreEqual(true, ngDriver.TestForAngular());
 		}
 		
 		[Test]
-		public void ShouldListTodos()
-		{
+		public void ShouldListTodos() {
 			var elements = ngDriver.FindElements(NgBy.Repeater("todo in todoList.todos"));
 			Assert.AreEqual("build an AngularJS app", elements[1].Text);
 			Assert.AreEqual(false, elements[1].Evaluate("todo.done"));
 		}
 
 		[Test]
-		public void ShouldDetectNonAngularPage()
-		{
+		public void ShouldDetectNonAngularPage() {
 			ngDriver.IgnoreSynchronization = true;
 			Assert.DoesNotThrow(() => {
 				ngDriver.Navigate().GoToUrl("http://www.google.com");
@@ -107,31 +97,29 @@ namespace Protractor.Test
 		}
 	
 		[Test]
-		public void ShouldExerciseCustomWaitMethod()
-		{
+		public void ShouldExerciseCustomWaitMethod() {
 			WaitInDomElement(By.TagName("div"));
 		}
-	public void WaitInDomElement(By by) {
-        var wait = new WebDriverWait(driver, TimeSpan.FromMilliseconds(60)){
-                PollingInterval = TimeSpan.FromMilliseconds(500),
-        };
 
-        wait.Until(d =>
-            {
-                try
-                {
-                    d.FindElement(by);
-                    return true;
-                }
-                catch (NoSuchElementException)
-                {
-                    return false;
-                }
-                catch (StaleElementReferenceException)
-                {
-                    return false;
-                }
+		// NOTE: cannot use with NgBy: 
+		// first, NgBy is a static class (can remove static attribute), 
+		// and "The best overloaded method match for 
+		// 'OpenQA.Selenium.ISearchContext.FindElement(OpenQA.Selenium.By)' has some invalid arguments (CS1502)" 
+		public void WaitInDomElement(By by) {
+    	    var wait = new WebDriverWait(driver, TimeSpan.FromMilliseconds(60)){
+                PollingInterval = TimeSpan.FromMilliseconds(500),
+        	};
+
+	        wait.Until(d => {
+	                try {
+	                    d.FindElement(by);
+	                    return true;
+	                } catch (NoSuchElementException) {
+	                    return false;
+	                } catch (StaleElementReferenceException) {
+	                    return false;
+	                }
             });
         }
-	}	
+	}
 }
