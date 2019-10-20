@@ -1,4 +1,4 @@
-#Copyright (c) 2016,2019 Serguei Kouzmine
+#Copyright (c) 2019 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -26,13 +26,11 @@
 
 param(
   [string]$browser = 'firefox',
-  # default is to show.
-  # NOTE: need to fix chrome from opening maximized
-  [string]$base_url = 'http://httpbin.org',
-  [string]$username,
-  [string]$password,
+  # TODO: fix chrome from opening maximized when run without the grid
+  [string]$base_url = 'http://stackoverflow.com/',
   [switch]$grid,
-  # TODO: default value for a switch type
+  [int]$num_tabs = 2,
+  # TODO:  find compatible versions of chrome browser, Selenium driver
   [switch]$debug,
   [switch]$pause
 )
@@ -61,44 +59,57 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
   Start-Sleep -Millisecond 500
 }
 
+# based on: https://github.com/adamdriscoll/selenium-powershell/blob/master/Selenium.psm1
+function map_keys {
+ [OpenQA.Selenium.Keys] |
+ get-member -MemberType Property -Static |
+ select-object -property Name, @{N = "ObjectString"; E = { "[OpenQA.Selenium.Keys]::$($_.Name)" } }
+}
+
+function send_keys {
+  param(
+  # [OpenQA.Selenium.IWebElement]$element,
+    [System.Management.Automation.PSReference]$element_ref,
+    [string]$message
+  )
+  [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
+  # NOTE: which is Powershell version needed for that DSL?
+  foreach ($Key in @(map_keys).Name) {
+    $message = $message -replace "{{$Key}}", [OpenQA.Selenium.Keys]::$Key
+  }
+  $local:element.SendKeys($message)
+}
+
+
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
 # no about:blank for chrome
-$selenium.Navigate().GoToUrl('http://www.google.com')
+$selenium.Navigate().GoToUrl($base_url)
+
 start-sleep -millisecond 1000
-[object]$body = find_element -tag_name 'body'
+# [object]$logo = find_element2 -selector 'css_selector' -value 'a.-logo'
+[OpenQA.Selenium.IWebElement]$logo = find_element2 -selector 'css_selector' -value 'a.-logo'
+write-output ('located: {0}'-f $logo.getAttribute('outerHTML'))
+highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$logo) -delay 1500 -color 'red'
 
-Write-Output '--'
-$body
-Write-Output '--'
-$urls = @()
-
-$username_urlencoded = [System.Uri]::EscapeDataString($username)
-$password_urlencoded = [System.Uri]::EscapeDataString($password)
-
-@( 0..5) | ForEach-Object {
+@( 0..($num_tabs-1)) | ForEach-Object {
   $count = $_
-  $username = 'testuser'
-  $password = ('password_{0}' -f $count)
-  $url = ('{0}/basic-auth/{1}/{2}' -f ($base_url -replace 'https?:\/\/',('https://{0}:{1}@' -f $username,$password)),$username,$password)
-  Write-Output $url
-  $urls += $url
-}
-
-@( 0..($urls.Count - 2)) | ForEach-Object {
   write-output 'Opening new tab'
-  $body.SendKeys([OpenQA.Selenium.Keys]::Control + 't')
+  # send_keys -element $logo -message '{{Control}}{{Return}}'
+  send_keys -element_ref ([ref]$logo) -message '{{Control}}{{Return}}'
+  Write-Output $count
 }
 
 
 $initial_window_handle = $selenium.CurrentWindowHandle
 
 write-output ("CurrentWindowHandle = {0}`n" -f $initial_window_handle)
-
+write-output ('Anothet tab: {0}' -f $selenium.WindowHandles[2])
 $handles = @()
 try {
   $handles = $selenium.WindowHandles
-  $handles | format-list # NOTE: only shows one window handle
+  $handles | format-list
+
   write-output ('number of tabs: {0}' -f ($handles.count))
 } catch [exception]{
   write-output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
