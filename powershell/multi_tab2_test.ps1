@@ -100,12 +100,10 @@ highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$logo) -delay 1500 -
   Write-Output $count
 }
 
-
 $initial_window_handle = $selenium.CurrentWindowHandle
 
 write-output ("CurrentWindowHandle = {0}`n" -f $initial_window_handle)
-write-output ('Anothet tab: {0}' -f $selenium.WindowHandles[2])
-$handles = @()
+
 try {
   $handles = $selenium.WindowHandles
   $handles | format-list
@@ -114,6 +112,27 @@ try {
 } catch [exception]{
   write-output ("Exception : {0} ...`n" -f (($_.Exception.Message) -split "`n")[0])
 }
+
+
+@( 0..($num_tabs-1)) | ForEach-Object {
+  [object]$body = find_element -tag_name 'body'
+  send_keys -element_ref ([ref]$body) -message '{{Control}}{{Tab}}'
+  write-output ('Another tab: {0}' -f $selenium.CurrentWindowHandle )
+}
+
+@( 0..($num_tabs-1)) | ForEach-Object {
+  [object]$body = find_element -tag_name 'body'
+  send_keys -element_ref ([ref]$body) -message '{{Control}}{{Shift}}{{Tab}}'
+  write-output ('Another tab: {0}' -f $selenium.CurrentWindowHandle )
+}
+
+[void]$selenium.switchTo().window($initial_window_handle)
+[void]$selenium.switchTo().defaultContent()
+
+
+<#
+# This navigation does not work with WebDriver.dll 2.53.0 - assembly upgrade needed
+$handles = @()
 if ($handles.Count -gt 1) {
   $handle_cnt = 0
   $handles | ForEach-Object {
@@ -138,6 +157,7 @@ if ($handles.Count -gt 1) {
   [void]$selenium.switchTo().defaultContent()
 
 }
+#>
 
 custom_pause -fullstop $fullstop
 
