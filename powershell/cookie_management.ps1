@@ -159,7 +159,18 @@ for (var i = 0; i < cookies.length; i++) {
 # https://code.google.com/p/selenium/issues/detail?id=6511  
 
 [void]([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script)
+<#
+origin: https://gist.github.com/Jaykul/d16a390e36ec3ba54cd5e3f760cfb59e
 
+$response  = Invoke-WebRequest $url -SessionVariable jar
+$selenium.Manage().Cookies.AllCookies | Select-Object Name, Value, Domain, Secure | % { $jar.Cookies.Add([Net.Cookie]$_) }
+# https://msdn.microsoft.com/en-us/subscriptions/securejson/getallexportkeys?brand=msdn
+[xml](Microsoft.PowerShell.Utility\Invoke-WebRequest $url -WebSession $jar).Content
+
+# see also: https://github.com/adamdriscoll/selenium-powershell/blob/master/Selenium.psm1
+# for powershell function wrappers on ICookieJar API accessed through
+$selenium.Manage().Cookies method and [OpenQA.Selenium.Cookie] type
+#>
 # Cleanup
 if ($PSBoundParameters['pause']) {
 
