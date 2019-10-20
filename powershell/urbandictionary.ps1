@@ -167,6 +167,24 @@ while ($cnt_found -lt $cnt_to_find) {
       }
 
       [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+    <#
+      using this example testcase to exercise the newly added method
+      #>
+      $cssSelectorOfElement = cssSelectorOfElement -element_ref ([ref] $element2)
+      # NOTE:without the parenthesis, get formatting error:
+      # Locating for debugging by a#logo:nth-of-type(3)1
+      # Exception calling "FindElement" with "1" argument(s): "The given selector
+      # a#logo:nth-of-type(5)1 is either invalid or does not result in a WebElement.
+      # The following error occurred:
+      # InvalidSelectorError: An invalid or illegal selector was specified"
+      # The selector like div.someclass may needs an "nth-of-type"
+      # $css_selector2 = ('{0}:nth-of-type({1})' -f $cssSelectorOfElement, ($cnt + 1))
+      $css_selector2 = $cssSelectorOfElement 
+      write-output ('Locating for debugging by "{0}"' -f $css_selector2)
+      [OpenQA.Selenium.IWebElement]$element3 = find_element2 -selector 'css_selector' -value $css_selector2
+      write-output ('Located "{0}"' -f $element3.Text)
+      [OpenQA.Selenium.IWebElement]$element4 = find_element2 -selector 'link_text' -value $element3.Text
+      write-output ('Located "{0}"' -f $element4.Text)
 
       $actions.MoveToElement([OpenQA.Selenium.IWebElement]$element2).Build().Perform()
 

@@ -156,7 +156,7 @@ function xpathOfElement {
   Runs the javascript code through Selenium and returns the CSS path to the provided Selenium page element
 
 .EXAMPLE
-  $javascript_generated_css_selector_of_element = cssSelectorOfElement ([ref] $element)
+  $javascript_generated_css_selector_of_element = cssSelectorOfElement -element_ref ([ref] $element)
 
 .LINK
   # http://stackoverflow.com/questions/8343767/how-to-get-the-current-directory-of-the-cmdlet-being-executed	
@@ -543,19 +543,128 @@ function sleep(milliseconds) {
 #>
 
 
-
-
 <#
 .SYNOPSIS
   Finds element using specific method of finding : xpath, classname, css_selector etc.
 .DESCRIPTION
   Receives aither of the core Selenium locator strategies as named argument
+
 .EXAMPLE
+  $element = find_element2 -selector 'classname' -value $classname
+  $element = find_element2 -selector 'xpath' -value $xpath
+  $element = find_element2 -selector 'css_selector' -value $css_selector
+  $element = find_element2 -selector 'id' -value $id
+  $element = find_element2 -selector 'tagname' -value $tagsname
+  $element = find_element2 -selector 'link_text' -value $link_text
+  $element = find_element2 -selector 'partial_link_text' -value $partial_link_text
+
+.LINK
+
+.NOTES
+  VERSION HISTORY
+  2019/10/19 Initial Version
+
+  See also:
+  https://github.com/grock90/PSSelenium
+#>
+
+# Powershell version
+function find_element2{
+    param(
+      [Parameter(Mandatory=$true,
+                  ValueFromPipelineByPropertyName=$true)]
+      [Validateset('classname', 'xpath', 'css_selector', 'id', 'tagname', 'link_text', 'partial_link_text')]
+      $selector,
+      [ValidateNotNull()]
+      $value
+    )
+
+  $element = $null
+  $wait_seconds = 5
+  $wait_polling_interval = 50
+
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+  $wait.PollingInterval = $wait_polling_interval
+
+  switch ($selector)
+    {
+      'xpath'{
+        try {
+          [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($value)))
+        } catch [exception]{
+          write-debug ("Exception : {0} ...`nxpath='{1}'" -f (($_.Exception.Message) -split "`n")[0],$value)
+        }
+        $element = $selenium.FindElement([OpenQA.Selenium.By]::XPath($value))
+      }
+      'css_selector'{
+        try {
+          [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($value)))
+        } catch [exception]{
+          write-debug ("Exception : {0} ...`ncss_selector='{1}'" -f (($_.Exception.Message) -split "`n")[0],$value)
+        }
+        $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($value))
+      }
+
+      'link_text'{
+        try {
+          [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::LinkText($value)))
+        } catch [exception]{
+          write-debug ("Exception : {0} ...`nlink_te='{1}'" -f (($_.Exception.Message) -split "`n")[0],$value)
+        }
+        $element = $selenium.FindElement([OpenQA.Selenium.By]::LinkText($value))
+      }
+      'id'{
+        try {
+          [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id($value)))
+        } catch [exception]{
+          write-debug ("Exception : {0} ...`nid='{1}'" -f (($_.Exception.Message) -split "`n")[0], $value)
+        }
+        $element = $selenium.FindElement([OpenQA.Selenium.By]::Id($value))
+      }
+
+      'tag_name'{
+        try {
+          [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::TagName($value)))
+        } catch [exception]{
+          write-debug ("Exception : {0} ...`ntag_name='{1}'" -f (($_.Exception.Message) -split "`n")[0],$value)
+        }
+        $element = $selenium.FindElement([OpenQA.Selenium.By]::TagName($value))
+      }
+      'classname'{
+        try {
+          [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName($value)))
+
+        } catch [exception]{
+          write-debug ("Exception : {0} ...`nclassname='{1}'" -f (($_.Exception.Message) -split "`n")[0], $value)
+        }
+        $element = $selenium.FindElement([OpenQA.Selenium.By]::ClassName($value))
+      }
+      'partial_link_text'{
+        try {
+          [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::PartialLinkText($value)))
+        } catch [exception]{
+          write-debug ("Exception : {0} ...`npartial_link_text='{1}'" -f (($_.Exception.Message) -split "`n")[0],$value)
+        }
+        $element = $selenium.FindElement([OpenQA.Selenium.By]::PartialLinkText($value))
+      }
+    }
+
+  return $element
+}
+<#
+.SYNOPSIS
+  Finds element using specific method of finding : xpath, classname, css_selector etc.
+.DESCRIPTION
+  Receives aither of the core Selenium locator strategies as named argument
+
+.EXAMPLE
+  $element = find_element -xpath $xpath
   $element = find_element -classname $classname
   $element = find_element -css_selector $css_selector
   $element = find_element -id $id
   $element = find_element -tagname $tagsname
   $element = find_element -link_text $link_text
+  $element = find_element -partial_link_text $partial_link_text
 
 .LINK
   # https://chromium.googlesource.com/chromium/blink/+/master/Source/devtools/front_end/components/DOMPresentationUtils.js
@@ -567,7 +676,6 @@ function sleep(milliseconds) {
   2015/07/03 Initial Version
   2015/09/20 Removed old versions
   2018/07/22 Upated documentation
-
 #>
 
 function find_element {
@@ -595,19 +703,15 @@ function find_element {
 
   $implemented.Keys | ForEach-Object { $option = $_
     if ($psBoundParameters.ContainsKey($option)) {
-
       if (-not $implemented_options[$option]) {
-
         Write-Output ('Option {0} i not implemented' -f $option)
-
       } else {
         # will find
-
       }
     }
   }
   if ($false) {
-    Write-Output @psBoundParameters | Format-Table -AutoSize
+    write-output @psBoundParameters | Format-Table -AutoSize
   }
   $element = $null
   $wait_seconds = 5
@@ -624,22 +728,16 @@ function find_element {
       write-debug ("Exception : {0} ...`ncss_selector='{1}'" -f (($_.Exception.Message) -split "`n")[0],$css_selector)
     }
     $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-
-
   }
 
 
   if ($xpath -ne $null) {
-
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::XPath($xpath)))
     } catch [exception]{
       write-debug ("Exception : {0} ...`nxpath='{1}'" -f (($_.Exception.Message) -split "`n")[0],$xpath)
     }
-
     $element = $selenium.FindElement([OpenQA.Selenium.By]::XPath($xpath))
-
-
   }
 
   if ($link_text -ne $null) {
@@ -655,7 +753,6 @@ function find_element {
   if ($tag_name -ne $null) {
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::TagName($tag_name)))
-
     } catch [exception]{
       write-debug ("Exception : {0} ...`ntag_name='{1}'" -f (($_.Exception.Message) -split "`n")[0],$tag_name)
     }
@@ -665,7 +762,6 @@ function find_element {
   if ($partial_link_text -ne $null) {
     try {
       [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::PartialLinkText($partial_link_text)))
-
     } catch [exception]{
       write-debug ("Exception : {0} ...`npartial_link_text='{1}'" -f (($_.Exception.Message) -split "`n")[0],$partial_link_text)
     }
