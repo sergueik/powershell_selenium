@@ -1,3 +1,7 @@
+param(
+  [String]$name = 'svchost'
+)
+
 # origin: https://stackoverflow.com/questions/40495248/create-hashtable-from-json
 function parse_json_helper{
   param (
@@ -33,10 +37,12 @@ function collection_processing_function {
     [int]$threshold
   )
   $data = convertFrom-json -InputObject $json <# -Hashtable parameter was introduced in PowerShell 6.2 #>
-
+  if ($DebugPreference -eq 'Continue'){
+    format-list -inputObject $data 
+  }
   # the $data here is unpleasant MS-own pscustomobject type
   $data = @{}
-  (convertFrom-json -InputObject $json  <# -Depth parameter is unavailable prior PowerShell 6.2 #> ).psobject.properties |
+  (convertFrom-json -InputObject $json <# -Depth parameter is not available prior to version 6.2 PowerShell #> ).psobject.properties |
     foreach-object {
       $data[$_.Name] = $_.Value
     }
@@ -54,7 +60,11 @@ function collection_processing_function {
       }
     }
 }
-$name = 'vivaldi'; $data = @{ } ; get-process -Name $name | foreach-object {
+
+# NOTE: on Windows 7, extracting the CPU information require running the script with adminisntrator privilege 
+# get-process -Name 'svchost' | select-object -first  1 | select-object -property *
+
+$data = @{ } ; get-process -Name $name | foreach-object {
   # using pid as a key. The convertTo-json only supports  string keys
   # convertTo-json : The type 'System.Collections.Hashtable' is not supported for serialization or deserialization of a dictionary. Keys must be strings.
   $it = $_;
@@ -65,7 +75,8 @@ $name = 'vivaldi'; $data = @{ } ; get-process -Name $name | foreach-object {
   }
 };
 $process_list = convertTo-json -inputobject $data| out-string;
-collection_processing_function $process_list 13
+
+write-output 'Pure Powershel parse JSON test'
+collection_processing_function $process_list 2
+write-output 'Parse JSON helper test'
 parse_json_helper -json $process_list
-
-
