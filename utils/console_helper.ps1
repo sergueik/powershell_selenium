@@ -25,12 +25,16 @@ powershell.exe -executionpolicy bypass -file console_helper.ps1 -enable
 param(
   [switch]$enable
 )
-
+# based on:
+# http://forum.oszone.net/thread-325464.html
+# purpose: disable or enable simple mouse click-to-select to prevent interruptions
+# of a lengthy batch process running in the console window, with the mouse click
+#
+# See also:
+# https://www.pinvoke.net/default.aspx/kernel32.setconsolemode
+# https://www.pinvoke.net/default.aspx/kernel32.getconsolemode
+# https://www.pinvoke.net/default.aspx/kernel32/GetStdHandle.html
 Add-Type -Language 'VisualBasic' -TypeDefinition @'
-' based on:
-' http://forum.oszone.net/thread-325464.html
-' purpose: dis/enable simple mouse click-to-select that may pause the console window
-' that may be busy running a lengthy batch process
 
 Imports System
 Public Class Helper
@@ -40,7 +44,26 @@ Public Class Helper
   Declare Function SetConsoleMode Lib "kernel32" (ByVal hConsoleHandle As Integer, ByVal dwMode As Integer) As Integer
 
   Public Const STD_INPUT_HANDLE As Integer = -10&
+  Public Const STD_OUTPUT_HANDLE As Integer = -11&
+  Public Const STD_ERROR_HANDLE As Integer = -12&
+  
+  Public Enum ConsoleModes
+    ' 55 /* Console Mode flags */
+    ENABLE_PROCESSED_INPUT = &H1
+    ENABLE_LINE_INPUT = &H2
+    ENABLE_ECHO_INPUT = &H4
+    ENABLE_WINDOW_INPUT = &H8
+    ENABLE_MOUSE_INPUT = &H10
+    ENABLE_INSERT_MODE = &H20
+    ENABLE_QUICK_EDIT_MODE = &H40
+    ENABLE_EXTENDED_FLAGS = &H80
+    ENABLE_AUTO_POSITION = &H100
 
+    ENABLE_PROCESSED_OUTPUT = &H1s
+    ENABLE_WRAP_AT_EOL_OUTPUT = &H2
+
+  End Enum
+  
   Sub ModifyConsoleMode(ByVal allowMouseSelection As Boolean)
     Dim hConsole As Integer
     Dim iMode As Integer
@@ -49,9 +72,9 @@ Public Class Helper
     hConsole = GetStdHandle(STD_INPUT_HANDLE)
     bSuccess = GetConsoleMode(hConsole, iMode)
     If allowMouseSelection = True Then
-      bSuccess = SetConsoleMode(hConsole, iMode Or &H40)
+      bSuccess = SetConsoleMode(hConsole, iMode Or ConsoleModes.ENABLE_QUICK_EDIT_MODE Or ConsoleModes.ENABLE_EXTENDED_FLAGS)
     Else
-      bSuccess = SetConsoleMode(hConsole, iMode And Not &H40)
+      bSuccess = SetConsoleMode(hConsole, iMode And Not ConsoleModes.ENABLE_QUICK_EDIT_MODE And Not ConsoleModes.ENABLE_EXTENDED_FLAGS)
     End If
 
   End Sub
@@ -93,4 +116,5 @@ Module mainModule
 End Module
 '@
 #>
+
 
