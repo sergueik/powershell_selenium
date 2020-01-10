@@ -28,7 +28,7 @@ namespace ShadowDriver.Test {
 	public class LocalFileTests {
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
-		private NgWebDriver ngDriver;
+		private ShadowWebDriver shadowDriver;
 		private WebDriverWait wait;
 		private Actions actions;
 		private bool headless = true;

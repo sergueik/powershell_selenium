@@ -68,12 +68,10 @@
   <ItemGroup>
     <Compile Include="FindsByAttributes.cs" />
     <Compile Include="JavaScriptBy.cs" />
-    <Compile Include="NgBy.cs" />
-    <Compile Include="NgNavigation.cs" />
-    <Compile Include="NgWebDriver.cs" />
+    <Compile Include="ShadowBy.cs" />
+    <Compile Include="ShadowWebDriver.cs" />
     <Compile Include="ClientSideScripts.cs" />
-    <Compile Include="NgModule.cs" />
-    <Compile Include="NgWebElement.cs" />
+    <Compile Include="ShadowWebElement.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -82,7 +80,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <PropertyGroup>
-	  <PreBuildEvent>sc.exe query Winmgmt | findstr RUNNING &gt; NUL 2&gt;NUL
+    <PreBuildEvent>sc.exe query Winmgmt | findstr RUNNING &gt; NUL 2&gt;NUL
 if ERRORLEVEL 1 goto :EOF
 		  tasklist.exe /FI "IMAGENAME EQ chromedriver.exe" | findstr /i chromedriver.exe &gt; NUL 2&gt;NUL
 if ERRORLEVEL 1 goto :NEXT1
@@ -95,7 +93,7 @@ taskkill.exe /F /IM geckodriver.exe &gt; NUL 2&gt;NUL
 exit 0
 </PreBuildEvent>
   </PropertyGroup>
-<PropertyGroup>
+  <PropertyGroup>
     <PostBuildEvent>
     </PostBuildEvent>
   </PropertyGroup>

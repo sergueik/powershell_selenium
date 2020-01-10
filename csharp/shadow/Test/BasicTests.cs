@@ -13,7 +13,7 @@ namespace ShadowDriver.Test {
 	public class BasicTests {
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
-		private NgWebDriver ngDriver;
+		private ShadowWebDriver shadowDriver;
 		private bool headless = false;
 		private String base_url = "https://www.virustotal.com";
 		
@@ -40,8 +40,8 @@ namespace ShadowDriver.Test {
 			// Required for TestForAngular and WaitForAngular scripts
             driver.Manage().Timeouts().AsynchronousJavaScript =  TimeSpan.FromSeconds(5);
 			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
-			ngDriver = new NgWebDriver(driver);
-			ngDriver.Navigate().GoToUrl(base_url);
+			shadowDriver = new ShadowWebDriver(driver);
+			shadowDriver.Navigate().GoToUrl(base_url);
 		}
 
 		[TearDown]
@@ -56,8 +56,8 @@ namespace ShadowDriver.Test {
 		[Test]
 		public void ShouldFindShadowElements() {
 			string urlLocator = "*[data-route='url']";
-			IWebElement element = ngDriver.FindElement(By.CssSelector(urlLocator));
-			var elements = ngDriver.FindElements(NgBy.ShadowDOMPath(urlLocator, "#wrapperLink"));
+			IWebElement element = shadowDriver.FindElement(By.CssSelector(urlLocator));
+			var elements = shadowDriver.FindElements(ShadowBy.ShadowDOMPath(urlLocator, "#wrapperLink"));
 			Assert.Greater(elements.Count, 0);
 		}
 

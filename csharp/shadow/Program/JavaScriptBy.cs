@@ -7,59 +7,25 @@ using OpenQA.Selenium.Internal;
 
 namespace ShadowDriver
 {
-	/// <summary>
-	/// Provides a mechanism by which to find elements within a document using JavaScript.
-	/// </summary>
 	public class JavaScriptBy : By
 	{
 		private string script;
 		private object[] args;
 
-		/// <summary>
-		/// Creates a new instance of <see cref="JavaScriptBy"/>.
-		/// </summary>
-		/// <param name="script">
-		/// The JavaScript code to execute.
-		/// </param>
-		/// <param name="args">
-		/// The arguments to the script.
-		/// </param>
 		public JavaScriptBy(string script, params object[] args)
 		{
 			this.script = script;
 			this.args = args;
 		}
 
-		/// <summary>
-		/// Element that uniquely identifies the node housing the ShadowDriver ng-app <see cref="ClientSideScripts" />
-		/// </summary>
 		public IWebElement RootElement { get; set; }
 
-		/// <summary>
-		/// Find a single element matching the criteria.
-		/// </summary>
-		/// <param name="context">
-		/// An <see cref="ISearchContext"/> object to use to search for the elements.
-		/// </param>
-		/// <returns>
-		/// The first matching <see cref="IWebElement"/> on the current context.
-		/// </returns>
 		public override IWebElement FindElement(ISearchContext context)
 		{
 			ReadOnlyCollection<IWebElement> elements = this.FindElements(context);
 			return elements.Count > 0 ? elements[0] : null;
 		}
 
-		/// <summary>
-		/// Finds all elements matching the criteria.
-		/// </summary>
-		/// <param name="context">
-		/// An <see cref="ISearchContext"/> object to use to search for the elements.
-		/// </param>
-		/// <returns>
-		/// A collection of all <see cref="OpenQA.Selenium.IWebElement"/> matching the current criteria,
-		/// or an empty list if nothing matches.
-		/// </returns>
 		public override ReadOnlyCollection<IWebElement> FindElements(ISearchContext context)
 		{
 			// Create script arguments
