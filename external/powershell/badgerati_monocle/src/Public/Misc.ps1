@@ -98,6 +98,38 @@ function Get-MonocleHtml
     $content | Out-File -FilePath $FilePath -Force | Out-Null
 }
 
+function Start-MonocleSleepUntilPresentElement
+{
+    [CmdletBinding()]
+    param (
+      [String]$selector = 'text'
+    )
+
+    $count = 0
+    $timeout = Get-MonocleTimeout
+
+    $script = @'
+
+// Wait block
+var _await = function(_selector){
+    var element= document.getElementById(_selector);
+    if (typeof element== 'undefined' || element== null){
+        setTimeout(function() {
+            _await(_selector);
+        }, 1000);
+    }
+}
+var _selector = arguments[0];
+_await(_selector);
+// Exception calling "ExecuteScript" with "2" argument(s): "javascript error: Unexpected reserved word
+return(true);
+'@    
+    Invoke-MonocleJavaScript -Script $script -arguments @($selector)
+    # TODO: meaningful message
+    # Write-MonocleHost -Message "Browser busy for $count seconds(s)"
+}
+
+
 function Invoke-MonocleJavaScript
 {
     [CmdletBinding()]
