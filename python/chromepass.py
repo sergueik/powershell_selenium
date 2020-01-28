@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# origin https://github.com/hassaanaliw/chromepass/blob/master/chromepass.py
+# base on: https://github.com/hassaanaliw/chromepass/blob/master/chromepass.py
+# see also: https://github.com/darkarp/chromepass
 
 import os
 import sys
-import sqlite3 # sqlite is part of the standard library, and does not need installing
+import sqlite3
 import csv
 import json
 import argparse
 
 try:
-    import win32crypt
+    import win32crypt  # python -m pip install pywin32
 except:
     pass
-
-
 
 def args_parser():
 
@@ -22,28 +21,32 @@ def args_parser():
         description='Retrieve Google Chrome Passwords')
     parser.add_argument('-o', '--output', choices=['csv', 'json'],
                         help='Output passwords to [ CSV | JSON ] format.')
+    parser.add_argument('-b', '--browser', choices=['vivaldi', 'chrome', 'none'],
+                        help='Browser ("chrome" is default).')
     parser.add_argument(
         '-d', '--dump', help='Dump passwords to stdout. ', action='store_true')
-
+    browser = 'chrome'
     args = parser.parse_args()
+    if args.browser != None:
+        browser = args.browser
     if args.dump:
-        for data in main():
+        for data in main(browser):
             print(data)
     if args.output == 'csv':
-        output_csv(main())
+        output_csv(main(browser))
         return
 
     if args.output == 'json':
-        output_json(main())
+        output_json(main(browser))
         return
 
     else:
         parser.print_help()
 
 
-def main():
+def main(app = None):
     info_list = []
-    path = getpath()
+    path = getpath(app)
     try:
         connection = sqlite3.connect(path + 'Login Data')
         with connection:
@@ -60,7 +63,7 @@ def main():
             if os.name == 'nt':
                 password = win32crypt.CryptUnprotectData(
                     password, None, None, None, 0)[1]
-            
+
             if password:
                 info_list.append({
                     'origin_url': origin_url,
@@ -84,25 +87,25 @@ def main():
 
 
 def getpath(app = 'chrome'):
-    app_path = {'chrome': 'Google\\Chrome', 'vivaldi': 'Vivaldi'} 
+    app_path = {'chrome': 'Google\\Chrome', 'vivaldi': 'Vivaldi', 'none': 'None' }
     if os.name == 'nt':
         # Windows
-        PathName = os.getenv('localappdata') + \
+        user_data_dir = os.getenv('localappdata') + \
         '\\' + app_path.get(app) + \
             '\\User Data\\Default\\'
     elif os.name == 'posix':
-        PathName = os.getenv('HOME')
+        user_data_dir = os.getenv('HOME')
         if sys.platform == 'darwin':
             # OS X
-            PathName += '/Library/Application Support/Google/Chrome/Default/'
+            user_data_dir += '/Library/Application Support/Google/Chrome/Default/'
         else:
             # Linux
-            PathName += '/.config/google-chrome/Default/'
-    if not os.path.isdir(PathName):
-        print('[!] Chrome Doesn\'t exists')
+            user_data_dir += '/.config/google-chrome/Default/'
+    if not os.path.isdir(user_data_dir):
+        print("User data directory of application {} doesn\'t exists".format(app))
         sys.exit(0)
 
-    return PathName
+    return user_data_dir
 
 
 def output_csv(info):
@@ -110,7 +113,7 @@ def output_csv(info):
         with open('chromepass-passwords.csv', 'wb') as csv_file:
             csv_file.write('origin_url,username,password \n'.encode('utf-8'))
             for data in info:
-                csv_file.write(('%s, %s, %s \n' % (data['origin_url'], data[
+                csv_file.write(("%s, %s, %s \n" % (data['origin_url'], data[
                     'username'], data['password'])).encode('utf-8'))
         print('Data written to chromepass-passwords.csv')
     except EnvironmentError:
@@ -129,3 +132,5 @@ def output_json(info):
 
 if __name__ == '__main__':
     args_parser()
+	
+
