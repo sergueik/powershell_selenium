@@ -24,6 +24,7 @@ def get_html(url):
         page_source = driver.page_source
         debug_print('read page source: {} bytes'.format( len(page_source)))
         # https://stackoverflow.com/questions/9942594/unicodeencodeerror-ascii-codec-cant-encode-character-u-xa0-in-position-20
+        # https://stackoverflow.com/questions/2365411/convert-unicode-to-ascii-without-errors-in-python
         # UnicodeEncodeError: 'ascii' codec can't encode character u'\xa0' in position 4970: ordinal not in range(128)
         # page_source = page_source.encode('windows-1252', 'ignore').decode('windows-1252')
         # decoded_page_source = page_source.decode('windows-1252')
