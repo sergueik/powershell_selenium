@@ -18,7 +18,7 @@ if __name__ == '__main__':
     homedir = getenv('HOMEDIR').replace('\\', '/')
   else:
     homedir = getenv('HOME')
-  location = 'file:///{0}/{1}'.format('{0}/Downloads'.format(homedir),'example.html')
+  location = 'file:///{0}/{1}'.format('{0}/Downloads'.format(homedir), 'alert.html')
   driver.get(location)
 
   button = driver.find_element_by_name('alert')
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     alert.accept()
 
   except (NoAlertPresentException, TimeoutException) as e:
-    print('Alert is not present'.format(e))
+    print('Alert was not shown: {0}'.format(e))
     print (e.args)
   finally:
     driver.quit()

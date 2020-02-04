@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+# origin: https://www.techbeamers.com/selenium-webdriver-waits-python/
+# see also:
+# https://selenium-python.readthedocs.io/waits.html
+# https://nedbatchelder.com/text/unipain.html
 
 import sys
 from os import getenv
@@ -20,15 +23,17 @@ if __name__ == '__main__':
     homedir = getenv('HOME')
   location = 'file:///{0}/{1}'.format('{0}/Downloads'.format(homedir),'text.html')
   driver.get(location)
+  xpath = '//div[@id="up_file_name"]/label'
+  expected_text = u'Ошибка: неверный формат файла'
   try:
-    element = driver.find_element_by_xpath('//div[@id="up_file_name"]/label')
-    print(element.text)
-    assert element.text.encode('utf8','ignore') == unicode('Ошибка: неверный формат файла')
-    # See also: http://translit-online.ru
-    # Warning: Unicode equal comparison failed to convert both arguments to Unicode - interpreting them as being unequal
-    print(element.text)
+    WebDriverWait(driver,10).until(EC.visibility_of_element_located((By.XPATH, xpath)))
+    element = driver.find_element_by_xpath(xpath )
+    assert element.text.encode('utf8','ignore').decode('utf8') == expected_text
+    print('Verified Text of Element: "{0}"'.format(element.text.encode('utf8','ignore')) )
+
   except ( TimeoutException) as e:
-    print('Element is not present'.format(e))
+    print('Element is not located: '.format(e))
     print (e.args)
   finally:
     driver.quit()
+
