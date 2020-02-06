@@ -1,4 +1,4 @@
-#Copyright (c) 2014 Serguei Kouzmine
+#Copyright (c) 2014,2020 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -24,17 +24,16 @@ param(
 $shared_assemblies = @(
   'WebDriver.dll',
   'WebDriver.Support.dll',
-  'Selenium.WebDriverBackedSelenium.dll',
   'nunit.core.dll',
   'nunit.framework.dll'
 )
 
+# default directory for .net assemblies
 $shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies'
-
+# SHARED_ASSEMBLIES_PATH overrides
 if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
   $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
 }
-
 pushd $shared_assemblies_path
 $shared_assemblies | ForEach-Object {
 
@@ -46,20 +45,12 @@ $shared_assemblies | ForEach-Object {
 }
 popd
 
-
-$env:SHARED_ASSEMBLIES_PATH = 'c:\java\selenium\csharp\sharedassemblies'
-
-$shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
-
-pushd $shared_assemblies_path
-$shared_assemblies | ForEach-Object { Unblock-File -Path $_; Add-Type -Path $_ }
-popd
-
-# Convertfrom-JSON applies To: Windows PowerShell 3.0 and above
+# Convertfrom-JSON applies To: Windows PowerShell 3.0 and later
 [NUnit.Framework.Assert]::IsTrue($host.Version.Major -gt 2)
 
 
 # http://stackoverflow.com/questions/15767066/get-session-id-for-a-selenium-remotewebdriver-in-c-sharp
+
 Add-Type -TypeDefinition @"
 using System;
 using OpenQA.Selenium;
@@ -92,7 +83,7 @@ public class CustomeRemoteDriver : RemoteWebDriver
     {
         return base.SessionId.ToString();
     }
-} 
+}
 "@ -ReferencedAssemblies 'System.dll',"${shared_assemblies_path}\WebDriver.dll","${shared_assemblies_path}\WebDriver.Support.dll"
 
 
@@ -144,8 +135,8 @@ if ($browser -ne $null -and $browser -ne '') {
   }
   $selenium = New-Object CustomeRemoteDriver ($uri,$capability)
 } else {
-  # this example 
-  # will not work with phantomjs 
+  # this example
+  # will not work with phantomjs
   $phantomjs_executable_folder = "c:\tools\phantomjs"
   Write-Host 'Running on phantomjs'
   $selenium = New-Object OpenQA.Selenium.PhantomJS.PhantomJSDriver ($phantomjs_executable_folder)
@@ -169,7 +160,14 @@ try {
 }
 
 [void]$selenium.manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds(10))
-[string]$base_url = $selenium.Url = 'http://192.168.56.101/';
+[string]$base_url = $selenium.Url = 'https://192.168.56.101/';
+
+# This test need to run in a Virtual Box
+# configured to with host-only networking
+# VM network adapter to a previously created host-only hetwork 192.168.56.1/24
+# The VM configured with NAT networking only will likely not work (and be timing out browsers)
+
+write-output ('Navigating to "{0}"' -f $base_url)
 $selenium.Navigate().GoToUrl($base_url)
 
 [NUnit.Framework.Assert]::IsTrue($sessionid -ne $null)
@@ -177,6 +175,8 @@ $selenium.Navigate().GoToUrl($base_url)
 # https://github.com/davglass/selenium-grid-status/blob/master/lib/index.js
 # call TestSessionStatusServlet.java
 $sessionURL = ("http://{0}:{1}/grid/api/testsession?session={2}" -f $hub_host,$hub_port,$sessionid)
+write-output ('Parsing response to GET "{0}"' -f $sessionURL)
+
 $req = [System.Net.WebRequest]::Create($sessionURL)
 $resp = $req.GetResponse()
 $reqstream = $resp.GetResponseStream()
@@ -207,6 +207,13 @@ $selenium_capabilities = $selenium.Capabilities
 $selenium_capabilities | Format-List
 
 # Cleanup
-cleanup ([ref]$selenium)
+  try {
+    $selenium.Close()
+    $selenium.Quit()
+  } catch [exception]{
+    # Ignore errors if unable to close the browser
+    Write-Output (($_.Exception.Message) -split "`n")[0]
+
+  }
 
 return
