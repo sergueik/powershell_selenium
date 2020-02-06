@@ -15,7 +15,7 @@ if __name__ == '__main__':
   driver = webdriver.Firefox()
   driver.maximize_window()
   if getenv('OS') != None :
-    homedir = getenv('HOMEDIR').replace('\\', '/')
+    homedir = getenv('USERPROFILE').replace('\\', '/')
   else:
     homedir = getenv('HOME')
   location = 'file:///{0}/{1}'.format('{0}/Downloads'.format(homedir), 'alert.html')

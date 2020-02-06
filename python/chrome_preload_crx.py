@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options
 
 if __name__ == '__main__':
   if getenv('OS') != None :
-    homedir = getenv('HOMEDIR').replace('\\', '/')
+    homedir = getenv('USERPROFILE').replace('\\', '/')
   else:
     homedir = getenv('HOME')
   extension = 'cropath.crx'# download archive
