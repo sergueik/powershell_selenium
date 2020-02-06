@@ -40,6 +40,8 @@ def print_pdf(url, chromedriver = './chromedriver', print_options = {}):
   return base64.b64decode(result['data'])
 
 def send_command_and_get_result(driver, cmd, params = {}):
+	# DevTools listening on ws://127.0.0.1:49536/devtools/browser/f77c331d-d2ef-4500-b0c0-857b8dc98984
+	# "/session/{sessionId}/chromium/send_command_and_get_result"
   # https://www.python-course.eu/python3_formatted_output.php
   response = driver.command_executor._request('POST', driver.command_executor._url + '/session/{0:s}/chromium/send_command_and_get_result'.format( driver.session_id), json.dumps({'cmd': cmd, 'params': params}))
   # NOTE: 'has_key()' is even removed from P 3.x
@@ -74,7 +76,7 @@ if __name__ == '__main__':
     file.write(result)
 
 # on vanilla Windows node
-# path=%path%;c:\Python27
-# path=%path%;c:\Users\sergueik\Downloads
+path=%path%;c:\Python27
+path=%path%;c:\Users\sergueik\Downloads
 
 
