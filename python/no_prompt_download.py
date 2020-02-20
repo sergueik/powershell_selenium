@@ -12,11 +12,17 @@ import time
 from os import getenv, path
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import json, base64
 
-def download_pdf(url, xpath, download_dir, chromedrivr_path):
+default_downloads_dir = getenv('USERPROFILE' if getenv('OS') == 'NT' else 'HOME') + '/' + 'Downloads'
+
+def download_pdf(
+  url = None,
+  xpath = None,
+  chromedriver_path = default_downloads_dir + '/' + ('chromedriver.exe' if getenv('OS') == 'NT' else 'chromedriver'),
+  download_dir = default_downloads_dir ):
   options = Options()
-  prefs = {'safebrowsing.enabled': True,
+  prefs = {
+  'safebrowsing.enabled': True,
   'select_file_dialogs.allowed': False,
   'download.prompt_for_download': False,
   'download.directory_upgrade': True,
@@ -41,20 +47,12 @@ def download_pdf(url, xpath, download_dir, chromedrivr_path):
     driver = webdriver.Chrome(chromedriver_path, chrome_options = options)
   else:
     driver = webdriver.Chrome(chrome_options = options)
-
-  if url:
-    driver.get(url )
-  else:
-    if getenv('OS') != None :
-      homedir = getenv('USERPROFILE').replace('\\', '/')
-    else:
-      homedir = getenv('HOME')
-    location = 'file:///{0}/{1}'.format('{0}/Downloads'.format(homedir), 'download.html')
-    script_dir = path.dirname(path.realpath(__file__))
-    test_file_path = script_dir + '/download.html'
-    location = 'file://{0}'.format( test_file_path )
-    driver.get(location)
-  link = driver.find_element_by_css_selector('a')
+  if url is None:
+    url ='file://{0}'.format(path.dirname(path.realpath(__file__)) + '/'  + 'download.html' )
+  if xpath is None:
+    xpath = '//a'
+  driver.get(url)
+  link = driver.find_element_by_xpath(xpath)
   link.click()
   time.sleep(10)
   driver.close()
@@ -63,19 +61,13 @@ if __name__ == '__main__':
   if (len(sys.argv) != 3) and (len(sys.argv) !=1):
     print ('usage: download_pdf.py <html page> <xpath>')
     exit()
-  if getenv('OS') != None :
-    homedir = getenv('USERPROFILE').replace('\\', '/')
-  else:
-    homedir = getenv('HOME')
-  # url = sys.argv[1]
-  # css_selector = sys.argv[2]
-  url = None
-  css_selecor = None
-  if url:
+  if len(sys.argv) == 3:
+    url = sys.argv[1]
+    xpath = sys.argv[2]
     match = re.match(r'^(https?://).*$', url, re.UNICODE)
     if match == None:
       url = 'https://{}'.format(url)
-
-  chromedriver_path =  homedir + '/' + 'Downloads' + '/' + 'chromedriver'
-
-  result = download_pdf(None, None, homedir + '/' + 'Downloads', chromedriver_path  )
+  else:
+    url = None
+    xpath = None
+  result = download_pdf( url, xpath  )
