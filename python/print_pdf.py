@@ -76,7 +76,7 @@ if __name__ == '__main__':
     file.write(result)
 
 # on vanilla Windows node
-path=%path%;c:\Python27
-path=%path%;c:\Users\sergueik\Downloads
+# path=%path%;c:\Python27
+# path=%path%;c:\Users\sergueik\Downloads
 
 
