@@ -313,19 +313,23 @@ popd
 
 
 write-host -ForegroundColor 'green' @'
-This call Enalbes full SSL / TLS  support
+This call Enables full SSL / TLS support
 '@
 $settings = @{
 
   'all' = 2728;
-  'TLS 1.0' = 128;
-  'TLS 1.1' = 512;
-  'TLS 1.2' = 2048;
-  'SSL 2.0' = 8;
-  'SSL 3.0' = 32;
+  'TLS 1.0' = 0x80;
+  'TLS 1.1' = 0x200;
+  'TLS 1.2' = 0x800;
+  'SSL 2.0' = 0x08;
+  'SSL 3.0' = 0x20;
 
 }
-
+# so e.g. TLS 1.0 + TLS 1.1 + TLS 1.2 is DWORD '0xa80'
+# Alternatively, one may pass the setting on the command line:
+# [System.Net.ServicePointManager]::SecurityProtocol = @('Tls12','Tls11','Tls','Ssl3')
+# (Invoke-WebRequest -UseBasicParsing -Uri $url).Content
+# see also: http://forum.oszone.net/thread-344128.html
 $hive = 'HKCU:'
 $path = '/SOFTWARE/Microsoft/Windows/CurrentVersion/Internet Settings'
 $name = 'SecureProtocols'
