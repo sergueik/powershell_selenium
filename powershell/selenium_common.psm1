@@ -528,8 +528,9 @@ function custom_pause {
 
 	VERSION HISTORY
 	2015/06/21 Initial Version
+        2020/02/28 fixing the underlying code change:
+	# Method invocation failed because [OpenQA.Selenium.Remote.RemoteTimeouts] does not contain a method named 'ImplicitlyWait'.
 #>
-
 
 function set_timeouts {
   param(
@@ -538,11 +539,23 @@ function set_timeouts {
     [int]$page_load = 60,
     [int]$script = 60
   )
+  # [OpenQA.Selenium.Remote.RemoteTimeouts] is an interface?
+  # Unable to find type [OpenQA.Selenium.Remote.RemoteTimeouts]
+
+  <# new Selenium Webdriver
+  $timeouts = $selenium_ref.Value.Manage().timeouts()
+  $timeouts.ImplicitWait = [System.TimeSpan]::FromSeconds($explicit)
+  $timeouts.PageLoad = [System.TimeSpan]::FromSeconds($pageload)
+  $timeouts.AsynchronousJavaScript = [System.TimeSpan]::FromSeconds($script)
+  #>
+  
+   # older Selenium WebDriver code 
+   
   [void]($selenium_ref.Value.Manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))
   [void]($selenium_ref.Value.Manage().timeouts().SetPageLoadTimeout([System.TimeSpan]::FromSeconds($pageload)))
   [void]($selenium_ref.Value.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script)))
+  
 }
-
 
 <#
 .SYNOPSIS
