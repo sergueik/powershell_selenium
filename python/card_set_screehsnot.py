@@ -1,22 +1,41 @@
 #!/usr/bin/env python3
 
+# based on https://qna.habr.com/q/732307
+
 import getopt
-import sys
-import re
+from datetime import date
+import json, base64
 from os import getenv
+import re
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import json, base64
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions
-from datetime import date
+import sys
+
+def element_screenshot(driver,params):
+  command = 'Page.captureScreenshot'
+  result = send_command_and_get_result(driver, command, params)
+  return result
+
+# https://www.python-course.eu/python3_formatted_output.php
+def send_command_and_get_result(driver, cmd, params = {}):
+  post_url = driver.command_executor._url + '/session/{0:s}/chromium/send_command_and_get_result'.format( driver.session_id)
+  if debug:
+    print ('POST to {}'.format(post_url))
+    print('params: {}'.format(json.dumps({'cmd': cmd, 'params': params})))
+
+  response = driver.command_executor._request('POST', post_url, json.dumps({'cmd': cmd, 'params': params}))
+  if debug:
+    print( response.keys())
+  return base64.b64decode(response['value']['data'])
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:], 'hdi:o:s:p:', ['help', 'debug','size='])
+  opts, args = getopt.getopt(sys.argv[1:], 'hds:', ['help', 'debug','size='])
 except getopt.GetoptError as err:
-  print('usage:card_set_screehsnot.py --size <number of cards> --debug')
+  print('Usage: card_set_screehsnot.py --size <number of cards> --debug')
   print(str(err))
   exit()
 
@@ -63,8 +82,21 @@ for card in cards:
     'y': card.location['y'],
     'width': card.size['width'],
     'height': card.size['height'],
-    'scale': '1'
+    'scale': 1
   }}
-  print("card element {}: {}".format(cnt,params))
+  print(f'card element {cnt}')
+  result = element_screenshot(driver,params)
+  with open('card_1_{}.png'.format(cnt), 'wb') as output_file:
+    output_file.write(result)
+  with open(file = f'card_2_{cnt}.png', mode = 'wb') as output_file:
+    output_file.write(card.screenshot_as_png)
+
+# alternative locator
+cards = driver.find_elements_by_xpath('//*[contains(@class, "d-inline-block")]')
+for cnt, card in enumerate(cards):
+  if cnt > max_cnt:
+    break
+  with open(file = f'card_3_{cnt}.png', mode = 'wb') as output_file:
+    output_file.write(card.screenshot_as_png)
 driver.close()
 driver.quit()

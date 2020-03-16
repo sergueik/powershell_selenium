@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # based on: https://habr.com/ru/post/459112 (in Russian)
+# https://stackoverflow.com/questions/47023842/selenium-chromedriver-printtopdf
 # see also: https://github.com/SeleniumHQ/selenium/blob/master/dotnet/src/webdriver/Chromium/ChromiumDriver.cs
 # https://github.com/checkly/puppeteer-examples/blob/master/1. basics/pdf.js
 
@@ -41,11 +42,17 @@ def print_pdf(url, chromedriver = './chromedriver', print_options = {}):
   driver.quit()
   return base64.b64decode(result['data'])
 
+# https://stackoverflow.com/questions/47023842/selenium-chromedriver-printtopdf
+# https://www.python-course.eu/python3_formatted_output.php
 def send_command_and_get_result(driver, cmd, params = {}):
-  # DevTools listening on ws://127.0.0.1:49536/devtools/browser/f77c331d-d2ef-4500-b0c0-857b8dc98984
-  # "/session/{sessionId}/chromium/send_command_and_get_result"
-  # https://www.python-course.eu/python3_formatted_output.php
-  response = driver.command_executor._request('POST', driver.command_executor._url + '/session/{0:s}/chromium/send_command_and_get_result'.format( driver.session_id), json.dumps({'cmd': cmd, 'params': params}))
+  post_url = driver.command_executor._url + '/session/{0:s}/chromium/send_command_and_get_result'.format( driver.session_id)
+  if debug:
+    print ('POST to {}'.format(post_url))
+    print('params: {}'.format(json.dumps({'cmd': cmd, 'params': params})))
+
+  response = driver.command_executor._request('POST', post_url, json.dumps({'cmd': cmd, 'params': params}))
+  if debug:
+    print( response.keys())
   # NOTE: 'has_key()' is even removed from P 3.x
   # see also: https://stackoverflow.com/questions/1323410/should-i-use-has-key-or-in-on-python-dicts
   # NOTE: KeyError: 'status'
