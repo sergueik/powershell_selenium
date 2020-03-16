@@ -1,5 +1,6 @@
 @echo OFF
-REM  origin: http://forum.oszone.net/thread-340041.html
+REM origin: http://forum.oszone.net/thread-340041.html
+REM see also: http://www.outsidethebox.ms/17918/#_Toc432346111
 REM quick removal of zone indefier stream information
 cd /D "%~1"
 chcp 65001>nul

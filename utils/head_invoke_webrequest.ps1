@@ -1,7 +1,11 @@
-#
+# https://echo.msk.ru/programs/code/2561795-echo/
 # based on question: http://www.cyberforum.ru/powershell/thread2562775.html
+# https://docs.microsoft.com/en-us/previous-versions/powershell/module/Microsoft.PowerShell.Utility/Invoke-WebRequest?view=powershell-3.0
+# DisableKeepAlive
 # see also: https://davidhamann.de/2019/04/12/powershell-invoke-webrequest-by-example/
-
+# see also: https://powershell.org/forums/topic/converting-a-working-curl-to-powershell-invoke-webrequest/
+# https://stackoverflow.com/questions/20259251/powershell-script-to-check-the-status-of-a-url
+# https://codereview.stackexchange.com/questions/137826/multi-threading-with-webrequests-responses
 # Powershell invoke-webrequest does not show the resource status as curl,
 # because one has to specifically
 # force invoke-webrequest to stop following redirects and also ignore the error:
@@ -137,6 +141,8 @@ exit 0
 # the code below is  taken from the original foorum question.
 # The code does not appear to really belong to the party asking for help, more likely is a
 # stackoverflow paste, already seen in several topics
+# e.g.
+# http://forum.oszone.net/post-2901164.html#post2901164
 # it does not have code
 # to run the url download on a separate thread
 
@@ -259,3 +265,230 @@ Remove-Item $file.FullName -errorAction silentlycontinue
 
 exit 0
 
+# below a yet another version of the code
+<#
+    function GenerateForm {
+
+        [reflection.assembly]::loadwithpartialname("System.Windows.Forms") | Out-Null
+        [reflection.assembly]::loadwithpartialname("System.Drawing") | Out-Null
+
+        $form1 = New-Object System.Windows.Forms.Form
+        $button1 = New-Object System.Windows.Forms.Button
+        $listBox1 = New-Object System.Windows.Forms.ListBox
+        $RadioButton = New-Object System.Windows.Forms.RadioButton
+        $RadioButton1 = New-Object System.Windows.Forms.RadioButton
+        $InitialFormWindowState = New-Object System.Windows.Forms.FormWindowState
+
+        $b1= $false
+        $b2= $false
+        $b3= $false
+
+#----------------------------------------------
+#Generated Event Script Blocks
+#----------------------------------------------
+        function online ($url, $name) {
+            $watch = [System.Diagnostics.Stopwatch]::StartNew()
+            $watch.Start() #Запуск таймера
+
+            $file = New-TemporaryFile
+            $lfile = New-TemporaryFile
+            $d = '#EXTM3U'
+            (Invoke-WebRequest -UseBasicParsing -Uri $url -TimeoutSec 20).Links.Href | Where {$_ -match "html"} | Sort-Object -Unique `
+            | ForEach {$_ -replace "(.*html)","$url`$1"} | Out-File $file.FullName
+            $ls = Get-Content $file.FullName -Encoding utf8
+            ForEach ($link in $ls){
+                $a = Invoke-WebRequest -Uri $link -TimeoutSec 20 -Method GET
+                if ($a.Content -match '<h1>') {
+                    $a.Content -match '<h1>(.*) смотреть онлайн</h1>' | Out-Null
+                    $matches[1] | ForEach-Object {[Void]$listbox1.Items.Add($_)}
+                    $listBox1.SelectedIndex = $listBox1.Items.Count -1
+                    $listBox1.SelectedIndex = -1
+                    $n = '#EXTINF:-1,'+$matches[1]
+                    if ($a -notmatch "iframe.*https?.*html") {
+                        $a.Content -match 'iframe.*"(https?.+php)".*' | Out-Null
+                        $Global:l = $matches[1]
+                        if ($l -notmatch "youtube") {
+                            (Invoke-WebRequest -UseBasicParsing -URI $l -Headers @{"Referer"=$link}).Content -match 'file:"([^"]+)"' | Out-Null
+                            $m = $matches[1]
+                            Add-Content $lfile.FullName -Encoding utf8 -Value $n,$m
+                        }
+                        else {
+                            continue
+                        }
+                    }
+                    else {
+                        $a.Content -match 'iframe.*"(https?.+html)".*' | Out-Null
+                        $Global:l = $matches[1]
+                        (Invoke-WebRequest -UseBasicParsing -URI $l -Headers @{"Referer"=$link}).Content -match 'var videoLink.*(https?[^"]+m3u8)' | Out-Null
+                        $m = $matches[1]
+                        Add-Content $lfile.FullName -Encoding utf8 -Value $n,$m
+                    }
+                }
+                else {
+                    continue
+                }
+            }
+            $c = Get-Content $lfile.FullName -Encoding utf8
+            Set-Content $name -Encoding utf8 -value $d,$c
+            Remove-Item $file.FullName -errorAction silentlycontinue
+            Remove-Item $lfile.FullName -errorAction silentlycontinue
+            $listBox1.Items.Add("Плейлист создан!")
+            $listBox1.SelectedIndex = $listBox1.Items.Count -1
+            $listBox1.SelectedIndex = -1
+
+            $watch.Stop() #Остановка таймера
+            $watch.Elapsed #Время выполнения
+
+            $time = $watch.Elapsed
+
+        }
+
+        $handler_button1_Click=
+        {
+            $listBox1.Items.Clear();
+
+            if ($RadioButton.Checked) {
+
+                $url = 'http://первый сайт'
+                $name = '.\первый.txt'
+                online
+            }
+
+            elseif ($RadioButton1.Checked) {
+
+                $url = 'http://второй сайт'
+                $name = '.\второй.txt'
+                online
+            }
+
+            if ( !$RadioButton.Checked -and !$RadioButton1.Checked ) {   $listBox1.Items.Add("No CheckBox selected....")}
+        }
+
+
+        $OnLoadForm_StateCorrection=
+        {#Correct the initial state of the form to prevent the .Net maximized form issue
+            $form1.WindowState = $InitialFormWindowState
+        }
+
+#----------------------------------------------
+#region Generated Form Code
+        $form1.Text = "TV"
+        $form1.Name = "form1"
+        $form1.DataBindings.DefaultDataSourceUpdateMode = 0
+        $form1.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedSingle
+        $form1.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
+        $System_Drawing_Size = New-Object System.Drawing.Size
+        $System_Drawing_Size.Width = 450
+        $System_Drawing_Size.Height = 660
+        $form1.BackColor = "0x7AC5E7"
+        $form1.Opacity = 0.96
+        $form1.Icon = New-Object System.Drawing.Icon(".\favicon.ico")
+        $form1.ClientSize = $System_Drawing_Size
+
+        $button1.TabIndex = 1
+        $button1.Name = "button1"
+        $System_Drawing_Size = New-Object System.Drawing.Size
+        $System_Drawing_Size.Width = 75
+        $System_Drawing_Size.Height = 23
+        $button1.Size = $System_Drawing_Size
+        $button1.UseVisualStyleBackColor = $True
+
+        $button1.Text = "Run Script"
+
+        $System_Drawing_Point = New-Object System.Drawing.Point
+        $System_Drawing_Point.X = 25
+        $System_Drawing_Point.Y = 585
+        $button1.Location = $System_Drawing_Point
+        $button1.DataBindings.DefaultDataSourceUpdateMode = 0
+        $button1.add_Click($handler_button1_Click)
+
+        $form1.Controls.Add($button1)
+
+        $CancelButton = New-Object System.Windows.Forms.Button
+        $CancelButton.Location = New-Object System.Drawing.Point(25,615)
+        $CancelButton.Size = New-Object System.Drawing.Size(75,23)
+        $CancelButton.Text = "Cancel"
+        $CancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+        $CancelButton.UseVisualStyleBackColor = $True
+        $button1.TabIndex = 2
+        $form1.CancelButton = $CancelButton
+        $form1.Controls.Add($CancelButton)
+
+        $listBox1.FormattingEnabled = $True
+        $System_Drawing_Size = New-Object System.Drawing.Size
+        $System_Drawing_Size.Width = 210
+        $System_Drawing_Size.Height = 640
+        $listBox1.Size = $System_Drawing_Size
+        $listBox1.DataBindings.DefaultDataSourceUpdateMode = 0
+        $listBox1.Name = "listBox1"
+        $System_Drawing_Point = New-Object System.Drawing.Point
+        $System_Drawing_Point.X = 220
+        $System_Drawing_Point.Y = 13
+        $listBox1.Location = $System_Drawing_Point
+        $listBox1.TabIndex = 3
+
+        $form1.Controls.Add($listBox1)
+
+        $RadioButton.UseVisualStyleBackColor = $True
+        $RadioButton.Checked = $false
+        $System_Drawing_Size = New-Object System.Drawing.Size
+        $System_Drawing_Size.Width = 154
+        $System_Drawing_Size.Height = 30
+        $RadioButton.Size = $System_Drawing_Size
+        $RadioButton.TabIndex = 4
+        $RadioButton.Text = "TV1"
+        $System_Drawing_Point = New-Object System.Drawing.Point
+        $System_Drawing_Point.X = 25
+        $System_Drawing_Point.Y = 40
+        $RadioButton.Location = $System_Drawing_Point
+        $RadioButton.DataBindings.DefaultDataSourceUpdateMode = 0
+        $RadioButton.Name = "RadioButton"
+        $RadioButton.add_CheckedChanged({
+            if ($RadioButton.Checked){
+                $listBox1.Items.Add( "TV1"  )
+            }
+            else {
+                $listBox1.Items.Clear();
+            }
+        })
+
+        $form1.Controls.Add($RadioButton)
+
+        $RadioButton1.UseVisualStyleBackColor = $True
+        $RadioButton1.Checked = $false
+        $System_Drawing_Size = New-Object System.Drawing.Size
+        $System_Drawing_Size.Width = 154
+        $System_Drawing_Size.Height = 30
+        $RadioButton1.Size = $System_Drawing_Size
+        $RadioButton1.TabIndex = 5
+        $RadioButton1.Text = "TV2"
+        $System_Drawing_Point = New-Object System.Drawing.Point
+        $System_Drawing_Point.X = 25
+        $System_Drawing_Point.Y = 75
+        $RadioButton1.Location = $System_Drawing_Point
+        $RadioButton1.DataBindings.DefaultDataSourceUpdateMode = 0
+        $RadioButton1.Name = "RadioButton1"
+        $RadioButton1.add_CheckedChanged({
+            if ($RadioButton1.Checked){
+                $listBox1.Items.Add( "TV2"  )
+            }
+            else {
+                $listBox1.Items.Clear();
+            }
+        })
+
+        $form1.Controls.Add($RadioButton1)
+
+
+#Save the initial state of the form
+        $InitialFormWindowState = $form1.WindowState
+#Init the OnLoad event to correct the initial state of the form
+        $form1.add_Load($OnLoadForm_StateCorrection)
+#Show the Form
+        $form1.ShowDialog()| Out-Null
+
+    } #End Function
+
+#Call the Function
+    GenerateForm
+#>

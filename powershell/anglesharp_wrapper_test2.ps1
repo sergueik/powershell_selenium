@@ -61,6 +61,7 @@ function load_shared_assemblies {
 load_shared_assemblies
 
 # origin: http://anglesharp.github.io/docs/Examples.html#connecting-javascript-evaluation
+# https://github.com/AngleSharp/AngleSharp.Js
 # https://www.nuget.org/packages/AngleSharp.Scripting.JavaScript/
 add-type -TypeDefinition @'
 
