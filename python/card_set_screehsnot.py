@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 
-# based on https://qna.habr.com/q/732307
+# based on answering the topic https://qna.habr.com/q/732307
+# see also: http://www.programmersought.com/article/34791573956/
 
-import getopt
 from datetime import date
+import getopt
 import json, base64
 from os import getenv
 import re
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions
@@ -54,10 +55,20 @@ if getenv('OS') != None :
   homedir = getenv('USERPROFILE').replace('\\', '/')
 else:
   homedir = getenv('HOME')
-options = Options()
+
+capabilities = DesiredCapabilities.CHROME.copy()
+capabilities['acceptSslCerts'] = True
+capabilities['acceptInsecureCerts'] = True
+# https://www.programcreek.com/python/example/96012/selenium.webdriver.common.desired_capabilities.DesiredCapabilities.CHROME
+options = webdriver.ChromeOptions()
+# user_agent = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
+# option.add_argument('--proxy-server={}'.format(proxy))
+options.add_argument('--no-sandbox')
 options.add_argument('--headless')
 options.add_argument('--disable-gpu')
-driver = webdriver.Chrome(homedir + '/' + 'Downloads' + '/' + 'chromedriver', options = options)
+
+driver = webdriver.Chrome( homedir + '/' + 'Downloads' + '/' + 'chromedriver', chrome_options = options, desired_capabilities = capabilities)
+
 year,month,day = date.today().year, date.today().month, date.today().day
 url = 'http://almetpt.ru/{}/site/schedulegroups/0/1/{}-{}-{}'.format(year,year,'{0:02d}'.format(month),'{0:02d}'.format(day))
 if debug:
@@ -85,18 +96,19 @@ for card in cards:
     'scale': 1
   }}
   print(f'card element {cnt}')
-  result = element_screenshot(driver,params)
-  with open('card_1_{}.png'.format(cnt), 'wb') as output_file:
-    output_file.write(result)
-  with open(file = f'card_2_{cnt}.png', mode = 'wb') as output_file:
-    output_file.write(card.screenshot_as_png)
+  result = element_screenshot(driver, params)
+  output_file = 'card_1_{}.png'.format(cnt)
+  with open(output_file, 'wb') as f:
+    f.write(result)
+  with open(file = f'card_2_{cnt}.png', mode = 'wb') as f:
+    f.write(card.screenshot_as_png)
 
 # alternative locator
 cards = driver.find_elements_by_xpath('//*[contains(@class, "d-inline-block")]')
 for cnt, card in enumerate(cards):
   if cnt > max_cnt:
     break
-  with open(file = f'card_3_{cnt}.png', mode = 'wb') as output_file:
-    output_file.write(card.screenshot_as_png)
+  with open(file = f'card_3_{cnt}.png', mode = 'wb') as f:
+    f.write(card.screenshot_as_png)
 driver.close()
 driver.quit()

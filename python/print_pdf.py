@@ -4,11 +4,24 @@
 # see also: https://github.com/SeleniumHQ/selenium/blob/master/dotnet/src/webdriver/Chromium/ChromiumDriver.cs
 # https://github.com/checkly/puppeteer-examples/blob/master/1. basics/pdf.js
 
-# NOTE: failing with certain builds of google-chrome-stable 77
-# - a tiny blank pdf is produced
-# works with chromium-browser 79 and google-chrome-stable 76 and 72
+# NOTE: was found randomly failing with certain builds of google-chrome-stable 77
+# intermittent issue of a tiny blank pdf produced (not saved)
+# work fine  with other vesions e.g.
+# chromium-browser 79 and google-chrome-stable 76 and 72
 # with google-chrome 76 the PrintToPDF API is only supported in headless mode.
-# the "PrintToPDF is not implemented" exception is returned when run fullscreen
+# 'PrintToPDF is not implemented' exception is generated when run fullscreen
+# On Windows 10 / Windows Server 2016 the altenative solution would be
+# 'Microsoft Print to PDF' printer-based:
+# https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/sending-powershell-results-to-pdf-part-1
+# https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/sending-powershell-results-to-pdf-part-2
+# https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/sending-powershell-results-to-pdf-part-3
+# https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/sending-powershell-results-to-pdf-part-4
+# older Windows-only solutions involve "itextsharp.dll"
+# https://social.technet.microsoft.com/wiki/contents/articles/30427.creating-pdf-files-using-powershell.aspx
+# and pdfsharp.dll
+# https://merill.net/2013/06/creating-pdf-files-dynamically-with-powershell/
+# https://github.com/empira/PDFsharp
+# http://forum.oszone.net/thread-344427.html (in Russian) focused on Poowershell solitions
 
 from __future__ import print_function
 import getopt
@@ -78,7 +91,7 @@ if __name__ == '__main__':
 
   output_file = None
   url = None
-  size = None
+  paper_size = None
   pages = None
   global debug
   debug = False
@@ -93,7 +106,7 @@ if __name__ == '__main__':
     elif option in ('-p', '--pages'):
       pages = argument
     elif option in ('-s', '--size'):
-      size = argument
+      paper_size = argument
     elif option in ('-o', '--output'):
       output_file = argument
     else:
@@ -116,8 +129,8 @@ if __name__ == '__main__':
     url = 'https://{}'.format(url)
 
   match = None
-  if size != None:
-    match = re.match(r'a4', size, re.UNICODE|re.IGNORECASE  )
+  if paper_size != None:
+    match = re.match(r'a4', paper_size, re.UNICODE|re.IGNORECASE  )
   if match == None:
     print_options = {}
   else:
@@ -132,11 +145,10 @@ if __name__ == '__main__':
     print('opts: {}'.format(opts))
     # exit()
   result = print_pdf(url, homedir + '/' + 'Downloads' + '/' + 'chromedriver', print_options)
-  with open(output_file, 'wb') as file:
-    file.write(result)
+  with open(file = output_file, mode = 'wb') as f:
+    f.write(result)
 
 # on vanilla Windows node
-# path=%path%;c:\Python27
-# path=%path%;c:\Users\sergueik\Downloads
+# PATH=%PATH%;c:\Python27;%USERPROFILE%\Downloads
 
 
