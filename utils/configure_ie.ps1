@@ -25,14 +25,83 @@ param(
   [switch]$all # For clearing 'Protected Mode' for allInternet 'Zones'
 )
 
+# https://stackoverflow.com/questions/2483771/how-can-i-convince-ie-to-simply-display-application-json-rather-than-offer-to-do/2492211#2492211
+
+function read_registry_setting {
+
+  param(
+    [string]$hive= 'HKLM:',
+    # http://mctexpert.blogspot.com/2014/04/how-to-access-all-of-registry-hives.html
+    # however on some Windows releases only HKCU and HKML are returned by
+    # Get-PSDrive -PSProvider Registry | select-object -expandproperty Name
+    [string]$path = '\Software\Classes\MIME\Database\Content Type\text/plain',
+    [string]$name = 'Encoding',
+    #  TODO: ref ?
+    # [string]$value,
+    [string]$propertyType = 'binary',
+    # will be converted to 'Microsoft.Win32.RegistryValueKind' enumeration
+    # 'String', 'ExpandString', 'Binary', 'DWord', 'MultiString', 'QWord'
+    [switch]$debug
+
+  )
+ if ([bool]$PSBoundParameters['debug'].IsPresent) {
+   write-output 'debug'
+ }
+  $local:setting = $null
+  pushd $hive
+  cd /
+  if ([bool]$PSBoundParameters['debug'].IsPresent) {
+   write-host "cd `"${path}`""
+ }
+ cd "${path}"
+ if ([bool]$PSBoundParameters['debug'].IsPresent) {
+   get-item '.'
+ }
+ if ([bool]$PSBoundParameters['debug'].IsPresent) {
+   write-host 'Get-ItemProperty' '-path' ('{0}\{1}' -f $hive,$path) -name $name
+   Get-ItemProperty -path ('{0}\{1}' -f $hive,$path) -name $name -ErrorAction 'SilentlyContinue'
+   Get-ItemProperty -path ('{0}\{1}' -f $hive,$path) -name $name -ErrorAction 'SilentlyContinue' | select-object -expandproperty $name
+ }
+  $local:setting = Get-ItemProperty -path ('{0}\{1}' -f $hive,$path) -name $name -ErrorAction 'SilentlyContinue' | select-object -expandproperty $name
+  if ($local:setting -ne $null) {
+    if ([bool]$PSBoundParameters['debug'].IsPresent) {
+      $local:setting
+      select-object -inputobject $local:setting
+    }
+  } else  {
+    write-output 'null'
+
+  }
+  if ($propertyType -eq 'binary') {
+    $result =  [System.Text.Encoding]::Unicode.GetString($local:setting,0,4)
+  } else {
+    $result = $local:setting
+  }
+
+  popd
+  return $result
+
+}
+<#
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\application/json]
+"CLSID"="{25336920-03F9-11cf-8FD0-00AA00686F13}"
+"Encoding"=hex:08,00,00,00
+
+[HKEY_CLASSES_ROOT\MIME\Database\Content Type\text/json]
+"CLSID"="{25336920-03F9-11cf-8FD0-00AA00686F13}"
+"Encoding"=hex:08,00,00,00
+
+#>
+
 function change_registry_setting {
 
   param(
-    [string]$hive,
+    [string]$hive = 'HKCU:',
     [string]$path,
     [string]$name,
     [string]$value,
-    [string]$propertyType,
+    [string]$propertyType = 'Dword',
     # will be converted to 'Microsoft.Win32.RegistryValueKind' enumeration
     # 'String', 'ExpandString', 'Binary', 'DWord', 'MultiString', 'QWord'
     [switch]$debug
@@ -368,6 +437,7 @@ https://github.com/conceptsandtraining/modernie_selenium
 # IE11-only, on 64 bit Windows need to also handle
 # $path = '/SOFTWARE/Wow6432Node/Microsoft/Internet Explorer/Main/FeatureControl/FEATURE_BFCACHE'
 # see also https://automated-testing.info/t/internet-explorer-ne-mozhet-najti-element-na-stranicze/21972/8 (in Russian)
+# https://qna.habr.com/q/727439 (in Russian)
 $hive = 'HKLM:'
 $path = '/SOFTWARE/Microsoft/Internet Explorer/MAIN/FeatureControl/FEATURE_BFCACHE'
 $name = 'iexplore.exe'
@@ -421,6 +491,7 @@ This sets IE9 Zoom factor
 '@
 
 # origin: https://support.microsoft.com/en-us/help/2689447/how-to-set-the-zoom-level-in-internet-explorer-9
+# https://www.thewindowsclub.com/change-zoom-level-in-internet-explorer
 # NOTE: the registry setting is still present with later versions of IE. May have no effect though
 $path = '/SOFTWARE/Microsoft/Internet Explorer/Zoom'
 $hive = 'HKCU:'
