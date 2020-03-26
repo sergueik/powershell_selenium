@@ -8,17 +8,20 @@
 from __future__ import print_function
 import sys
 import re
+import os
 import time
 from os import getenv, path
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-default_downloads_dir = getenv('USERPROFILE' if getenv('OS') == 'NT' else 'HOME') + '/' + 'Downloads'
+is_windows = getenv('OS') != None and re.compile('.*NT').match( getenv('OS'))
+homedir = getenv('USERPROFILE' if is_windows else 'HOME')
+default_downloads_dir = homedir + os.sep + 'Downloads'
 
 def download_pdf(
   url = None,
   xpath = None,
-  chromedriver_path = default_downloads_dir + '/' + ('chromedriver.exe' if getenv('OS') == 'NT' else 'chromedriver'),
+  chromedriver_path = default_downloads_dir + os.sep + ('chromedriver.exe' if is_windows  else 'chromedriver'),
   download_dir = default_downloads_dir ):
   options = Options()
   prefs = {
