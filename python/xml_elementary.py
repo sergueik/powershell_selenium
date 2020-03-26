@@ -1,3 +1,11 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+import re
+import time
+from os import getenv, path
+import sys 
+import json, base64
 from xml.dom import minidom
 
 # https://docs.python.org/2/library/xml.dom.minidom.html
