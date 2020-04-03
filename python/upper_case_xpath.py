@@ -32,11 +32,7 @@ url_fragment = 'https://crossBrowsertesting.com'
 xpaths = [
   '//a[contains(@href,"{}")]'.format(url_fragment.lower()),
   '//a[contains(lower-case(@href),"{}")]'.format(url_fragment),
-  '//a[contains(translate(@href, "b", "B"), "{}")]'.format(url_fragment),
-  # NOTE: missing quotes is failing
-  '//a[contains(translate(@href, ab, AB ), "{}")]'.format(url_fragment),
-  '//a[contains(translate(@href, "ab", "AB" ), "{}")]'.format(url_fragment),
-   '//a[contains(translate(@href, "abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"), "{}")]'.format(url_fragment.upper())
+  '//a[contains(translate(@href, "abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"), "{}")]'.format(url_fragment.upper())
 ]
 length = len(xpaths)
 for cnt in range(length):
@@ -46,11 +42,8 @@ for cnt in range(length):
   element = None
   try:
     element = driver.find_element_by_xpath(xpath)
-  except InvalidSelectorException, e:
+  except (InvalidSelectorException, NoSuchElementException) as e:
     print('Exception (ignored): {}'.format(e))
-    pass
-  except NoSuchElementException, e:
-    print('Exception (ignored): {0}'.format(e))
     pass
   if element != None:
     print('Found via {}'.format(xpath))
@@ -59,7 +52,5 @@ for cnt in range(length):
     print('Failed via {}'.format(xpath))
 
 time.sleep(5)
-
 driver.close()
 driver.quit()
-
