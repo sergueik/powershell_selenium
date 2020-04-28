@@ -1,0 +1,28 @@
+<html>
+<head>
+<!-- origin: http://www.java2s.com/Tutorials/Javascript/Javascript_Data_Type_How_to/Date_Clock/Create_auto_refresh_clock.htm -->
+<script language="JavaScript">
+function gettime() {
+    var date= new Date();
+    var hr = date.getHours();
+    var m = date.getMinutes();
+    var s = date.getSeconds();
+    if(m < 10)
+    {
+        m = "0" + m
+    }
+    if(s < 10)
+    {
+        s = "0" + s
+    }
+    document.clockform.clock.value = hr + ":" + m + ":" + s;
+    setTimeout("gettime()", 12000)
+}
+</script>
+</head>
+<body onload="gettime()">
+<form name="clockform">
+<input type="text" name="clock">
+</form>
+</body>
+</html>
