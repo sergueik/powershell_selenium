@@ -83,7 +83,7 @@ def send_command_and_get_result(driver, cmd, params = {}):
 if __name__ == '__main__':
   # https://docs.python.org/2/library/getopt.html
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'hdi:o:s:p:', ['help', 'input=', 'output=','size=', 'pages='])
+    opts, args = getopt.getopt(sys.argv[1:], 'hdi:o:s:p:', ['help', 'debug', 'input=', 'output=','size=', 'pages='])
   except getopt.GetoptError as err:
     print('usage: print_pdf.py --input <html page> --output <output file>')
     print(str(err))
