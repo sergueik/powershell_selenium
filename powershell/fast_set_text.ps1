@@ -70,7 +70,7 @@ write-debug ('Element: {0}' -f $element.getAttribute('outerHTML') )
 
 highlight -element ([ref]$element) -color 'green' -selenium_ref ([ref]$selenium)
 
-setValue -element_ref ([ref]$element) -text $text -selenium_ref ([ref]$selenium)
+setValue -element_ref ([ref]$element) -text $text -selenium_ref ([ref]$selenium) -run_debug $true
 write-output ('Element Value: ' + $element.getAttribute('value'))
 # TODO: take element screenshot
 custom_pause -fullstop $fullstop

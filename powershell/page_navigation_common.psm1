@@ -1060,43 +1060,60 @@ return check_image_ready(selector, debug);
 function setValue {
   param(
     [System.Management.Automation.PSReference]$selenium_ref,
-    [System.Management.Automation.PSReference]$element_ref,
+    [Parameter(ParameterSetName = 'set_element')] [System.Management.Automation.PSReference]$element_ref = $null,
+    [Parameter(ParameterSetName = 'set_locator')] [String]$element_locator = $null,
     [String]$text = '',
-    [switch]$debug,
-    [String]$element_locator = 'body'
+    [bool]$run_debug
+    # [switch]$debug
+    # ParameterNameAlreadyExistsForCommand
+    # setValue : A parameter with the name 'Debug' was defined multiple times for the command
   )
-  $run_debug = [bool]$PSBoundParameters['debug'].IsPresent
-
-  [string]$local:script = @'
-// based on: https://github.com/selenide/selenide/blob/master/src/main/java/com/codeborne/selenide/commands/SetValue.java
-var setValue = function(element, text) {
-if (element.getAttribute('readonly') != undefined) return 'Cannot change value of readonly element';
-if (element.getAttribute('disabled') != undefined) return 'Cannot change value of disabled element';
-element.focus();
-var maxlength = element.getAttribute('maxlength') == null ? -1 : parseInt(element.getAttribute('maxlength'));
-element.value = maxlength == -1 ? text : text.length <= maxlength ? text : text.substring(0, maxlength);
-return null;
-}
-
-var element = arguments[0];
-var text = arguments[1];
-var debug = arguments[2];
-
-setValue(element, text);
-return;
-
+  # $run_debug = [bool]$PSBoundParameters['debug'].IsPresent
+  [OpenQA.Selenium.IJavaScriptExecutor]$local:js = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value)
+  [String]$local:functionScript =  @'
+  // based on: https://github.com/selenide/selenide/blob/master/src/main/java/com/codeborne/selenide/commands/SetValue.java
+    var setValue = function(element, text) {
+    if (element.getAttribute('readonly') != undefined) return 'Cannot change value of readonly element';
+    if (element.getAttribute('disabled') != undefined) return 'Cannot change value of disabled element';
+    element.focus();
+    var maxlength = element.getAttribute('maxlength') == null ? -1 : parseInt(element.getAttribute('maxlength'));
+    element.value = maxlength == -1 ? text : text.length <= maxlength ? text : text.substring(0, maxlength);
+    return null;
+  };
 '@
+  if ($element_ref -ne $null) {
+    [string]$local:script = ( $local:functionScript + @'
+      var element = arguments[0];
+      var text = arguments[1];
+      var debug = arguments[2];
 
-  [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
-  $run_debug = [bool]$PSBoundParameters['debug'].IsPresent
+      setValue(element, text);
+      return;
+'@ )
+    # NOTE: with 'Microsoft.PowerShell.Commands.WriteErrorException,check_image_ready' will be thrown if write-error is used here instead of write-debug
+    # TODO : support $element_locator
+    <#
+     Exception calling "ExecuteScript" with "4" argument(s): "Argument is of anillegal typeFalse
+    #>
+    [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
+    $local:element_argument = $local:element
+  }
+  if ($element_locator -ne $null -and $element_ref -eq $null) {
+    $local:element_argument = $element_locator
+    [string]$local:script =  (  $local:functionScript + @'
+      var selector = arguments[0];
+      var text = arguments[1];
+      var debug = arguments[2];
+      var nodes = window.document.querySelectorAll(selector);
+      if (nodes) {
+        setValue(nodes[0], text);
+      }
+      return;
+'@ )
+  }
   if ($run_debug) {
     write-debug ('Running the script: {0}' -f $local:script )
     write-debug ('Entering text: {0}' -f $text )
   }
-  # NOTE: with 'Microsoft.PowerShell.Commands.WriteErrorException,check_image_ready' will be thrown if write-error is used here instead of write-debug
-  # TODO : support $element_locator
-  <#
-   Exception calling "ExecuteScript" with "4" argument(s): "Argument is of anillegal typeFalse
-  #>
-  ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value).ExecuteScript($local:script, $local:element, $text, $run_debug )
+  $local:js.ExecuteScript($local:script, $local:element_argument, $text, $run_debug )
 }
