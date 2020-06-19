@@ -136,7 +136,7 @@ function loadScript {
 
 function xpathOfElement {
   param(
-    [System.Management.Automation.PSReference]$element_ref = ([ref]$element_ref)
+    [System.Management.Automation.PSReference]$element_ref
   )
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
   [string]$local:rawjson = $null
@@ -547,7 +547,7 @@ function sleep(milliseconds) {
 .SYNOPSIS
   Finds element using specific method of finding : xpath, classname, css_selector etc.
 .DESCRIPTION
-  Receives aither of the core Selenium locator strategies as named argument
+  Receives either of the core Selenium locator strategies as named argument
 
 .EXAMPLE
   $element = find_element2 -selector 'classname' -value $classname
@@ -1043,4 +1043,55 @@ return check_image_ready(selector, debug);
   write-debug ('Result = {0}' -f $local:rawjson)
 
   return $local:rawjson
+}
+
+<#
+.SYNOPSIS
+  Utility to enter text intothe element
+.DESCRIPTION
+  Runs Javascript on the page to enter text intothe element
+.EXAMPLE
+.LINK
+.NOTES
+  VERSION HISTORY
+  2020/06/18 Initial Version
+#>
+# fastSetText
+function setValue {
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [System.Management.Automation.PSReference]$element_ref,
+    [switch]$debug,
+    [String]$element_locator = 'body'
+  )
+
+  [string]$local:script = @'
+// based on: https://github.com/selenide/selenide/blob/master/src/main/java/com/codeborne/selenide/commands/SetValue.java
+var setValue = function(element, text) {
+if (element.getAttribute('readonly') != undefined) return 'Cannot change value of readonly element';
+if (element.getAttribute('disabled') != undefined) return 'Cannot change value of disabled element';
+element.focus();
+var maxlength = element.getAttribute('maxlength') == null ? -1 : parseInt(element.getAttribute('maxlength'));
+element.value = maxlength == -1 ? text : text.length <= maxlength ? text : text.substring(0, maxlength);
+return null;
+}
+
+var element = arguments[0];
+var text = arguments[1];
+
+setValue(element, text);
+return;
+
+'@
+
+  [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
+  write-debug ('Running the script : {0}' -f $local:script )
+  # NOTE: with 'Microsoft.PowerShell.Commands.WriteErrorException,check_image_ready' will be thrown if write-error is used here instead of write-debug
+# TODO : support $element_locator
+<#
+  $local:result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value).ExecuteScript($local:script, $local:element, $debug  )
+  #>
+  write-debug ('Result = {0}' -f $local:result)
+
+  return $local:result
 }

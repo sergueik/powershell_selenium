@@ -112,9 +112,9 @@ try{
 custom_pause -fullstop $fullstop
 
 # launch survey
-$answer_button_xpath = "//*[@id="sbStarterCard9"]/div/a[contains(text(), 'Answer')]"
+$answer_button_xpath = "//*[@id='sbStarterCard9']/div/a[contains(text(), 'Answer')]"
 $answer_button_element = find_element -xpath $answer_button_xpath
-highlight ([ref]$selenium) ([ref]$$answer_button_element) -timeout 3000
+highlight ([ref]$selenium) ([ref]$answer_button_element) -timeout 3000
 $answer_button_element.click()
 $survey_link_selectoer = "#surveyList > tbody#profilerSurveyTBody > tr:nth-child(46) > td.surveyLink.startSurveyLink > a[class *='surveyClick']"
 # TODO: clear the target attribute "_blank", optionally strip onClick attributes:

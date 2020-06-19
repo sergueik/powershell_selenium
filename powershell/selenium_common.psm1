@@ -335,8 +335,8 @@ which can be collaptsed into
       }
     }
     elseif ($browser -match 'chrome') {
-      $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
       if ($use_remote_driver) {
+        $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
         $selenium = New-Object OpenQA.Selenium.Remote.RemoteWebDriver ($uri,$capability)
       } else {
         $driver_environment_variable = 'webdriver.chrome.driver'
@@ -393,6 +393,7 @@ which can be collaptsed into
         $options.addArguments([System.Collections.Generic.List[string]]@('--allow-running-insecure-content', '--disable-infobars', '--enable-automation', '--kiosk', "--lang=${locale}"))
         $options.AddUserProfilePreference('credentials_enable_service', $false)
         $options.AddUserProfilePreference('profile.password_manager_enabled', $false)
+        write-output ('driver: {0}' -f "${selenium_drivers_path}\chromedriver.exe")
         $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver($options)
       }
     }
@@ -488,8 +489,8 @@ function cleanup {
 	custom_pause [-fullstop]
 
 .LINK
-	
-	
+
+
 .NOTES
 
 	VERSION HISTORY
@@ -509,8 +510,6 @@ function custom_pause {
     Start-Sleep -Millisecond 1000
   }
 }
-
-
 
 <#
 .SYNOPSIS
@@ -539,9 +538,13 @@ function set_timeouts {
     [int]$page_load = 60,
     [int]$script = 60
   )
+  # $local:selenium = $selenium_ref.Value
+  # $selenium | get-member
+  # $timeouts = $selenium.Manage().timeouts()
   # [OpenQA.Selenium.Remote.RemoteTimeouts] is an interface?
   # Unable to find type [OpenQA.Selenium.Remote.RemoteTimeouts]
 
+  # $timeouts| get-member
   <# new Selenium Webdriver
   $timeouts = $selenium_ref.Value.Manage().timeouts()
   $timeouts.ImplicitWait = [System.TimeSpan]::FromSeconds($explicit)
@@ -556,6 +559,7 @@ function set_timeouts {
   [void]($selenium_ref.Value.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script)))
   
 }
+
 
 <#
 .SYNOPSIS
