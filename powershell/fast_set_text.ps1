@@ -81,8 +81,9 @@ custom_pause
 [String]$text1 = $arr -join ''
 
 setValue -element_locator $selector -element_ref ([ref]$element) -text $text1 -selenium_ref ([ref]$selenium) -run_debug $true
-
+# cannot leave off the -element_ref ([ref]$element) argument
 # setValue : Cannot process argument transformation on parameter 'element_ref'. Reference type is expected in argument.
+# cannot set a null ref for -element_ref ([ref]$null)
 # setValue : Parameter set cannot be resolved using the specified named parameters.
 custom_pause -fullstop $fullstop
 $selenium.close()

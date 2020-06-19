@@ -1051,17 +1051,25 @@ return check_image_ready(selector, debug);
 .DESCRIPTION
   Runs Javascript on the page to enter text intothe element
 .EXAMPLE
+
+  $locator = 'form#contact_form > fieldset div.form-group div.input-group textarea.form-control'
+
+  $element = find_element -css $locator
+
+  setValue -element_ref ([ref]$element) -text $text -selenium_ref ([ref]$selenium) -run_debug $true
+
+  setValue -element_locator $locator -element_ref ([ref]$element) -text $text -selenium_ref ([ref]$selenium)
+
 .LINK
 .NOTES
   VERSION HISTORY
   2020/06/18 Initial Version
 #>
-# fastSetText
 function setValue {
   param(
     [System.Management.Automation.PSReference]$selenium_ref,
-    [Parameter(Mandatory=$false, ParameterSetName = 'set_element')] [System.Management.Automation.PSReference]$element_ref = $null,
-    [Parameter(Mandatory=$false, ParameterSetName = 'set_locator')] [String]$element_locator = $null,
+    [Parameter(Mandatory=$false)] [System.Management.Automation.PSReference]$element_ref = $null,
+    [Parameter(Mandatory=$false)] [String]$element_locator = $null,
     [String]$text = '',
     [bool]$run_debug
     # [switch]$debug
@@ -1071,7 +1079,7 @@ function setValue {
   # $run_debug = [bool]$PSBoundParameters['debug'].IsPresent
   [OpenQA.Selenium.IJavaScriptExecutor]$local:js = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value)
   [String]$local:functionScript =  @'
-  // based on: https://github.com/selenide/selenide/blob/master/src/main/java/com/codeborne/selenide/commands/SetValue.java
+    // based on: https://github.com/selenide/selenide/blob/master/src/main/java/com/codeborne/selenide/commands/SetValue.java
     var setValue = function(element, text) {
     if (element.getAttribute('readonly') != undefined) return 'Cannot change value of readonly element';
     if (element.getAttribute('disabled') != undefined) return 'Cannot change value of disabled element';
@@ -1081,7 +1089,7 @@ function setValue {
     return null;
   };
 '@
-  if ($element_locator -eq $null -and $element_ref -ne $null -and $element_ref.Value -ne $null) {
+  if ($element_locator -eq $null -or $element_locator -eq '') {
     [string]$local:script = ( $local:functionScript + @'
       var element = arguments[0];
       var text = arguments[1];
@@ -1090,15 +1098,11 @@ function setValue {
       setValue(element, text);
       return;
 '@ )
-    # NOTE: with 'Microsoft.PowerShell.Commands.WriteErrorException,check_image_ready' will be thrown if write-error is used here instead of write-debug
-    # TODO : support $element_locator
-    <#
-     Exception calling "ExecuteScript" with "4" argument(s): "Argument is of anillegal typeFalse
-    #>
+
+    # Exception calling "ExecuteScript" with "4" argument(s): "Argument is of an illegal type False
     [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
     $local:element_argument = $local:element
-  }
-  if ($element_locator -ne $null) {
+  } else {
     $local:element_argument = $element_locator
     [string]$local:script =  (  $local:functionScript + @'
       var selector = arguments[0];
