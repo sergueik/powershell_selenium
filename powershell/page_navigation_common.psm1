@@ -1060,8 +1060,8 @@ return check_image_ready(selector, debug);
 function setValue {
   param(
     [System.Management.Automation.PSReference]$selenium_ref,
-    [Parameter(ParameterSetName = 'set_element')] [System.Management.Automation.PSReference]$element_ref = $null,
-    [Parameter(ParameterSetName = 'set_locator')] [String]$element_locator = $null,
+    [Parameter(Mandatory=$false, ParameterSetName = 'set_element')] [System.Management.Automation.PSReference]$element_ref = $null,
+    [Parameter(Mandatory=$false, ParameterSetName = 'set_locator')] [String]$element_locator = $null,
     [String]$text = '',
     [bool]$run_debug
     # [switch]$debug
@@ -1081,7 +1081,7 @@ function setValue {
     return null;
   };
 '@
-  if ($element_ref -ne $null) {
+  if ($element_locator -eq $null -and $element_ref -ne $null -and $element_ref.Value -ne $null) {
     [string]$local:script = ( $local:functionScript + @'
       var element = arguments[0];
       var text = arguments[1];
@@ -1098,7 +1098,7 @@ function setValue {
     [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
     $local:element_argument = $local:element
   }
-  if ($element_locator -ne $null -and $element_ref -eq $null) {
+  if ($element_locator -ne $null) {
     $local:element_argument = $element_locator
     [string]$local:script =  (  $local:functionScript + @'
       var selector = arguments[0];

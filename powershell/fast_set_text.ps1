@@ -67,12 +67,23 @@ $element = find_element -css  $selector
 
 write-debug ('Element: {0}' -f $element.getAttribute('outerHTML') )
 
-
 highlight -element ([ref]$element) -color 'green' -selenium_ref ([ref]$selenium)
 
 setValue -element_ref ([ref]$element) -text $text -selenium_ref ([ref]$selenium) -run_debug $true
 write-output ('Element Value: ' + $element.getAttribute('value'))
 # TODO: take element screenshot
+custom_pause
+# https://www.dotnetperls.com/reverse-string
+[char[]] $arr = $text.ToCharArray()
+[System.Array]::Reverse($arr)
+# new-object : Exception calling ".ctor" with "3" argument(s): "Index was out of range. Must be non-negative and less than the size of the collection.
+# $text1 = new-object System.String($arr)
+[String]$text1 = $arr -join ''
+
+setValue -element_locator $selector -element_ref ([ref]$element) -text $text1 -selenium_ref ([ref]$selenium) -run_debug $true
+
+# setValue : Cannot process argument transformation on parameter 'element_ref'. Reference type is expected in argument.
+# setValue : Parameter set cannot be resolved using the specified named parameters.
 custom_pause -fullstop $fullstop
 $selenium.close()
 $selenium.quit()
