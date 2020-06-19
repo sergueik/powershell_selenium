@@ -393,7 +393,7 @@ which can be collaptsed into
         $options.addArguments([System.Collections.Generic.List[string]]@('--allow-running-insecure-content', '--disable-infobars', '--enable-automation', '--kiosk', "--lang=${locale}"))
         $options.AddUserProfilePreference('credentials_enable_service', $false)
         $options.AddUserProfilePreference('profile.password_manager_enabled', $false)
-        write-output ('driver: {0}' -f "${selenium_drivers_path}\chromedriver.exe")
+        # write-host ('driver: {0}' -f "${selenium_drivers_path}\chromedriver.exe")
         $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver($options)
       }
     }
@@ -551,13 +551,13 @@ function set_timeouts {
   $timeouts.PageLoad = [System.TimeSpan]::FromSeconds($pageload)
   $timeouts.AsynchronousJavaScript = [System.TimeSpan]::FromSeconds($script)
   #>
-  
-   # older Selenium WebDriver code 
-   
+
+   # older Selenium WebDriver code
+
   [void]($selenium_ref.Value.Manage().timeouts().ImplicitlyWait([System.TimeSpan]::FromSeconds($explicit)))
   [void]($selenium_ref.Value.Manage().timeouts().SetPageLoadTimeout([System.TimeSpan]::FromSeconds($pageload)))
   [void]($selenium_ref.Value.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script)))
-  
+
 }
 
 

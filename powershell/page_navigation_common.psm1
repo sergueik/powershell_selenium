@@ -1061,9 +1061,11 @@ function setValue {
   param(
     [System.Management.Automation.PSReference]$selenium_ref,
     [System.Management.Automation.PSReference]$element_ref,
+    [String]$text = '',
     [switch]$debug,
     [String]$element_locator = 'body'
   )
+  $run_debug = [bool]$PSBoundParameters['debug'].IsPresent
 
   [string]$local:script = @'
 // based on: https://github.com/selenide/selenide/blob/master/src/main/java/com/codeborne/selenide/commands/SetValue.java
@@ -1078,6 +1080,7 @@ return null;
 
 var element = arguments[0];
 var text = arguments[1];
+var debug = arguments[2];
 
 setValue(element, text);
 return;
@@ -1085,13 +1088,15 @@ return;
 '@
 
   [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
-  write-debug ('Running the script : {0}' -f $local:script )
+  $run_debug = [bool]$PSBoundParameters['debug'].IsPresent
+  if ($run_debug) {
+    write-debug ('Running the script: {0}' -f $local:script )
+    write-debug ('Entering text: {0}' -f $text )
+  }
   # NOTE: with 'Microsoft.PowerShell.Commands.WriteErrorException,check_image_ready' will be thrown if write-error is used here instead of write-debug
-# TODO : support $element_locator
-<#
-  $local:result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value).ExecuteScript($local:script, $local:element, $debug  )
+  # TODO : support $element_locator
+  <#
+   Exception calling "ExecuteScript" with "4" argument(s): "Argument is of anillegal typeFalse
   #>
-  write-debug ('Result = {0}' -f $local:result)
-
-  return $local:result
+  ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value).ExecuteScript($local:script, $local:element, $text, $run_debug )
 }
