@@ -69,7 +69,7 @@ write-debug ('Element: {0}' -f $element.getAttribute('outerHTML') )
 
 highlight -element ([ref]$element) -color 'green' -selenium_ref ([ref]$selenium)
 
-setValue -element_ref ([ref]$element) -text $text -selenium_ref ([ref]$selenium) -run_debug $true
+setValue -element_ref ([ref]$element) -text $text -selenium_ref ([ref]$selenium) -run_debug
 write-output ('Element Value: ' + $element.getAttribute('value'))
 # TODO: take element screenshot
 custom_pause
@@ -80,7 +80,7 @@ custom_pause
 # $text1 = new-object System.String($arr)
 [String]$text1 = $arr -join ''
 
-setValue -element_locator $selector -element_ref ([ref]$element) -text $text1 -selenium_ref ([ref]$selenium) -run_debug $true
+setValue -element_locator $selector -element_ref ([ref]$element) -text $text1 -selenium_ref ([ref]$selenium) -run_debug
 # cannot leave off the -element_ref ([ref]$element) argument
 # setValue : Cannot process argument transformation on parameter 'element_ref'. Reference type is expected in argument.
 # cannot set a null ref for -element_ref ([ref]$null)

@@ -1056,7 +1056,7 @@ return check_image_ready(selector, debug);
 
   $element = find_element -css $locator
 
-  setValue -element_ref ([ref]$element) -text $text -selenium_ref ([ref]$selenium) -run_debug $true
+  setValue -element_ref ([ref]$element) -text $text -selenium_ref ([ref]$selenium) -run_debug
 
   setValue -element_locator $locator -element_ref ([ref]$element) -text $text -selenium_ref ([ref]$selenium)
 
@@ -1071,12 +1071,12 @@ function setValue {
     [Parameter(Mandatory=$false)] [System.Management.Automation.PSReference]$element_ref = $null,
     [Parameter(Mandatory=$false)] [String]$element_locator = $null,
     [String]$text = '',
-    [bool]$run_debug
-    # [switch]$debug
-    # ParameterNameAlreadyExistsForCommand
+    [switch]$run_debug
+    # NOTE: ParameterNameAlreadyExistsForCommand
     # setValue : A parameter with the name 'Debug' was defined multiple times for the command
   )
-  # $run_debug = [bool]$PSBoundParameters['debug'].IsPresent
+  $local:debug = [bool]$PSBoundParameters['run_debug'].IsPresent
+  # Exception calling "ExecuteScript" with "4" argument(s): "Argument is of an illegal type False
   [OpenQA.Selenium.IJavaScriptExecutor]$local:js = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value)
   [String]$local:functionScript =  @'
     // based on: https://github.com/selenide/selenide/blob/master/src/main/java/com/codeborne/selenide/commands/SetValue.java
@@ -1099,7 +1099,6 @@ function setValue {
       return;
 '@ )
 
-    # Exception calling "ExecuteScript" with "4" argument(s): "Argument is of an illegal type False
     [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
     $local:element_argument = $local:element
   } else {
@@ -1115,9 +1114,9 @@ function setValue {
       return;
 '@ )
   }
-  if ($run_debug) {
+  if ($local:debug) {
     write-debug ('Running the script: {0}' -f $local:script )
     write-debug ('Entering text: {0}' -f $text )
   }
-  $local:js.ExecuteScript($local:script, $local:element_argument, $text, $run_debug )
+  $local:js.ExecuteScript($local:script, $local:element_argument, $text, $local:debug )
 }
