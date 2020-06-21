@@ -1047,29 +1047,25 @@ return check_image_ready(selector, debug);
 
 <#
 .SYNOPSIS
-  Utility to enter text intothe element
+  Utility to enter text into the element
 .DESCRIPTION
-  Runs Javascript on the page to enter text intothe element
+  Runs Javascript on the page to enter text into the provided element (by reference)
 .EXAMPLE
 
-  $locator = 'form#contact_form > fieldset div.form-group div.input-group textarea.form-control'
-
-  $element = find_element -css $locator
+  $element = find_element -css 'form#contact_form > fieldset div.form-group div.input-group textarea.form-control'
 
   setValue -element_ref ([ref]$element) -text $text -selenium_ref ([ref]$selenium) -run_debug
-
-  setValue -element_locator $locator -element_ref ([ref]$element) -text $text -selenium_ref ([ref]$selenium)
 
 .LINK
 .NOTES
   VERSION HISTORY
   2020/06/18 Initial Version
+  2020/06/21 Segregated setValue and setValueWithLocator
 #>
 function setValue {
   param(
     [System.Management.Automation.PSReference]$selenium_ref,
-    [Parameter(Mandatory=$false)] [System.Management.Automation.PSReference]$element_ref = $null,
-    [Parameter(Mandatory=$false)] [String]$element_locator = $null,
+    [System.Management.Automation.PSReference]$element_ref = $null,
     [String]$text = '',
     [switch]$run_debug
     # NOTE: ParameterNameAlreadyExistsForCommand
@@ -1078,45 +1074,79 @@ function setValue {
   $local:debug = [bool]$PSBoundParameters['run_debug'].IsPresent
   # Exception calling "ExecuteScript" with "4" argument(s): "Argument is of an illegal type False
   [OpenQA.Selenium.IJavaScriptExecutor]$local:js = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value)
-  [String]$local:functionScript =  @'
+  [string]$local:script = ( $local:functionScript + @'
     // based on: https://github.com/selenide/selenide/blob/master/src/main/java/com/codeborne/selenide/commands/SetValue.java
     var setValue = function(element, text) {
-    if (element.getAttribute('readonly') != undefined) return 'Cannot change value of readonly element';
-    if (element.getAttribute('disabled') != undefined) return 'Cannot change value of disabled element';
-    element.focus();
-    var maxlength = element.getAttribute('maxlength') == null ? -1 : parseInt(element.getAttribute('maxlength'));
-    element.value = maxlength == -1 ? text : text.length <= maxlength ? text : text.substring(0, maxlength);
-    return null;
-  };
-'@
-  if ($element_locator -eq $null -or $element_locator -eq '') {
-    [string]$local:script = ( $local:functionScript + @'
-      var element = arguments[0];
-      var text = arguments[1];
-      var debug = arguments[2];
+      if (element.getAttribute('readonly') != undefined) return 'Cannot change value of readonly element';
+      if (element.getAttribute('disabled') != undefined) return 'Cannot change value of disabled element';
+      element.focus();
+      var maxlength = element.getAttribute('maxlength') == null ? -1 : parseInt(element.getAttribute('maxlength'));
+      element.value = maxlength == -1 ? text : text.length <= maxlength ? text : text.substring(0, maxlength);
+      return null;
+    };
+    var element = arguments[0];
+    var text = arguments[1];
+    var debug = arguments[2];
 
-      setValue(element, text);
-      return;
+    setValue(element, text);
+    return;
 '@ )
 
-    [OpenQA.Selenium.ILocatable]$local:element = ([OpenQA.Selenium.ILocatable]$element_ref.Value)
-    $local:element_argument = $local:element
-  } else {
-    $local:element_argument = $element_locator
-    [string]$local:script =  (  $local:functionScript + @'
-      var selector = arguments[0];
-      var text = arguments[1];
-      var debug = arguments[2];
-      var nodes = window.document.querySelectorAll(selector);
-      if (nodes) {
-        setValue(nodes[0], text);
-      }
-      return;
-'@ )
-  }
   if ($local:debug) {
-    write-debug ('Running the script: {0}' -f $local:script )
-    write-debug ('Entering text: {0}' -f $text )
+    write-debug ('Running the script: {0} to enter text: {1}' -f $local:script,  $text )
   }
-  $local:js.ExecuteScript($local:script, $local:element_argument, $text, $local:debug )
+  $local:js.ExecuteScript($local:script, ([OpenQA.Selenium.ILocatable]$element_ref.Value), $text, $local:debug )
+}
+
+
+<#
+.SYNOPSIS
+  Utility to enter text into the element
+.DESCRIPTION
+  Runs Javascript on the page to enter text into the element located though provided css selector
+.EXAMPLE
+
+  $locator = 'form#contact_form > fieldset div.form-group div.input-group textarea.form-control'
+  setValueWithLocator -element_locator $locator -text $text -selenium_ref ([ref]$selenium)
+
+.LINK
+.NOTES
+  VERSION HISTORY
+  2020/06/21 Initial Version
+#>
+
+function setValueWithLocator {
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [String]$element_locator = $null,
+    [String]$text = '',
+    [switch]$run_debug
+  )
+  $local:debug = [bool]$PSBoundParameters['run_debug'].IsPresent
+  [OpenQA.Selenium.IJavaScriptExecutor]$local:js = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value)
+  $local:element_argument = $element_locator
+  [string]$local:script =  (  $local:functionScript + @'
+    // based on: https://github.com/selenide/selenide/blob/master/src/main/java/com/codeborne/selenide/commands/SetValue.java
+    var setValue = function(element, text) {
+      if (element.getAttribute('readonly') != undefined) return 'Cannot change value of readonly element';
+      if (element.getAttribute('disabled') != undefined) return 'Cannot change value of disabled element';
+      element.focus();
+      var maxlength = element.getAttribute('maxlength') == null ? -1 : parseInt(element.getAttribute('maxlength'));
+      element.value = maxlength == -1 ? text : text.length <= maxlength ? text : text.substring(0, maxlength);
+      return null;
+    };
+    var selector = arguments[0];
+    var text = arguments[1];
+    var debug = arguments[2];
+    var nodes = window.document.querySelectorAll(selector);
+    if (nodes) {
+      setValue(nodes[0], text);
+    }
+    return;
+'@ )
+
+  if ($local:debug) {
+    write-debug ('Running the script: {0} to enter text: {1}' -f $local:script,  $text )
+  }
+  $local:js.ExecuteScript($local:script, $element_locator, $text, $local:debug )
 }

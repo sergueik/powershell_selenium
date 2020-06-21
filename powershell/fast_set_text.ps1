@@ -80,7 +80,7 @@ custom_pause
 # $text1 = new-object System.String($arr)
 [String]$text1 = $arr -join ''
 
-setValue -element_locator $selector -element_ref ([ref]$element) -text $text1 -selenium_ref ([ref]$selenium) -run_debug
+setValueWithLocator -element_locator $selector -text $text1 -selenium_ref ([ref]$selenium) -run_debug
 # cannot leave off the -element_ref ([ref]$element) argument
 # setValue : Cannot process argument transformation on parameter 'element_ref'. Reference type is expected in argument.
 # cannot set a null ref for -element_ref ([ref]$null)
