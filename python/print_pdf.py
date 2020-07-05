@@ -36,6 +36,61 @@ def print_pdf(url, chromedriver = './chromedriver', print_options = {}):
   options = Options()
   options.add_argument('--headless')
   options.add_argument('--disable-gpu')
+  # for annotated list of chrome headless flags, see
+  # https://peter.sh/experiments/chromium-command-line-switches/
+  # https://groups.google.com/forum/#!topic/selenium-users/SnxpvG8Erj4
+  flags = [
+    '--data-path=/tmp/data-path',
+    '--disable-background-timer-throttling',
+    '--disable-breakpad',
+    '--disable-client-side-phishing-detection',
+    '--disable-cloud-import',
+    '--disable-default-apps',
+    '--disable-dev-shm-usage', 
+    '--disable-extensions',
+    '--disable-gesture-typing',
+    '--disable-gpu',
+    '--disable-hang-monitor',
+    '--disable-infobars',
+    '--disable-notifications',
+    '--disable-offer-store-unmasked-wallet-cards',
+    '--disable-offer-upload-credit-cards',
+    '--disable-popup-blocking',
+    '--disable-print-preview',
+    '--disable-prompt-on-repost',
+    '--disable-setuid-sandbox',
+    '--disable-speech-api',
+    '--disable-sync',
+    '--disable-tab-for-desktop-share',
+    '--disable-translate',
+    '--disable-voice-input',
+    '--disable-wake-on-wifi',
+    '--disable-webgl',
+    '--disk-cache-dir=/tmp/cache-dir',
+    '--enable-async-dns',
+    '--enable-simple-cache-backend',
+    '--enable-tcp-fast-open',
+    '--headless',
+    '--hide-scrollbars',
+    '--homedir=/tmp',
+    '--ignore-gpu-blacklist',
+    '--media-cache-size=33554432',
+    '--metrics-recording-only',
+    '--mute-audio',
+    '--no-default-browser-check',
+    '--no-first-run',
+    '--no-pings',
+    '--no-sandbox',
+    '--no-zygote',
+    '--password-store=basic',
+    '--prerender-from-omnibox=disabled',
+    '--remote-debugging-port=9222',
+    '--single-process',
+    '--use-mock-keychain',
+    '--user-data-dir=/tmp/user-data',
+    '--window-size={}'.format(getenv('WINDOW_SIZE'))
+  ]
+  
   driver = webdriver.Chrome(chromedriver, options = options)
   if debug:
     print('Loading url: "{}"'.format(url), file = sys.stderr)
@@ -144,6 +199,9 @@ if __name__ == '__main__':
   if debug:
     print('opts: {}'.format(opts))
     # exit()
+  helper = h1()
+  helper.visit_site(url, homedir + '/' + 'Downloads' + '/' + 'chromedriver', print_options)
+
   result = print_pdf(url, homedir + '/' + 'Downloads' + '/' + 'chromedriver', print_options)
   with open(file = output_file, mode = 'wb') as f:
     f.write(result)
