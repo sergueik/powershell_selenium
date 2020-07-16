@@ -18,19 +18,20 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
 
-# automate the UCD Selenium client 
+# automate the UCD Selenium client
 
 param(
   [string]$ucd =  "192.168.0.64",
   [string]$username = 'admin',
   [string]$password = 'admin',
-  [string]$browser = 'chrome',
+  [string]$browser = 'firefox', # currently more stable under ferefox
+  # 
   [switch]$grid,
   [switch]$headless,
   [switch]$pause
 )
 $base_url = ('https://{0}:8443/' -f $ucd)
-$debugpreference='continue'
+$debugpreference = 'continue'
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 write-debug ('Full Stop: {0}' -f $fullstop )
 $MODULE_NAME = 'selenium_utils.psd1'
@@ -58,29 +59,12 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
 function close_dialog{
 param(
   [string] $selector
-) 
+)
 dialogElement = driver.findElement(By.cssSelector($selector))
 element = dialogElement.findElement(By.cssSelector("span.closeDialogIcon"))
 element.click()
 }
 
-finction user_sign_out {
-param(
-  [string]$username = 'admin'
-)
-$element = wait.until(
-		ExpectedConditions.visibilityOf(driver.findElement(By.cssSelector(
-	("div.idxHeaderPrimary a[title='%s']" -f username)))))
-$element.click()
-	$element = wait.until(ExpectedConditions.visibilityOf(
-				driver.findElement(By.cssSelector("div.dijitPopup.dijitMenuPopup"))))
-highlight -element ([ref]$element2) -color 'green' -selenium_ref ([ref]$selenium)
-$elements = element.findElements(By.xpath(
-				".//td[contains(@class, 'dijitMenuItemLabel')][contains(text(),'Sign Out')]"));
-	$element = $elements[0]
-highlight -element ([ref]$element2) -color 'green' -selenium_ref ([ref]$selenium)
-$element.click()
-}
 #>
 
 function login_user {
@@ -90,14 +74,14 @@ function login_user {
   )
   $id = 'usernameField'
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::Id($id)))
-  
+
   $css_selector = 'form[action = "/tasks/LoginTasks/login" ] input[name = "username"]'
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
   [OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
   $element.sendKeys($username)
   $css_selector = 'form input[name = "password"]'
   $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-  setValue -element_ref ([ref]$element) -text $password -selenium_ref ([ref]$selenium) -run_debug
+  setValue -element_ref ([ref]$element) -text $password -selenium_ref ([ref]$selenium)
   $css_selector = 'form span[widgetid = "submitButton"]'
   $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
   highlight -element ([ref]$element) -color 'green' -selenium_ref ([ref]$selenium)
@@ -120,13 +104,34 @@ function login_user {
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::UrlContains('dashboard'))
 }
 
+function user_sign_out {
+  param(
+    [string]$username = 'admin'
+  )
+  $css_selector = ( 'div.idxHeaderPrimary a[title = "{0}"]' -f $username )
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+  [OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+highlight -element ([ref]$element) -color 'green' -selenium_ref ([ref]$selenium)
+  $element.click()
+  $css_selector = 'div.dijitPopup.dijitMenuPopup'
+  $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+  highlight -element ([ref]$element) -color 'green' -selenium_ref ([ref]$selenium)
+  $xpath = './/td[contains(@class, "dijitMenuItemLabel")][contains(text(),"Sign Out")]'
+
+  [OpenQA.Selenium.IWebElement]$element2 = $element.FindElements([OpenQA.Selenium.By]::Xpath($xpath))[0]
+  highlight -element ([ref]$element2) -color 'green' -selenium_ref ([ref]$selenium)
+  $element2.click()
+}
+
+# main flow
 $selenium.Navigate().GoToUrl($base_url)
-# NOTE: slow 
+# NOTE: slow
 [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(20))
 $wait.PollingInterval = 150
 [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
 
 login_user
+user_sign_out
 custom_pause -fullstop $fullstop
 if (-not ($host.Name -match 'ISE')) {
   # Cleanup

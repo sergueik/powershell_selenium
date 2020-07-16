@@ -384,13 +384,26 @@ which can be collaptsed into
           # $options.addArguments('user-data-dir=c:/TEMP');
 
           $options.addArguments('--profile-directory=Default')
-
+          $options.addArguments('--ignore-certificate-errors')
+	  # https://stackoverflow.com/questions/45510973/headless-chrome-ignore-certificate-errors
+	  # Method invocation failed because [OpenQA.Selenium.Chrome.ChromeOptions] does not contain a method named 'setAcceptInsecureCerts'.
+	  # $options.setAcceptInsecureCerts($true)
+	  # the property 'AcceptInsecureCertificates' cannot be found on this object.
+	  # $options.AcceptInsecureCertificates  = $true
           [OpenQA.Selenium.Remote.DesiredCapabilities]$capabilities = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
           $capabilities.setCapability([OpenQA.Selenium.Chrome.ChromeOptions]::Capability,$options)
+	  # see https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/remote/CapabilityType.html
+	  # NOTE: has no effect		
+          $capabilities.setCapability([OpenQA.Selenium.Remote.CapabilityType]::ACCEPT_SSL_CERTS, $true)
+          $capabilities.setCapability([OpenQA.Selenium.Remote.CapabilityType]::ACCEPT_INSECURE_CERTS, $true)
         }
         $locale = 'en-us'
         # http://knowledgevault-sharing.blogspot.com/2017/05/selenium-webdriver-with-powershell.html
-        $options.addArguments([System.Collections.Generic.List[string]]@('--allow-running-insecure-content', '--disable-infobars', '--enable-automation', '--kiosk', "--lang=${locale}"))
+	$kiosk = $false
+        $options.addArguments([System.Collections.Generic.List[string]]@('--allow-running-insecure-content', '--disable-infobars', '--enable-automation', "--lang=${locale}"))
+	if ($kiosk){ 
+          $options.addArguments([System.Collections.Generic.List[string]]@( '--kiosk'))
+	}
         $options.AddUserProfilePreference('credentials_enable_service', $false)
         $options.AddUserProfilePreference('profile.password_manager_enabled', $false)
         # write-host ('driver: {0}' -f "${selenium_drivers_path}\chromedriver.exe")
@@ -499,7 +512,10 @@ function cleanup {
 
 
 function custom_pause {
-  param([bool]$fullstop)
+  param(
+    [bool]$fullstop,
+    [int]$timeout = 1000
+  )
   # Do not close Browser / Selenium when run from Powershell ISE
   if ($fullstop) {
     try {
@@ -507,7 +523,7 @@ function custom_pause {
       [void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
     } catch [exception]{}
   } else {
-    Start-Sleep -Millisecond 1000
+    Start-Sleep -Millisecond $timeout
   }
 }
 
