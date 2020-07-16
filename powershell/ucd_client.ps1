@@ -21,12 +21,13 @@
 # automate the UCD Selenium client
 
 param(
-  [string]$ucd =  "192.168.0.64",
+  [string]$ucd      = '192.168.0.64',
   [string]$username = 'admin',
   [string]$password = 'admin',
-  [string]$browser = 'firefox', # currently more stable under ferefox
+  [string]$browser  = 'firefox', # currently more stable under ferefox
   # 
   [switch]$grid,
+  [switch]$kiosk, # chrome behaves differently in kiosk mode
   [switch]$headless,
   [switch]$pause
 )
@@ -42,6 +43,9 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
 if ([bool]$PSBoundParameters['headless'].IsPresent) {
   write-debug 'Running headless'
 }
+if ([bool]$PSBoundParameters['kiosk'].IsPresent) {
+  write-debug 'Running kiosk mode'
+}
 if ([bool]$PSBoundParameters['grid'].IsPresent) {
   if ([bool]$PSBoundParameters['headless'].IsPresent) {
     $selenium = launch_selenium -browser $browser -grid -headless
@@ -55,17 +59,18 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
     $selenium = launch_selenium -browser $browser
   }
 }
-<#
-function close_dialog{
-param(
-  [string] $selector
-)
-dialogElement = driver.findElement(By.cssSelector($selector))
-element = dialogElement.findElement(By.cssSelector("span.closeDialogIcon"))
-element.click()
-}
 
-#>
+function close_dialog{
+  param(
+    [string] $css_selector = 'div[role = "dialog"]'
+  )
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+  [OpenQA.Selenium.IWebElement]$local:element1 = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+
+  [OpenQA.Selenium.IWebElement]$local:element2 = $element1.FindElement([OpenQA.Selenium.By]::CssSelector('span.closeDialogIcon'))
+  $local:element2.click()
+  
+}
 
 function login_user {
   param(
@@ -111,7 +116,7 @@ function user_sign_out {
   $css_selector = ( 'div.idxHeaderPrimary a[title = "{0}"]' -f $username )
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
   [OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
-highlight -element ([ref]$element) -color 'green' -selenium_ref ([ref]$selenium)
+  highlight -element ([ref]$element) -color 'green' -selenium_ref ([ref]$selenium)
   $element.click()
   $css_selector = 'div.dijitPopup.dijitMenuPopup'
   $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
@@ -123,15 +128,71 @@ highlight -element ([ref]$element) -color 'green' -selenium_ref ([ref]$selenium)
   $element2.click()
 }
 
+function navigate_to_resource_tree() {
+
+  $area = '#main/resources'
+  $css_selector = ('a.tab.linkPointer[href = "{0}"] span.tabLabel' -f $area)
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+  [OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+  highlight -element ([ref]$element) -color 'green' -selenium_ref ([ref]$selenium)
+  $element.click()
+  
+  $css_selector =  '*[id *= "uniqName_"] > div.selectableTable.webextTable.treeTable > table'
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+  [OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+  
+		if ($debug) {
+			write-output ( 'table: ' + $element.getAttribute('innerHTML'))
+		}
+    <#
+		elements = element.findElements(By.cssSelector(
+				"tr.noPrint.tableFilterRow input[class *= 'dijitInputInner']"));
+		assertThat(elements, notNullValue());
+		assertThat(elements.size(), greaterThan(1));
+		element = elements.get(0);
+		// select group by name
+		fastSetText(element, groupName);
+		highlight(element);
+		element.sendKeys(Keys.ENTER);
+		sleep(1000);
+		// TODO: improve the selector
+		element = wait.until(
+				ExpectedConditions.visibilityOf(driver.findElement(By.cssSelector(
+						"*[id *= 'uniqName_'] > div.selectableTable.webextTable.treeTable > table"))));
+		assertThat(element, notNullValue());
+		highlight(element);
+		// if (debug) {
+		// System.err.println(element.getAttribute("innerHTML"));
+		// }
+		elements = element.findElements(By.cssSelector(
+				"tbody.treeTable-body > tr:nth-of-type(1) > td:nth-of-type(3) div.inlineBlock a[href *= '#resource']"));
+		assertThat(elements.size(), is(1));
+		element = elements.get(0);
+		highlight(element);
+		assertThat(element.getText(), is(groupName));
+		// if (debug) {
+		// System.err.println(element.getAttribute("innerHTML"));
+		// }
+		element.click();
+		element = wait.until(ExpectedConditions.visibilityOf(driver.findElement(
+				By.cssSelector("div.masterContainer div.containerLabel"))));
+		assertThat(element, notNullValue());
+		highlight(element);
+		assertThat(element.getText(), is("Subresources"));
+    #>
+}
+
+
 # main flow
 $selenium.Navigate().GoToUrl($base_url)
 # NOTE: slow
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(20))
+[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(20))
 $wait.PollingInterval = 150
-[OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+[OpenQA.Selenium.Interactions.Actions]$actions = new-object OpenQA.Selenium.Interactions.Actions ($selenium)
 
-login_user
-user_sign_out
+login_user -username $username -password $password
+user_sign_out -username $username
+
 custom_pause -fullstop $fullstop
 if (-not ($host.Name -match 'ISE')) {
   # Cleanup
