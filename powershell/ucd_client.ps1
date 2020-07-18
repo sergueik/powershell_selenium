@@ -55,6 +55,8 @@ if ([bool]$PSBoundParameters['grid'].IsPresent) {
 } else {
   if ([bool]$PSBoundParameters['headless'].IsPresent) {
     $selenium = launch_selenium -browser $browser -headless
+  } elseif ([bool]$PSBoundParameters['kiosk'].IsPresent) {
+    $selenium = launch_selenium -browser $browser -kiosk
   } else {
     $selenium = launch_selenium -browser $browser
   }

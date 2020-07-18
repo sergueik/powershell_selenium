@@ -90,6 +90,7 @@ function launch_selenium {
     [string]$browser = '',
     [switch]$grid,
     [switch]$headless,
+    [switch]$kiosk,
     [int]$version,
     [string]$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies',
     # Flat directory seems a better choice for Selenium dlls
@@ -113,6 +114,7 @@ function launch_selenium {
   $use_remote_driver = [bool]$PSBoundParameters['grid'].IsPresent
   # write-debug (Get-ScriptDirectory)
   $run_headless = [bool]$PSBoundParameters['headless'].IsPresent
+  $run_kiosk = [bool]$PSBoundParameters['kiosk'].IsPresent
   if ($run_headless) {
     write-debug 'launch_selenium: Running headless'
   }
@@ -399,9 +401,8 @@ which can be collaptsed into
         }
         $locale = 'en-us'
         # http://knowledgevault-sharing.blogspot.com/2017/05/selenium-webdriver-with-powershell.html
-	$kiosk = $false
         $options.addArguments([System.Collections.Generic.List[string]]@('--allow-running-insecure-content', '--disable-infobars', '--enable-automation', "--lang=${locale}"))
-	if ($kiosk){ 
+	if ($run_kiosk){ 
           $options.addArguments([System.Collections.Generic.List[string]]@( '--kiosk'))
 	}
         $options.AddUserProfilePreference('credentials_enable_service', $false)
