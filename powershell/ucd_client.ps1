@@ -107,8 +107,11 @@ function login_user {
     # ignore: "element not interactable"
   }
   #>
-
-  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::UrlContains('dashboard'))
+  start-sleep -millisecond 2000
+  write-output $selenim.Url
+  $url_fragment ='dashboard'
+  $url_fragment = 'welcome'
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::UrlContains($url_fragment))
 }
 
 function user_sign_out {
@@ -161,11 +164,15 @@ function navigate_to_resource_tree {
   highlight -element ([ref]$element) -selenium_ref ([ref]$selenium)
   $css_selector = 'tbody.treeTable-body > tr:nth-of-type(1) > td:nth-of-type(3) div.inlineBlock a[href *= "#resource"]'
   $element2 = $element.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))[0]
-  write-output $element2.getText()# $group_name
-  $element2.click();
+  write-output $element2.Text # $group_name
+  highlight -element ([ref]$element2) -selenium_ref ([ref]$selenium)
+  $element2.click()
+  start-sleep -millisecond 1000
   $css_selector = 'div.masterContainer div.containerLabel'
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
-  write-output $element2.getText() # 'Subresources'
+  $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+  write-output $element.Text # 'Subresources'
+  highlight -element ([ref]$element) -selenium_ref ([ref]$selenium)
 }
 <#
 	private void launchProcess() {
