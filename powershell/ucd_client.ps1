@@ -130,7 +130,10 @@ function user_sign_out {
   $element2.click()
 }
 
-function navigate_to_resource_tree() {
+function navigate_to_resource_tree {
+  param(
+    [String]$group_name
+  )
 
   $area = '#main/resources'
   $css_selector = ('a.tab.linkPointer[href = "{0}"] span.tabLabel' -f $area)
@@ -143,56 +146,92 @@ function navigate_to_resource_tree() {
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
   [OpenQA.Selenium.IWebElement]$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
   
-		if ($debug) {
-			write-output ( 'table: ' + $element.getAttribute('innerHTML'))
-		}
-    <#
-		elements = element.findElements(By.cssSelector(
-				"tr.noPrint.tableFilterRow input[class *= 'dijitInputInner']"));
-		assertThat(elements, notNullValue());
-		assertThat(elements.size(), greaterThan(1));
-		element = elements.get(0);
-		// select group by name
-		fastSetText(element, groupName);
-		highlight(element);
-		element.sendKeys(Keys.ENTER);
-		sleep(1000);
-		// TODO: improve the selector
-		element = wait.until(
-				ExpectedConditions.visibilityOf(driver.findElement(By.cssSelector(
-						"*[id *= 'uniqName_'] > div.selectableTable.webextTable.treeTable > table"))));
-		assertThat(element, notNullValue());
-		highlight(element);
-		// if (debug) {
-		// System.err.println(element.getAttribute("innerHTML"));
-		// }
-		elements = element.findElements(By.cssSelector(
-				"tbody.treeTable-body > tr:nth-of-type(1) > td:nth-of-type(3) div.inlineBlock a[href *= '#resource']"));
-		assertThat(elements.size(), is(1));
-		element = elements.get(0);
-		highlight(element);
-		assertThat(element.getText(), is(groupName));
-		// if (debug) {
-		// System.err.println(element.getAttribute("innerHTML"));
-		// }
-		element.click();
-		element = wait.until(ExpectedConditions.visibilityOf(driver.findElement(
-				By.cssSelector("div.masterContainer div.containerLabel"))));
-		assertThat(element, notNullValue());
-		highlight(element);
-		assertThat(element.getText(), is("Subresources"));
-    #>
+  if ($debug) {
+    write-output ( 'table: ' + $element.getAttribute('innerHTML'))
+  }
+  $css_selector = 'tr.noPrint.tableFilterRow input[class *= "dijitInputInner"]'
+  [OpenQA.Selenium.IWebElement]$element2 = $element.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))[0]
+  setValue -element_ref ([ref]$element2) -text $group_name -selenium_ref ([ref]$selenium)
+  highlight -element ([ref]$element2) -color 'green' -selenium_ref ([ref]$selenium)
+  $element2.SendKeys([OpenQA.Selenium.Keys]::Enter)
+  start-sleep -millisecond 1000
+  $css_selector = '*[id *= "uniqName_"] > div.selectableTable.webextTable.treeTable > table'
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+  $element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css_selector))
+  highlight -element ([ref]$element) -selenium_ref ([ref]$selenium)
+  $css_selector = 'tbody.treeTable-body > tr:nth-of-type(1) > td:nth-of-type(3) div.inlineBlock a[href *= "#resource"]'
+  $element2 = $element.FindElements([OpenQA.Selenium.By]::CssSelector($css_selector))[0]
+  write-output $element2.getText()# $group_name
+  $element2.click();
+  $css_selector = 'div.masterContainer div.containerLabel'
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($css_selector)))
+  write-output $element2.getText() # 'Subresources'
 }
+<#
+	private void launchProcess() {
+		dialogElement = wait.until(ExpectedConditions.visibilityOf(
+				driver.findElement(By.cssSelector("div[role = 'dialog']"))));
+		assertThat(dialogElement, notNullValue());
+		highlight(dialogElement);
+		elements = dialogElement.findElements(By.cssSelector(
+				"input.dijitInputInner[id *= 'dijit_form_FilteringSelect']"));
+		assertThat(elements.size(), greaterThan(0));
+		element = elements.get(0);
+		String widgetid = element.getAttribute("id");
+		if (debug) {
+			System.err.println("Choice input id: " + widgetid);
+		}
+		element.sendKeys(Keys.DOWN);
 
+		// To find DOM of Javascript-generated popup run Chrome with extension
+		// "View Rendered Source"
+		// https://chrome.google.com/webstore/detail/view-rendered-source/ejgngohbdedoabanmclafpkoogegdpob?hl=en
+		// "View Generated Source"
+		// https://chrome.google.com/webstore/detail/view-generated-source/epmicgdiljcefknmbppapkbaakbgacjm?hl=en
+
+		popupElement = wait.until(ExpectedConditions.visibilityOf(
+				driver.findElement(By.cssSelector("div.dijitComboBoxMenuPopup"))));
+		assertThat(popupElement, notNullValue());
+		if (debug) {
+			System.err.println("Popup: " + popupElement.getAttribute("innerHTML"));
+		}
+		highlight(popupElement);
+
+		elements = popupElement.findElements(By.cssSelector("div.dijitMenuItem"));
+		assertThat(elements.size(), greaterThan(0));
+		element = elements.stream().filter(e -> e.getText().contains(processName))
+				.collect(Collectors.toList()).get(0);
+		assertThat(element, notNullValue());
+		System.err.println("Popup: " + element.getAttribute("innerHTML"));
+		highlight(element);
+		element.click();
+		// sleep(1000);
+		element = wait.until(ExpectedConditions.visibilityOf(dialogElement
+				.findElement(By.cssSelector("div.linkPointer.inlineBlock"))));
+		assertThat(element, notNullValue());
+		assertThat(element.getText(), is("Choose Versions"));
+		highlight(element);
+
+		element.click();
+
+		wait.until(ExpectedConditions.visibilityOf(driver.findElement(
+				By.cssSelector("div.version-selection-dialog[role = 'dialog']"))));
+		// TODO: version selections dialog
+		closeDialog("div.version-selection-dialog[role = 'dialog']");
+		closeDialog("div[role = 'dialog']");
+
+
+#>
 
 # main flow
 $selenium.Navigate().GoToUrl($base_url)
 # NOTE: slow
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(20))
+[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(60))
 $wait.PollingInterval = 150
 [OpenQA.Selenium.Interactions.Actions]$actions = new-object OpenQA.Selenium.Interactions.Actions ($selenium)
 
 login_user -username $username -password $password
+navigate_to_resource_tree -group_name 'resource_group'
 user_sign_out -username $username
 
 custom_pause -fullstop $fullstop
