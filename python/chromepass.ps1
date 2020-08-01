@@ -1,3 +1,27 @@
+#Copyright (c) 2020 Serguei Kouzmine
+#
+#Permission is hereby granted, free of charge, to any person obtaining a copy
+#of this software and associated documentation files (the "Software"), to deal
+#in the Software without restriction, including without limitation the rights
+#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#copies of the Software, and to permit persons to whom the Software is
+#furnished to do so, subject to the following conditions:
+#
+#The above copyright notice and this permission notice shall be included in
+#all copies or substantial portions of the Software.
+#
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#THE SOFTWARE.
+# automate transfer the saved passwords from Chrome or Vivaldi (Windows)
+# see also: WebBrowserPassView https://www.nirsoft.net/utils/web_browser_password.html
+# see also: https://github.com/xorrior/RandomPS-Scripts/blob/master/Get-FoxDump.ps1 - invokes unmanaged code from nss3.dll to decrypt saved passwords in Mozilla
+# and
+# https://raw.githubusercontent.com/xorrior/RandomPS-Scripts/master/Get-ChromeDump.ps1
 param (
   [String] $browser = 'chrome'
 )
@@ -38,7 +62,7 @@ private static extern bool CryptProtectData(
 
 # see also: https://blag.nullteilerfrei.de/2018/01/05/powershell-dpapi-script/
 <#
-Param(
+param(
   [string] $StoreSecret,
   [Parameter(Mandatory=$True,Position=0)]
   [string] $filename )
@@ -70,7 +94,7 @@ pushd $shared_assemblies_path
 
 $shared_assemblies | ForEach-Object {
   $shared_assembly_filename = $_
-  Add-Type -Path $shared_assembly_filename
+  add-Type -Path $shared_assembly_filename
 }
 popd
 if ($browser -eq 'vivaldi') {
@@ -111,7 +135,7 @@ if ($datatSet.Tables.Length -eq 1) {
     $data = $row.password_value
 
     $plaindata = [System.Security.Cryptography.ProtectedData]::Unprotect( $data, $null, $scope )
-    # Unable to find type [System.Security.Cryptography.ProtectedData]. - possibly run as Administrator - dont
+    # Unable to find type [System.Security.Cryptography.ProtectedData]. - possibly run as Administrator - do not run this script as administrator
 
     $plain_password_value = [System.Text.UTF8Encoding]::UTF8.GetString($plaindata)
     write-output $plain_password_value
