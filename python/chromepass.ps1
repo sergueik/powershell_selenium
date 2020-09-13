@@ -17,15 +17,26 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
+#
 # automate transfer the saved passwords from Chrome or Vivaldi (Windows)
 # see also: WebBrowserPassView https://www.nirsoft.net/utils/web_browser_password.html
 # see also: https://github.com/xorrior/RandomPS-Scripts/blob/master/Get-FoxDump.ps1 - invokes unmanaged code from nss3.dll to decrypt saved passwords in Mozilla
 # and
 # https://raw.githubusercontent.com/xorrior/RandomPS-Scripts/master/Get-ChromeDump.ps1
+# https://habr.com/ru/company/vdsina/blog/518416/#habracut
 param (
-  [String] $browser = 'chrome'
+  # several chromium based should be supported (verified with chrome and vivaldi)
+  [String]$browser = 'chrome',
+  [String]$url = $null,
+  [String]$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies',
+  [switch]$debug
 )
 # https://www.pinvoke.net/default.aspx/crypt32.cryptprotectdata
+# https://stackoverflow.com/questions/14668143/cryptunprotectdata-returns-false-when-using-jni
+# https://www.codota.com/code/java/methods/com.sun.jna.platform.win32.Crypt32/CryptUnprotectData
+# https://java-native-access.github.io/jna/4.2.0/com/sun/jna/platform/win32/Crypt32Util.html
+# http://javadox.com/net.java.dev.jna/jna/3.5.2/index-all.html
+# https://coderoad.ru/43008556/Java-CryptUnprotectData-Windows-WiFi-пароли
 <#
 @'
 
@@ -71,15 +82,18 @@ $scope = [System.Security.Cryptography.DataProtectionScope]::CurrentUser
 if ($StoreSecret -eq "") {
   $data = Get-Content $filename
   $ciphertext = [System.Convert]::FromBase64String($data)
-  # https://github.com/PowerShell/PowerShell/blob/master/src/System.Management.Automation/security/SecureStringHelper.cs
+  # https://github.com/PowerShell/PowerShell/blob/master/src/System.Management.Automation/security/SecureStringHelper.cs#L519
+  
   # internally calls CryptUnprotectData
-  $plaintext = [System.Security.Cryptography.ProtectedData]::Unprotect(
-    $ciphertext, $null, $scope )
+  #
+  # uint dwFlags = CAPI.CRYPTPROTECT_UI_FORBIDDEN;
+  # if (scope == DataProtectionScope.LocalMachine) {  dwFlags |= CAPI.CRYPTPROTECT_LOCAL_MACHINE; }
+  # CyptUnprotectData(  pDataIn: new IntPtr(&dataIn),  ppszDataDescr: IntPtr.Zero,  pOptionalEntropy: new IntPtr(&entropy),   pvReserved: IntPtr.Zero,   pPromptStruct: IntPtr.Zero, dwFlags: dwFlags, pDataBlob: new IntPtr(&userData)))
+  $plaintext = [System.Security.Cryptography.ProtectedData]::Unprotect( $ciphertext, $null, $scope )
   [System.Text.UTF8Encoding]::UTF8.GetString($plaintext)
 } else {
   $plaintext = [System.Text.UTF8Encoding]::UTF8.GetBytes($StoreSecret)
-  $ciphertext = [System.Security.Cryptography.ProtectedData]::Protect(
-    $plaintext, $null, $scope )
+  $ciphertext = [System.Security.Cryptography.ProtectedData]::Protect( $plaintext, $null, $scope )
   [System.Convert]::ToBase64String($ciphertext) > $filename
 }
 #>
@@ -89,10 +103,15 @@ $shared_assemblies = @(
   'nunit.framework.dll'
 )
 
-$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies'
+
+# SHARED_ASSEMBLIES_PATH environment overrides parameter
+if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
+  $shared_assemblies_path = $env:SHARED_ASSEMBLIES_PATH
+}
+
 pushd $shared_assemblies_path
 
-$shared_assemblies | ForEach-Object {
+$shared_assemblies | foreach-object {
   $shared_assembly_filename = $_
   add-Type -Path $shared_assembly_filename
 }
@@ -104,40 +123,63 @@ if ($browser -eq 'vivaldi') {
 }
 $filename = 'Login Data'
 $database = "${file_path}\${filename}"
-$version = 3 # Only SQLite Version 3 is supported at this time
+$version = 3 # the only supported SQLite version at this time is 3
 $connection_string = ('Data Source={0};Version={1};' -f $database,$version )
-$connection = New-Object System.Data.SQLite.SQLiteConnection ($connection_string)
-write-debug ('Opening {0}' -f $connection_string)
+$connection = new-object System.Data.SQLite.SQLiteConnection ($connection_string)
+if ($debug){
+  write-output ('Opening {0}' -f $connection_string)
+}
 $connection.Open()
-$datatSet = New-Object System.Data.DataSet
+$datatSet = new-object System.Data.DataSet
 $query = 'SELECT action_url, username_value, password_value FROM logins'
-$dataAdapter = New-Object System.Data.SQLite.SQLiteDataAdapter ($query,$connection)
+$dataAdapter = new-object System.Data.SQLite.SQLiteDataAdapter ($query,$connection)
 try {
   $dataAdapter.Fill($datatSet, 'passwords')
 } catch [Exception] {
-  <# database is locked ? #>
-  write-output $_.Exception.Message
+  if ($debug) {
+    write-output $_.Exception.Message
+  }
+  if ($_.Exception.Message -match 'database is locked') {
+    write-output 'need to close the browser'
+  }
 }
 
-$connection.Close();
+$connection.Close()
+
+[System.Collections.ArrayList]$result_array = @()
+$result = new-object -typename psobject
+
 if ($datatSet.Tables.Length -eq 1) {
+
   [void] [Reflection.Assembly]::LoadWithPartialName('System.Security')
   $scope = [System.Security.Cryptography.DataProtectionScope]::CurrentUser
   $rows = $datatSet.Tables['passwords'].Rows;
 
   $rows | foreach-object {
     $row = $_
-    $row | format-list
+    
+    if ($url -eq $null -or $row.action_url -match $url) {
+      if ($debug) {
+        $row | format-list
+      }
+      $result = new-object -typename psobject
+      # https://www.gngrninja.com/script-ninja/2016/6/18/powershell-getting-started-part-12-creating-custom-objects
+      add-member -inputobject $result -membertype NoteProperty -name url -value $row.action_url
+      add-member -inputobject $result -membertype NoteProperty -name user -value $row.username_value
+      $data = $row.password_value
 
-    # action_url     : https://www.airbnb.com/create
-    # username_value : kouzmine_serguei@yahoo.com
-    # password_value : {1, 0, 0, 0...}
-    $data = $row.password_value
+      # https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.protecteddata.unprotect?view=netframework-4.0
+      # https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.dataprotectionscope?view=netframework-4.0
+      $plaindata = [System.Security.Cryptography.ProtectedData]::Unprotect( $data, $null, $scope )
+      # Unable to find type [System.Security.Cryptography.ProtectedData]. - this script should not be run as Administrator
 
-    $plaindata = [System.Security.Cryptography.ProtectedData]::Unprotect( $data, $null, $scope )
-    # Unable to find type [System.Security.Cryptography.ProtectedData]. - possibly run as Administrator - do not run this script as administrator
-
-    $plain_password_value = [System.Text.UTF8Encoding]::UTF8.GetString($plaindata)
-    write-output $plain_password_value
+      $plain_password_value = [System.Text.UTF8Encoding]::UTF8.GetString($plaindata)
+      add-member -inputobject $result -membertype NoteProperty -name password -value $plain_password_value
+      if ($debug) {
+        write-output $plain_password_value
+      }
+      $result_array.Add($result) | out-null
+    }
   }
 }
+$result_array | where-object { $_.url -ne ''} | format-list
