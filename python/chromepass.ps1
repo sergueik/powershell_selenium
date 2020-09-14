@@ -117,9 +117,9 @@ $shared_assemblies | foreach-object {
 }
 popd
 if ($browser -eq 'vivaldi') {
-  $file_path = ('C:\Users\{0}\AppData\Local\Vivaldi\User Data\Default' -f $env:username)
+  $appdata_path = ('C:\Users\{0}\AppData\Local\Vivaldi\User Data\Default' -f $env:username)
 } else {
-  $file_path = ('C:\Users\{0}\AppData\Local\Google\Chrome\User Data\Default'  -f $env:username)
+  $appdata_path = ('C:\Users\{0}\AppData\Local\Google\Chrome\User Data\Default'  -f $env:username)
 }
 $filename = 'Login Data'
 $database = "${file_path}\${filename}"

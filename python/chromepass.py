@@ -17,42 +17,47 @@ except:
 
 def args_parser():
 
-  parser = argparse.ArgumentParser(
-    description='Retrieve Google Chrome Passwords')
-  parser.add_argument('-o', '--output', choices=['csv', 'json'],
-            help='Output passwords to [ CSV | JSON ] format.')
-  parser.add_argument('-b', '--browser', choices=['vivaldi', 'chrome', 'none'],
-            help='Browser ("chrome" is default).')
-  parser.add_argument(
-    '-d', '--dump', help='Dump passwords to stdout. ', action='store_true')
+  parser = argparse.ArgumentParser( description = 'Retrieve Google Chrome Passwords')
+  parser.add_argument('-o', '--output', choices = ['csv', 'json'], help = 'Output passwords to [ CSV | JSON ] format')
+  parser.add_argument('-b', '--browser', choices = ['vivaldi', 'chrome', 'none'], help = 'Browser ("chrome" is default)')
+  parser.add_argument('-d', '--dump', help = 'Dump passwords to stdout', action = 'store_true')
+  parser.add_argument('-u', '--url', help = 'Filter passwords by url', action = 'store_true')
   browser = 'chrome'
   args = parser.parse_args()
+
+  if args.url != None:
+    url = args.url
+  else:
+    url = None
   if args.browser != None:
     browser = args.browser
+
+  print ('Processing browser {}'.format(browser))
   if args.dump:
-    for data in main(browser):
+    for data in main(browser, url):
       print(data)
   if args.output == 'csv':
-    output_csv(main(browser))
+    output_csv(main(browser, url))
     return
 
   if args.output == 'json':
-    output_json(main(browser))
+    output_json(main(browser, url))
     return
 
   else:
     parser.print_help()
 
 
-def main(app = None):
-  info_list = []
-  path = getpath(app)
+def main(browser = None, url = None):
+  data = []
+  appdata_path = get_appdata_path(browser)
+  database = appdata_path + 'Login Data'
   try:
-    connection = sqlite3.connect(path + 'Login Data')
+    print('Loading path: "{}"'.format(database))
+    connection = sqlite3.connect(database)
     with connection:
       cursor = connection.cursor()
-      v = cursor.execute(
-        'SELECT action_url, username_value, password_value FROM logins')
+      v = cursor.execute( 'SELECT action_url, username_value, password_value FROM logins')
       value = v.fetchall()
 
     if (os.name == 'posix') and (sys.platform == 'darwin'):
@@ -61,76 +66,110 @@ def main(app = None):
 
     for origin_url, username, password in value:
       if os.name == 'nt':
+        # uint dwFlags = CAPI.CRYPTPROTECT_UI_FORBIDDEN | CAPI.CRYPTPROTECT_LOCAL_MACHINE
         password = win32crypt.CryptUnprotectData(
-          password, None, None, None, 0)[1]
+          password, None, None, None, 1)[1]
 
       if password:
-        info_list.append({
-          'origin_url': origin_url,
-          'username': username,
-          'password': str(password)
+        data.append({
+          'url': origin_url,
+          'user': username,
+          # 'password': str(password).encode('latin-1').decode('utf-8')
+          # https://nedbatchelder.com/text/unipain.html
+          # 'utf-16-le' codec can't decode bytes in position 12-13: illegal UTF-16 surrogate
+          # 'utf-8' codec can't decode byte 0xa2 in position 3: invalid start byte
+
+          # 'password': password.decode('latin-1')
+          'password': '{}'.format(password)
         })
 
   except sqlite3.OperationalError as e:
     e = str(e)
     if (e == 'database is locked'):
-      print('[!] Make sure Google Chrome is not running in the background')
+      print('Make sure browser {} is not running in the background'.format(browser))
     elif (e == 'no such table: logins'):
-      print('[!] Something wrong with the database name')
+      print('Something wrong with the database name')
     elif (e == 'unable to open database file'):
-      print('[!] Something wrong with the database path')
+      print('Something wrong with the database path')
     else:
       print(e)
     sys.exit(0)
+  return data
 
-  return info_list
 
-
-def getpath(app = 'chrome'):
-  app_path = {'chrome': 'Google\\Chrome', 'vivaldi': 'Vivaldi', 'none': 'None' }
+def get_appdata_path(browser = 'chrome'):
   if os.name == 'nt':
     # Windows
-    user_data_dir = os.getenv('localappdata') + \
-    '\\' + app_path.get(app) + \
+    app_dir = {'chrome': 'Google\\Chrome', 'vivaldi': 'Vivaldi', 'none': 'None' }
+    appdata_path = os.getenv('localappdata') + \
+    '\\' + app_dir.get(browser) + \
       '\\User Data\\Default\\'
   elif os.name == 'posix':
-    user_data_dir = os.getenv('HOME')
+    appdata_path = os.getenv('HOME')
     if sys.platform == 'darwin':
       # OS X
-      user_data_dir += '/Library/Application Support/Google/Chrome/Default/'
+      # TODO: app_dir
+      appdata_path += '/Library/Application Support/Google/Chrome/Default/'
     else:
       # Linux
-      user_data_dir += '/.config/google-chrome/Default/'
-  if not os.path.isdir(user_data_dir):
-    print("User data directory of application {} doesn\'t exists".format(app))
+      app_dir = {'chrome': 'google-chrome', 'chromium': 'google-chrome', 'vivaldi': 'vivaldi', 'none': 'none' }
+      appdata_path += '/.config/{}/Default/'.format(app_dir.get(browser))
+  if not os.path.isdir(appdata_path):
+    print("Application data directory of browser {} doesn\'t exists".format(browser))
     sys.exit(0)
-
-  return user_data_dir
+  return appdata_path
 
 
 def output_csv(info):
   try:
     with open('chromepass-passwords.csv', 'wb') as csv_file:
-      csv_file.write('origin_url,username,password \n'.encode('utf-8'))
+      csv_file.write('url,user,password \n'.encode('utf-8'))
       for data in info:
-        csv_file.write(("%s, %s, %s \n" % (data['origin_url'], data[
-          'username'], data['password'])).encode('utf-8'))
+        # one too many UTF-8 conversions ?
+        # TypeError: a bytes-like object is required, not 'str'
+        csv_file.write(("%s, %s, %s \n" % (data['url'], data['user'], data['password'])).encode('utf-8'))
     print('Data written to chromepass-passwords.csv')
   except EnvironmentError:
     print('EnvironmentError: cannot write data')
 
-
-def output_json(info):
+def output_json(data):
+  filename = 'chromepass-passwords.json'
   try:
-    with open('chromepass-passwords.json', 'w') as json_file:
-      json.dump({'password_items':info},json_file)
-      print('Data written to chromepass-passwords.json')
+    with open(filename, 'w') as json_file:
+      json.dump({'password_items': data}, json_file)
+      print('Data written to {0}'.format(filename))
   except EnvironmentError:
     print('EnvironmentError: cannot write data')
 
-
-
 if __name__ == '__main__':
   args_parser()
-  
+# path=%path%;c:\Python27
+# path=%path%;c:\Python27
 
+# CREATE TABLE logins (
+# origin_url VARCHAR NOT NULL,
+# action_url VARCHAR,
+# username_element VARCHAR,
+# username_value VARCHAR,
+# password_element VARCHAR,
+# password_value BLOB,
+# submit_element VARCHAR,
+# signon_realm VARCHAR NOT NULL,
+# preferred INTEGER NOT NULL,
+# date_created INTEGER NOT NULL,
+# blacklisted_by_user INTEGER NOT NULL,
+# scheme INTEGER NOT NULL,
+# password_type INTEGER,
+# times_used INTEGER,
+# form_data BLOB,
+# date_synced INTEGER,
+# display_name VARCHAR,
+# icon_url VARCHAR,
+# federation_url VARCHAR,
+# skip_zero_click INTEGER,
+# generation_upload_status INTEGER,
+# possible_username_pairs BLOB,
+# id INTEGER PRIMARY KEY AUTOINCREMENT,
+# date_last_used INTEGER NOT NULL DEFAULT 0,
+# UNIQUE (origin_url, username_element, username_value, password_element, signon_realm));
+# CREATE INDEX logins_signon ON logins (signon_realm);H
