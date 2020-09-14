@@ -21,14 +21,15 @@ def args_parser():
   parser.add_argument('-o', '--output', choices = ['csv', 'json'], help = 'Output passwords to [ CSV | JSON ] format')
   parser.add_argument('-b', '--browser', choices = ['vivaldi', 'chrome', 'none'], help = 'Browser ("chrome" is default)')
   parser.add_argument('-d', '--dump', help = 'Dump passwords to stdout', action = 'store_true')
-  parser.add_argument('-u', '--url', help = 'Filter passwords by url', action = 'store_true')
+  parser.add_argument('-u', '--url', help = 'Filter passwords by url', type=str)
+
   browser = 'chrome'
   args = parser.parse_args()
 
   if args.url != None:
     url = args.url
   else:
-    url = None
+    url = ''
   if args.browser != None:
     browser = args.browser
 
@@ -48,7 +49,7 @@ def args_parser():
     parser.print_help()
 
 
-def main(browser = None, url = None):
+def main(browser = None, url = ''):
   data = []
   appdata_path = get_appdata_path(browser)
   database = appdata_path + 'Login Data'
@@ -67,20 +68,22 @@ def main(browser = None, url = None):
     for origin_url, username, password in value:
       if os.name == 'nt':
         # uint dwFlags = CAPI.CRYPTPROTECT_UI_FORBIDDEN | CAPI.CRYPTPROTECT_LOCAL_MACHINE
-        password = win32crypt.CryptUnprotectData(
-          password, None, None, None, 1)[1]
-
+        password = win32crypt.CryptUnprotectData( password, None, None, None, 1)[1]
+        
+      if url != '':
+        if origin_url != None:
+          if origin_url.__contains__(url):
+            flag = False
+          else:
+            flag = True
+        if flag:
+          continue
+          
       if password:
         data.append({
           'url': origin_url,
           'user': username,
-          # 'password': str(password).encode('latin-1').decode('utf-8')
-          # https://nedbatchelder.com/text/unipain.html
-          # 'utf-16-le' codec can't decode bytes in position 12-13: illegal UTF-16 surrogate
-          # 'utf-8' codec can't decode byte 0xa2 in position 3: invalid start byte
-
-          # 'password': password.decode('latin-1')
-          'password': '{}'.format(password)
+          'password': str(password)
         })
 
   except sqlite3.OperationalError as e:
