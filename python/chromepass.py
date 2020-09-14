@@ -48,8 +48,10 @@ def args_parser():
   else:
     parser.print_help()
 
-
 def main(browser = None, url = ''):
+  if (os.name == 'posix') and (sys.platform == 'darwin'):
+    print('Mac OSX not supported.')
+    sys.exit(0)
   data = []
   appdata_path = get_appdata_path(browser)
   database = appdata_path + 'Login Data'
@@ -58,34 +60,40 @@ def main(browser = None, url = ''):
     connection = sqlite3.connect(database)
     with connection:
       cursor = connection.cursor()
-      v = cursor.execute( 'SELECT action_url, username_value, password_value FROM logins')
-      value = v.fetchall()
+      cursor.execute( 'SELECT action_url, username_value, password_value FROM logins')
 
-    if (os.name == 'posix') and (sys.platform == 'darwin'):
-      print('Mac OSX not supported.')
-      sys.exit(0)
+      while True:
+        row = cursor.fetchone()
 
-    for origin_url, username, password in value:
-      if os.name == 'nt':
-        # uint dwFlags = CAPI.CRYPTPROTECT_UI_FORBIDDEN | CAPI.CRYPTPROTECT_LOCAL_MACHINE
-        password = win32crypt.CryptUnprotectData( password, None, None, None, 1)[1]
-        
-      if url != '':
-        if origin_url != None:
-          if origin_url.__contains__(url):
-            flag = False
-          else:
-            flag = True
-        if flag:
-          continue
-          
-      if password:
-        data.append({
-          'url': origin_url,
-          'user': username,
-          'password': str(password)
-        })
+        if row == None:
+            break
 
+        # print('row: {}'.format(row))
+        origin_url = row[0]
+        username = row[1]
+        password = row[2]
+
+        if os.name == 'nt':
+          # uint dwFlags = CAPI.CRYPTPROTECT_UI_FORBIDDEN | CAPI.CRYPTPROTECT_LOCAL_MACHINE
+          password = win32crypt.CryptUnprotectData( password, None, None, None, 1)[1]
+        if url != '':
+          if origin_url != None:
+            if origin_url.__contains__(url):
+              skip_flag = False
+            else:
+              skip_flag = True
+        else
+          skip_flag = True
+          if skip_flag:
+            continue
+        if password:
+          data.append({
+            'url': origin_url,
+            'user': username,
+            'password': str(password)
+          })
+
+    return data
   except sqlite3.OperationalError as e:
     e = str(e)
     if (e == 'database is locked'):
@@ -97,8 +105,9 @@ def main(browser = None, url = ''):
     else:
       print(e)
     sys.exit(0)
-  return data
-
+  finally:
+    if connection:
+        connection.close()
 
 def get_appdata_path(browser = 'chrome'):
   if os.name == 'nt':
@@ -111,7 +120,6 @@ def get_appdata_path(browser = 'chrome'):
     appdata_path = os.getenv('HOME')
     if sys.platform == 'darwin':
       # OS X
-      # TODO: app_dir
       appdata_path += '/Library/Application Support/Google/Chrome/Default/'
     else:
       # Linux
@@ -121,7 +129,6 @@ def get_appdata_path(browser = 'chrome'):
     print("Application data directory of browser {} doesn\'t exists".format(browser))
     sys.exit(0)
   return appdata_path
-
 
 def output_csv(info):
   try:
