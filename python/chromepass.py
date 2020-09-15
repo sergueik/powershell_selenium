@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# base on: https://github.com/hassaanaliw/chromepass/blob/master/chromepass.py
-# see also: https://github.com/darkarp/chromepass
+# base on: https://github.com/hassaanaliw/chromepass/blob/mter/chromepass.py
+# see also: https://github.com/darkarp/chromepas
 
 import os
 import sys
@@ -92,7 +92,6 @@ def main(browser = None, url = ''):
             skip_flag = True
           if skip_flag:
             continue
-
         if password:
           data.append({
             'url': origin_url,
