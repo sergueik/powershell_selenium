@@ -1,0 +1,37 @@
+---
+ad8c3125:
+  datacenter: wec
+  role: service-discovery-server-0
+  branch: cert
+  environment: prod
+  unused1:
+  unused2:
+  unused3:
+  unused4:
+e530095c:
+  datacenter: wec
+  role: service-discovery-server-1
+  branch: cert
+  environment: prod
+  unused1:
+  unused2:
+  unused3:
+  unused4:
+e577775c:
+  datacenter: oxdc
+  role: apim-ap-manager-publisher-0
+  branch: sand
+  environment: test
+  unused1:
+  unused2:
+  unused3:
+  unused4:
+node_to_ignore:
+  datacenter: wec
+  branch: cert
+  environment: prod
+  server_role: 'internal'
+  unused1:
+  unused2:
+  unused3:
+  unused4:
