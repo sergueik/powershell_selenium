@@ -4,5 +4,7 @@ become: true
 tasks:
   - name: install
     package: name=jdk
+  - name: install
+    package: name=tomcat state=instaled
   - name: service
-    package: name=tomcat state=running
+    package: name='tomcat server' state=running info='about this and that' extra_info='with spaces'
