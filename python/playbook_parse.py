@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+# export PATH=$PATH:/usr/lib/python2.7/dist-packages/ansible
 import yaml
 import sys
 import pprint
@@ -13,7 +13,8 @@ pp = pprint.PrettyPrinter(indent = 2)
 # pattern = re.compile(r"'([^=']+ [^=']+)'")
 tokenizer_expression = "'(?P<word>[^=']+ [^=']+)'" # no need for 'raw'
 
-playbook = yaml.load(open(sys.argv[1]), Loader=yaml.FullLoader)
+playbook = yaml.load(open(sys.argv[1]))
+# playbook = yaml.load(open(sys.argv[1]), Loader=yaml.FullLoader)
 if DEBUG:
   pp.pprint(playbook)
 tasks = playbook['tasks']
@@ -58,10 +59,14 @@ for cnt in range(len(tasks)):
     subkey = 'name'  
     print('{}="{}"'.format(subkey, values[subkey]))
   except TypeError as e:
-    print(str(e), file = sys.stderr)
+    # TODO:  Python 2.7 compabile print to STDERR
+    print(str(e))
+    # print(str(e), file = sys.stderr)
     pass
   except ValueError as e:
-    print(str(e), file = sys.stderr)
+    # TODO:  Python 2.7 compabile print to STDERR
+    print(str(e))
+    # print(str(e), file = sys.stderr)
     # TODO: ValueError: dictionary update sequence element #0 has length 3; 2 is required
     pass
 

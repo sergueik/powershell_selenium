@@ -1,36 +1,29 @@
 ---
 ad8c3125:
-  datacenter: wec
+  datacenter: eastcoast
   role: service-discovery-server-0
-  branch: cert
+  branch: release
   environment: prod
-  unused1:
-  unused2:
-  unused3:
-  unused4:
 e530095c:
-  datacenter: wec
+  datacenter: eastcoast
   role: service-discovery-server-1
-  branch: cert
+  branch: release
   environment: prod
-  unused1:
-  unused2:
-  unused3:
-  unused4:
+a3391271:
+  datacenter: westcoast
+  role: service-discovery-server-0
+  branch: release
+  environment: prod
+e44820191:
+  datacenter: westcoast
+  role: service-discovery-server-1
+  branch: release
+  environment: prod
 e577775c:
-  datacenter: oxdc
-  role: apim-ap-manager-publisher-0
-  branch: sand
+  datacenter: westcoast
+  role: service-discovery-server-0
+  branch: test
   environment: test
-  unused1:
-  unused2:
-  unused3:
-  unused4:
-node_to_ignore:
-  datacenter: wec
-  branch: cert
-  environment: prod
-  server_role: 'internal'
   unused1:
   unused2:
   unused3:
