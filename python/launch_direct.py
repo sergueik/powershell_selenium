@@ -1,7 +1,8 @@
-#!/usr/bin/env python3
-# for python 2.7 need few modifications
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+# for python 2.7 need few modifications
+# PATH=%PATH%;c:\Python27;c:\Python27\Scripts
 # export PATH=$PATH:/usr/lib/python2.7/dist-packages/ansible
 from __future__ import print_function
 # NOTE: SyntaxError: from __future__ imports must occur at the beginning of the file
@@ -11,8 +12,8 @@ import yaml
 # Windows (Python 2.7 intalled):
 # path=%path%;c:\Python27;c:\Python27\scripts
 # pip2 install pyyaml
-#
-# python3 launch_direct.py  --input classification.yaml  --environment prod  --datacenter eastcoast --role server
+# python ...
+# python3 launch_direct.py --input classification.yaml --environment prod --datacenter eastcoast --role server
 #    role="service-discovery-server-0"
 #    datacenter="eastcoast"
 #    environment="prod"
@@ -73,20 +74,21 @@ if __name__ == '__main__':
     # print sample entry
     pp.pprint(classification[list(classification.keys())[0]])
 
-  for host in classification:
+  for host,host_data in classification.iteritems():
     if debug:
       print('inspecting host: {0}'.format(host))
-    host_data = classification[host]
     if debug:
-      print('inspecting role: {0}'.format(classification[host]['role']))
+      # AttributeError: 'dict' object has no attribute 'role'
+      # print('inspecting role: {0}'.format(host_data.role))
+      print('inspecting role: {0}'.format(host_data.get('role')))
     # https://stackoverflow.com/questions/33727149/dict-object-has-no-attribute-has-key
     # AttributeError: 'dict' object has no attribute 'has_key'
     if 'role' in host_data and re.match('^.*{}.*'.format(role), host_data['role']):
       if debug:
-        print('inspecting datacenter: {0}'.format(classification[host]['datacenter']))
+        print('inspecting datacenter: {0}'.format(host_data.get('datacenter')))
       if 'datacenter' in host_data and host_data['datacenter'] == datacenter:
         if debug:
-          print('inspecting environment: {0}'.format(classification[host]['environment']))
+          print('inspecting environment: {0}'.format(host_data.get('environment')))
         if 'environment' in host_data and re.match('^{}.*'.format(environment), host_data['environment']):
           if debug:
             print(host_data)
