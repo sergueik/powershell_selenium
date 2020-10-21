@@ -1,27 +1,27 @@
 ---
 ad8c3125:
   datacenter: eastcoast
-  role: service-discovery-server-0
+  consul_role: service-discovery-server-0
   branch: release
   environment: prod
 e530095c:
   datacenter: eastcoast
-  role: service-discovery-server-1
+  consul_role: service-discovery-server-1
   branch: release
   environment: prod
 a3391271:
   datacenter: westcoast
-  role: service-discovery-server-0
+  consul_role: service-discovery-server-0
   branch: release
   environment: prod
 e44820191:
   datacenter: westcoast
-  role: service-discovery-server-1
+  consul_role: service-discovery-server-1
   branch: release
   environment: prod
 e577775c:
   datacenter: westcoast
-  role: service-discovery-server-0
+  consul_role: service-discovery-server-0
   branch: test
   environment: test
   unused1:

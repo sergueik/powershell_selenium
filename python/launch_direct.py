@@ -29,9 +29,20 @@ import re
 import pprint
 from os import getenv
 import json, base64
+def get_column(argument):
+  # dictionary of arguments to columns
+  # TODO: dynamic pull of identical part
+  argument_columns = {
+    'role': 'consul_role'
+  }
+  # print('argument: {}'.format(argument))
+  # print('argument_columns: {}'.format(argument_columns))
+  if argument in argument_columns:
+    return argument_columns.get(argument)
+  else:
+    return argument
 
 def get_value(argument):
-  print('argument: {}'.format(argument))
   if re.match('^env:*', argument):
     return getenv(re.sub('env:', '', argument))
   else:
@@ -89,7 +100,6 @@ if __name__ == '__main__':
   if input_file == None or role == None or datacenter == None or environment == None:
     print('usage: launch_direct.py --input <classification file> --role <role> --environment <environment> --datacenter <datacenter>')
     exit()
-
   classification = yaml.load(open(input_file), Loader=yaml.FullLoader)
   if debug:
     # print sample entry
@@ -98,13 +108,14 @@ if __name__ == '__main__':
   for host,host_data in classification.iteritems():
     if debug:
       print('inspecting host: {0}'.format(host))
+    role_column = get_column('role')
     if debug:
       # AttributeError: 'dict' object has no attribute 'role'
       # print('inspecting role: {0}'.format(host_data.role))
-      print('inspecting role: {0}'.format(host_data.get('role')))
+      print('inspecting role: {0}'.format(host_data.get(role_column)))
     # https://stackoverflow.com/questions/33727149/dict-object-has-no-attribute-has-key
     # AttributeError: 'dict' object has no attribute 'has_key'
-    if 'role' in host_data and re.match('^.*{}.*'.format(role), host_data['role']):
+    if role_column in host_data and re.match('^.*{}.*'.format(role), host_data[role_column]):
       if debug:
         print('inspecting datacenter: {0}'.format(host_data.get('datacenter')))
       if 'datacenter' in host_data and host_data['datacenter'] == datacenter:
@@ -114,4 +125,4 @@ if __name__ == '__main__':
           if debug:
             print(host_data)
 
-          print("role=\"{}\"\ndatacenter=\"{}\"\nenvironment=\"{}\"\n".format(host_data['role'],host_data['datacenter'],host_data['environment']))
+          print("role=\"{}\"\ndatacenter=\"{}\"\nenvironment=\"{}\"\n".format(host_data[role_column],host_data['datacenter'],host_data['environment']))
