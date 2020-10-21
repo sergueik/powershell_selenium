@@ -14,7 +14,7 @@ import yaml
 # path=%path%;c:\Python27;c:\Python27\scripts
 # pip2 install pyyaml
 # python ...
-# python3 launch_direct.py --input classification.yaml --debug --environment prod --datacenter eastcoast --role server --nodes e44820191,e44820192,e44820193
+# python3 launch_direct.py --input classification.yaml --debug --environment prod --datacenter eastcoast --role server --nodes e44820191,e44820192,e44820193 --password env:USERPROFILE
 #    role="service-discovery-server-0"
 #    datacenter="eastcoast"
 #    environment="prod"
@@ -30,11 +30,18 @@ import pprint
 from os import getenv
 import json, base64
 
+def get_value(argument):
+  print('argument: {}'.format(argument))
+  if re.match('^env:*', argument):
+    return getenv(re.sub('env:', '', argument))
+  else:
+    return argument
+
 if __name__ == '__main__':
   pp = pprint.PrettyPrinter(indent=2)
   # https://docs.python.org/2/library/getopt.html
   try:
-      opts, args = getopt.getopt(sys.argv[1:], 'hdi:e:c:r:n:', ['help', 'debug', 'input=', 'environment=','datacenter=', 'role=', 'nodes='])
+      opts, args = getopt.getopt(sys.argv[1:], 'hdi:e:c:r:n:p:', ['help', 'debug', 'input=', 'environment=','datacenter=', 'role=', 'nodes=', 'password='])
 
   except getopt.GetoptError as err:
     print('usage: launch_direct.py --input <classification file> --role <role> --environment <environment> --datacenter <datacenter>')
@@ -44,6 +51,7 @@ if __name__ == '__main__':
   input_file = None
   datacenter = None
   environment = None
+  password = None
   nodes = []
   role = None
   global debug
@@ -56,6 +64,8 @@ if __name__ == '__main__':
       exit()
     elif option in ('-e', '--environment'):
       environment = argument
+    elif option in ('-p', '--password'):
+      password = get_value(argument)
     elif option in ('-n', '--nodes'):
       if debug:
          print("option:{}\nargument:{}".format(option,argument))
@@ -63,7 +73,7 @@ if __name__ == '__main__':
         if debug:
            print("idenfified argument as file name:{}".format(argument))
         with open(re.sub('^@', '', argument), 'r') as argument_file:
-          nodes = re.split(r'\W*\r?\n\W*',argument_file.read())
+          nodes = re.split(r'\W*\r?\n\W*', argument_file.read())
       else:
         nodes = re.split(r'\W*,\W*', argument) # NOTE: trailing space leftover possible
     elif option in ('-r', '--role'):
@@ -74,9 +84,8 @@ if __name__ == '__main__':
       input_file = argument
     else:
       assert False, 'unhandled option: {}'.format(option)
-
   if debug:
-    print("input_file={}\nrole={}\ndatacenter={}\nenvironment={}\nnodes={}".format(input_file,role,datacenter,environment,nodes))
+    print("input_file={}\nrole={}\ndatacenter={}\nenvironment={}\nnodes={}\npassword={}".format(input_file,role,datacenter,environment,nodes,password))
   if input_file == None or role == None or datacenter == None or environment == None:
     print('usage: launch_direct.py --input <classification file> --role <role> --environment <environment> --datacenter <datacenter>')
     exit()
@@ -106,4 +115,3 @@ if __name__ == '__main__':
             print(host_data)
 
           print("role=\"{}\"\ndatacenter=\"{}\"\nenvironment=\"{}\"\n".format(host_data['role'],host_data['datacenter'],host_data['environment']))
-
