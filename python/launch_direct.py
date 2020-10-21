@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/env python3
 # for python 2.7 need few modifications
+# on Windows machine
 # PATH=%PATH%;c:\Python27;c:\Python27\Scripts
 # export PATH=$PATH:/usr/lib/python2.7/dist-packages/ansible
 from __future__ import print_function
@@ -13,7 +14,7 @@ import yaml
 # path=%path%;c:\Python27;c:\Python27\scripts
 # pip2 install pyyaml
 # python ...
-# python3 launch_direct.py --input classification.yaml --environment prod --datacenter eastcoast --role server
+# python3 launch_direct.py --input classification.yaml --debug --environment prod --datacenter eastcoast --role server --nodes e44820191,e44820192,e44820193
 #    role="service-discovery-server-0"
 #    datacenter="eastcoast"
 #    environment="prod"
@@ -33,7 +34,7 @@ if __name__ == '__main__':
   pp = pprint.PrettyPrinter(indent=2)
   # https://docs.python.org/2/library/getopt.html
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'hdi:e:c:r:', ['help', 'debug', 'input=', 'environment=','datacenter=', 'role='])
+      opts, args = getopt.getopt(sys.argv[1:], 'hdi:e:c:r:n:', ['help', 'debug', 'input=', 'environment=','datacenter=', 'role=', 'nodes='])
 
   except getopt.GetoptError as err:
     print('usage: launch_direct.py --input <classification file> --role <role> --environment <environment> --datacenter <datacenter>')
@@ -43,17 +44,28 @@ if __name__ == '__main__':
   input_file = None
   datacenter = None
   environment = None
+  nodes = []
   role = None
   global debug
   debug = False
   for option, argument in opts:
-    if option == '-d':
+    if option in ( '-d', '--debug'):
       debug = True
     elif option in ('-h', '--help'):
       print('usage: launch_direct.py --input <classification file> --role <role> --environment <environment> --datacenter <datacenter>')
       exit()
     elif option in ('-e', '--environment'):
       environment = argument
+    elif option in ('-n', '--nodes'):
+      if debug:
+         print("option:{}\nargument:{}".format(option,argument))
+      if re.match('^@.*', argument):
+        if debug:
+           print("idenfified argument as file name:{}".format(argument))
+        with open(re.sub('^@', '', argument), 'r') as argument_file:
+          nodes = re.split(r'\W*\r?\n\W*',argument_file.read())
+      else:
+        nodes = re.split(r'\W*,\W*', argument) # NOTE: trailing space leftover possible
     elif option in ('-r', '--role'):
       role = argument
     elif option in ('-c', '--datacenter'):
@@ -64,7 +76,7 @@ if __name__ == '__main__':
       assert False, 'unhandled option: {}'.format(option)
 
   if debug:
-    print("input_file={}\nrole={}\ndatacenter={}\nenvironment={}".format(input_file,role,datacenter,environment))
+    print("input_file={}\nrole={}\ndatacenter={}\nenvironment={}\nnodes={}".format(input_file,role,datacenter,environment,nodes))
   if input_file == None or role == None or datacenter == None or environment == None:
     print('usage: launch_direct.py --input <classification file> --role <role> --environment <environment> --datacenter <datacenter>')
     exit()
@@ -94,3 +106,4 @@ if __name__ == '__main__':
             print(host_data)
 
           print("role=\"{}\"\ndatacenter=\"{}\"\nenvironment=\"{}\"\n".format(host_data['role'],host_data['datacenter'],host_data['environment']))
+
