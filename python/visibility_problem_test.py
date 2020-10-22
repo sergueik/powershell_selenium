@@ -48,7 +48,7 @@ def main():
       # to that of visual browser page
       options.add_argument('--enable-javascript')
       # probably this one
-      options.add_argument("--user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:72.0) Gecko/20100101 Firefox/72.0'")
+      # options.add_argument("--user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:72.0) Gecko/20100101 Firefox/72.0'")
       options.add_argument('--no-sandbox')
       options.add_argument('--ignore-certificate-errors')
       options.add_argument('--allow-insecure-localhost')
@@ -81,7 +81,17 @@ def main():
   except (Exception) as e:
     print('Page was not shown or rendered properly. Exception: {0}'.format(e))
     driver.save_screenshot("screenshot.png")
-    print("Page source:\n{}",format(driver.page_source))
+    print("Page source:\n")
+    print(driver.page_source)
+    # print(encoded_page_source)
+    # formatting ofpage source into custom error with prramble is tricky:
+    # works
+    # but
+    # print("Page source:\n{}".format(driver.page_source))
+    # fails with
+    # UnicodeEncodeError: 'ascii' codec can't encode character u'\u2603' in position 35563: ordinal not in range(128)
+    encoded_page_source = driver.page_source.encode('utf8','ignore')
+    print("Page source:\n{}".format(encoded_page_source))
   finally:
     driver.quit()
 
