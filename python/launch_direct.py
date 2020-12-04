@@ -42,6 +42,20 @@ def get_column(argument):
   else:
     return argument
 
+def get_argument_file(argument):
+  if re.match('^@.*', argument):
+    argument_filename = argument[1:]   
+    if debug:
+       print("idenfified argument as file name: {}".format(argument_filename))
+    with open(argument_filename) as argument_file:
+      data = re.split(r'\W*\r?\n\W*', argument_file.read())
+  else:
+    if debug:
+       print("Option {} value: {}\nargument:{}".format(option, argument))
+    data = re.split(r'\W*,\W*', argument) 
+    # NOTE: trailing space leftover needs to be handled
+  return data
+
 def get_value(argument):
   if re.match('^env:*', argument):
     return getenv(re.sub('env:', '', argument))
@@ -78,15 +92,19 @@ if __name__ == '__main__':
     elif option in ('-p', '--password'):
       password = get_value(argument)
     elif option in ('-n', '--nodes'):
-      if debug:
-         print("option:{}\nargument:{}".format(option,argument))
-      if re.match('^@.*', argument):
-        if debug:
-           print("idenfified argument as file name:{}".format(argument))
-        with open(re.sub('^@', '', argument), 'r') as argument_file:
-          nodes = re.split(r'\W*\r?\n\W*', argument_file.read())
-      else:
-        nodes = re.split(r'\W*,\W*', argument) # NOTE: trailing space leftover possible
+        nodes = get_argument_file(argument)
+
+   #   if re.match('^@.*', argument):
+   #     argument_filename = argument[1:]   
+   #     if debug:
+   #        print("idenfified argument as file name: {}".format(argument_filename))
+   #     with open(argument_filename) as argument_file:
+   #       nodes = re.split(r'\W*\r?\n\W*', argument_file.read())
+   #   else:
+   #     if debug:
+   #        print("Option {} value: {}\nargument:{}".format(option, argument))
+   #     nodes = re.split(r'\W*,\W*', argument) 
+   #     # NOTE: trailing space leftover needs to be handled
     elif option in ('-r', '--role'):
       role = argument
     elif option in ('-c', '--datacenter'):
@@ -100,7 +118,9 @@ if __name__ == '__main__':
   if input_file == None or role == None or datacenter == None or environment == None:
     print('usage: launch_direct.py --input <classification file> --role <role> --environment <environment> --datacenter <datacenter>')
     exit()
-  classification = yaml.load(open(input_file), Loader=yaml.FullLoader)
+  classification = yaml.load(open(input_file))
+  # /*, Loader=yaml.FullLoader */)
+  #  AttributeError: 'module' object has no attribute 'FullLoader'
   if debug:
     # print sample entry
     pp.pprint(classification[list(classification.keys())[0]])
