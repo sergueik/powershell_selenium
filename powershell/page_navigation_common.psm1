@@ -270,11 +270,13 @@ function extract_match {
 
 .EXAMPLE
         highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) [ -delay 1500 ] [-color 'red']
+        highlight -resore -selenium_ref ([ref]$selenium) -element_ref ([ref]$element) -delay 1500 -color 'gray'
 .LINK
 
 .NOTES
   VERSION HISTORY
   2015/06/07 Initial Version
+  2020/12/26 - adding saving option
 #>
 
 function highlight {
@@ -282,12 +284,28 @@ function highlight {
     [System.Management.Automation.PSReference]$selenium_ref,
     [System.Management.Automation.PSReference]$element_ref,
     [String]$color = 'yellow',
-    [int]$delay = 300
+    [int]$delay = 300,
+    [switch]$restore
   )
   # https://selenium.googlecode.com/git/docs/api/java/org/openqa/selenium/JavascriptExecutor.html
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,"color: ${color}; border: 4px solid ${color};")
+  [string]$current_value = ''
+[OpenQA.Selenium.IJavaScriptExecutor]$local:executor = [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value
+  if ($restore) {
+    # write-debug 'restore switch is provided'
+   $current_value = $local:executor.ExecuteScript("const element = arguments[0]; const current_value =  element.style.border; element.setAttribute('style', arguments[1]); return current_value;", $element_ref.Value, "color: ${color}; border: 4px solid ${color};")
+  } else {
+    # write-debug 'restore switch was not provided'
+    $local:executor.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,"color: ${color}; border: 4px solid ${color};")
+  }
+
   start-sleep -Millisecond $delay
-  [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);",$element_ref.Value,'')
+  if ($restore) {
+    # write-debug 'restore switch is provided'
+    [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].style.border=arguments[1];", $element_ref.Value,$current_value)
+  } else {
+    # write-debug 'restore switch was not provided'
+    [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);", $element_ref.Value,'')
+  }
 }
 
 

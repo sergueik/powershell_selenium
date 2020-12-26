@@ -195,7 +195,7 @@ while ($cnt_found -lt $cnt_to_find) {
 
       highlight_new -element ([ref]$element2) -color 'magenta' -selenium_ref ([ref]$selenium)
       flash -element ([ref]$element2) -selenium_ref ([ref]$selenium)
-      highlight -element ([ref]$element2) -color 'green' -selenium_ref ([ref]$selenium)
+      highlight -restore -element ([ref]$element2) -color 'green' -selenium_ref ([ref]$selenium)
 
       $cnt++
     }

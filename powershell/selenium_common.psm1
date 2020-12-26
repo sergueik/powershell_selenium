@@ -457,6 +457,8 @@ which can be collaptsed into
     $options.AddAdditionalCapability('phantomjs.executable.path',$phantomjs_path)
   }
 
+
+  [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
   return $selenium
 }
 
