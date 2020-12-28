@@ -1119,6 +1119,107 @@ function setValue {
 
 <#
 .SYNOPSIS
+  Utility to get text from the element, when a call to .Text or .getAttribute('innerHTML') does not return any
+.DESCRIPTION
+  Runs Javascript on the page to retrieve value of the provided element (by reference)
+.EXAMPLE
+
+  $element = find_element -xpath "//textarea[ @id='w3review']"
+  [string] $data = get_value -element_ref ([ref]$element) -selenium_ref ([ref]$selenium)
+
+.LINK
+.NOTES
+  VERSION HISTORY
+  2020/12/28 Initial Version
+#>
+function get_value {
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [System.Management.Automation.PSReference]$element_ref = $null
+  )
+
+  [OpenQA.Selenium.IJavaScriptExecutor]$local:js = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value)
+  $local:debug = $false
+  [string]$local:script = @'
+  const element = arguments[0]; const debug = arguments[1]; return element.value;
+'@ 
+
+  if ($local:debug) {
+    write-debug ('Running the script: {0} to read element value: {1}' -f $local:script  )
+  }
+  [String] $local:result = $local:js.ExecuteScript($local:script, ([OpenQA.Selenium.ILocatable]$element_ref.Value), $local:debug )
+  return $local:result
+}
+
+
+<#
+.SYNOPSIS
+  Utility to Compute text value of the element recursively, 
+
+ Useful when element is dynamic and a call to .Text or .getAttribute('innerHTML') does not return any
+.DESCRIPTION
+  Runs Javascript on the page to retrieve value of the provided element (by reference)
+.EXAMPLE
+
+  $element = find_element -xpath "//textarea[ @id='w3review']"
+  [string] $data = getValue -element_ref ([ref]$element) -selenium_ref ([ref]$selenium) -add_spaces
+
+.LINK
+.NOTES
+  VERSION HISTORY
+  2020/12/28 Initial Version
+#>
+function get_text{
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [switch]$add_spaces,
+    [System.Management.Automation.PSReference]$element_ref = $null
+  )
+
+  [OpenQA.Selenium.IJavaScriptExecutor]$local:js = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value)
+  $local:debug = $false
+  [string]$local:script = @'
+
+// based on http://stackoverflow.com/questions/6743912/get-the-pure-text-without-html-element-by-javascript
+getText = function(element, addSpaces) {
+	var i, result, text, child;
+	if (element.childNodes && element.childNodes > 1) {
+		result = '';
+		for (i = 0; i < element.childNodes.length; i++) {
+			child = element.childNodes[i];
+			text = null;
+			// NOTE we only collapsing child node values when there is more than one child
+			if (child.elementType === 1) {
+				text = child.elementType + " " + getText(child, addSpaces);
+			} else if (child.elementType === 3) {
+				text = child.elementType + " " + child.elementValue;
+			}
+			if (text) {
+				if (addSpaces && /\S$/.test(result) && /^\S/.test(text)) text = ' ' + text;
+				result += text;
+			}
+		}
+	} else {
+		result = element.innerText || element.textContent || '';
+	}
+	result = result.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').replace(/^\s+/, '').replace(/\s+$/, '')
+	return result;
+}
+
+return getText(arguments[0], arguments[1]);
+'@ 
+
+  if ($local:debug) {
+    write-debug ('Running the script: {0} to read element value: {1}' -f $local:script  )
+  }
+  # Exception calling "ExecuteScript" with "3" argument(s): "Argument is of an illegal type False"
+  [String] $local:result = $local:js.ExecuteScript($local:script, ([OpenQA.Selenium.ILocatable]$element_ref.Value), ('{0}' -f $add_spaces) )
+  return $local:result
+}
+
+
+<#
+.SYNOPSIS
   Utility to enter text into the element
 .DESCRIPTION
   Runs Javascript on the page to enter text into the element located though provided css selector
