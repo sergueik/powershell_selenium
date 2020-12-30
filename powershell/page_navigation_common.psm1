@@ -1142,7 +1142,7 @@ function get_value {
   $local:debug = $false
   [string]$local:script = @'
   const element = arguments[0]; const debug = arguments[1]; return element.value;
-'@ 
+'@
 
   if ($local:debug) {
     write-debug ('Running the script: {0} to read element value: {1}' -f $local:script  )
@@ -1154,7 +1154,7 @@ function get_value {
 
 <#
 .SYNOPSIS
-  Utility to Compute text value of the element recursively, 
+  Utility to Compute text value of the element recursively,
 
  Useful when element is dynamic and a call to .Text or .getAttribute('innerHTML') does not return any
 .DESCRIPTION
@@ -1207,7 +1207,7 @@ getText = function(element, addSpaces) {
 }
 
 return getText(arguments[0], arguments[1]);
-'@ 
+'@
 
   if ($local:debug) {
     write-debug ('Running the script: {0} to read element value: {1}' -f $local:script  )
@@ -1268,4 +1268,51 @@ function setValueWithLocator {
     write-debug ('Running the script: {0} to enter text: {1}' -f $local:script,  $text )
   }
   $local:js.ExecuteScript($local:script, $element_locator, $text, $local:debug )
+}
+
+
+
+<#
+.SYNOPSIS
+  Utility to accept the popping alert, and ignore and continue in case none is shown
+.DESCRIPTION
+.EXAMPLE
+ wait_alert -selenium_ref ([ref]$selenium)
+
+.LINK
+.NOTES
+  VERSION HISTORY
+  2020/12/30 Initial Version
+#>
+
+function wait_alert {
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [String]$element_locator = $null,
+    [String]$text = '',
+    [switch]$run_debug
+  )
+  $local:debug = [bool]$PSBoundParameters['run_debug'].IsPresent
+  [OpenQA.Selenium.IJavaScriptExecutor]$local:js = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value)
+  try {
+    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
+    [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::AlertIsPresent())
+    [OpenQA.Selenium.Remote.RemoteAlert]$alert = $selenium.switchTo().alert()
+    if ($run_debug) {
+      write-output $alert.Text
+    }
+    $alert.accept()
+  } catch [OpenQA.Selenium.WebDriverTimeoutException]{
+    write-debug ('Exception (ignored): {0}' -f (($_.Exception.Message) -split "`n")[0] )
+  }
+  try {
+    [OpenQA.Selenium.Remote.RemoteAlert]$alert = $selenium.switchTo().alert()
+    if ($local:debug) {
+      write-output $alert.Text
+    }
+    $alert.accept()
+  } catch [OpenQA.Selenium.NoAlertPresentException]{
+    write-debug ('Exception (ignored): {0}' -f (($_.Exception.Message) -split "`n")[0] )
+  }
+
 }

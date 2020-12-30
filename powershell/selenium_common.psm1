@@ -459,6 +459,8 @@ which can be collaptsed into
 
 
   [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
+  [OpenQA.Selenium.Remote.RemoteAlert] $alert = $null
+  # $alert = $selenium.switchTo().alert()
   return $selenium
 }
 
