@@ -49,7 +49,8 @@ return element.value;
 [object]$frame_element = $null
 find_page_element_by_xpath ([ref]$selenium) ([ref]$frame_element) $xpath
 $iframe = $selenium.SwitchTo().Frame($frame_element)
-$element = $iframe.FindElement([OpenQA.Selenium.By]::XPath("//textarea[ @id='w3review']"))
+$xpath = "//textarea[ @id='w3review']"
+$element = $iframe.FindElement([OpenQA.Selenium.By]::XPath($xpath))
 $result = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium).executeScript($script,$element)
 write-output ('Script (1): {0}' -f $result)
 $result = get_value ([ref]$iframe) ([ref]$element)
@@ -59,5 +60,10 @@ write-output ('Script (3): {0}' -f $result)
 write-output ('Text: {0}' -f $element.text)
 write-output ('innerHTML: {0}' -f $element.getAttribute('innerHTML'))
 
+find_page_element_by_xpath ([ref]$selenium) ([ref]$element) $xpath
+write-output ('innerHTML: {0}' -f $element.getAttribute('innerHTML'))
+
+wait_alert -selenium_ref ([ref]$selenium) -wait_seconds 10
+wait_alert_frame -selenium_ref ([ref]$selenium) -frame_locator 'frame' -accept_button_locator 'button' -run_debug
 # Cleanup
 cleanup ([ref]$selenium)

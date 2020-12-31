@@ -253,7 +253,7 @@ function extract_match {
   write-debug ('Extracting tag {0}' -f $label)
   $local:rawjsons = {}
   $local:rawjsons = $source | where { $_ -match $capturing_match_expression } |
-  ForEach-Object { New-Object PSObject -prop @{ Media = $matches[$label]; } }
+  ForEach-Object { new-object PSObject -prop @{ Media = $matches[$label]; } }
   if  ( $local:rawjsons -ne $null ) {
     write-debug 'extract_match:'
     write-debug $local:rawjsons
@@ -474,7 +474,7 @@ function find_page_element_by_xpath {
   }
   $local:element = $null
   [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
   $wait.PollingInterval = 50
 
   try {
@@ -529,7 +529,7 @@ function find_page_element_by_css_selector {
   $local:status = $false
   $local:element = $null
   [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_driver_ref.Value
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait ($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
   $wait.PollingInterval = 50
 
   try {
@@ -735,7 +735,7 @@ function find_element {
   $wait_seconds = 5
   $wait_polling_interval = 50
 
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
   $wait.PollingInterval = $wait_polling_interval
 
   if ($css_selector -ne $null) {
@@ -862,7 +862,7 @@ function find_elements {
   $wait_seconds = 5
   $wait_polling_interval = 50
 
-  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
   $wait.PollingInterval = $wait_polling_interval
   if ($parent) {
      $parent_css_selector = cssSelectorOfElement ([ref] $parent )
@@ -1274,10 +1274,10 @@ function setValueWithLocator {
 
 <#
 .SYNOPSIS
-  Utility to accept the popping alert, and ignore and continue in case none is shown
+  Utility to accept the popping alert, and ignore and continue in case none is observed
 .DESCRIPTION
 .EXAMPLE
- wait_alert -selenium_ref ([ref]$selenium)
+ wait_alert -selenium_ref ([ref]$selenium) -wait_seconds 10
 
 .LINK
 .NOTES
@@ -1288,14 +1288,14 @@ function setValueWithLocator {
 function wait_alert {
   param(
     [System.Management.Automation.PSReference]$selenium_ref,
-    [String]$element_locator = $null,
-    [String]$text = '',
+    [int]$wait_seconds = 3,
     [switch]$run_debug
   )
   $local:debug = [bool]$PSBoundParameters['run_debug'].IsPresent
-  [OpenQA.Selenium.IJavaScriptExecutor]$local:js = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value)
+  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_ref.Value
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$local:wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
+  $local:wait.Message = 'Alert was not shown'
   try {
-    [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
     [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::AlertIsPresent())
     [OpenQA.Selenium.Remote.RemoteAlert]$alert = $selenium.switchTo().alert()
     if ($run_debug) {
@@ -1303,7 +1303,7 @@ function wait_alert {
     }
     $alert.accept()
   } catch [OpenQA.Selenium.WebDriverTimeoutException]{
-    write-debug ('Exception (ignored): {0}' -f (($_.Exception.Message) -split "`n")[0] )
+    write-output ('Exception (ignored): {0}' -f (($_.Exception.Message) -split "`n")[0] )
   }
   try {
     [OpenQA.Selenium.Remote.RemoteAlert]$alert = $selenium.switchTo().alert()
@@ -1315,4 +1315,56 @@ function wait_alert {
     write-debug ('Exception (ignored): {0}' -f (($_.Exception.Message) -split "`n")[0] )
   }
 
+}
+
+<#
+.SYNOPSIS
+  Utility to accept the popping alert, implemented in iframe and ignore and continue in case none is observed
+.DESCRIPTION
+.EXAMPLE
+ wait_alert_frame -selenium_ref ([ref]$selenium) -frame_locator 'frame' -accept_button_locator 'button' -run_debug
+
+.LINK
+.NOTES
+  VERSION HISTORY
+  2020/12/30 Initial Version
+#>
+
+function wait_alert_frame {
+  param(
+    [System.Management.Automation.PSReference]$selenium_ref,
+    [String]$frame_locator = $null,
+    [String]$accept_button_locator = $null,
+    [String]$text_check = '',
+    [int]$wait_seconds = 3,
+    [switch]$run_debug
+ 
+ )
+  if ($frame_locator -eq '' -or $frame_locator -eq $null) {
+    return
+  }
+  if ($accept_button_locator -eq '' -or $accept_button_locator -eq $null) {
+    return
+  }
+ 
+  $local:debug = [bool]$PSBoundParameters['run_debug'].IsPresent
+  [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_ref.Value
+  # https://docs.microsoft.com/en-us/dotnet/api/system.timespan?redirectedfrom=MSDN&view=netframework-4.0
+  [OpenQA.Selenium.Support.UI.WebDriverWait]$local:wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait($local:selenum_driver,[System.TimeSpan]::FromSeconds($wait_seconds))
+  $local:wait.Message = 'Alert was not shown'
+  try {
+    [void]$local:wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::CssSelector($frame_locator)))
+    $local:frame_element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($frame_locator))
+    $local:iframe = $local:selenum_driver.SwitchTo().Frame($local:frame_element)
+    if ($run_debug) {
+      write-output $local:element.Text
+    }
+    if (($text_check -ne '') -and ($local:element.Text -match $text_check)) { # 'a b c' -match 'b' => True
+      $local:button_element = $local:iframe.FindElement([OpenQA.Selenium.By]::CssSelector($accept_button_locator))
+      $button_element.click()
+    }
+    [void]$local:selenum_driver.switchTo().defaultContent()
+  } catch [OpenQA.Selenium.WebDriverTimeoutException]{
+    write-output ('Exception (ignored): {0}' -f (($_.Exception.Message) -split "`n")[0] )
+  }
 }
