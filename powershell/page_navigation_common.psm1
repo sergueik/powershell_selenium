@@ -1338,7 +1338,7 @@ function wait_alert_frame {
     [String]$text_check = '',
     [int]$wait_seconds = 3,
     [switch]$run_debug
- 
+
  )
   if ($frame_locator -eq '' -or $frame_locator -eq $null) {
     return
@@ -1346,7 +1346,7 @@ function wait_alert_frame {
   if ($accept_button_locator -eq '' -or $accept_button_locator -eq $null) {
     return
   }
- 
+
   $local:debug = [bool]$PSBoundParameters['run_debug'].IsPresent
   [OpenQA.Selenium.Remote.RemoteWebDriver]$local:selenum_driver = $selenium_ref.Value
   # https://docs.microsoft.com/en-us/dotnet/api/system.timespan?redirectedfrom=MSDN&view=netframework-4.0
@@ -1365,6 +1365,24 @@ function wait_alert_frame {
     }
     [void]$local:selenum_driver.switchTo().defaultContent()
   } catch [OpenQA.Selenium.WebDriverTimeoutException]{
+    write-output ('Exception (ignored): {0}' -f (($_.Exception.Message) -split "`n")[0] )
+  }
+
+  # alternative try...catch
+  try {
+    $local:frame_element = $local:selenum_driver.FindElement([OpenQA.Selenium.By]::CssSelector($frame_locator))
+    if ($local:frame_element.Displayed) {
+      $local:iframe = $local:selenum_driver.SwitchTo().Frame($local:frame_element)
+      if ($run_debug) {
+        write-output $local:element.Text
+      }
+      if (($text_check -ne '') -and ($local:element.Text -match $text_check)) {
+        $local:button_element = $local:iframe.FindElement([OpenQA.Selenium.By]::CssSelector($accept_button_locator))
+        $button_element.click()
+      }
+      [void]$local:selenum_driver.switchTo().defaultContent()
+    }
+  } catch [OpenQA.Selenium.NoSuchElementException]{
     write-output ('Exception (ignored): {0}' -f (($_.Exception.Message) -split "`n")[0] )
   }
 }
