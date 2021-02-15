@@ -460,7 +460,8 @@ which can be collaptsed into
 
   [OpenQA.Selenium.Interactions.Actions]$actions = New-Object OpenQA.Selenium.Interactions.Actions ($selenium)
   # Unable to find type [OpenQA.Selenium.Remote.RemoteAlert]. 
-  [OpenQA.Selenium.ITargetLocator.Alert] $alert = $null
+  # [OpenQA.Selenium.ITargetLocator.Alert] $alert = $null
+  # Unable to find type [OpenQA.Selenium.ITargetLocator.Alert].
   # $alert = $selenium.switchTo().alert()
   return $selenium
 }
