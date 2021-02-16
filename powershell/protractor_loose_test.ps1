@@ -241,12 +241,29 @@ $wait_polling_interval = 50
 $wait.PollingInterval = $wait_polling_interval
 $wait.IgnoreExceptionTypes([OpenQA.Selenium.WebDriverTimeoutException],[OpenQA.Selenium.WebDriverException])
 # TODO: predicate
-# see for Java 
+# see for Java
 # https://www.techbeamers.com/webdriver-fluent-wait-command-examples/
 # https://gist.github.com/djangofan/cd96628f9ae2b4927c4d
 # https://www.codeproject.com/Articles/787565/Lightweight-Wait-Until-Mechanism
 
 try {
+  [void]$wait.Until([Func[[OpenQA.Selenium.IWebDriver],[Bool]]] {
+    param(
+      [OpenQA.Selenium.IWebDriver] $driver
+    )
+    # write-host 'Inside Wait'
+    $elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($binding_locator_script,$null,'latest',$null))
+    if (($elements -eq $null) -or ($elements.size -eq 0)) {
+      return $false
+    }
+    $element = $elements[0]
+    if ($element.Text -match '[0-9]+') {
+      return $true
+    } else {
+      return $false
+    }
+  })
+
   $elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($binding_locator_script,$null,'latest',$null))
   [NUnit.Framework.Assert]::IsNotNull($elements)
   $latest = $elements[0]
