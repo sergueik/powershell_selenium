@@ -227,7 +227,12 @@ $goButton = $elements[0]
 $goButton.Click()
 
 $script_timeout = 120
-[void]($selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script_timeout)))
+# only available in latest versions of Selenium assembly
+try {
+  [void]($selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script_timeout)))
+} catch [System.Management.Automation.RuntimeException] { # NOTE: fully specified class
+  write-output ('Exception (ignored): {0}' -f $_.Exception.Message)
+}
 
 $wait_seconds = 10
 $wait_polling_interval = 50
@@ -240,19 +245,18 @@ $wait.IgnoreExceptionTypes([OpenQA.Selenium.WebDriverTimeoutException],[OpenQA.S
 # https://www.techbeamers.com/webdriver-fluent-wait-command-examples/
 # https://gist.github.com/djangofan/cd96628f9ae2b4927c4d
 # https://www.codeproject.com/Articles/787565/Lightweight-Wait-Until-Mechanism
-start-sleep -millisecond 2000
+
 try {
-
-$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($binding_locator_script,$null,'latest',$null))
-[NUnit.Framework.Assert]::IsNotNull($elements)
-$latest = $elements[0]
-highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$latest) -Delay 150
-
-[NUnit.Framework.Assert]::AreEqual('42', $latest.Text )
+  $elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($binding_locator_script,$null,'latest',$null))
+  [NUnit.Framework.Assert]::IsNotNull($elements)
+  $latest = $elements[0]
+  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::TextToBePresentInElement($latest, '42'))
+  highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$latest) -Delay 150
+  [NUnit.Framework.Assert]::AreEqual('42', $latest.Text )
 
 } catch [OpenQA.Selenium.WebDriverTimeoutException]{
-  write-output ("Exception : {0} ...`n{1}" -f (($_.Exception.Message) -split "`n")[0],$_.Exception.Type)
-} catch [exception]{
+  write-output ('Timeout Exception : {0}' -f (($_.Exception.Message) -split "`n")[0])
+} catch [Exception]{
   write-output ("Exception : {0} ...`n{1}" -f (($_.Exception.Message) -split "`n")[0],$_.Exception.Type)
 }
 
