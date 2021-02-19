@@ -1,4 +1,4 @@
-#Copyright (c) 2015,2021 Serguei Kouzmine
+#Copyright (c) 2021 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
 param(
   [string]$browser = 'chrome',
   [string]$base_url = 'http://juliemr.github.io/protractor-demo/',
+  [String]$clientsidescripts = 'clientsidescripts.js',
   [switch]$debug,
   [switch]$pause
 
@@ -54,6 +55,7 @@ function highlight {
     [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);", $element_ref.Value,'')
   }
 }
+
 
 # https://seleniumonlinetrainingexpert.wordpress.com/2012/12/03/how-to-automate-youtube-using-selenium-webdriver/
 
@@ -237,60 +239,28 @@ $shared_assemblies = @(
   'WebDriver.Support.dll',
   'nunit.framework.dll'
 )
-[string]$model_locator_script = @'
-var findByModel = function(model, using, rootSelector) {
-    var root = document.querySelector(rootSelector || 'body');
-    using = using || '[ng-app]';
-    if (angular.getTestability) {
-        return angular.getTestability(root).
-        findModels(using, model, true);
-    }
-    var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-    for (var p = 0; p < prefixes.length; ++p) {
-        var selector = '[' + prefixes[p] + 'model="' + model + '"]';
-        var elements = using.querySelectorAll(selector);
-        if (elements.length) {
-            return elements;
-        }
-    }
-};
+$common = (get-content -literalpath $clientsidescripts)
+[string]$load_all_script = @"
+${common}
 var using = arguments[0] || document;
 var model = arguments[1];
 var rootSelector = arguments[2];
-return findByModel(model, using, rootSelector);
-'@
-[string]$binding_locator_script = @'
-var findBindings = function(binding, exactMatch, using, rootSelector) {
-    var root = document.querySelector(rootSelector || 'body');
-    using = using || document;
-    if (angular.getTestability) {
-        return angular.getTestability(root).
-        findBindings(using, binding, exactMatch);
-    }
-    var bindings = using.getElementsByClassName('ng-binding');
-    var matches = [];
-    for (var i = 0; i < bindings.length; ++i) {
-        var dataBinding = angular.element(bindings[i]).data('$binding');
-        if (dataBinding) {
-            var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
-            if (exactMatch) {
-                var matcher = new RegExp('({|\\s|^|\\|)' +
-                    /* See http://stackoverflow.com/q/3561711 */
-                    binding.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&') +
-                    '(}|\\s|$|\\|)');
-                if (matcher.test(bindingName)) {
-                    matches.push(bindings[i]);
-                }
-            } else {
-                if (bindingName.indexOf(binding) != -1) {
-                    matches.push(bindings[i]);
-                }
-            }
-        }
-    }
-    return matches; /* Return the whole array for webdriver.findElements. */
-};
+window.findByModel = functions.findByModel;
+window.findByOptions = functions.findByOptions;
+window.findAllRepeaterRows = functions.findAllRepeaterRows;
+window.findByButtonText = functions.findByButtonText;
+window.findBindings = functions.findBindings;
+return functions.findByModel(model, using, rootSelector);
+"@
+[string]$model_locator_script = @'
+var using = arguments[0] || document;
+var model = arguments[1];
+var rootSelector = arguments[2];
 
+return window.findByModel(model, using, rootSelector);
+'@
+
+[string]$binding_locator_script = @'
 var using = arguments[0] || document;
 var binding = arguments[1];
 var rootSelector = arguments[2];
@@ -300,105 +270,33 @@ if (typeof exactMatch === 'undefined') {
     exactMatch = true;
 }
 
-return findBindings(binding, exactMatch, using, rootSelector);
+return window.findBindings(binding, exactMatch, using, rootSelector);
 '@
 [string]$repeater_locator_script = @'
-var repeaterMatch = function(ngRepeat, repeater, exact) {
-  if (exact) {
-    return ngRepeat.split(' track by ')[0].split(' as ')[0].split('|')[0].
-    split('=')[0].trim() == repeater;
-  } else {
-    return ngRepeat.indexOf(repeater) != -1;
-  }
-}
-
-var findAllRepeaterRows = function(using, repeater) {
-
-  var rows = [];
-  var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-  for (var p = 0; p < prefixes.length; ++p) {
-    var attr = prefixes[p] + 'repeat';
-    var repeatElems = using.querySelectorAll('[' + attr + ']');
-    attr = attr.replace(/\\/g, '');
-    for (var i = 0; i < repeatElems.length; ++i) {
-      if (repeatElems[i].getAttribute(attr).indexOf(repeater) != -1) {
-        rows.push(repeatElems[i]);
-      }
-    }
-  }
-  for (var p = 0; p < prefixes.length; ++p) {
-    var attr = prefixes[p] + 'repeat-start';
-    var repeatElems = using.querySelectorAll('[' + attr + ']');
-    attr = attr.replace(/\\/g, '');
-    for (var i = 0; i < repeatElems.length; ++i) {
-      if (repeatElems[i].getAttribute(attr).indexOf(repeater) != -1) {
-        var elem = repeatElems[i];
-        while (elem.nodeType != 8 ||
-          !(elem.nodeValue.indexOf(repeater) != -1)) {
-          if (elem.nodeType == 1) {
-            rows.push(elem);
-          }
-          elem = elem.nextSibling;
-        }
-      }
-    }
-  }
-  return rows;
-};
 var using = arguments[0] || document;
 var repeater = arguments[1];
-return findAllRepeaterRows(using, repeater);
+return window.findAllRepeaterRows(using, repeater);
 '@
 [string]$options_locator_script = @'
-var findByOptions = function(options, using) {
-    using = using || document;
-    var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-    for (var p = 0; p < prefixes.length; ++p) {
-        var selector = '[' + prefixes[p] + 'options="' + options + '"] option';
-        var elements = using.querySelectorAll(selector);
-        if (elements.length) {
-            return elements;
-        }
-    }
-};
-
 var using = arguments[0] || document;
 var options = arguments[1];
-return findByOptions(options, using);
+return window.findByOptions(options, using);
 '@
 [string]$button_text_locator_script = @'
-var findByButtonText = function(searchText, using) {
-    using = using || document;
-    var elements = using.querySelectorAll('button, input[type="button"], input[type="submit"]');
-    var matches = [];
-    for (var i = 0; i < elements.length; ++i) {
-        var element = elements[i];
-        var elementText;
-        if (element.tagName.toLowerCase() == 'button') {
-            elementText = element.textContent || element.innerText || '';
-        } else {
-            elementText = element.value;
-        }
-        if (elementText.trim() === searchText) {
-            matches.push(element);
-        }
-    }
-    return matches;
-};
 var using = arguments[0] || document;
 var searchText = arguments[1];
-return findByButtonText(searchText, using);
+return window.findByButtonText(searchText, using);
 '@
 
 
 
 $selenium.Navigate().GoToUrl($base_url)
-
+# write-output $model_locator_script;
 $title = $selenium.Title
 sleep -millisecond 100
 [NUnit.Framework.Assert]::AreEqual('Super Calculator', $title)
 
-$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($model_locator_script,$null,'first',$null))
+$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($load_all_script,$null,'first',$null))
 [NUnit.Framework.Assert]::IsTrue(($elements -ne $null))
 $first = $elements[0]
 $first.Clear()
