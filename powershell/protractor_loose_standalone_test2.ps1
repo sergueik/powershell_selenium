@@ -21,11 +21,65 @@
 param(
   [string]$browser = 'chrome',
   [string]$base_url = 'http://juliemr.github.io/protractor-demo/',
-  [String]$clientsidescripts = 'clientsidescripts.js',
   [switch]$debug,
   [switch]$pause
 
 )
+
+function loadScript {
+  param(
+    [string]$scriptName = $null,
+    [int]$version,
+    [string[]]$shared_scripts_paths = @( 'c:\java\selenium\csharp\sharedassemblies'),
+    [switch]$debug
+  )
+  if ($scriptName -eq $null) {
+    throw [System.IO.FileNotFoundException] 'Script name can not be null.'
+  }
+  [string]$local:scriptDirectory = Get-ScriptDirectory
+  [string]$local:scriptdata = $null
+  write-debug ('Loading script "{0}"' -f $scriptName)
+
+  $local:scriptPath = ("{0}\{1}" -f $local:scriptDirectory, $scriptName)
+  if ( test-path -path $local:scriptPath){
+    write-debug ('Found script in "{0}"' -f $local:scriptPath)
+    $local:scriptdata = [IO.File]::ReadAllText($local:scriptPath)
+  } else {
+    foreach ($local:scriptDirectory in $shared_scripts_paths) {
+      $local:scriptPath = ("{0}\{1}" -f $local:scriptDirectory, $scriptName)
+      if ( test-path -path $local:scriptPath) {
+        write-debug ('Found script in "{0}"' -f $local:scriptPath)
+        $local:scriptdata = [IO.File]::ReadAllText($local:scriptPat)
+      }
+    }
+  }
+  write-debug ('Loaded "{0}"' -f $local:scriptdata)
+  if ($local:scriptdata -eq $null -or $local:scriptdata -eq '' ) {
+    throw [System.IO.FileNotFoundException] "Script file ${scriptName} was not be found or is empty."
+  }
+  return $local:scriptdata
+}
+
+
+function localPageURI {
+  param(
+    [string]$fileName = $null,
+    [string]$scriptDirectory = (Get-ScriptDirectory),
+    [switch]$debug
+  )
+  if ($fileName -eq $null) {
+    throw [System.IO.FileNotFoundException] 'Script name can not be null.'
+  }
+
+  $local:filePath = ("{0}\{1}" -f $scriptDirectory, $fileName)
+  if ( test-path -path $local:filePath){
+    write-debug ('Found page in "{0}"' -f $local:filePath)
+    $local:fileURI = ('file:///{0}' -f ($local:filePath -replace '\\', '/' ) )
+  } else {
+    throw [System.IO.FileNotFoundException] "Page file ${filePath} was not be found."
+  }
+  return $local:fileURI
+}
 
 function highlight {
   param(
@@ -55,7 +109,6 @@ function highlight {
     [OpenQA.Selenium.IJavaScriptExecutor]$selenium_ref.Value.ExecuteScript("arguments[0].setAttribute('style', arguments[1]);", $element_ref.Value,'')
   }
 }
-
 
 # https://seleniumonlinetrainingexpert.wordpress.com/2012/12/03/how-to-automate-youtube-using-selenium-webdriver/
 
@@ -239,28 +292,60 @@ $shared_assemblies = @(
   'WebDriver.Support.dll',
   'nunit.framework.dll'
 )
-$common = (get-content -literalpath $clientsidescripts)
-[string]$load_all_script = @"
-${common}
-var using = arguments[0] || document;
-var model = arguments[1];
-var rootSelector = arguments[2];
-window.findByModel = functions.findByModel;
-window.findByOptions = functions.findByOptions;
-window.findAllRepeaterRows = functions.findAllRepeaterRows;
-window.findByButtonText = functions.findByButtonText;
-window.findBindings = functions.findBindings;
-return functions.findByModel(model, using, rootSelector);
-"@
 [string]$model_locator_script = @'
+var findByModel = function(model, using, rootSelector) {
+    var root = document.querySelector(rootSelector || 'body');
+    using = using || '[ng-app]';
+    if (angular.getTestability) {
+        return angular.getTestability(root).
+        findModels(using, model, true);
+    }
+    var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
+    for (var p = 0; p < prefixes.length; ++p) {
+        var selector = '[' + prefixes[p] + 'model="' + model + '"]';
+        var elements = using.querySelectorAll(selector);
+        if (elements.length) {
+            return elements;
+        }
+    }
+};
 var using = arguments[0] || document;
 var model = arguments[1];
 var rootSelector = arguments[2];
-
-return window.findByModel(model, using, rootSelector);
+return findByModel(model, using, rootSelector);
 '@
-
 [string]$binding_locator_script = @'
+var findBindings = function(binding, exactMatch, using, rootSelector) {
+    var root = document.querySelector(rootSelector || 'body');
+    using = using || document;
+    if (angular.getTestability) {
+        return angular.getTestability(root).
+        findBindings(using, binding, exactMatch);
+    }
+    var bindings = using.getElementsByClassName('ng-binding');
+    var matches = [];
+    for (var i = 0; i < bindings.length; ++i) {
+        var dataBinding = angular.element(bindings[i]).data('$binding');
+        if (dataBinding) {
+            var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
+            if (exactMatch) {
+                var matcher = new RegExp('({|\\s|^|\\|)' +
+                    /* See http://stackoverflow.com/q/3561711 */
+                    binding.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&') +
+                    '(}|\\s|$|\\|)');
+                if (matcher.test(bindingName)) {
+                    matches.push(bindings[i]);
+                }
+            } else {
+                if (bindingName.indexOf(binding) != -1) {
+                    matches.push(bindings[i]);
+                }
+            }
+        }
+    }
+    return matches; /* Return the whole array for webdriver.findElements. */
+};
+
 var using = arguments[0] || document;
 var binding = arguments[1];
 var rootSelector = arguments[2];
@@ -270,109 +355,123 @@ if (typeof exactMatch === 'undefined') {
     exactMatch = true;
 }
 
-return window.findBindings(binding, exactMatch, using, rootSelector);
+return findBindings(binding, exactMatch, using, rootSelector);
 '@
 [string]$repeater_locator_script = @'
+var repeaterMatch = function(ngRepeat, repeater, exact) {
+  if (exact) {
+    return ngRepeat.split(' track by ')[0].split(' as ')[0].split('|')[0].
+    split('=')[0].trim() == repeater;
+  } else {
+    return ngRepeat.indexOf(repeater) != -1;
+  }
+}
+
+var findAllRepeaterRows = function(using, repeater) {
+
+  var rows = [];
+  var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
+  for (var p = 0; p < prefixes.length; ++p) {
+    var attr = prefixes[p] + 'repeat';
+    var repeatElems = using.querySelectorAll('[' + attr + ']');
+    attr = attr.replace(/\\/g, '');
+    for (var i = 0; i < repeatElems.length; ++i) {
+      if (repeatElems[i].getAttribute(attr).indexOf(repeater) != -1) {
+        rows.push(repeatElems[i]);
+      }
+    }
+  }
+  for (var p = 0; p < prefixes.length; ++p) {
+    var attr = prefixes[p] + 'repeat-start';
+    var repeatElems = using.querySelectorAll('[' + attr + ']');
+    attr = attr.replace(/\\/g, '');
+    for (var i = 0; i < repeatElems.length; ++i) {
+      if (repeatElems[i].getAttribute(attr).indexOf(repeater) != -1) {
+        var elem = repeatElems[i];
+        while (elem.nodeType != 8 ||
+          !(elem.nodeValue.indexOf(repeater) != -1)) {
+          if (elem.nodeType == 1) {
+            rows.push(elem);
+          }
+          elem = elem.nextSibling;
+        }
+      }
+    }
+  }
+  return rows;
+};
 var using = arguments[0] || document;
 var repeater = arguments[1];
-return window.findAllRepeaterRows(using, repeater);
+return findAllRepeaterRows(using, repeater);
 '@
 [string]$options_locator_script = @'
+var findByOptions = function(options, using) {
+    using = using || document;
+    var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
+    for (var p = 0; p < prefixes.length; ++p) {
+        var selector = '[' + prefixes[p] + 'options="' + options + '"] option';
+        var elements = using.querySelectorAll(selector);
+        if (elements.length) {
+            return elements;
+        }
+    }
+};
+
 var using = arguments[0] || document;
 var options = arguments[1];
-return window.findByOptions(options, using);
+return findByOptions(options, using);
 '@
 [string]$button_text_locator_script = @'
+var findByButtonText = function(searchText, using) {
+    using = using || document;
+    var elements = using.querySelectorAll('button, input[type="button"], input[type="submit"]');
+    var matches = [];
+    for (var i = 0; i < elements.length; ++i) {
+        var element = elements[i];
+        var elementText;
+        if (element.tagName.toLowerCase() == 'button') {
+            elementText = element.textContent || element.innerText || '';
+        } else {
+            elementText = element.value;
+        }
+        if (elementText.trim() === searchText) {
+            matches.push(element);
+        }
+    }
+    return matches;
+};
 var using = arguments[0] || document;
 var searchText = arguments[1];
-return window.findByButtonText(searchText, using);
+return findByButtonText(searchText, using);
 '@
 
 
+$fileURI = localPageURI -fileName 'ng_multi_select2.htm'
+$selenium.Navigate().GoToUrl($fileURI)
 
-$selenium.Navigate().GoToUrl($base_url)
-# write-output $model_locator_script;
-$title = $selenium.Title
-sleep -millisecond 100
-[NUnit.Framework.Assert]::AreEqual('Super Calculator', $title)
 
-$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($load_all_script,$null,'first',$null))
-[NUnit.Framework.Assert]::IsTrue(($elements -ne $null))
-$first = $elements[0]
-$first.Clear()
-$first.sendKeys('40')
+start-sleep -millisecond 10000
 
-$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($model_locator_script,$null,'second',$null))
+$css = "multiselect-dropdown button[data-ng-click='openDropdown()']"
+$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css))
+$element.click()
+$binding_locator_script = loadScript -scriptName 'binding.js'
+$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($binding_locator_script,$null,'option.name',$null))
 [NUnit.Framework.Assert]::IsNotNull($elements)
-$second = $elements[0]
-$second.Clear()
-$second.sendKeys('2')
 
-
-$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($options_locator_script,$null,'value for (key, value) in operators',$null))
-[NUnit.Framework.Assert]::IsNotNull($elements)
-$operator = $elements[0]
-$operator.Click()
-
-$goButton = $selenium.FindElement([OpenQA.Selenium.By]::Id('gobutton'))
-[NUnit.Framework.Assert]::AreEqual('Go!', $goButton.Text) # Contains
-$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($button_text_locator_script,$null,'Go!',$null))
-[NUnit.Framework.Assert]::IsNotNull($elements)
-$goButton = $elements[0]
-[NUnit.Framework.Assert]::That(($goButton.Text -match 'Go!')) # Contains
-$goButton.Click()
-
-$script_timeout = 120
-# only available in latest versions of Selenium assembly
-try {
-  [void]($selenium.Manage().timeouts().SetScriptTimeout([System.TimeSpan]::FromSeconds($script_timeout)))
-} catch [System.Management.Automation.RuntimeException] { # NOTE: fully specified class
-  write-output ('Exception (ignored): {0}' -f $_.Exception.Message)
+$elements | foreach-object {
+  $element = $_     
+  $evaluate_script = loadScript  -scriptName 'evaluate.js'
+  $optionName = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($evaluate_script, $element, 'option.name', $null))
+  write-output ('option.name = ' + $optionName)
 }
 
-$wait_seconds = 10
-$wait_polling_interval = 50
-
-[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds($wait_seconds))
-$wait.PollingInterval = $wait_polling_interval
-$wait.IgnoreExceptionTypes([OpenQA.Selenium.WebDriverTimeoutException],[OpenQA.Selenium.WebDriverException])
-# TODO: predicate
-# see for Java
-# https://www.techbeamers.com/webdriver-fluent-wait-command-examples/
-# https://gist.github.com/djangofan/cd96628f9ae2b4927c4d
-# https://www.codeproject.com/Articles/787565/Lightweight-Wait-Until-Mechanism
-
-try {
-  [void]$wait.Until([Func[[OpenQA.Selenium.IWebDriver],[Bool]]] {
-    param(
-      [OpenQA.Selenium.IWebDriver] $driver
-    )
-    # write-host 'Inside Wait'
-    $elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($binding_locator_script,$null,'latest',$null))
-    if (($elements -eq $null) -or ($elements.size -eq 0)) {
-      return $false
-    }
-    $element = $elements[0]
-    if ($element.Text -match '[0-9]+') {
-      return $true
-    } else {
-      return $false
-    }
-  })
-
-  $elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($binding_locator_script,$null,'latest',$null))
-  [NUnit.Framework.Assert]::IsNotNull($elements)
-  $latest = $elements[0]
-  [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::TextToBePresentInElement($latest, '42'))
-  highlight -selenium_ref ([ref]$selenium) -element_ref ([ref]$latest) -Delay 150
-  [NUnit.Framework.Assert]::AreEqual('42', $latest.Text )
-
-} catch [OpenQA.Selenium.WebDriverTimeoutException]{
-  write-output ('Timeout Exception : {0}' -f (($_.Exception.Message) -split "`n")[0])
-} catch [Exception]{
-  write-output ("Exception : {0} ...`n{1}" -f (($_.Exception.Message) -split "`n")[0],$_.Exception.Type)
+$repeater_column_locator_script = loadScript  -scriptName 'repeaterColumn.js'
+$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($repeater_column_locator_script, $null, 'country in SelectedCountries', 'country.name', $null))
+$elements | foreach-object {
+  $element = $_     
+  write-output $element.text
 }
-
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
 if (-not ($host.Name -match 'ISE')) {

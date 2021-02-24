@@ -67,6 +67,45 @@ function Get-ScriptDirectory {
 
 
 <#
+
+
+.SYNOPSIS
+  Returns the path to the page file in 'file://'protocol
+.DESCRIPTION
+  Confirms page file is present in current script directory
+
+.EXAMPLE
+  $fileURI = localPageURI -fileName 'ng_multi_select2.htm'
+
+.LINK
+
+.NOTES
+  VERSION HISTORY
+  2019/05/15 Initial Version
+#>
+
+function localPageURI {
+  param(
+    [string]$fileName = $null,
+    [string]$scriptDirectory = (Get-ScriptDirectory),
+    [switch]$debug
+  )
+  if ($fileName -eq $null) {
+    throw [System.IO.FileNotFoundException] 'Script name can not be null.'
+  }
+
+  $local:filePath = ("{0}\{1}" -f $scriptDirectory, $fileName)
+  if ( test-path -path $local:filePath){
+    write-debug ('Found page in "{0}"' -f $local:filePath)
+    $local:fileURI = ('file:///{0}' -f ($local:filePath -replace '\\', '/' ) )
+  } else {
+    throw [System.IO.FileNotFoundException] "Page file ${filePath} was not be found."
+  }
+  return $local:fileURI
+}
+
+
+<#
 .SYNOPSIS
   Returns the content of the script file from to the provided filename as text
 .DESCRIPTION
