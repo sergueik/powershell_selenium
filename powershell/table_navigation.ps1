@@ -1,4 +1,4 @@
-#Copyright (c) 2015 Serguei Kouzmine
+#Copyright (c) 2015,2021 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -87,7 +87,7 @@ if ($table_row_collection -ne $null) {
 
     [NUnit.Framework.Assert]::IsTrue(($table_row -ne $null))
     [NUnit.Framework.Assert]::IsTrue(($table_row.Displayed))
-    [NUnit.Framework.Assert]::IsTrue(($table_row.getAttribute('role') -match $row_role_attribute),("Unexpected '{0}' attribute '{1}'" -f 'role',$table_row.getAttribute('role')))
+    # [NUnit.Framework.Assert]::IsTrue(($table_row.getAttribute('role') -match $row_role_attribute),("Unexpected '{0}' attribute '{1}'" -f 'role',$table_row.getAttribute('role')))
     write-output ('Row role: {0}' -f $table_row.getAttribute('role') )
     [OpenQA.Selenium.IWebElement[]]$table_cell_collection = $table_row.FindElements([OpenQA.Selenium.By]::XPath($row_cell_relative_xpath))
     $cell_num = 1
@@ -147,8 +147,11 @@ if ($table_row_collection -ne $null) {
 
     [NUnit.Framework.Assert]::IsTrue(($table_row -ne $null))
     [NUnit.Framework.Assert]::IsTrue(($table_row.Displayed))
-    [NUnit.Framework.Assert]::IsTrue(($table_row.getAttribute('role') -match $row_role_attribute),("Unexpected '{0}' attribute '{1}'" -f 'role',$table_row.getAttribute('role')))
-
+   <#
+      write-output ('role: {0}' -f $table_row.getAttribute('role')  )
+      write-output ('row attribute role: {0}' -f $row_role_attribute  )
+      [NUnit.Framework.Assert]::IsTrue(($table_row.getAttribute('role') -match $row_role_attribute),("Unexpected '{0}' attribute '{1}'" -f 'role',$table_row.getAttribute('role')))
+    #>
     $row_cell_relative_xpath = 'td'
     [OpenQA.Selenium.IWebElement[]]$table_cell_collection = $table_row.FindElements([OpenQA.Selenium.By]::XPath($row_cell_relative_xpath))
     $cell_num = 1
