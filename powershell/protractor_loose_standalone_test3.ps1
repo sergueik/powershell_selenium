@@ -20,7 +20,6 @@
 
 param(
   [string]$browser = 'chrome',
-  [string]$base_url = 'http://juliemr.github.io/protractor-demo/',
   [switch]$debug,
   [switch]$pause
 
@@ -201,7 +200,7 @@ if ($browser -ne $null -and $browser -ne '') {
   Write-Host "Running on ${browser}"
   $selenium = $null
   if ($browser -match 'firefox') {
-   
+
    #  $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Firefox()
 
   [object]$profile_manager = New-Object OpenQA.Selenium.Firefox.FirefoxProfileManager
@@ -222,13 +221,13 @@ if ($browser -ne $null -and $browser -ne '') {
     $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
     # override
 
-    # Oveview of extensions 
+    # Oveview of extensions
     # https://sites.google.com/a/chromium.org/chromedriver/capabilities
 
     # Profile creation
     # https://support.google.com/chrome/answer/142059?hl=en
     # http://www.labnol.org/software/create-family-profiles-in-google-chrome/4394/
-    # using Profile 
+    # using Profile
     # http://superuser.com/questions/377186/how-do-i-start-chrome-using-a-specified-user-profile/377195#377195
 
 
@@ -241,7 +240,7 @@ if ($browser -ne $null -and $browser -ne '') {
     # no-op option - re-enforcing the default setting
     $options.addArguments(('user-data-dir={0}' -f ("${env:LOCALAPPDATA}\Google\Chrome\User Data" -replace '\\','/')))
     # if you like to specify another profile parent directory:
-    # $options.addArguments('user-data-dir=c:/TEMP'); 
+    # $options.addArguments('user-data-dir=c:/TEMP');
 
     $options.addArguments('--profile-directory=Default')
 
@@ -292,186 +291,56 @@ $shared_assemblies = @(
   'WebDriver.Support.dll',
   'nunit.framework.dll'
 )
-[string]$model_locator_script = @'
-var findByModel = function(model, using, rootSelector) {
-    var root = document.querySelector(rootSelector || 'body');
-    using = using || '[ng-app]';
-    if (angular.getTestability) {
-        return angular.getTestability(root).
-        findModels(using, model, true);
-    }
-    var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-    for (var p = 0; p < prefixes.length; ++p) {
-        var selector = '[' + prefixes[p] + 'model="' + model + '"]';
-        var elements = using.querySelectorAll(selector);
-        if (elements.length) {
-            return elements;
-        }
-    }
-};
-var using = arguments[0] || document;
-var model = arguments[1];
-var rootSelector = arguments[2];
-return findByModel(model, using, rootSelector);
-'@
-[string]$binding_locator_script = @'
-var findBindings = function(binding, exactMatch, using, rootSelector) {
-    var root = document.querySelector(rootSelector || 'body');
-    using = using || document;
-    if (angular.getTestability) {
-        return angular.getTestability(root).
-        findBindings(using, binding, exactMatch);
-    }
-    var bindings = using.getElementsByClassName('ng-binding');
-    var matches = [];
-    for (var i = 0; i < bindings.length; ++i) {
-        var dataBinding = angular.element(bindings[i]).data('$binding');
-        if (dataBinding) {
-            var bindingName = dataBinding.exp || dataBinding[0].exp || dataBinding;
-            if (exactMatch) {
-                var matcher = new RegExp('({|\\s|^|\\|)' +
-                    /* See http://stackoverflow.com/q/3561711 */
-                    binding.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&') +
-                    '(}|\\s|$|\\|)');
-                if (matcher.test(bindingName)) {
-                    matches.push(bindings[i]);
-                }
-            } else {
-                if (bindingName.indexOf(binding) != -1) {
-                    matches.push(bindings[i]);
-                }
-            }
-        }
-    }
-    return matches; /* Return the whole array for webdriver.findElements. */
-};
 
-var using = arguments[0] || document;
-var binding = arguments[1];
-var rootSelector = arguments[2];
-
-var exactMatch = arguments[3];
-if (typeof exactMatch === 'undefined') {
-    exactMatch = true;
-}
-
-return findBindings(binding, exactMatch, using, rootSelector);
-'@
-[string]$repeater_locator_script = @'
-var repeaterMatch = function(ngRepeat, repeater, exact) {
-  if (exact) {
-    return ngRepeat.split(' track by ')[0].split(' as ')[0].split('|')[0].
-    split('=')[0].trim() == repeater;
-  } else {
-    return ngRepeat.indexOf(repeater) != -1;
-  }
-}
-
-var findAllRepeaterRows = function(using, repeater) {
-
-  var rows = [];
-  var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-  for (var p = 0; p < prefixes.length; ++p) {
-    var attr = prefixes[p] + 'repeat';
-    var repeatElems = using.querySelectorAll('[' + attr + ']');
-    attr = attr.replace(/\\/g, '');
-    for (var i = 0; i < repeatElems.length; ++i) {
-      if (repeatElems[i].getAttribute(attr).indexOf(repeater) != -1) {
-        rows.push(repeatElems[i]);
-      }
-    }
-  }
-  for (var p = 0; p < prefixes.length; ++p) {
-    var attr = prefixes[p] + 'repeat-start';
-    var repeatElems = using.querySelectorAll('[' + attr + ']');
-    attr = attr.replace(/\\/g, '');
-    for (var i = 0; i < repeatElems.length; ++i) {
-      if (repeatElems[i].getAttribute(attr).indexOf(repeater) != -1) {
-        var elem = repeatElems[i];
-        while (elem.nodeType != 8 ||
-          !(elem.nodeValue.indexOf(repeater) != -1)) {
-          if (elem.nodeType == 1) {
-            rows.push(elem);
-          }
-          elem = elem.nextSibling;
-        }
-      }
-    }
-  }
-  return rows;
-};
-var using = arguments[0] || document;
-var repeater = arguments[1];
-return findAllRepeaterRows(using, repeater);
-'@
-[string]$options_locator_script = @'
-var findByOptions = function(options, using) {
-    using = using || document;
-    var prefixes = ['ng-', 'ng_', 'data-ng-', 'x-ng-', 'ng\\:'];
-    for (var p = 0; p < prefixes.length; ++p) {
-        var selector = '[' + prefixes[p] + 'options="' + options + '"] option';
-        var elements = using.querySelectorAll(selector);
-        if (elements.length) {
-            return elements;
-        }
-    }
-};
-
-var using = arguments[0] || document;
-var options = arguments[1];
-return findByOptions(options, using);
-'@
-[string]$button_text_locator_script = @'
-var findByButtonText = function(searchText, using) {
-    using = using || document;
-    var elements = using.querySelectorAll('button, input[type="button"], input[type="submit"]');
-    var matches = [];
-    for (var i = 0; i < elements.length; ++i) {
-        var element = elements[i];
-        var elementText;
-        if (element.tagName.toLowerCase() == 'button') {
-            elementText = element.textContent || element.innerText || '';
-        } else {
-            elementText = element.value;
-        }
-        if (elementText.trim() === searchText) {
-            matches.push(element);
-        }
-    }
-    return matches;
-};
-var using = arguments[0] || document;
-var searchText = arguments[1];
-return findByButtonText(searchText, using);
-'@
-
-
-$fileURI = localPageURI -fileName 'ng_multi_select2.htm'
+$fileURI = localPageURI -fileName 'ng_modal2.htm'
 $selenium.Navigate().GoToUrl($fileURI)
-
 
 start-sleep -millisecond 1000
 
-$css = "multiselect-dropdown button[data-ng-click='openDropdown()']"
-$element = $selenium.FindElement([OpenQA.Selenium.By]::CssSelector($css))
-$element.click()
-$binding_locator_script = loadScript -scriptName 'binding.js'
-$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($binding_locator_script,$null,'option.name',$null))
+$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($button_text_locator_script,$null,'Open modal',$null))
 [NUnit.Framework.Assert]::IsNotNull($elements)
+$elements[0].Click()
 
-$elements | foreach-object {
-  $element = $_     
-  $evaluate_script = loadScript  -scriptName 'evaluate.js'
-  $optionName = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($evaluate_script, $element, 'option.name', $null))
-  write-output ('option.name = ' + $optionName)
-}
+[OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
 
-$repeater_column_locator_script = loadScript  -scriptName 'repeaterColumn.js'
-$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($repeater_column_locator_script, $null, 'country in SelectedCountries', 'country.name', $null))
-$elements | foreach-object {
-  $element = $_     
-  write-output $element.text
+
+$wait.PollingInterval = 150
+
+# NOTE: signature-sensitive
+$result = $wait.until([System.Func[[OpenQA.Selenium.IWebDriver],[OpenQA.Selenium.IWebElement]]] <# follows the code block #> {
+
+  [string]$binding_script = loadScript -scriptName 'binding.js'
+  $elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($binding_script,$null,'title',$null))
+  # probably a bit slow
+  # in .net those are properties
+  $element =  $elements | where-object { $_.Displayed } | select-object -first 1
+  return $element
+})
+
+write-output ('Fluent wait result: {0}' -f $result.getAttribute('innerHTML'))
+[OpenQA.Selenium.IWebElement[]]$dialog = $result.FindElements([OpenQA.Selenium.By]::XPath('../..'))
+highlight ([ref]$selenium) ([ref]$result)
+$formdata = @{
+	'email' = 'test_user@rambler.ru';
+	'password' = 'secret'
 }
+$formdata.keys |  foreach-object {
+  $field = $_
+  $data = $formdata[$field]
+  $css =('form label[ for="{0}"]' -f $field)
+  $element = $dialog.FindElement([OpenQA.Selenium.By]::CssSelector($css))
+  highlight ([ref]$selenium) ([ref]$element)
+  $css =('form input#{0}' -f $field)
+  $element = $dialog.FindElement([OpenQA.Selenium.By]::CssSelector($css))
+  highlight ([ref]$selenium) ([ref]$element)
+  $element.sendKeys($Data);
+}
+start-sleep -millisecond 1000
+$css = 'button[type="submit"]'
+$element = $dialog.FindElement([OpenQA.Selenium.By]::CssSelector($css))
+highlight ([ref]$selenium) ([ref]$element)
+$element.click()
+start-sleep -millisecond 1000
 [bool]$fullstop = [bool]$PSBoundParameters['pause'].IsPresent
 
 if (-not ($host.Name -match 'ISE')) {
