@@ -54,8 +54,28 @@ $base_url = 'https://datatables.net/examples/api/highlight.html'
 
 $selenium.Navigate().GoToUrl($base_url)
 [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait ($selenium,[System.TimeSpan]::FromSeconds(10))
+
+
 $wait.PollingInterval = 150
 
+# NOTE: signature-sensitive
+$result = $wait.until([System.Func[[OpenQA.Selenium.IWebDriver],[OpenQA.Selenium.IWebElement]]] <# follows the code block #> {
+
+  # NOTE: write-output from the criteria function is destructive:
+  # Exception calling "Until" with "1" argument(s): "Cannot convert the "System.Object[]" value of type "System.Object[]" to type "OpenQA.Selenium.IWebElement"."
+  # write-host ('inside until criteria')
+  # NOTE: write host is harmful to returned result
+  return $selenium.FindElement([OpenQA.Selenium.By]::ClassName('nav-item'))
+})
+write-output ('Fluent wait result: {0}' -f $result.getAttribute('innerHTML'))
+
+# $result = $wait.Until( <# follows the code block witn no type #>  {
+# param (
+#  [OpenQA.Selenium.Remote.RemoteWebDriver]$o
+#)
+#return $o.FindElement([OpenQA.Selenium.By]::ClassName("sbn-logo"))
+#}
+#)
 <#
 try {
   [void]$wait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::ClassName("sbn-logo")))
