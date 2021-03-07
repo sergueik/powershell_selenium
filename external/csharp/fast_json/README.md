@@ -68,5 +68,6 @@ $zip = $shell.NameSpace((resolve-path -path 'fastjson.2.1.18.zip').path)
 $zip.items() | where-object {$_.name -eq 'lib'} |foreach-object {$shell.Namespace((resolve-path -path '.').path).copyhere($_)}
 copy-item -path .\lib\net20\fastjson.dll -destination '.'
 ```
+
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)

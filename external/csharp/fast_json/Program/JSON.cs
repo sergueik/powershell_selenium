@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text;
 using System.Xml;
 
 namespace fastJSON
@@ -954,5 +955,993 @@ namespace fastJSON
 #endif
         #endregion
     }
+    internal class JSONSerializer
+    {
+        private readonly StringBuilder _output = new StringBuilder();
+        readonly int _MAX_DEPTH = 10;
+        int _current_depth = 0;
+        private Dictionary<string, int> _globalTypes = new Dictionary<string, int>();
+        private JSONParamters _params;
 
+        internal JSONSerializer(JSONParamters param)
+        {
+            _params = param;
+        }
+
+        internal string ConvertToJSON(object obj)
+        {
+            WriteValue(obj);
+
+            string str = "";
+            if (_params.UsingGlobalTypes)
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.Append("\"$types\":{");
+                bool pendingSeparator = false;
+                foreach (var kv in _globalTypes)
+                {
+                    if (pendingSeparator) sb.Append(',');
+                    pendingSeparator = true;
+                    sb.Append("\"");
+                    sb.Append(kv.Key);
+                    sb.Append("\":\"");
+                    sb.Append(kv.Value);
+                    sb.Append("\"");
+                }
+                sb.Append("},");
+                str = _output.Replace("$types$", sb.ToString()).ToString();
+            }
+            else
+                str = _output.ToString();
+
+            return str;
+        }
+
+        private void WriteValue(object obj)
+        {
+            if (obj == null || obj is DBNull)
+                _output.Append("null");
+
+            else if (obj is string || obj is char)
+                WriteString((string)obj);
+
+            else if (obj is Guid)
+                WriteGuid((Guid)obj);
+
+            else if (obj is bool)
+                _output.Append(((bool)obj) ? "true" : "false"); // conform to standard
+
+            else if (
+                obj is int || obj is long || obj is double ||
+                obj is decimal || obj is float ||
+                obj is byte || obj is short ||
+                obj is sbyte || obj is ushort ||
+                obj is uint || obj is ulong
+            )
+                _output.Append(((IConvertible)obj).ToString(NumberFormatInfo.InvariantInfo));
+
+            else if (obj is DateTime)
+                WriteDateTime((DateTime)obj);
+
+            else if (obj is IDictionary && obj.GetType().IsGenericType && obj.GetType().GetGenericArguments()[0] == typeof(string))
+                WriteStringDictionary((IDictionary)obj);
+
+            else if (obj is IDictionary)
+                WriteDictionary((IDictionary)obj);
+            else if (obj is DataSet)
+                WriteDataset((DataSet)obj);
+
+            else if (obj is DataTable)
+                this.WriteDataTable((DataTable)obj);
+            else if (obj is byte[])
+                WriteBytes((byte[])obj);
+
+            else if (obj is Array || obj is IList || obj is ICollection)
+                WriteArray((IEnumerable)obj);
+
+            else if (obj is Enum)
+                WriteEnum((Enum)obj);
+
+#if CUSTOMTYPE
+            else if (JSON.Instance.IsTypeRegistered(obj.GetType()))
+                WriteCustom(obj);
+#endif
+            else
+                WriteObject(obj);
+        }
+
+#if CUSTOMTYPE
+        private void WriteCustom(object obj)
+        {
+            Serialize s;
+            JSON.Instance._customSerializer.TryGetValue(obj.GetType(), out s);
+            WriteStringFast(s(obj));
+        }
+#endif
+
+        private void WriteEnum(Enum e)
+        {
+            // TODO : optimize enum write
+            WriteStringFast(e.ToString());
+        }
+
+        private void WriteGuid(Guid g)
+        {
+            if (_params.UseFastGuid == false)
+                WriteStringFast(g.ToString());
+            else
+                WriteBytes(g.ToByteArray());
+        }
+
+        private void WriteBytes(byte[] bytes)
+        {
+#if !SILVERLIGHT
+            WriteStringFast(Convert.ToBase64String(bytes, 0, bytes.Length, Base64FormattingOptions.None));
+#else
+            WriteStringFast(Convert.ToBase64String(bytes, 0, bytes.Length));
+#endif
+        }
+
+        private void WriteDateTime(DateTime dateTime)
+        {
+            // datetime format standard : yyyy-MM-dd HH:mm:ss
+            DateTime dt = dateTime;
+            if (_params.UseUTCDateTime)
+                dt = dateTime.ToUniversalTime();
+
+            _output.Append("\"");
+            _output.Append(dt.Year.ToString("0000", NumberFormatInfo.InvariantInfo));
+            _output.Append("-");
+            _output.Append(dt.Month.ToString("00", NumberFormatInfo.InvariantInfo));
+            _output.Append("-");
+            _output.Append(dt.Day.ToString("00", NumberFormatInfo.InvariantInfo));
+            _output.Append(" ");
+            _output.Append(dt.Hour.ToString("00", NumberFormatInfo.InvariantInfo));
+            _output.Append(":");
+            _output.Append(dt.Minute.ToString("00", NumberFormatInfo.InvariantInfo));
+            _output.Append(":");
+            _output.Append(dt.Second.ToString("00", NumberFormatInfo.InvariantInfo));
+
+            if (_params.UseUTCDateTime)
+                _output.Append("Z");
+
+            _output.Append("\"");
+        }
+#if !SILVERLIGHT
+        private DatasetSchema GetSchema(DataTable ds)
+        {
+            if (ds == null) return null;
+
+            DatasetSchema m = new DatasetSchema();
+            m.Info = new List<string>();
+            m.Name = ds.TableName;
+
+            foreach (DataColumn c in ds.Columns)
+            {
+                m.Info.Add(ds.TableName);
+                m.Info.Add(c.ColumnName);
+                m.Info.Add(c.DataType.ToString());
+            }
+            // FEATURE : serialize relations and constraints here
+
+            return m;
+        }
+
+        private DatasetSchema GetSchema(DataSet ds)
+        {
+            if (ds == null) return null;
+
+            DatasetSchema m = new DatasetSchema();
+            m.Info = new List<string>();
+            m.Name = ds.DataSetName;
+
+            foreach (DataTable t in ds.Tables)
+            {
+                foreach (DataColumn c in t.Columns)
+                {
+                    m.Info.Add(t.TableName);
+                    m.Info.Add(c.ColumnName);
+                    m.Info.Add(c.DataType.ToString());
+                }
+            }
+            // FEATURE : serialize relations and constraints here
+
+            return m;
+        }
+
+        private string GetXmlSchema(DataTable dt)
+        {
+            using (var writer = new StringWriter())
+            {
+                dt.WriteXmlSchema(writer);
+                return dt.ToString();
+            }
+        }
+
+        private void WriteDataset(DataSet ds)
+        {
+            _output.Append('{');
+            if ( _params.UseExtensions)
+            {
+                WritePair("$schema", _params.UseOptimizedDatasetSchema ? (object)GetSchema(ds) : ds.GetXmlSchema());
+                _output.Append(',');
+            }
+            bool tablesep = false;
+            foreach (DataTable table in ds.Tables)
+            {
+                if (tablesep) _output.Append(",");
+                tablesep = true;
+                WriteDataTableData(table);
+            }
+            // end dataset
+            _output.Append('}');
+        }
+
+        private void WriteDataTableData(DataTable table)
+        {
+            _output.Append('\"');
+            _output.Append(table.TableName);
+            _output.Append("\":[");
+            DataColumnCollection cols = table.Columns;
+            bool rowseparator = false;
+            foreach (DataRow row in table.Rows)
+            {
+                if (rowseparator) _output.Append(",");
+                rowseparator = true;
+                _output.Append('[');
+
+                bool pendingSeperator = false;
+                foreach (DataColumn column in cols)
+                {
+                    if (pendingSeperator) _output.Append(',');
+                    WriteValue(row[column]);
+                    pendingSeperator = true;
+                }
+                _output.Append(']');
+            }
+
+            _output.Append(']');
+        }
+
+        void WriteDataTable(DataTable dt)
+        {
+            this._output.Append('{');
+            if (_params.UseExtensions)
+            {
+                this.WritePair("$schema", _params.UseOptimizedDatasetSchema ? (object)this.GetSchema(dt) : this.GetXmlSchema(dt));
+                this._output.Append(',');
+            }
+
+            WriteDataTableData(dt);
+
+            // end datatable
+            this._output.Append('}');
+        }
+#endif
+        bool _TypesWritten = false;
+        private void WriteObject(object obj)
+        {
+            if (_params.UsingGlobalTypes == false)
+                _output.Append('{');
+            else
+            {
+                if (_TypesWritten== false)
+                    _output.Append("{$types$");
+                else
+                    _output.Append("{");
+            }
+            _TypesWritten = true;
+            _current_depth++;
+            if (_current_depth > _MAX_DEPTH)
+                throw new Exception("Serializer encountered maximum depth of " + _MAX_DEPTH);
+
+
+            Dictionary<string, string> map = new Dictionary<string, string>();
+            Type t = obj.GetType();
+            bool append = false;
+            if (_params.UseExtensions)
+            {
+                if (_params.UsingGlobalTypes == false)
+                    WritePairFast("$type", JSON.Instance.GetTypeAssemblyName(t));
+                else
+                {
+                    int dt = 0;
+                    string ct = JSON.Instance.GetTypeAssemblyName(t);
+                    if (_globalTypes.TryGetValue(ct, out dt) == false)
+                    {
+                        dt = _globalTypes.Count + 1;
+                        _globalTypes.Add(ct, dt);
+                    }
+                    WritePairFast("$type", dt.ToString());
+                }
+                append = true;
+            }
+
+            List<Getters> g = JSON.Instance.GetGetters(t);
+            foreach (var p in g)
+            {
+                if (append)
+                    _output.Append(',');
+                object o = p.Getter(obj);
+                if ((o == null || o is DBNull) && _params.SerializeNullValues == false)
+                    append = false;
+                else
+                {
+                    WritePair(p.Name, o);
+                    if (o != null && _params.UseExtensions)
+                    {
+                        Type tt = o.GetType();
+                        if (tt == typeof(System.Object))
+                            map.Add(p.Name, tt.ToString());
+                    }
+                    append = true;
+                }
+            }
+            if (map.Count > 0 && _params.UseExtensions)
+            {
+                _output.Append(",\"$map\":");
+                WriteStringDictionary(map);
+            }
+            _current_depth--;
+            _output.Append('}');
+            _current_depth--;
+
+        }
+
+        private void WritePairFast(string name, string value)
+        {
+            if ((value == null) && _params.SerializeNullValues == false)
+                return;
+            WriteStringFast(name);
+
+            _output.Append(':');
+
+            WriteStringFast(value);
+        }
+
+        private void WritePair(string name, object value)
+        {
+            if ((value == null || value is DBNull) && _params.SerializeNullValues == false)
+                return;
+            WriteStringFast(name);
+
+            _output.Append(':');
+
+            WriteValue(value);
+        }
+
+        private void WriteArray(IEnumerable array)
+        {
+            _output.Append('[');
+
+            bool pendingSeperator = false;
+
+            foreach (object obj in array)
+            {
+                if (pendingSeperator) _output.Append(',');
+
+                WriteValue(obj);
+
+                pendingSeperator = true;
+            }
+            _output.Append(']');
+        }
+
+        private void WriteStringDictionary(IDictionary dic)
+        {
+            _output.Append('{');
+
+            bool pendingSeparator = false;
+
+            foreach (DictionaryEntry entry in dic)
+            {
+                if (pendingSeparator) _output.Append(',');
+
+                WritePair((string)entry.Key, entry.Value);
+
+                pendingSeparator = true;
+            }
+            _output.Append('}');
+        }
+
+        private void WriteDictionary(IDictionary dic)
+        {
+            _output.Append('[');
+
+            bool pendingSeparator = false;
+
+            foreach (DictionaryEntry entry in dic)
+            {
+                if (pendingSeparator) _output.Append(',');
+                _output.Append('{');
+                WritePair("k", entry.Key);
+                _output.Append(",");
+                WritePair("v", entry.Value);
+                _output.Append('}');
+
+                pendingSeparator = true;
+            }
+            _output.Append(']');
+        }
+
+        private void WriteStringFast(string s)
+        {
+            _output.Append('\"');
+            _output.Append(s);
+            _output.Append('\"');
+        }
+
+        private void WriteString(string s)
+        {
+            _output.Append('\"');
+
+            int runIndex = -1;
+
+            for (var index = 0; index < s.Length; ++index)
+            {
+                var c = s[index];
+
+                if (c >= ' ' && c < 128 && c != '\"' && c != '\\')
+                {
+                    if (runIndex == -1)
+                    {
+                        runIndex = index;
+                    }
+
+                    continue;
+                }
+
+                if (runIndex != -1)
+                {
+                    _output.Append(s, runIndex, index - runIndex);
+                    runIndex = -1;
+                }
+
+                switch (c)
+                {
+                    case '\t': _output.Append("\\t"); break;
+                    case '\r': _output.Append("\\r"); break;
+                    case '\n': _output.Append("\\n"); break;
+                    case '"':
+                    case '\\': _output.Append('\\'); _output.Append(c); break;
+                    default:
+                        _output.Append("\\u");
+                        _output.Append(((int)c).ToString("X4", NumberFormatInfo.InvariantInfo));
+                        break;
+                }
+            }
+
+            if (runIndex != -1)
+            {
+                _output.Append(s, runIndex, s.Length - runIndex);
+            }
+
+            _output.Append('\"');
+        }
+    }
+     internal class JsonParser
+    {
+        enum Token
+        {
+            None = -1,           // Used to denote no Lookahead available
+            Curly_Open,
+            Curly_Close,
+            Squared_Open,
+            Squared_Close,
+            Colon,
+            Comma,
+            String,
+            Number,
+            True,
+            False,
+            Null
+        }
+
+        readonly char[] json;
+        readonly StringBuilder s = new StringBuilder();
+        Token lookAheadToken = Token.None;
+        int index;
+        bool _ignorecase = false;
+
+
+        internal JsonParser(string json, bool ignorecase)
+        {
+            this.json = json.ToCharArray();
+            _ignorecase = ignorecase;
+        }
+
+        public object Decode()
+        {
+            return ParseValue();
+        }
+
+        private Dictionary<string, object> ParseObject()
+        {
+            Dictionary<string, object> table = new Dictionary<string, object>();
+
+            ConsumeToken(); // {
+
+            while (true)
+            {
+                switch (LookAhead())
+                {
+
+                    case Token.Comma:
+                        ConsumeToken();
+                        break;
+
+                    case Token.Curly_Close:
+                        ConsumeToken();
+                        return table;
+
+                    default:
+                        {
+
+                            // name
+                            string name = ParseString();
+                            if (_ignorecase)
+                                name = name.ToLower();
+
+                            // :
+                            if (NextToken() != Token.Colon)
+                            {
+                                throw new Exception("Expected colon at index " + index);
+                            }
+
+                            // value
+                            object value = ParseValue();
+
+                            table[name] = value;
+                        }
+                        break;
+                }
+            }
+        }
+
+        private ArrayList ParseArray()
+        {
+            ArrayList array = new ArrayList();
+            ConsumeToken(); // [
+
+            while (true)
+            {
+                switch (LookAhead())
+                {
+
+                    case Token.Comma:
+                        ConsumeToken();
+                        break;
+
+                    case Token.Squared_Close:
+                        ConsumeToken();
+                        return array;
+
+                    default:
+                        {
+                            array.Add(ParseValue());
+                        }
+                        break;
+                }
+            }
+        }
+
+        private object ParseValue()
+        {
+            switch (LookAhead())
+            {
+                case Token.Number:
+                    return ParseNumber();
+
+                case Token.String:
+                    return ParseString();
+
+                case Token.Curly_Open:
+                    return ParseObject();
+
+                case Token.Squared_Open:
+                    return ParseArray();
+
+                case Token.True:
+                    ConsumeToken();
+                    return true;
+
+                case Token.False:
+                    ConsumeToken();
+                    return false;
+
+                case Token.Null:
+                    ConsumeToken();
+                    return null;
+            }
+
+            throw new Exception("Unrecognized token at index" + index);
+        }
+
+        private string ParseString()
+        {
+            ConsumeToken(); // "
+
+            s.Length = 0;
+
+            int runIndex = -1;
+
+            while (index < json.Length)
+            {
+                var c = json[index++];
+
+                if (c == '"')
+                {
+                    if (runIndex != -1)
+                    {
+                        if (s.Length == 0)
+                            return new string(json, runIndex, index - runIndex - 1);
+
+                        s.Append(json, runIndex, index - runIndex - 1);
+                    }
+                    return s.ToString();
+                }
+
+                if (c != '\\')
+                {
+                    if (runIndex == -1)
+                        runIndex = index - 1;
+
+                    continue;
+                }
+
+                if (index == json.Length) break;
+
+                if (runIndex != -1)
+                {
+                    s.Append(json, runIndex, index - runIndex - 1);
+                    runIndex = -1;
+                }
+
+                switch (json[index++])
+                {
+                    case '"':
+                        s.Append('"');
+                        break;
+
+                    case '\\':
+                        s.Append('\\');
+                        break;
+
+                    case '/':
+                        s.Append('/');
+                        break;
+
+                    case 'b':
+                        s.Append('\b');
+                        break;
+
+                    case 'f':
+                        s.Append('\f');
+                        break;
+
+                    case 'n':
+                        s.Append('\n');
+                        break;
+
+                    case 'r':
+                        s.Append('\r');
+                        break;
+
+                    case 't':
+                        s.Append('\t');
+                        break;
+
+                    case 'u':
+                        {
+                            int remainingLength = json.Length - index;
+                            if (remainingLength < 4) break;
+
+                            // parse the 32 bit hex into an integer codepoint
+                            uint codePoint = ParseUnicode(json[index], json[index + 1], json[index + 2], json[index + 3]);
+                            s.Append((char)codePoint);
+
+                            // skip 4 chars
+                            index += 4;
+                        }
+                        break;
+                }
+            }
+
+            throw new Exception("Unexpectedly reached end of string");
+        }
+
+        private uint ParseSingleChar(char c1, uint multipliyer)
+        {
+            uint p1 = 0;
+            if (c1 >= '0' && c1 <= '9')
+                p1 = (uint)(c1 - '0') * multipliyer;
+            else if (c1 >= 'A' && c1 <= 'F')
+                p1 = (uint)((c1 - 'A') + 10) * multipliyer;
+            else if (c1 >= 'a' && c1 <= 'f')
+                p1 = (uint)((c1 - 'a') + 10) * multipliyer;
+            return p1;
+        }
+
+        private uint ParseUnicode(char c1, char c2, char c3, char c4)
+        {
+            uint p1 = ParseSingleChar(c1, 0x1000);
+            uint p2 = ParseSingleChar(c2, 0x100);
+            uint p3 = ParseSingleChar(c3, 0x10);
+            uint p4 = ParseSingleChar(c4, 1);
+
+            return p1 + p2 + p3 + p4;
+        }
+
+        private string ParseNumber()
+        {
+            ConsumeToken();
+
+            // Need to start back one place because the first digit is also a token and would have been consumed
+            var startIndex = index - 1;
+
+            do
+            {
+                var c = json[index];
+
+                if ((c >= '0' && c <= '9') || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E')
+                {
+                    if (++index == json.Length) throw new Exception("Unexpected end of string whilst parsing number");
+                    continue;
+                }
+
+                break;
+            } while (true);
+
+            return new string(json, startIndex, index - startIndex);
+        }
+
+        private Token LookAhead()
+        {
+            if (lookAheadToken != Token.None) return lookAheadToken;
+
+            return lookAheadToken = NextTokenCore();
+        }
+
+        private void ConsumeToken()
+        {
+            lookAheadToken = Token.None;
+        }
+
+        private Token NextToken()
+        {
+            var result = lookAheadToken != Token.None ? lookAheadToken : NextTokenCore();
+
+            lookAheadToken = Token.None;
+
+            return result;
+        }
+
+        private Token NextTokenCore()
+        {
+            char c;
+
+            // Skip past whitespace
+            do
+            {
+                c = json[index];
+
+                if (c > ' ') break;
+                if (c != ' ' && c != '\t' && c != '\n' && c != '\r') break;
+
+            } while (++index < json.Length);
+
+            if (index == json.Length)
+            {
+                throw new Exception("Reached end of string unexpectedly");
+            }
+
+            c = json[index];
+
+            index++;
+
+            //if (c >= '0' && c <= '9')
+            //    return Token.Number;
+
+            switch (c)
+            {
+                case '{':
+                    return Token.Curly_Open;
+
+                case '}':
+                    return Token.Curly_Close;
+
+                case '[':
+                    return Token.Squared_Open;
+
+                case ']':
+                    return Token.Squared_Close;
+
+                case ',':
+                    return Token.Comma;
+
+                case '"':
+                    return Token.String;
+
+				case '0': case '1': case '2': case '3': case '4':
+				case '5': case '6': case '7': case '8': case '9':
+                case '-': case '+': case '.':
+                    return Token.Number;
+
+                case ':':
+                    return Token.Colon;
+
+                case 'f':
+                    if (json.Length - index >= 4 &&
+                        json[index + 0] == 'a' &&
+                        json[index + 1] == 'l' &&
+                        json[index + 2] == 's' &&
+                        json[index + 3] == 'e')
+                    {
+                        index += 4;
+                        return Token.False;
+                    }
+                    break;
+
+                case 't':
+                    if (json.Length - index >= 3 &&
+                        json[index + 0] == 'r' &&
+                        json[index + 1] == 'u' &&
+                        json[index + 2] == 'e')
+                    {
+                        index += 3;
+                        return Token.True;
+                    }
+                    break;
+
+                case 'n':
+                    if (json.Length - index >= 3 &&
+                        json[index + 0] == 'u' &&
+                        json[index + 1] == 'l' &&
+                        json[index + 2] == 'l')
+                    {
+                        index += 3;
+                        return Token.Null;
+                    }
+                    break;
+
+            }
+
+            throw new Exception("Could not find token at index " + --index);
+        }
+    }
+    internal class SafeDictionary<TKey, TValue>
+    {
+        private readonly object _Padlock = new object();
+        private readonly Dictionary<TKey, TValue> _Dictionary;
+
+        public SafeDictionary(int capacity)
+        {
+            _Dictionary = new Dictionary<TKey, TValue>(capacity);
+        }
+
+        public SafeDictionary()
+        {
+            _Dictionary = new Dictionary<TKey, TValue>();
+        }
+
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            lock (_Padlock)
+                return _Dictionary.TryGetValue(key, out value);
+        }
+
+        public TValue this[TKey key]
+        {
+            get
+            {
+                lock (_Padlock)
+                    return _Dictionary[key];
+            }
+            set
+            {
+                lock (_Padlock)
+                    _Dictionary[key] = value;
+            }
+        }
+
+        public void Add(TKey key, TValue value)
+        {
+            lock (_Padlock)
+            {
+                if (_Dictionary.ContainsKey(key) == false)
+                    _Dictionary.Add(key, value);
+            }
+        }
+    }
+   internal class Getters
+    {
+        public string Name;
+        public JSON.GenericGetter Getter;
+        public Type propertyType;
+    }
+
+    public class DatasetSchema
+    {
+        public List<string> Info { get; set; }
+        public string Name { get; set; }
+    }
+   internal static class Formatter
+    {
+        public static string Indent = "    ";
+
+        public static void AppendIndent(StringBuilder sb, int count)
+        {
+            for (; count > 0; --count) sb.Append(Indent);
+        }
+
+        public static bool IsEscaped(StringBuilder sb, int index)
+        {
+            bool escaped = false;
+            while (index > 0 && sb[--index] == '\\') escaped = !escaped;
+            return escaped;
+        }
+
+        public static string PrettyPrint(string input)
+        {
+            var output = new StringBuilder(input.Length * 2);
+            char? quote = null;
+            int depth = 0;
+
+            for (int i = 0; i < input.Length; ++i)
+            {
+                char ch = input[i];
+
+                switch (ch)
+                {
+                    case '{':
+                    case '[':
+                        output.Append(ch);
+                        if (!quote.HasValue)
+                        {
+                            output.AppendLine();
+                            AppendIndent(output, ++depth);
+                        }
+                        break;
+                    case '}':
+                    case ']':
+                        if (quote.HasValue)
+                            output.Append(ch);
+                        else
+                        {
+                            output.AppendLine();
+                            AppendIndent(output, --depth);
+                            output.Append(ch);
+                        }
+                        break;
+                    case '"':
+                    case '\'':
+                        output.Append(ch);
+                        if (quote.HasValue)
+                        {
+                            if (!IsEscaped(output, i))
+                                quote = null;
+                        }
+                        else quote = ch;
+                        break;
+                    case ',':
+                        output.Append(ch);
+                        if (!quote.HasValue)
+                        {
+                            output.AppendLine();
+                            AppendIndent(output, depth);
+                        }
+                        break;
+                    case ':':
+                        if (quote.HasValue) output.Append(ch);
+                        else output.Append(" : ");
+                        break;
+                    default:
+                        if (quote.HasValue || !char.IsWhiteSpace(ch))
+                            output.Append(ch);
+                        break;
+                }
+            }
+            return output.ToString();
+        }
+    }
 }
