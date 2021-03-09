@@ -17,29 +17,32 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
-
+# More often the Text property of the enclosing repeater looks worse than this
+param(
+  [switch]$debug
+)
 $raw_input =  @'
-Application Name
-Top 10 SUM(Hits), SUM(New Sessions) grouped by Application Name
+Browser
+Top 10 Visitors, New Users grouped by Browser
 
-Application Name
-SUM(Hits)
-Sum(New Sessions)
-Public-Web
+Browser
+Visitors
+New Users
+Firefox
 10.0M
 1.0M
-Public-Server
+Chrome
 3.0M
 120.9K
-Mobile-Android
+Vivaldi
 10K
 0.5K
 '@
 $input_lines = $raw_input -split "`r?`n"
 $column0 = @{
-  'Mobile-Android' = $null;
-  'Public-Wec' = $null;
-  'Public-Server' = $null;
+  'Vivaldi' = $null;
+  'Firefox' = $null;
+  'Chrome' = $null;
 }
 $column1 = @{}
 $column2 = @{}
@@ -49,13 +52,17 @@ $column3 = @{}
 0..($input_lines.Count -2) | foreach-object {
   $row_index = $_
   $text = $input_lines[$row_index]
-  write-output ('Processing: {0}' -f $text)
+  if ($debug){
+    write-output ('Processing: {0}' -f $text)
+  }
   $matching_element = [String](
     [Array]::Find($data_keys,[System.Predicate[String]]<# follows the code block #>{
     if ($text -match $args[0]) { return $args[0] } else { return $null }
   }))
 
-  write-output ('found matching element: {0}' -f $matching_element)
+  if ($debug){
+    write-output ('found matching element: {0}' -f $matching_element)
+  }  
   if ($matching_element -ne '' -and $matching_element -ne $null) {
    $column1[$matching_element] = $matching_element
    $column2[$matching_element] = $input_lines[$row_index + 1]
@@ -66,9 +73,10 @@ $data = @()
 $column1.keys | foreach-object  {
   $key = $_
   $row = @{}
-  $row['Application Name'] = $key
-  $row['SUM(Hits)'] = $column2[$key]
-  $row['Sum(New Sessions)'] = $column3[$key]
+  $row['Browser'] = $key
+  $row['Visitors'] = $column2[$key]
+  $row['New Users'] = $column3[$key]
   $data += $row
 }
 write-output ($data | convertTo-JSON)
+
