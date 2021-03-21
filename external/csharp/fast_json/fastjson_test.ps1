@@ -1,12 +1,14 @@
 param (
   [String]$assembly_path = '.\Program\bin\Debug'
 )
+<#
 if ($env:PROCESSOR_ARCHITECTURE -ne 'x86') { 
   # if the dll is compiled in SharpDevelp for x86 
   # the attempt to load in 64 bit Powershell will result in "BadImageFormatException"'
   write-output 'this test needs to be run on c:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe'
   exit 1;
 }
+#>
 $asssembly = 'fastJSON.dll'
 $shared_assemblies = @($asssembly)
 pushd $assembly_path
