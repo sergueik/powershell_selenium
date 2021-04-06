@@ -237,6 +237,7 @@ $shared_assemblies = @(
   'WebDriver.Support.dll',
   'nunit.framework.dll'
 )
+# for intro to Angular directives see https://www.w3schools.com/angular/angular_directives.asp
 [string]$model_locator_script = @'
 var findByModel = function(model, using, rootSelector) {
     var root = document.querySelector(rootSelector || 'body');
