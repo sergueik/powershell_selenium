@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputPath>$(SolutionDir)bin\$(Configuration)</OutputPath>
+    <RefreshProtocolJsonFiles>false</RefreshProtocolJsonFiles>
+    <LangVersion>7.3</LangVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <DocumentationFile>$(OutputPath)\DumbPrograms.ChromeDevTools.xml</DocumentationFile>
+    <Version>0.1.30</Version>
+    <Company />
+    <Product />
+    <Authors>Paul Chen</Authors>
+    <RepositoryUrl>https://github.com/DumbPrograms/ChromeDevTools.git</RepositoryUrl>
+    <Description>.Net library to interact with Chrome using the Chrome DevTools Protocol</Description>
+    <PackageLicenseUrl>https://github.com/DumbPrograms/ChromeDevTools/blob/master/LICENSE</PackageLicenseUrl>
+    <Copyright>2019 DumbPrograms</Copyright>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/DumbPrograms/ChromeDevTools</PackageProjectUrl>
+    <PackageReleaseNotes></PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Generated\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <Target Name="DownloadProtocolJsonFiles">
+    <DownloadFile DestinationFolder="$(ProjectDir)Generated" SourceUrl="https://github.com/ChromeDevTools/devtools-protocol/raw/master/json/browser_protocol.json" />
+    <DownloadFile DestinationFolder="$(ProjectDir)Generated" SourceUrl="https://github.com/ChromeDevTools/devtools-protocol/raw/master/json/js_protocol.json" />
+  </Target>
+  <Target Name="GenerateProtocolFiles" BeforeTargets="BeforeBuild">
+    <CallTarget Condition="$(RefreshProtocolJsonFiles) == true" Targets="DownloadProtocolJsonFiles" />
+    <Exec Command="dotnet $(SolutionDir)bin\$(Configuration)\netcoreapp2.0\DumbPrograms.ChromeDevTools.Generator.dll Generated" />
+  </Target>
+  
+</Project>
