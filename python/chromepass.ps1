@@ -1,4 +1,4 @@
-#Copyright (c) 2020 Serguei Kouzmine
+﻿#Copyright (c) 2020,2021 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -29,8 +29,23 @@ param (
   [String]$browser = 'chrome',
   [String]$url = $null,
   [String]$shared_assemblies_path = 'c:\java\selenium\csharp\sharedassemblies',
+  [String]$backup = 'data.bak',
   [switch]$debug
 )
+
+$cmdname = 'tee-object'
+# NOTE: slow
+$has_tee_object = $false
+$backup_filepath = ((get-location).path + '\' + $backup )
+if (Get-Command $cmdName -CommandType Cmdlet -errorAction SilentlyContinue) {
+  $has_tee_object = $true
+  if ($debug) {
+    write-output ("$cmdName exists"  )
+  }
+  Clear-Content -path $backup_filepath -force
+}
+
+
 # https://www.pinvoke.net/default.aspx/crypt32.cryptprotectdata
 # https://stackoverflow.com/questions/14668143/cryptunprotectdata-returns-false-when-using-jni
 # https://www.codota.com/code/java/methods/com.sun.jna.platform.win32.Crypt32/CryptUnprotectData
@@ -83,7 +98,7 @@ if ($StoreSecret -eq "") {
   $data = Get-Content $filename
   $ciphertext = [System.Convert]::FromBase64String($data)
   # https://github.com/PowerShell/PowerShell/blob/master/src/System.Management.Automation/security/SecureStringHelper.cs#L519
-  
+
   # internally calls CryptUnprotectData
   #
   # uint dwFlags = CAPI.CRYPTPROTECT_UI_FORBIDDEN;
@@ -122,13 +137,14 @@ if ($browser -eq 'vivaldi') {
   $appdata_path = ('C:\Users\{0}\AppData\Local\Google\Chrome\User Data\Default'  -f $env:username)
 }
 $filename = 'Login Data'
-$database = "${file_path}\${filename}"
+$database = "${appdata_path}\${filename}"
 $version = 3 # the only supported SQLite version at this time is 3
 $connection_string = ('Data Source={0};Version={1};' -f $database,$version )
 $connection = new-object System.Data.SQLite.SQLiteConnection ($connection_string)
 if ($debug){
   write-output ('Opening {0}' -f $connection_string)
 }
+# TODO: check if browser is running
 $connection.Open()
 $datatSet = new-object System.Data.DataSet
 $query = 'SELECT action_url, username_value, password_value FROM logins'
@@ -140,7 +156,7 @@ try {
     write-output $_.Exception.Message
   }
   if ($_.Exception.Message -match 'database is locked') {
-    write-output 'need to close the browser'
+    write-output ('you probably need to close the browser' -f $browser )
   }
 }
 
@@ -153,11 +169,11 @@ if ($datatSet.Tables.Length -eq 1) {
 
   [void] [Reflection.Assembly]::LoadWithPartialName('System.Security')
   $scope = [System.Security.Cryptography.DataProtectionScope]::CurrentUser
-  $rows = $datatSet.Tables['passwords'].Rows;
+  $rows = $datatSet.Tables['passwords'].Rows
 
   $rows | foreach-object {
     $row = $_
-    
+
     if ($url -eq $null -or $row.action_url -match $url) {
       if ($debug) {
         $row | format-list
@@ -170,16 +186,26 @@ if ($datatSet.Tables.Length -eq 1) {
 
       # https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.protecteddata.unprotect?view=netframework-4.0
       # https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.dataprotectionscope?view=netframework-4.0
-      $plaindata = [System.Security.Cryptography.ProtectedData]::Unprotect( $data, $null, $scope )
-      # Unable to find type [System.Security.Cryptography.ProtectedData]. - this script should not be run as Administrator
+      try {
+        [void]($plaindata = [System.Security.Cryptography.ProtectedData]::Unprotect( $data, $null, $scope ))
+        # Unable to find type [System.Security.Cryptography.ProtectedData]. - this script should not be run as Administrator
 
-      $plain_password_value = [System.Text.UTF8Encoding]::UTF8.GetString($plaindata)
-      add-member -inputobject $result -membertype NoteProperty -name password -value $plain_password_value
-      if ($debug) {
-        write-output $plain_password_value
+        $plain_password_value = [System.Text.UTF8Encoding]::UTF8.GetString($plaindata)
+        add-member -inputobject $result -membertype NoteProperty -name password -value $plain_password_value
+        if ($debug) {
+          write-output $plain_password_value
+        }
+        $result_array.Add($result) | out-null
+      } catch [Exception] {
+
       }
-      $result_array.Add($result) | out-null
     }
   }
 }
-$result_array | where-object { $_.url -ne ''} | format-list
+if ($has_tee_object) {
+  # NOTE: bug? swapping the format-list with tee-object will make only first column of every $result row backed up into the file
+  $result_array | where-object { $_.url -ne ''}  |format-list | tee-object -filepath $backup_filepath
+} else {
+  $result_array | where-object { $_.url -ne ''} | format-list
+}
+
