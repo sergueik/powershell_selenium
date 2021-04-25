@@ -33,18 +33,15 @@ param (
   [switch]$debug
 )
 
-$cmdname = 'tee-object'
 # NOTE: slow
 $has_tee_object = $false
 $backup_filepath = ((get-location).path + '\' + $backup )
-if (Get-Command $cmdName -CommandType Cmdlet -errorAction SilentlyContinue) {
+if (Get-Command 'tee-object' -CommandType Cmdlet -errorAction SilentlyContinue) {
   $has_tee_object = $true
-  if ($debug) {
-    write-output ("$cmdName exists"  )
+  if (test-path -path $backup_filepath){
+    clear-Content -path $backup_filepath -force
   }
-  Clear-Content -path $backup_filepath -force
 }
-
 
 # https://www.pinvoke.net/default.aspx/crypt32.cryptprotectdata
 # https://stackoverflow.com/questions/14668143/cryptunprotectdata-returns-false-when-using-jni
@@ -134,7 +131,8 @@ popd
 if ($browser -eq 'vivaldi') {
   $appdata_path = ('C:\Users\{0}\AppData\Local\Vivaldi\User Data\Default' -f $env:username)
 } else {
-  $appdata_path = ('C:\Users\{0}\AppData\Local\Google\Chrome\User Data\Default'  -f $env:username)
+  # the password_value setting stored in this file are no longer decryptable through
+  $appdata_path = ('C:\Users\{0}\AppData\Local\Google\Chrome\User Data\Default' -f $env:username)
 }
 $filename = 'Login Data'
 $database = "${appdata_path}\${filename}"
@@ -148,6 +146,11 @@ if ($debug){
 $connection.Open()
 $datatSet = new-object System.Data.DataSet
 $query = 'SELECT action_url, username_value, password_value FROM logins'
+if ($url -ne $null) {
+  $where = (" where action_url like '%{0}%'" -f $url )
+} else { 
+  $where = ''
+}
 $dataAdapter = new-object System.Data.SQLite.SQLiteDataAdapter ($query,$connection)
 try {
   $dataAdapter.Fill($datatSet, 'passwords')
@@ -167,8 +170,6 @@ $result = new-object -typename psobject
 
 if ($datatSet.Tables.Length -eq 1) {
 
-  [void] [Reflection.Assembly]::LoadWithPartialName('System.Security')
-  $scope = [System.Security.Cryptography.DataProtectionScope]::CurrentUser
   $rows = $datatSet.Tables['passwords'].Rows
 
   $rows | foreach-object {
@@ -182,22 +183,38 @@ if ($datatSet.Tables.Length -eq 1) {
       # https://www.gngrninja.com/script-ninja/2016/6/18/powershell-getting-started-part-12-creating-custom-objects
       add-member -inputobject $result -membertype NoteProperty -name url -value $row.action_url
       add-member -inputobject $result -membertype NoteProperty -name user -value $row.username_value
-      $data = $row.password_value
-
+      $encrypted_data = $row.password_value
+      [void] [Reflection.Assembly]::LoadWithPartialName('System.Security')
+      $scope = [System.Security.Cryptography.DataProtectionScope]::CurrentUser
+      $optional_entropy = [Byte[]]$null
+      # optional additional byte array that was used to encrypt the data
       # https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.protecteddata.unprotect?view=netframework-4.0
       # https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.dataprotectionscope?view=netframework-4.0
       try {
-        [void]($plaindata = [System.Security.Cryptography.ProtectedData]::Unprotect( $data, $null, $scope ))
+        if ($debug) {
+          write-output ('try to unprotect the encrypted data')
+        }
+        [void]($plaindata = [System.Security.Cryptography.ProtectedData]::Unprotect( $encrypted_data, $optional_entropy, $scope ))
+        if ($debug) {
+          write-output ('got plaindata')
+        }
         # Unable to find type [System.Security.Cryptography.ProtectedData]. - this script should not be run as Administrator
 
         $plain_password_value = [System.Text.UTF8Encoding]::UTF8.GetString($plaindata)
+        if ($debug) {
+          write-output ('got plain password value')
+        }
         add-member -inputobject $result -membertype NoteProperty -name password -value $plain_password_value
         if ($debug) {
           write-output $plain_password_value
         }
         $result_array.Add($result) | out-null
       } catch [Exception] {
-
+        if ($debug) {
+          # NOTE: issues with formatting
+          # write-output ("Exception:`r`n{0} ...`r`n(ignored)" -f (($_.Exception.Message) -split "`r`n")[0])
+          write-output ("Exception (ignored):`r`n{0}" -f $_.Exception.Message)
+        }
       }
     }
   }
