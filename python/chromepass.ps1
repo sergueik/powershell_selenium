@@ -24,6 +24,7 @@
 # and
 # https://raw.githubusercontent.com/xorrior/RandomPS-Scripts/master/Get-ChromeDump.ps1
 # https://habr.com/ru/company/vdsina/blog/518416/#habracut
+# https://stackoverflow.com/questions/61099492/chrome-80-password-file-decryption-in-python
 param (
   # several chromium based should be supported (verified with chrome and vivaldi)
   [String]$browser = 'chrome',
@@ -99,8 +100,8 @@ if ($StoreSecret -eq "") {
   # internally calls CryptUnprotectData
   #
   # uint dwFlags = CAPI.CRYPTPROTECT_UI_FORBIDDEN;
-  # if (scope == DataProtectionScope.LocalMachine) {  dwFlags |= CAPI.CRYPTPROTECT_LOCAL_MACHINE; }
-  # CyptUnprotectData(  pDataIn: new IntPtr(&dataIn),  ppszDataDescr: IntPtr.Zero,  pOptionalEntropy: new IntPtr(&entropy),   pvReserved: IntPtr.Zero,   pPromptStruct: IntPtr.Zero, dwFlags: dwFlags, pDataBlob: new IntPtr(&userData)))
+  # if (scope == DataProtectionScope.LocalMachine) { dwFlags |= CAPI.CRYPTPROTECT_LOCAL_MACHINE; }
+  # CyptUnprotectData( pDataIn: new IntPtr(&dataIn), ppszDataDescr: IntPtr.Zero, pO: new IntPtr(&entropy), pvReserved: IntPtr.Zero, pPromptStruct: IntPtr.Zero, dwFlags: dwFlags, pDataBlob: new IntPtr(&userData)))
   $plaintext = [System.Security.Cryptography.ProtectedData]::Unprotect( $ciphertext, $null, $scope )
   [System.Text.UTF8Encoding]::UTF8.GetString($plaintext)
 } else {
@@ -114,7 +115,16 @@ $shared_assemblies = @(
   'System.Data.SQLite.dll', # NOTE: 'SQLite.Interop.dll' must be there too
   'nunit.framework.dll'
 )
-
+# new-object : Exception calling ".ctor" with "1" argument(s): 
+# "An attempt was made to load a program with an incorrect format. 
+# (Exception from HRESULT: 0x8007007E)
+# Need a x86 or x64 package named System.Data.SQLite.x86 
+# or System.Data.SQLite.x64
+# and a matchig interop:
+# https://www.nuget.org/api/v2/package/SQLite.Interop/1.0.0 for x86
+# https://www.nuget.org/api/v2/package/SQLite.Interop.dll/1.0.103 for x64
+# https://stackoverflow.com/questions/1001404/check-if-unmanaged-dll-is-32-bit-or-64-bit
+# https://stackoverflow.com/questions/197951/how-can-i-determine-for-which-platform-an-executable-is-compiled
 
 # SHARED_ASSEMBLIES_PATH environment overrides parameter
 if (($env:SHARED_ASSEMBLIES_PATH -ne $null) -and ($env:SHARED_ASSEMBLIES_PATH -ne '')) {
@@ -186,7 +196,7 @@ if ($datatSet.Tables.Length -eq 1) {
       $encrypted_data = $row.password_value
       [void] [Reflection.Assembly]::LoadWithPartialName('System.Security')
       $scope = [System.Security.Cryptography.DataProtectionScope]::CurrentUser
-      $optional_entropy = [Byte[]]$null
+      $optional_entropy = [Byte[]]@()
       # optional additional byte array that was used to encrypt the data
       # https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.protecteddata.unprotect?view=netframework-4.0
       # https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.dataprotectionscope?view=netframework-4.0
