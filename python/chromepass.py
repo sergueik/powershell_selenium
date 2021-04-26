@@ -62,10 +62,8 @@ def decrypt_password_chrome80(buff, master_key) -> bytes:
     decrypted_pass = decrypted_pass[:-16].decode()  # remove suffix bytes
     return decrypted_pass
   except Exception as e:
-    #
-    print("Probably saved password from Chrome version older than v80\n")
-    # print(str(e))
-    return bytearray([]) # Chrome < 80
+    print("Probably saved password from Chrome version older than v80\n", file = sys.stderr)
+    return bytearray([])
 
 def args_parser():
 
@@ -140,10 +138,10 @@ def main(browser = None, url = ''):
             try:
               print('Trying legacy call for {}'.format(username))
               # uint dwFlags = CAPI.CRYPTPROTECT_UI_FORBIDDEN | CAPI.CRYPTPROTECT_LOCAL_MACHINE
+              # for  Linux see https://www.programcreek.com/python/example/104887/win32crypt.CryptUnprotectData
               password = win32crypt.CryptUnprotectData( password, None, None, None, 1)[1]
             except (Exception) as e:
-              # print(e.__class__.__name__)
-              # print(traceback.format_exc())
+              # powershell.exe -executionpolicy remotesigned -noprofile -file chromepass.ps1 -browser chrome -debug
               print('Exception (ignored): {}'.format(e), file = sys.stderr)
         if url != '':
           if origin_url != None:
