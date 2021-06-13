@@ -1,0 +1,619 @@
+#Copyright (c) 2021 Serguei Kouzmine
+#
+#Permission is hereby granted, free of charge, to any person obtaining a copy
+#of this software and associated documentation files (the "Software"), to deal
+#in the Software without restriction, including without limitation the rights
+#to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#copies of the Software, and to permit persons to whom the Software is
+#furnished to do so, subject to the following conditions:
+#
+#The above copyright notice and this permission notice shall be included in
+#all copies or substantial portions of the Software.
+#
+#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#THE SOFTWARE.
+
+
+$datafile = 'grid_console.html'
+$uri = ('file:///{0}' -f ((resolve-path $datafile).path -replace '\\', '/'))
+[Microsoft.PowerShell.Commands.WebResponseObject]$response_obj = (Invoke-WebRequest -Uri $uri)
+$html = new-object -ComObject 'HTMLFile'
+$html.IHTMLDocument2_write($response_obj.rawContent)
+# $html | get-member -membertype method
+# TypeName: mshtml.HTMLDocumentClass
+
+[String[]]$texts = @()
+$column1 = $html.getElementById('leftColumn')
+$element1 = $column1.getElementsByClassName('proxyid')|select-object -first 1
+# $element | get-member
+# $element1.getType().FullName
+# System.__ComObject
+
+$text1 = $element1.innertext
+# $text1.getType().FullName
+# System.String
+
+<#
+try {
+  $element2 = $column1.querySelectorall('p[class= "proxyid"]')|select-object -first 1
+  $element2.getType().FullName
+} catch [Exception] { 
+  write-output ( 'Exception : ' + $_.Exception.Message)
+  # "a problem causes the program to stop working correctly" dialog. 
+  # Cannot be caught
+}
+#>
+
+
+@('leftColumn', 'rightColumn')| foreach-object {
+  $id = $_
+  $column = $html.getElementById($id)
+  $elements = $column.querySelectorall('.proxyid')
+  $length = $elements.length
+  0..($length - 1) | foreach-object {
+    $index = $_
+    $element = $elements.item($index)
+    $element.getType().FullName
+    $text = $element.innertext
+    # id : http://SERGUEIK53:5555, OS : WIN8_1
+    $text.getType().FullName
+  
+    $texts += $text
+    write-output ('Adding element index: {0} "{1}"' -f $index, $text)
+  }
+  Remove-Variable column -ErrorAction SilentlyContinue
+  Remove-Variable element -ErrorAction SilentlyContinue
+  Remove-Variable elements -ErrorAction SilentlyContinue
+}
+<#
+try { 
+  [Microsoft.PowerShell.Commands.HtmlWebResponseObject]$obj = (Invoke-WebRequest -Uri $uri)
+} catch [Exception] { 
+  write-output ( 'Exception : ' + $_.Exception.Message)
+  # Cannot convert the value of type 
+  # "Microsoft.PowerShell.Commands.WebResponseObject" to type
+  # "Microsoft.PowerShell.Commands.HtmlWebResponseObject"
+}
+#>
+# when reading http://localhost:4444/grid/console
+# the result is Microsoft.PowerShell.Commands.HtmlWebResponseObject and has ParsedHtml member which is mshtml.HTMLDocumentClass 
+# 
+$uri = 'http://localhost:4444/grid/console'
+[Microsoft.PowerShell.Commands.HtmlWebResponseObject]$obj = (Invoke-WebRequest -Uri $uri)
+[mshtml.HTMLDocumentClass] $document = $obj.ParsedHtml
+Remove-Variable document -ErrorAction SilentlyContinue
+
+Remove-Variable html -ErrorAction SilentlyContinue
+$html = new-object -ComObject 'HTMLFile'
+$html.IHTMLDocument2_write($obj.rawContent)
+
+$column2 = $html.getElementById('leftColumn')
+$element3 = $column2.querySelectorall('p[class= "proxyid"]').item(0) 
+
+$element3.getType().FullName
+$text3 = $element3.innertext
+# id : http://SERGUEIK53:5555, OS : WIN8_1
+$text3 
+$text3.getType().FullName
+
+$texts += $text3
+$texts |sort| format-list
+
+$texts| foreach-object { $text = $_; 
+$result = $text | convertfrom-String;
+$result.P3 -replace ',', '' -replace 'http://', ''
+}  |sort|format-list
+
+# $document | get-member -membertype method
+# TypeName: mshtml.HTMLDocumentClass
+
+# $column = $document.getElementById('leftColumn')
+# practically hangs
+
+<#
+   TypeName: mshtml.HTMLDocumentClass
+
+Name
+----
+add_onactivate
+add_onafterupdate
+add_onbeforeactivate
+add_onbeforedeactivate
+add_onbeforeeditfocus
+add_onbeforeupdate
+add_oncellchange
+add_onclick
+add_oncontextmenu
+add_oncontrolselect
+add_ondataavailable
+add_ondatasetchanged
+add_ondatasetcomplete
+add_ondblclick
+add_ondeactivate
+add_ondragstart
+add_onerrorupdate
+add_onfocusin
+add_onfocusout
+add_onhelp
+add_onkeydown
+add_onkeypress
+add_onkeyup
+add_onmousedown
+add_onmousemove
+add_onmouseout
+add_onmouseover
+add_onmouseup
+add_onmousewheel
+add_onpropertychange
+add_onreadystatechange
+add_onrowenter
+add_onrowexit
+add_onrowsdelete
+add_onrowsinserted
+add_onselectionchange
+add_onselectstart
+add_onstop
+appendChild
+attachEvent
+clear
+cloneNode
+close
+createAttribute
+createComment
+createDocumentFragment
+createDocumentFromUrl
+createElement
+CreateEventObject
+CreateObjRef
+createRenderStyle
+createStyleSheet
+createTextNode
+detachEvent
+elementFromPoint
+Equals
+execCommand
+execCommandShowHelp
+FireEvent
+focus
+getElementById
+getElementsByName
+getElementsByTagName
+GetHashCode
+GetLifetimeService
+GetType
+hasChildNodes
+hasFocus
+HTMLDocumentEvents2_Event_add_onactivate
+HTMLDocumentEvents2_Event_add_onafterupdate
+HTMLDocumentEvents2_Event_add_onbeforeactivate
+HTMLDocumentEvents2_Event_add_onbeforedeactivate
+HTMLDocumentEvents2_Event_add_onbeforeeditfocus
+HTMLDocumentEvents2_Event_add_onbeforeupdate
+HTMLDocumentEvents2_Event_add_oncellchange
+HTMLDocumentEvents2_Event_add_onclick
+HTMLDocumentEvents2_Event_add_oncontextmenu
+HTMLDocumentEvents2_Event_add_oncontrolselect
+HTMLDocumentEvents2_Event_add_ondataavailable
+HTMLDocumentEvents2_Event_add_ondatasetchanged
+HTMLDocumentEvents2_Event_add_ondatasetcomplete
+HTMLDocumentEvents2_Event_add_ondblclick
+HTMLDocumentEvents2_Event_add_ondeactivate
+HTMLDocumentEvents2_Event_add_ondragstart
+HTMLDocumentEvents2_Event_add_onerrorupdate
+HTMLDocumentEvents2_Event_add_onfocusin
+HTMLDocumentEvents2_Event_add_onfocusout
+HTMLDocumentEvents2_Event_add_onhelp
+HTMLDocumentEvents2_Event_add_onkeydown
+HTMLDocumentEvents2_Event_add_onkeypress
+HTMLDocumentEvents2_Event_add_onkeyup
+HTMLDocumentEvents2_Event_add_onmousedown
+HTMLDocumentEvents2_Event_add_onmousemove
+HTMLDocumentEvents2_Event_add_onmouseout
+HTMLDocumentEvents2_Event_add_onmouseover
+HTMLDocumentEvents2_Event_add_onmouseup
+HTMLDocumentEvents2_Event_add_onmousewheel
+HTMLDocumentEvents2_Event_add_onpropertychange
+HTMLDocumentEvents2_Event_add_onreadystatechange
+HTMLDocumentEvents2_Event_add_onrowenter
+HTMLDocumentEvents2_Event_add_onrowexit
+HTMLDocumentEvents2_Event_add_onrowsdelete
+HTMLDocumentEvents2_Event_add_onrowsinserted
+HTMLDocumentEvents2_Event_add_onselectionchange
+HTMLDocumentEvents2_Event_add_onselectstart
+HTMLDocumentEvents2_Event_add_onstop
+HTMLDocumentEvents2_Event_remove_onactivate
+HTMLDocumentEvents2_Event_remove_onafterupdate
+HTMLDocumentEvents2_Event_remove_onbeforeactivate
+HTMLDocumentEvents2_Event_remove_onbeforedeactivate
+HTMLDocumentEvents2_Event_remove_onbeforeeditfocus
+HTMLDocumentEvents2_Event_remove_onbeforeupdate
+HTMLDocumentEvents2_Event_remove_oncellchange
+HTMLDocumentEvents2_Event_remove_onclick
+HTMLDocumentEvents2_Event_remove_oncontextmenu
+HTMLDocumentEvents2_Event_remove_oncontrolselect
+HTMLDocumentEvents2_Event_remove_ondataavailable
+HTMLDocumentEvents2_Event_remove_ondatasetchanged
+HTMLDocumentEvents2_Event_remove_ondatasetcomplete
+HTMLDocumentEvents2_Event_remove_ondblclick
+HTMLDocumentEvents2_Event_remove_ondeactivate
+HTMLDocumentEvents2_Event_remove_ondragstart
+HTMLDocumentEvents2_Event_remove_onerrorupdate
+HTMLDocumentEvents2_Event_remove_onfocusin
+HTMLDocumentEvents2_Event_remove_onfocusout
+HTMLDocumentEvents2_Event_remove_onhelp
+HTMLDocumentEvents2_Event_remove_onkeydown
+HTMLDocumentEvents2_Event_remove_onkeypress
+HTMLDocumentEvents2_Event_remove_onkeyup
+HTMLDocumentEvents2_Event_remove_onmousedown
+HTMLDocumentEvents2_Event_remove_onmousemove
+HTMLDocumentEvents2_Event_remove_onmouseout
+HTMLDocumentEvents2_Event_remove_onmouseover
+HTMLDocumentEvents2_Event_remove_onmouseup
+HTMLDocumentEvents2_Event_remove_onmousewheel
+HTMLDocumentEvents2_Event_remove_onpropertychange
+HTMLDocumentEvents2_Event_remove_onreadystatechange
+HTMLDocumentEvents2_Event_remove_onrowenter
+HTMLDocumentEvents2_Event_remove_onrowexit
+HTMLDocumentEvents2_Event_remove_onrowsdelete
+HTMLDocumentEvents2_Event_remove_onrowsinserted
+HTMLDocumentEvents2_Event_remove_onselectionchange
+HTMLDocumentEvents2_Event_remove_onselectstart
+HTMLDocumentEvents2_Event_remove_onstop
+IHTMLDocument2_clear
+IHTMLDocument2_close
+IHTMLDocument2_createElement
+IHTMLDocument2_createStyleSheet
+IHTMLDocument2_elementFromPoint
+IHTMLDocument2_execCommand
+
+IHTMLDocument2_open
+IHTMLDocument2_queryCommandEnabled
+IHTMLDocument2_queryCommandIndeterm
+IHTMLDocument2_queryCommandState
+IHTMLDocument2_queryCommandSupported
+IHTMLDocument2_queryCommandText
+IHTMLDocument2_queryCommandValue
+IHTMLDocument2_toString
+IHTMLDocument2_write
+IHTMLDocument2_writeln
+IHTMLDocument3_attachEvent
+IHTMLDocument3_createDocumentFragment
+IHTMLDocument3_createTextNode
+IHTMLDocument3_detachEvent
+IHTMLDocument3_getElementById
+IHTMLDocument3_getElementsByName
+IHTMLDocument3_getElementsByTagName
+IHTMLDocument3_recalc
+IHTMLDocument3_releaseCapture
+IHTMLDocument4_createDocumentFromUrl
+IHTMLDocument4_CreateEventObject
+IHTMLDocument4_createRenderStyle
+IHTMLDocument4_FireEvent
+IHTMLDocument4_focus
+IHTMLDocument4_hasFocus
+IHTMLDocument5_createAttribute
+IHTMLDocument5_createComment
+IHTMLDOMNode_appendChild
+IHTMLDOMNode_cloneNode
+IHTMLDOMNode_hasChildNodes
+IHTMLDOMNode_insertBefore
+IHTMLDOMNode_removeChild
+IHTMLDOMNode_removeNode
+IHTMLDOMNode_replaceChild
+IHTMLDOMNode_replaceNode
+IHTMLDOMNode_swapNode
+InitializeLifetimeService
+insertBefore
+open
+queryCommandEnabled
+queryCommandIndeterm
+queryCommandState
+queryCommandSupported
+queryCommandText
+queryCommandValue
+recalc
+releaseCapture
+removeChild
+removeNode
+remove_onactivate
+remove_onafterupdate
+remove_onbeforeactivate
+remove_onbeforedeactivate
+remove_onbeforeeditfocus
+remove_onbeforeupdate
+remove_oncellchange
+remove_onclick
+remove_oncontextmenu
+remove_oncontrolselect
+remove_ondataavailable
+remove_ondatasetchanged
+remove_ondatasetcomplete
+remove_ondblclick
+remove_ondeactivate
+remove_ondragstart
+remove_onerrorupdate
+remove_onfocusin
+remove_onfocusout
+remove_onhelp
+remove_onkeydown
+remove_onkeypress
+remove_onkeyup
+remove_onmousedown
+remove_onmousemove
+remove_onmouseout
+remove_onmouseover
+remove_onmouseup
+remove_onmousewheel
+remove_onpropertychange
+remove_onreadystatechange
+remove_onrowenter
+remove_onrowexit
+remove_onrowsdelete
+remove_onrowsinserted
+remove_onselectionchange
+remove_onselectstart
+remove_onstop
+replaceChild
+replaceNode
+swapNode
+toString
+write
+writeln
+#>
+
+<#
+   TypeName: mshtml.HTMLDocumentClass
+
+Name
+----
+add_onactivate
+add_onafterupdate
+add_onbeforeactivate
+add_onbeforedeactivate
+add_onbeforeeditfocus
+add_onbeforeupdate
+add_oncellchange
+add_onclick
+add_oncontextmenu
+add_oncontrolselect
+add_ondataavailable
+add_ondatasetchanged
+add_ondatasetcomplete
+add_ondblclick
+add_ondeactivate
+add_ondragstart
+add_onerrorupdate
+add_onfocusin
+add_onfocusout
+add_onhelp
+add_onkeydown
+add_onkeypress
+add_onkeyup
+add_onmousedown
+add_onmousemove
+add_onmouseout
+add_onmouseover
+add_onmouseup
+add_onmousewheel
+add_onpropertychange
+add_onreadystatechange
+add_onrowenter
+add_onrowexit
+add_onrowsdelete
+add_onrowsinserted
+add_onselectionchange
+add_onselectstart
+add_onstop
+appendChild
+attachEvent
+clear
+cloneNode
+close
+createAttribute
+createComment
+createDocumentFragment
+createDocumentFromUrl
+createElement
+CreateEventObject
+CreateObjRef
+createRenderStyle
+createStyleSheet
+createTextNode
+detachEvent
+elementFromPoint
+Equals
+execCommand
+execCommandShowHelp
+FireEvent
+focus
+getElementById
+getElementsByName
+getElementsByTagName
+GetHashCode
+GetLifetimeService
+GetType
+hasChildNodes
+hasFocus
+HTMLDocumentEvents2_Event_add_onactivate
+HTMLDocumentEvents2_Event_add_onafterupdate
+HTMLDocumentEvents2_Event_add_onbeforeactivate
+HTMLDocumentEvents2_Event_add_onbeforedeactivate
+HTMLDocumentEvents2_Event_add_onbeforeeditfocus
+HTMLDocumentEvents2_Event_add_onbeforeupdate
+HTMLDocumentEvents2_Event_add_oncellchange
+HTMLDocumentEvents2_Event_add_onclick
+HTMLDocumentEvents2_Event_add_oncontextmenu
+HTMLDocumentEvents2_Event_add_oncontrolselect
+HTMLDocumentEvents2_Event_add_ondataavailable
+HTMLDocumentEvents2_Event_add_ondatasetchanged
+HTMLDocumentEvents2_Event_add_ondatasetcomplete
+HTMLDocumentEvents2_Event_add_ondblclick
+HTMLDocumentEvents2_Event_add_ondeactivate
+HTMLDocumentEvents2_Event_add_ondragstart
+HTMLDocumentEvents2_Event_add_onerrorupdate
+HTMLDocumentEvents2_Event_add_onfocusin
+HTMLDocumentEvents2_Event_add_onfocusout
+HTMLDocumentEvents2_Event_add_onhelp
+HTMLDocumentEvents2_Event_add_onkeydown
+HTMLDocumentEvents2_Event_add_onkeypress
+HTMLDocumentEvents2_Event_add_onkeyup
+HTMLDocumentEvents2_Event_add_onmousedown
+HTMLDocumentEvents2_Event_add_onmousemove
+HTMLDocumentEvents2_Event_add_onmouseout
+HTMLDocumentEvents2_Event_add_onmouseover
+HTMLDocumentEvents2_Event_add_onmouseup
+HTMLDocumentEvents2_Event_add_onmousewheel
+HTMLDocumentEvents2_Event_add_onpropertychange
+HTMLDocumentEvents2_Event_add_onreadystatechange
+HTMLDocumentEvents2_Event_add_onrowenter
+HTMLDocumentEvents2_Event_add_onrowexit
+HTMLDocumentEvents2_Event_add_onrowsdelete
+HTMLDocumentEvents2_Event_add_onrowsinserted
+HTMLDocumentEvents2_Event_add_onselectionchange
+HTMLDocumentEvents2_Event_add_onselectstart
+HTMLDocumentEvents2_Event_add_onstop
+HTMLDocumentEvents2_Event_remove_onactivate
+HTMLDocumentEvents2_Event_remove_onafterupdate
+HTMLDocumentEvents2_Event_remove_onbeforeactivate
+HTMLDocumentEvents2_Event_remove_onbeforedeactivate
+HTMLDocumentEvents2_Event_remove_onbeforeeditfocus
+HTMLDocumentEvents2_Event_remove_onbeforeupdate
+HTMLDocumentEvents2_Event_remove_oncellchange
+HTMLDocumentEvents2_Event_remove_onclick
+HTMLDocumentEvents2_Event_remove_oncontextmenu
+HTMLDocumentEvents2_Event_remove_oncontrolselect
+HTMLDocumentEvents2_Event_remove_ondataavailable
+HTMLDocumentEvents2_Event_remove_ondatasetchanged
+HTMLDocumentEvents2_Event_remove_ondatasetcomplete
+HTMLDocumentEvents2_Event_remove_ondblclick
+HTMLDocumentEvents2_Event_remove_ondeactivate
+HTMLDocumentEvents2_Event_remove_ondragstart
+HTMLDocumentEvents2_Event_remove_onerrorupdate
+HTMLDocumentEvents2_Event_remove_onfocusin
+HTMLDocumentEvents2_Event_remove_onfocusout
+HTMLDocumentEvents2_Event_remove_onhelp
+HTMLDocumentEvents2_Event_remove_onkeydown
+HTMLDocumentEvents2_Event_remove_onkeypress
+HTMLDocumentEvents2_Event_remove_onkeyup
+HTMLDocumentEvents2_Event_remove_onmousedown
+HTMLDocumentEvents2_Event_remove_onmousemove
+HTMLDocumentEvents2_Event_remove_onmouseout
+HTMLDocumentEvents2_Event_remove_onmouseover
+HTMLDocumentEvents2_Event_remove_onmouseup
+HTMLDocumentEvents2_Event_remove_onmousewheel
+HTMLDocumentEvents2_Event_remove_onpropertychange
+HTMLDocumentEvents2_Event_remove_onreadystatechange
+HTMLDocumentEvents2_Event_remove_onrowenter
+HTMLDocumentEvents2_Event_remove_onrowexit
+HTMLDocumentEvents2_Event_remove_onrowsdelete
+HTMLDocumentEvents2_Event_remove_onrowsinserted
+HTMLDocumentEvents2_Event_remove_onselectionchange
+HTMLDocumentEvents2_Event_remove_onselectstart
+HTMLDocumentEvents2_Event_remove_onstop
+IHTMLDocument2_clear
+IHTMLDocument2_close
+IHTMLDocument2_createElement
+IHTMLDocument2_createStyleSheet
+IHTMLDocument2_elementFromPoint
+IHTMLDocument2_execCommand
+IHTMLDocument2_execCommandShowHelp
+IHTMLDocument2_open
+IHTMLDocument2_queryCommandEnabled
+IHTMLDocument2_queryCommandIndeterm
+IHTMLDocument2_queryCommandState
+IHTMLDocument2_queryCommandSupported
+IHTMLDocument2_queryCommandText
+IHTMLDocument2_queryCommandValue
+IHTMLDocument2_toString
+IHTMLDocument2_write
+IHTMLDocument2_writeln
+IHTMLDocument3_attachEvent
+IHTMLDocument3_createDocumentFragment
+IHTMLDocument3_createTextNode
+IHTMLDocument3_detachEvent
+IHTMLDocument3_getElementById
+IHTMLDocument3_getElementsByName
+IHTMLDocument3_getElementsByTagName
+IHTMLDocument3_recalc
+IHTMLDocument3_releaseCapture
+IHTMLDocument4_createDocumentFromUrl
+IHTMLDocument4_CreateEventObject
+IHTMLDocument4_createRenderStyle
+IHTMLDocument4_FireEvent
+IHTMLDocument4_focus
+IHTMLDocument4_hasFocus
+IHTMLDocument5_createAttribute
+IHTMLDocument5_createComment
+IHTMLDOMNode_appendChild
+IHTMLDOMNode_cloneNode
+IHTMLDOMNode_hasChildNodes
+IHTMLDOMNode_insertBefore
+IHTMLDOMNode_removeChild
+IHTMLDOMNode_removeNode
+IHTMLDOMNode_replaceChild
+IHTMLDOMNode_replaceNode
+IHTMLDOMNode_swapNode
+InitializeLifetimeService
+insertBefore
+open
+queryCommandEnabled
+queryCommandIndeterm
+queryCommandState
+queryCommandSupported
+queryCommandText
+queryCommandValue
+recalc
+releaseCapture
+removeChild
+removeNode
+remove_onactivate
+remove_onafterupdate
+remove_onbeforeactivate
+remove_onbeforedeactivate
+remove_onbeforeeditfocus
+remove_onbeforeupdate
+remove_oncellchange
+remove_onclick
+remove_oncontextmenu
+remove_oncontrolselect
+remove_ondataavailable
+remove_ondatasetchanged
+remove_ondatasetcomplete
+remove_ondblclick
+remove_ondeactivate
+remove_ondragstart
+remove_onerrorupdate
+remove_onfocusin
+remove_onfocusout
+remove_onhelp
+remove_onkeydown
+remove_onkeypress
+remove_onkeyup
+remove_onmousedown
+remove_onmousemove
+remove_onmouseout
+remove_onmouseover
+remove_onmouseup
+remove_onmousewheel
+remove_onpropertychange
+remove_onreadystatechange
+remove_onrowenter
+remove_onrowexit
+remove_onrowsdelete
+remove_onrowsinserted
+remove_onselectionchange
+remove_onselectstart
+remove_onstop
+replaceChild
+replaceNode
+swapNode
+toString
+write
+writeln
+#>
+
