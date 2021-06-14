@@ -14,6 +14,8 @@ import os
 # https://pypi.org/project/cyrtranslit/#files
 # https://stackoverflow.com/questions/47420957/create-custom-wait-until-condition-in-python
 # https://selenium-python.readthedocs.io/waits.html
+# see also:
+# https://github.com/konflic/python_qa_wait_elements/blob/master/2_custom_waits/test_custom_wait.py
 class translit_text_wait:
   # dictionary is to transliterate from Russian cyrillic to latin.
 
@@ -99,12 +101,9 @@ else:
   chromedriver = 'chromedriver'
 url = 'http://ya.ru/'
 options = Options()
-# options.add_argument('--headless')
-# options.add_argument('--disable-gpu')
-# export PATH=$PATH:$HOME/Downloads
-# DevToolsActivePort file doesn't exist
-driver = webdriver.Chrome(homedir + '/' + 'Downloads' + '/' + chromedriver, options = options)
-driver = webdriver.Chrome()
+options.add_argument('--headless')
+options.add_argument('--disable-gpu')
+driver = webdriver.Chrome(homedir + '/' + 'Downloads' + '/' + chromedriver, chrome_options = options)
 
 driver.get(url)
 element = WebDriverWait(driver, 10).until( translit_text_wait("button[class *= 'button']", 'Najti') )
@@ -113,4 +112,5 @@ print( 'Found element "{}"'.format(element.get_attribute('innerHTML')))
 driver.close()
 driver.quit()
 
-#  PATH=%PATH%;c:\Python381;c:\Python381\Scripts;%userprofile%\downloads
+# export PATH=$PATH:$HOME/Downloads
+# PATH=%PATH%;c:\Python381;c:\Python381\Scripts;%userprofile%\downloads
