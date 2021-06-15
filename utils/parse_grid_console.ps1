@@ -19,7 +19,10 @@
 #THE SOFTWARE.
 
 param (
-  [String]$hub_ip = ''
+  [String]$hub_ip = '',
+  [switch]$remove_port,
+  [switch]$debug_html,
+  [switch]$debug_ie
 )
 if ($hub_ip -eq '') {
   $datafile = 'grid_console.html'
@@ -48,23 +51,25 @@ $text1 = $element1.innertext
 # $text1.getType().FullName
 # System.String
 #>
-<#
+
+if ($debug_ie) {
 try {
-  $element2 = $column1.querySelectorall('p[class= "proxyid"]')|select-object -first 1
-  # $element2.getType().FullName
+  $column = $html.getElementById('leftColumn')
+  $element = $column.querySelectorall('p[class= "proxyid"]')|select-object -first 1
+  $element.getType().FullName
 } catch [Exception] { 
   write-output ( 'Exception : ' + $_.Exception.Message)
   # "a problem causes the program to stop working correctly" dialog. 
   # Cannot be caught
 }
-#>
+}
 # hub version-specific
 $ids = @('left-column','right-column')
 $ids = @('leftColumn', 'rightColumn') 
 
 $ids| foreach-object {
-  $id = $_
-  $column = $html.getElementById($id)
+  $column_id = $_
+  $column = $html.getElementById($column_id)
   # $elements = $column.querySelectorall('.proxyid')
   $elements = $column.getElementsByClassName('proxyid')
   # in Powershell Version 4.0 [mshtml.HTMLDivElementClass] does not contain a method named 'getElementsByClassName'.
@@ -79,8 +84,11 @@ $ids| foreach-object {
     # id : http://SERGUEIK53:5555, OS : WIN8_1
     # $text.getType().FullName 
     $texts += $text
-    write-output ('Adding element index: {0} "{1}"' -f $index, $text)
+    if ($debug_html) {
+      write-output ('Adding element column: {0} index: {1} "{2}"' -f $column_id, $index, $text)
+    }
   }
+
   Remove-Variable column -ErrorAction SilentlyContinue
   Remove-Variable element -ErrorAction SilentlyContinue
   Remove-Variable elements -ErrorAction SilentlyContinue
@@ -113,5 +121,9 @@ $html.IHTMLDocument2_write($obj.rawContent)
 $texts| foreach-object { $text = $_; 
   $result = $text | convertfrom-String
   # With Powershell 4.0 the term 'convertfrom-String' is not recognized as the name of a cmdlet, function, script file, or operable program
-  $result.P3 -replace ',', '' -replace 'http://', ''
+  $node_info = $result.P3 -replace ',', '' -replace 'http://', ''
+  if ($remove_port) { 
+    $node_info = $node_info -replace ':[0-9]+$', ''
+  } 
+  $node_info
 } | sort-object | format-list
