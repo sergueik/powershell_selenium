@@ -83,6 +83,10 @@ $ids| foreach-object {
   # in Powershell Version 4.0 [mshtml.HTMLDivElementClass] does not contain a method named 'getElementsByClassName'.
   # in Powershell Version 4.0 [mshtml.HTMLDivElementClass] does not containa method named 'querySelectorall'.
   # not practical to continue coding against 4.0
+  if (($elements -eq $null) -or ($elements.length -eq 0 )) {
+    write-output ('all nodes are down on hub http://{0}:4444/grid/console' -f $hub_ip, $hub_port)
+    exit 0
+  }
   $length = $elements.length
   0..($length - 1) | foreach-object {
     $index = $_
