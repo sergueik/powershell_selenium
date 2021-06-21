@@ -20,15 +20,23 @@
 
 param (
   [String]$hub_ip = '',
+  [String]$hub_port = '4444',
   [switch]$remove_port,
   [switch]$debug_html,
   [switch]$debug_ie
 )
+if ($hub_ip -ne '') {
+  $status = test-netconnection -computername $hub_ip -port $hub_port
+  if (( -not $status.PingSucceeded )-or (-not $status.TcpTestSucceeded) ) {
+    write-output ('http://{0}:4444/grid/console is not responding' -f $hub_ip, $hub_port)
+    exit 0
+  }
+}
 if ($hub_ip -eq '') {
   $datafile = 'grid_console.html'
   $uri = ('file:///{0}' -f ((resolve-path $datafile).path -replace '\\', '/'))
 } else {
-  $uri = ('http://{0}:4444/grid/console' -f $hub_ip)
+  $uri = ('http://{0}:4444/grid/console' -f $hub_ip, $hub_port)
 }
 
 [Microsoft.PowerShell.Commands.WebResponseObject]$response_obj = (Invoke-WebRequest -Uri $uri)
