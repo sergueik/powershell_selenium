@@ -23,6 +23,7 @@ param (
   [String]$hub_port = '4444',
   [switch]$remove_port,
   [switch]$debug_html,
+  [switch]$form,
   [switch]$debug_ie
 )
 if ($hub_ip -ne '') {
@@ -129,13 +130,56 @@ $html = new-object -ComObject 'HTMLFile'
 $html.IHTMLDocument2_write($obj.rawContent)
 #>
 # $texts
+add-type -assembly System.Windows.Forms
+$form = new-object System.Windows.Forms.Form
+$form.Size = new-object System.Drawing.Size(600,300)
 
-$texts| foreach-object { $text = $_; 
+$list = new-object System.collections.ArrayList
+$hostinfo = $texts| foreach-object { $text = $_; 
   $result = $text | convertfrom-String
   # With Powershell 4.0 the term 'convertfrom-String' is not recognized as the name of a cmdlet, function, script file, or operable program
   $node_info = $result.P3 -replace ',', '' -replace 'http://', ''
   if ($remove_port) { 
     $node_info = $node_info -replace ':[0-9]+$', ''
+    $node_info
   } 
   $node_info
-} | sort-object | format-list
+} | sort-object 
+
+$hostinfo | foreach-object {
+# https://www.c-sharpcorner.com/article/binding-an-arraylist-with-datagrid-control/
+# NOTE: the following will not work:
+# $list.add($_) 
+# $list.Add(@{"hostname" = $_})
+$o = new-object PSObject
+$o | add-member Noteproperty 'hostname' $_
+$list.add($o) 
+ } | out-null
+if ([bool]$PSBoundParameters['form'].IsPresent) { 
+  $dataGrid = new-object System.Windows.Forms.DataGrid -Property @{
+    Size = new-object System.Drawing.Size(584,200)
+    Location = new-object System.Drawing.Point(8,8)
+    ColumnHeadersVisible = $true
+    DataSource = $list
+  }
+  $style= [System.Windows.Forms.DataGridTextBoxColumn]@{
+    MappingName = 'hostname'
+    HeaderText = 'hostname'
+    Width = 150
+  }
+  $table_style = new-object System.Windows.Forms.DataGridTableStyle
+  $table_style.GridColumnStyles.Add($style)
+  $dataGrid.TableStyles.Add($table_style)
+
+  $button = [System.Windows.Forms.Button]@{
+    Text = 'OK'
+    Name = 'ok_button'
+    Location = [System.Drawing.point]::new(8, 222 )
+  } 
+  $form.Controls.AddRange(@($dataGrid, $button))
+  $form.ShowDialog() |out-null
+} else {
+  $list | format-table
+}
+
+# see also: https://stackoverflow.com/questions/11468423/powershell-creating-custom-datagridview
