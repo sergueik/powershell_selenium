@@ -23,7 +23,7 @@ param (
   [String]$hub_port = '4444',
   [switch]$remove_port,
   [switch]$debug_html,
-  [switch]$form,
+  [switch]$use_form,
   [switch]$debug_ie
 )
 if ($hub_ip -ne '') {
@@ -60,21 +60,37 @@ $text1 = $element1.innertext
 # $text1.getType().FullName
 # System.String
 #>
+if ($debug_ie) {
+  $element = $html.querySelector('#leftColumn,#rightColumn p[class = "proxyid"]')
+  write-output 'Found element '
+  write-output  $element.InnerText
 
+  # https://www.w3schools.com/cssref/css_selectors.asp
+  $column1 = $html.getElementById('leftColumn')
+  $length = $column1.querySelectorall('p[class = "proxyid"]').length
+
+  write-output('Found {0} elements' -f $length)
+  $content = $html.getElementById('main_content')
+  $length = $content.querySelectorall('#leftColumn,#rightColumn p[class = "proxyid"]').length
+  write-output('Found {0} elements' -f $length)
+
+}
+<#
 if ($debug_ie) {
 try {
   $column = $html.getElementById('leftColumn')
   $element = $column.querySelectorall('p[class= "proxyid"]')|select-object -first 1
   $element.getType().FullName
-} catch [Exception] { 
+} catch [Exception] {
   write-output ( 'Exception : ' + $_.Exception.Message)
-  # "a problem causes the program to stop working correctly" dialog. 
+  # "a problem causes the program to stop working correctly" dialog.
   # Cannot be caught
 }
 }
+#>
 # hub version-specific
 $ids = @('left-column','right-column')
-$ids = @('leftColumn', 'rightColumn') 
+$ids = @('leftColumn', 'rightColumn')
 
 $ids| foreach-object {
   $column_id = $_
@@ -95,7 +111,7 @@ $ids| foreach-object {
     # $element.getType().FullName
     $text = $element.innertext
     # id : http://SERGUEIK53:5555, OS : WIN8_1
-    # $text.getType().FullName 
+    # $text.getType().FullName
     $texts += $text
     if ($debug_html) {
       write-output ('Adding element column: {0} index: {1} "{2}"' -f $column_id, $index, $text)
@@ -107,18 +123,18 @@ $ids| foreach-object {
   Remove-Variable elements -ErrorAction SilentlyContinue
 }
 <#
-try { 
+try {
   [Microsoft.PowerShell.Commands.HtmlWebResponseObject]$obj = (Invoke-WebRequest -Uri $uri)
-} catch [Exception] { 
+} catch [Exception] {
   write-output ( 'Exception : ' + $_.Exception.Message)
-  # Cannot convert the value of type 
+  # Cannot convert the value of type
   # "Microsoft.PowerShell.Commands.WebResponseObject" to type
   # "Microsoft.PowerShell.Commands.HtmlWebResponseObject"
 }
 #>
 # when reading http://localhost:4444/grid/console
-# the result is Microsoft.PowerShell.Commands.HtmlWebResponseObject and has ParsedHtml member which is mshtml.HTMLDocumentClass 
-# 
+# the result is Microsoft.PowerShell.Commands.HtmlWebResponseObject and has ParsedHtml member which is mshtml.HTMLDocumentClass
+#
 <#
 $uri = 'http://localhost:4444/grid/console'
 [Microsoft.PowerShell.Commands.HtmlWebResponseObject]$obj = (Invoke-WebRequest -Uri $uri)
@@ -135,27 +151,28 @@ $form = new-object System.Windows.Forms.Form
 $form.Size = new-object System.Drawing.Size(600,300)
 
 $list = new-object System.collections.ArrayList
-$hostinfo = $texts| foreach-object { $text = $_; 
+$hostinfo = $texts| foreach-object { $text = $_;
   $result = $text | convertfrom-String
   # With Powershell 4.0 the term 'convertfrom-String' is not recognized as the name of a cmdlet, function, script file, or operable program
   $node_info = $result.P3 -replace ',', '' -replace 'http://', ''
-  if ($remove_port) { 
+  if ($remove_port) {
     $node_info = $node_info -replace ':[0-9]+$', ''
     $node_info
-  } 
+  }
   $node_info
-} | sort-object 
+} | sort-object
 
 $hostinfo | foreach-object {
 # https://www.c-sharpcorner.com/article/binding-an-arraylist-with-datagrid-control/
 # NOTE: the following will not work:
-# $list.add($_) 
+# $list.add($_)
 # $list.Add(@{"hostname" = $_})
 $o = new-object PSObject
 $o | add-member Noteproperty 'hostname' $_
-$list.add($o) 
+$list.add($o)
  } | out-null
-if ([bool]$PSBoundParameters['form'].IsPresent) { 
+if ([bool]$PSBoundParameters['use_form'].IsPresent) {
+
   $dataGrid = new-object System.Windows.Forms.DataGrid -Property @{
     Size = new-object System.Drawing.Size(584,200)
     Location = new-object System.Drawing.Point(8,8)
@@ -175,7 +192,7 @@ if ([bool]$PSBoundParameters['form'].IsPresent) {
     Text = 'OK'
     Name = 'ok_button'
     Location = [System.Drawing.point]::new(8, 222 )
-  } 
+  }
   $form.Controls.AddRange(@($dataGrid, $button))
   $form.ShowDialog() |out-null
 } else {
