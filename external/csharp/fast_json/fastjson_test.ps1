@@ -3,8 +3,8 @@ param (
 )
 <#
 if ($env:PROCESSOR_ARCHITECTURE -ne 'x86') { 
-  # if the dll is compiled in SharpDevelp for x86 
-  # the attempt to load in 64 bit Powershell will result in "BadImageFormatException"'
+  # if the dll is compiled in SharpDevelop for x86 (e.g. for debugging)
+  # attempt to load in 64 bit Powershell will fail with "BadImageFormatException"
   write-output 'this test needs to be run on c:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe'
   exit 1;
 }
@@ -146,4 +146,37 @@ write-output $o['a'][0]['b']
 write-output ('$o["a"][0]["b"]["c"] = {0}' -f ($o['a'][0]['b']['c']).getType())
 
 write-output $o['a'][0]['b']['c']
+write-output $j.ToJSON($o)
+
+write-output 'test #6'
+$s = '{
+  "name": "John",
+  "age": 30,
+  "married": true,
+  "cars": [
+    {
+      "model": "BMW 230",
+      "extradata": {
+        "list of values": [
+          1,
+          42,
+          3
+        ]
+      },
+      "mpg": 27.5
+    },
+    {
+      "model": "Ford Edge",
+      "mpg": 24.1
+    }
+  ]
+}
+'
+
+$o = $j.Parse($s)
+# write-output ('json: {0}' -f [fastJSON.JSON]::Beautify($s))
+write-output ('json: {0}' -f $j.Beautify($s))
+$o = $j.Parse($s)
+#
+write-output $o['cars'][0]['extradata']['list of values'][1]
 write-output $j.ToJSON($o)
