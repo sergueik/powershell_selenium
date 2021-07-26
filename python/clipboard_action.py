@@ -1,4 +1,5 @@
-﻿from __future__ import print_function
+﻿#!/usr/bin/env python
+from __future__ import print_function
 # SyntaxError: from __future__ imports must occur at the beginning of the file
 # based on: https://qna.habr.com/q/786911
 import clipboard
@@ -35,6 +36,11 @@ WebDriverWait(driver, 10).until(ec.presence_of_all_elements_located((By.XPATH, e
 
 
 elements = driver.find_elements_by_xpath(elements_xpath)
+if (len(elements) == 0):
+  print('No elements found by xpath: {}'.format(elements_xpath), file = sys.stderr)
+  exit(1)
+
+print('Found {} elements by xpath: {}'.format(len(elements), elements_xpath), file = sys.stderr)
 
 try:
   # object has no attribute 'clear'
