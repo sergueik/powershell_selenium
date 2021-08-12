@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 # Encoding: UTF-8
 # origin: https://github.com/Modified/MHTifier
-# see also: https://github.com/DavidBenko/MHTML-to-HTML-Decoding-in-C-Sharp
-# see also: https://github.com/itriders/mht2html
+# see also:
+# https://github.com/DavidBenko/MHTML-to-HTML-Decoding-in-C-Sharp
+# https://github.com/itriders/mht2html
+# https://sourceforge.net/projects/mht2htm/
+# https://www.example-code.com/powershell/mht.asp
+# https://stackoverflow.com/questions/16203002/how-can-you-programmatically-or-with-a-tool-convert-mht-mhtml-files-to-regula
+
 """mhtifier.py
 Un/packs an MHT "archive" into/from separate files, writing/reading them in directories to match their Content-Location.
 
