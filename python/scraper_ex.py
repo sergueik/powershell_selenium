@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # has both FF and Chrome initialization code
 # origin: https://groups.google.com/forum/#!topic/selenium-users/PuDpVblziAo
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -9,15 +10,16 @@ from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoSuchElementException
 
 # Ability to run headless
-from selenium.webdriver.firefox.options import Options as f_Options
-from selenium.webdriver.chrome.options import Options as c_Options
+from selenium.webdriver.firefox.options import Options as firefox_options
+from selenium.webdriver.chrome.options import Options as chrome_options
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
 # package to allow one to download the page
 # sudo -H pip3 install parsel --upgrade	
 from parsel import Selector
 
-import time, datetime, os
+import sys, time, datetime, os
+import getopt
 from os import getenv
 
 
@@ -26,7 +28,7 @@ class headlessbypass:
   my_date_time = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 
   def firefox_headless_func(self):
-    self.options = f_Options()
+    self.options = firefox_options()
     self.options.headless = True
     # system wide
 
@@ -37,7 +39,7 @@ class headlessbypass:
     self.driver = webdriver.Firefox(firefox_binary = binary, executable_path = '{}/Downloads/{}'.format(self.homedir,self.geckodriver), options = self.options)
 
   def chrome_headless_func(self):
-    self.options = c_Options()
+    self.options = chrome_options()
     #self.options.headless = True
     self.options.add_argument('--window-size=1920, 1080')
     #self.options.add_argument('--disable-extensions')
@@ -54,7 +56,7 @@ class headlessbypass:
     #self.options.add_argument('--disable-browser-side-navigation')
     self.options.add_argument('--enable-javascript')
     self.options.add_argument('--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:72.0) Gecko/20100101 Firefox/72.0"')
-    self.options.binary_location = '/usr/bin/google-chrome'  # "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"
+    self.options.binary_location = '/usr/bin/google-chrome' if os.getenv('OS') == None else 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
     self.driver = webdriver.Chrome(options = self.options,executable_path = '{}/Downloads/{}'.format(self.homedir,self.chromedriver))
 
   def my_set_up(self):
@@ -66,27 +68,17 @@ class headlessbypass:
       self.homedir = os.getenv('HOME')
       self.chromedriver = 'chromedriver'
       self.geckodriver = 'geckodriver'
-    headless = os.getenv('HEADLESS_MODE')
-    # This is for running locally; select/toggle what you want to run
-    headless_firefox = 1
-    headless_chrome = 0
-    chrome = 0
-    safari = 0
-
+    print('browser = {} , headless = {}'.format(browser,headless))
     if headless:
-      self.firefox_headless_func()
-    else:
-      if headless_firefox:
+      if browser == 'firefox':
         self.firefox_headless_func()
-
-      elif headless_chrome:
+      elif browser == 'chrome':
         self.chrome_headless_func()
-
-      elif chrome:
+    else:
+      if browser == 'chrome':
         self.driver = webdriver.Chrome(executable_path = '{}/Downloads/{}'.format(self.homedir,self.chromedriver))
-
       else:
-        print('{}/Downloads/{}'.format(self.homedir,self.geckodriver)) 
+        print('{}/Downloads/{}'.format(self.homedir,self.geckodriver))
         self.driver = webdriver.Firefox(executable_path = '{}/Downloads/{}'.format(self.homedir,self.geckodriver))
 
     self.driver.implicitly_wait(30)
@@ -98,6 +90,7 @@ class headlessbypass:
   def my_tear_down(self):
     self.driver.quit()
 
+  # TODO: https://www.geeksforgeeks.org/decorators-with-parameters-in-python/
   def my_decorator(func):
     def wrapper(self, *args, **kwargs):
         self.my_set_up()
@@ -130,8 +123,35 @@ class headlessbypass:
     self.driver.save_screenshot('firstpagescreenshot2.png')
 
 if __name__ == '__main__':
+  try:
+    opts, args = getopt.getopt(sys.argv[1:], 'hdb:u:n', ['help', 'debug', 'browser=', 'url=', 'nowindow'])
+  except getopt.GetoptError as err:
+    print('usage: print_pdf.py --url <html page> --browser <browser> [--headless]')
+    print(str(err))
+    exit()
+  url = 'https://mygocompare.gocompare.com/newcustomer/'
+  global browser
+  browser = 'firefox'
+  global headless
+  # headless = os.getenv('HEADLESS_MODE')
+  headless = False
+  global debug
+  debug = False
+  for option, argument in opts:
+    if option == '-d':
+      debug = True
+    elif option in ('-h', '--help'):
+      print('usage: scraper_ex.py--url <html page> --browser <browser> [--headless]')
+      exit()
+    elif option in ('-u', '--url'):
+      url = argument
+    elif option in ('-b', '--browser'):
+      browser = argument
+    elif option in ('-n', '--nowindow'):
+      headless = True
+    else:
+      assert False, 'unhandled option: {}'.format(option)
   start_time = time.time()
   scrape = headlessbypass()
   scrape.visit_site()
-
 
