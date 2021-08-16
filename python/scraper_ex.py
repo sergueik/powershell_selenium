@@ -16,6 +16,9 @@ from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 
 # package to allow one to download the page
 # sudo -H pip3 install parsel --upgrade	
+# on Windows, do
+# PATH=%PATH%;c:\Python381;c:\Python381\Scripts;%userprofile%\downloads
+# python -m pip install parsel
 from parsel import Selector
 
 import sys, time, datetime, os
@@ -56,7 +59,8 @@ class headlessbypass:
     #self.options.add_argument('--disable-browser-side-navigation')
     self.options.add_argument('--enable-javascript')
     self.options.add_argument('--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:72.0) Gecko/20100101 Firefox/72.0"')
-    self.options.binary_location = '/usr/bin/google-chrome' if os.getenv('OS') == None else 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
+    # Cope with 64/32. Assume 32 bit Chrome is installed
+    self.options.binary_location = '/usr/bin/google-chrome' if getenv('OS') == None else 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe' if getenv('ProgramW6432') != None else 'C:/Program Files/Google/Chrome/Application/chrome.exe'
     self.driver = webdriver.Chrome(options = self.options,executable_path = '{}/Downloads/{}'.format(self.homedir,self.chromedriver))
 
   def my_set_up(self):
@@ -154,4 +158,3 @@ if __name__ == '__main__':
   start_time = time.time()
   scrape = headlessbypass()
   scrape.visit_site()
-
