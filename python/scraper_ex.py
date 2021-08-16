@@ -59,8 +59,18 @@ class headlessbypass:
     #self.options.add_argument('--disable-browser-side-navigation')
     self.options.add_argument('--enable-javascript')
     self.options.add_argument('--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:72.0) Gecko/20100101 Firefox/72.0"')
+    # self.options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36")
     # Cope with 64/32. Assume 32 bit Chrome is installed
     self.options.binary_location = '/usr/bin/google-chrome' if getenv('OS') == None else 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe' if getenv('ProgramW6432') != None else 'C:/Program Files/Google/Chrome/Application/chrome.exe'
+    # additional options
+    self.options.add_experimental_option('excludeSwitches', ['enable-automation'])
+    self.options.add_argument('--incognito')
+    prefs = {'safebrowsing.enabled': True, 'gcredentials_enable_service': False,'gprofile.password_manager_enabled' : False,'gcredentials_enable_service': False,'gprofile.password_manager_enabled': False }
+    self.options.add_experimental_option('prefs', prefs)
+    self.options.add_argument('--disable-blink-features=AutomationControlled')
+    self.options.add_argument('--disable-infobars')
+    self.options.add_argument('--safebrowsing-disable-extension-blacklist')
+    self.options.add_argument('--safebrowsing-disable-download-protection')
     self.driver = webdriver.Chrome(options = self.options,executable_path = '{}/Downloads/{}'.format(self.homedir,self.chromedriver))
 
   def my_set_up(self):
