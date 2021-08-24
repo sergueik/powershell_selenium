@@ -24,11 +24,16 @@ options.add_argument('--no-sandbox')
 options.add_argument('--disable-setuid-sandbox')
 options.add_argument('--headless')
 
-# aternatively:
+# alternatively:
 options.headless = True
 
 url = 'https://qna.habr.com'
 binary = '{}/Downloads/firefox/firefox'.format(homedir)
+# this assumes some latest Mozilla is downloaded and expanded in Downloads directory
+# when not there, typical error is:
+# Unable to find a matching set of capabilities
+# use system default:
+binary = '/usr/bin/firefox'
 driver = '{}/Downloads/{}'.format(homedir, geckodriver)
 # TODO: explore
 # it is known to lead to the following failure:
