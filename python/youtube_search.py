@@ -53,7 +53,16 @@ element = browser.find_element_by_css_selector('form input#search')
 print(element.get_attribute('outerHTML'))
 # <input id="search" autocapitalize="none" autocomplete="off" autocorrect="off" name="search_query" tabindex="0" type="text" spellcheck="false" placeholder="Search" aria-label="Search">
 if element.get_attribute('type') == 'text':
+  # https://github.com/SeleniumHQ/selenium/blob/master/py/selenium/webdriver/remote/webelement.py#503
+  # see also
+  # https://github.com/SeleniumHQ/selenium/blob/trunk/py/selenium/webdriver/common/actions/key_actions.py#39
   element.send_keys( text )
+  browser.execute_script("""var element = arguments[0];
+ element.dispatchEvent(new Event('input'));
+""", element)
+  browser.execute_script("""var element = arguments[0];
+  element.dispatchEvent(new Event('change'));
+""", element)
 
 # Take screenshot
 browser.save_screenshot(output_file)
