@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.chrome.options import Options as Options
 
@@ -14,11 +14,9 @@ import os
 # https://pypi.org/project/cyrtranslit/#files
 # https://stackoverflow.com/questions/47420957/create-custom-wait-until-condition-in-python
 # https://selenium-python.readthedocs.io/waits.html
-# see also:
-# https://github.com/konflic/python_qa_wait_elements/blob/master/2_custom_waits/test_custom_wait.py
 class translit_text_wait:
   # dictionary is to transliterate from Russian cyrillic to latin.
-
+ 
   RU_CYR_TO_LAT_DICT = { u"А": u"A", u"а": u"a",
 
       u"Б": u"B", u"б": u"b",
@@ -72,7 +70,7 @@ class translit_text_wait:
     localized_string = self.decode_utf8(localized_string)
     length_of_string = len(localized_string)
     index = 0
-    for c in localized_string:
+    for c in localized_string:           
       if c in self.RU_CYR_TO_LAT_DICT:
         latinized_str += self.RU_CYR_TO_LAT_DICT[c]
       else:
@@ -87,7 +85,7 @@ class translit_text_wait:
   def __call__(self, driver):
     element = driver.find_element_by_css_selector(self._selector)
     text = element.text
-    print('checking text: "{}" against "{}"'.format(self.to_latin(text), self._value))
+    print('checking the translit text of "{}": "{}" against "{}"'.format(text, self.to_latin(text), self._value))
     if self.to_latin(text) == self._value:
       return element
     else:
@@ -103,14 +101,16 @@ url = 'http://ya.ru/'
 options = Options()
 options.add_argument('--headless')
 options.add_argument('--disable-gpu')
-driver = webdriver.Chrome(homedir + '/' + 'Downloads' + '/' + chromedriver, chrome_options = options)
+
+driver = webdriver.Chrome(homedir + '/' + 'Downloads' + '/' + chromedriver, options = options)
+driver = webdriver.Chrome()
+
 
 driver.get(url)
 element = WebDriverWait(driver, 10).until( translit_text_wait("button[class *= 'button']", 'Najti') )
-print( 'Found element "{}"'.format(element.get_attribute('innerHTML')))
+print( element.get_attribute('innerHTML'))
 
 driver.close()
 driver.quit()
 
-# export PATH=$PATH:$HOME/Downloads
-# PATH=%PATH%;c:\Python381;c:\Python381\Scripts;%userprofile%\downloads
+#  PATH=%PATH%;c:\Python381;c:\Python381\Scripts;%userprofile%\downloads

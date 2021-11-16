@@ -42,7 +42,7 @@ if __name__ == '__main__':
   try:
     element.click()
   except exceptions.ElementNotInteractableException as e:
-    print(e)
+    print('Exception (ignored): {}'.format(str(e)))
     pass
 
   # selenium.common.exceptions.ElementNotInteractableException: Message: element not interactable 

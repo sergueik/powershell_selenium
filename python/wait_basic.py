@@ -11,7 +11,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoAlertPresentException,TimeoutException,WebDriverException
+from selenium.common import exceptions
 
 def create_firefox_extension(profile_path):
   # NOTE: __file__ requires running script as executable or 
@@ -69,8 +69,8 @@ if __name__ == '__main__':
   location = 'file:///{0}/{1}'.format(os.getcwd(), 'alert.html')
   try:
     driver.get(location)
-  except WebDriverException as e:
-    # selenium.common.exceptions.WebDriverException: Message: Reached error page: about:neterror?e=fileNotFound&u=file%3A////home/sergueik/Downloads/alert.html&c=UTF-8&d=Firefox%20can%E2%80%99t%20find%20the%20file%20at%20//home/sergueik/Downloads/alert.html
+  except exceptions.WebDriverException as e:
+    # Reached error page: about:neterror?e=fileNotFound&u=file%3A////home/sergueik/Downloads/alert.html&c=UTF-8&d=Firefox%20can%E2%80%99t%20find%20the%20file%20at%20//home/sergueik/Downloads/alert.html
     print('Exception (ignored): {}'.format(str(e)))
     driver.quit()
     exit
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     print ('Alert message: {}'.format(msg) )
     alert.accept()
 
-  except (NoAlertPresentException, TimeoutException) as e:
+  except (exceptions.NoAlertPresentException, exceptions.TimeoutException) as e:
     print('Alert was not shown: {0}'.format(e))
     print (e.args)
   except: # catch *all* exceptions
