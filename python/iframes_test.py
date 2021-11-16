@@ -1,55 +1,54 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-# origin: https://www.techbeamers.com/switch-between-iframes-selenium-python/
-# NOTE:  www.google.com seems to refuse to connect when in iframe
-import sys, pprint, zipfile,os,time
-from os import getenv,path
+# see also:
+# https://www.tutorialspoint.com/how-to-handle-frames-in-selenium-with-python
+
+from __future__ import print_function
+import sys
+import re
+import time
+from os import getenv, path
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoAlertPresentException,TimeoutException,WebDriverException
-from selenium.webdriver.chrome.options import Options as Options
+from selenium.common import exceptions
+from selenium.webdriver.chrome.options import Options
 
-if os.getenv('OS') != None :
-  homedir = os.getenv('USERPROFILE').replace('\\', '/')
-  chromedriver = 'chromedriver.exe'
-else:
-  homedir = os.getenv('HOME')
-  chromedriver = 'chromedriver'
-options = Options()
-# options.add_argument('--headless')
-# options.add_argument('--disable-gpu')
+if __name__ == '__main__':
+  default_downloads_dir = getenv('USERPROFILE' if getenv('OS') == 'Windows_NT' else 'HOME') + '/' + 'Downloads'
+  chromedriver_path = default_downloads_dir + '/' + ('chromedriver.exe' if getenv('OS') ==  'Windows_NT' else 'chromedriver')
+  options = Options()
+  options.add_argument('--disable-gpu')
+  options.add_argument('--headless')
+  # Windows 7 VM is at 100% CPU when chrome is visible
+  driver = webdriver.Chrome(chromedriver_path, options = options)
+  filename = 'tryhtml_iframe'
+  url = 'https://www.w3schools.com/tags/tryit.asp?filename={}'.format(filename)
+  driver.get(url)
+  frame_css = 'iframe[name="iframeResult"]'
+  frame_element = driver.find_element_by_css_selector(frame_css)
+  print('frame1: {}'.format( frame_element.get_attribute('outerHTML')))
+  driver.switch_to.frame(frame_element)
+  text = 'The iframe element'
+  element_xpath = '//h1[contains(normalize-space(.),"{}")]'.format(text)
+  element = driver.find_element_by_xpath(element_xpath)
+  print('element found in iframe1: {}'.format(element.get_attribute('innerHTML')))
+  driver.implicitly_wait(1)
+  title = 'W3Schools Free Online Web Tutorials'
+  frame_element = driver.find_element_by_xpath('//iframe[@title = "{}"]'.format(title))
+  print('frame2: {}'.format( frame_element.get_attribute('outerHTML')))
+  driver.switch_to.frame(frame_element)
+  href = "/html/default.asp"
+  element = driver.find_element_by_css_selector('.w3-button[href = "{}"]'.format(href))
+  print('element found in iframe2: {}'.format(element.get_attribute('innerHTML')))
+  try:
+    element.click()
+  except exceptions.ElementNotInteractableException as e:
+    print(e)
+    pass
 
-driver = webdriver.Chrome(homedir + '/' + 'Downloads' + '/' + chromedriver, options = options)
-url = 'file:///{0}/{1}'.format(os.getcwd(), 'iframes_test.html')
-
-driver.get(url)
-
-seq = driver.find_elements_by_tag_name('iframe')
-
-print('# of frames present in the web page is: {}'.format(len(seq)))
-
-for index in range(len(seq)):
-  # try 
-  # driver.switch_to.frame(seq[index])
-  # stale element
-  print('Switched to default content {}'.format(driver.page_source[0:100]))
+  # selenium.common.exceptions.ElementNotInteractableException: Message: element not interactable 
   driver.switch_to.default_content()
-  print('Switch to frame: {}'.format(index))
-  iframe = driver.find_elements_by_tag_name('iframe')[index]
-  driver.switch_to.frame(iframe)
-  driver.implicitly_wait(30)
-  print('the url is {}'.format(driver.page_source[0:100]))
+  driver.close()
+  driver.quit()
 
-  # element = driver.find_element_by_css_selector('#searchInput')
-  element =   driver.find_element_by_xpath('//input[contains("search text", @type)]')
-  print('found element: {}'.format(element.get_attribute('outerHTML')))
-  element.send_keys(Keys.CONTROL, 'a')
-  time.sleep(2)
-  # https://stackoverflow.com/questions/61192271/python-selenium-switch-to-default-content-not-working
-driver.switch_to.default_content()
-driver.close()
-driver.quit()
-
+#  PATH=%PATH%;c:\Python381;c:\Python381\Scripts;%userprofile%\downloads
+ 
