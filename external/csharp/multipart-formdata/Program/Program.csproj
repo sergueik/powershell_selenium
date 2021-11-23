@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Utils</RootNamespace>
-    <AssemblyName>UploadFileEx</AssemblyName>
+    <AssemblyName>UploadFile</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
@@ -47,27 +47,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="UploadFileEx.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <PropertyGroup>
-    <PreBuildEvent>sc.exe query Winmgmt | findstr RUNNING &gt; NUL 2&gt;NUL
-if ERRORLEVEL 1 goto :EOF
-		  tasklist.exe /FI "IMAGENAME EQ chromedriver.exe" | findstr /i chromedriver.exe &gt; NUL 2&gt;NUL
-if ERRORLEVEL 1 goto :NEXT1
-taskkill.exe /F /IM chromedriver.exe &gt; NUL 2&gt;NUL
-:NEXT1
-tasklist.exe /FI "IMAGENAME EQ geckodriver.exe" | findstr /i geckodriver.exe &gt; NUL 2&gt;NUL
-if ERRORLEVEL 1 goto :NEXT2
-taskkill.exe /F /IM geckodriver.exe &gt; NUL 2&gt;NUL
-:NEXT2
-exit 0
-</PreBuildEvent>
+    <PreBuildEvent/>
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>
