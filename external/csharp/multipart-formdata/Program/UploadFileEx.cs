@@ -38,11 +38,8 @@ namespace Utils {
 			stringBuilder.Append("--");
 			stringBuilder.Append(boundary);
 			stringBuilder.Append("\r\n");
-			stringBuilder.Append("Content-Disposition: form-data; name=\"");
-			stringBuilder.Append(fileFormName);
-			stringBuilder.Append("\"; filename=\"");
-			stringBuilder.Append(Path.GetFileName(uploadfile));
-			stringBuilder.Append("\"");
+			// NOTE: malformed Content-Disposition leads to System.Net.WebException: The remote server returned an error: (400) Bad Request.
+			stringBuilder.Append(String.Format("Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"", fileFormName, Path.GetFileName(uploadfile)));
 			stringBuilder.Append("\r\n");
 			stringBuilder.Append("Content-Type: ");
 			stringBuilder.Append(contenttype);
@@ -58,27 +55,37 @@ namespace Utils {
 			var fileStream = new FileStream(uploadfile, FileMode.Open, FileAccess.Read);
 			long length = postHeaderBytes.Length + fileStream.Length + boundaryBytes.Length;
 			webrequest.ContentLength = length;
+			try {
+				Stream requestStream = webrequest.GetRequestStream();
 
-			Stream requestStream = webrequest.GetRequestStream();
+				requestStream.Write(postHeaderBytes, 0, postHeaderBytes.Length);
 
-			requestStream.Write(postHeaderBytes, 0, postHeaderBytes.Length);
-
-			byte[] buffer = new Byte[checked((uint)Math.Min(4096, (int)fileStream.Length))];
-			int bytesRead = 0;			
-			while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0){
-				text = Encoding.ASCII.GetString(buffer);
-				Console.Error.WriteLine(text);
-				requestStream.Write(buffer, 0, bytesRead);
-			}
+				byte[] buffer = new Byte[checked((uint)Math.Min(4096, (int)fileStream.Length))];
+				int bytesRead = 0;			
+				while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0) {
+					text = Encoding.ASCII.GetString(buffer);
+					Console.Error.WriteLine(text);
+					requestStream.Write(buffer, 0, bytesRead);
+				}
  
-			text = Encoding.ASCII.GetString(boundaryBytes);
-			Console.Error.WriteLine(text);
-			requestStream.Write(boundaryBytes, 0, boundaryBytes.Length);
-			WebResponse responce = webrequest.GetResponse();
-			Stream stream = responce.GetResponseStream();
-			var streamReader = new StreamReader(stream);
-			
-			return streamReader.ReadToEnd();
+				text = Encoding.ASCII.GetString(boundaryBytes);
+				Console.Error.WriteLine(text);
+				requestStream.Write(boundaryBytes, 0, boundaryBytes.Length);
+				WebResponse response = webrequest.GetResponse();
+				Stream stream = response.GetResponseStream();
+				var streamReader = new StreamReader(stream);
+				var payload = streamReader.ReadToEnd();
+				response.Close();
+				return payload;
+			} catch (WebException e) {
+				String message = e.Message;
+				if (message.Contains("The remote server returned an error")){
+					Console.Error.WriteLine("Failed to post data : " + message);
+				} else {
+				  Console.Error.WriteLine("Exception (ignored): " + e.ToString());
+				}
+				return null;
+			}
 		}
 		private static String url =  "http://localhost:8085/basic/upload";
 		private static String uploadfile = "c:\\temp\\data.txt";
@@ -87,7 +94,12 @@ namespace Utils {
 		static void Main(string[] args) {
 			var cookies = new CookieContainer();
 			var querystring = new NameValueCollection();
-			
+			if (args.Length > 0) { 
+				uploadfile = args[0];
+			}
+			if (args.Length > 1) { 
+				url = args[1];
+			}
 			querystring["operation"] = "send";
 			querystring["param"] = "something";			
 			UploadFile(uploadfile, url, "file", "text/plain",
