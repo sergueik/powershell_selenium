@@ -18,7 +18,6 @@
     <NoStdLib>False</NoStdLib>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
     <NoWarn>1591</NoWarn>
-    <DocumentationFile>bin\Debug\Protractor.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -49,11 +48,16 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Utils\Utils.csproj">
+      <Project>{cb806eec-ac14-48f0-a70c-1f13fa5ce894}</Project>
+      <Name>Utils</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent/>
+    <PreBuildEvent />
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>

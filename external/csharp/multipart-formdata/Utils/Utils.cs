@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Utils {
 
-	class Utils {
+	public class Utils {
 		private static String text;
 		public static string UploadFile(string uploadfile, string url,
 			string fileFormName, string contenttype, NameValueCollection querystring,
@@ -68,7 +68,7 @@ namespace Utils {
 					Console.Error.WriteLine(text);
 					requestStream.Write(buffer, 0, bytesRead);
 				}
- 
+				fileStream.Close();
 				text = Encoding.ASCII.GetString(boundaryBytes);
 				Console.Error.WriteLine(text);
 				requestStream.Write(boundaryBytes, 0, boundaryBytes.Length);
