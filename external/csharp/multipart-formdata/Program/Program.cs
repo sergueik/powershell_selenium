@@ -37,20 +37,8 @@ namespace Launcher {
 			dataHelper.Text = text;
 			dataHelper.WriteContents();
 
-/* 
-$o = new-object -typeName 'DataHelper'
-[int]$retries = 3,
-[String]$text = 'DATA: value'
+			WMIDataCollector.CollectData(null);
 
-$o.Retries = $retries
-$o.FilePath = $filepath
-$o.ReadContents()
-
-write-output ('read: {0}' -f $o.Text)
-$o.Text = $text 
-$o.WriteContents()
-write-output ('Write: {0}' -f $o.Text)
-*/    
 		}
 	}
 }

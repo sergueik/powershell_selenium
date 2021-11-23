@@ -12,6 +12,7 @@ namespace Utils {
 		public static string UploadFile(string uploadfile, string url,
 			string fileFormName, string contenttype, NameValueCollection querystring,
 			CookieContainer cookies) {
+			FileStream fileStream = null;
 			if (String.IsNullOrEmpty(fileFormName)) {
 				fileFormName = "file";
 			}
@@ -34,11 +35,10 @@ namespace Utils {
 			webrequest.ContentType = "multipart/form-data; boundary=" + boundary;
 			webrequest.Method = "POST";
 
-		var stringBuilder = new StringBuilder();
+			var stringBuilder = new StringBuilder();
 			stringBuilder.Append("--");
 			stringBuilder.Append(boundary);
 			stringBuilder.Append("\r\n");
-			// NOTE: malformed Content-Disposition leads to System.Net.WebException: The remote server returned an error: (400) Bad Request.
 			stringBuilder.Append(String.Format("Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"", fileFormName, Path.GetFileName(uploadfile)));
 			stringBuilder.Append("\r\n");
 			stringBuilder.Append("Content-Type: ");
@@ -48,12 +48,12 @@ namespace Utils {
 
 			string postHeader = stringBuilder.ToString();
 			// 
-			Console.Error.WriteLine(String.Format("Header {0}" , postHeader));
+			Console.Error.WriteLine(String.Format("Header {0}", postHeader));
 			byte[] postHeaderBytes = Encoding.UTF8.GetBytes(postHeader);
 
 			byte[] boundaryBytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
 
-			var fileStream = new FileStream(uploadfile, FileMode.Open, FileAccess.Read);
+			fileStream = new FileStream(uploadfile, FileMode.Open, FileAccess.Read);
 			long length = postHeaderBytes.Length + fileStream.Length + boundaryBytes.Length;
 			webrequest.ContentLength = length;
 			try {
@@ -68,7 +68,7 @@ namespace Utils {
 					Console.Error.WriteLine(text);
 					requestStream.Write(buffer, 0, bytesRead);
 				}
-				fileStream.Close();
+				
 				text = Encoding.ASCII.GetString(boundaryBytes);
 				Console.Error.WriteLine(text);
 				requestStream.Write(boundaryBytes, 0, boundaryBytes.Length);
@@ -80,12 +80,15 @@ namespace Utils {
 				return payload;
 			} catch (WebException e) {
 				String message = e.Message;
-				if (message.Contains("The remote server returned an error")){
+				if (message.Contains("The remote server returned an error")) {
 					Console.Error.WriteLine("Failed to post data : " + message);
 				} else {
-				  Console.Error.WriteLine("Exception (ignored): " + e.ToString());
+					Console.Error.WriteLine("Exception (ignored): " + e.ToString());
 				}
 				return null;
+			} finally {
+				if (fileStream != null)
+					fileStream.Close();
 			}
 		}
 	}
