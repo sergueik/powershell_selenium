@@ -4,15 +4,21 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # SharpDevelop 5.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Program", "Program\Program.csproj", "{DE9C82C5-EBB3-4A2B-A75E-CE3E68E2C866}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utils", "Utils\Utils.csproj", "{CB806EEC-AC14-48F0-A70C-1F13FA5CE894}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{DE9C82C5-EBB3-4A2B-A75E-CE3E68E2C866}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{DE9C82C5-EBB3-4A2B-A75E-CE3E68E2C866}.Debug|Any CPU.Build.0 = Debug|x86
-		{DE9C82C5-EBB3-4A2B-A75E-CE3E68E2C866}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DE9C82C5-EBB3-4A2B-A75E-CE3E68E2C866}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE9C82C5-EBB3-4A2B-A75E-CE3E68E2C866}.Debug|x86.ActiveCfg = Debug|x86
+		{DE9C82C5-EBB3-4A2B-A75E-CE3E68E2C866}.Debug|x86.Build.0 = Debug|x86
+		{DE9C82C5-EBB3-4A2B-A75E-CE3E68E2C866}.Release|x86.ActiveCfg = Release|x86
+		{DE9C82C5-EBB3-4A2B-A75E-CE3E68E2C866}.Release|x86.Build.0 = Release|x86
+		{CB806EEC-AC14-48F0-A70C-1F13FA5CE894}.Debug|x86.ActiveCfg = Debug|x86
+		{CB806EEC-AC14-48F0-A70C-1F13FA5CE894}.Debug|x86.Build.0 = Debug|x86
+		{CB806EEC-AC14-48F0-A70C-1F13FA5CE894}.Release|x86.ActiveCfg = Release|x86
+		{CB806EEC-AC14-48F0-A70C-1F13FA5CE894}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 EndGlobal

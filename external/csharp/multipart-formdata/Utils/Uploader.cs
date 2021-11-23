@@ -7,7 +7,7 @@ using System.IO;
 
 namespace Utils {
 
-	class UploadFileEx {
+	public class Uploader {
 		private static String text;
 		public static string UploadFile(string uploadfile, string url,
 			string fileFormName, string contenttype, NameValueCollection querystring,
@@ -47,6 +47,7 @@ namespace Utils {
 			stringBuilder.Append("\r\n");			
 
 			string postHeader = stringBuilder.ToString();
+			// 
 			Console.Error.WriteLine(String.Format("Header {0}" , postHeader));
 			byte[] postHeaderBytes = Encoding.UTF8.GetBytes(postHeader);
 
@@ -67,7 +68,7 @@ namespace Utils {
 					Console.Error.WriteLine(text);
 					requestStream.Write(buffer, 0, bytesRead);
 				}
- 
+				fileStream.Close();
 				text = Encoding.ASCII.GetString(boundaryBytes);
 				Console.Error.WriteLine(text);
 				requestStream.Write(boundaryBytes, 0, boundaryBytes.Length);
@@ -86,25 +87,6 @@ namespace Utils {
 				}
 				return null;
 			}
-		}
-		private static String url =  "http://localhost:8085/basic/upload";
-		private static String uploadfile = "c:\\temp\\data.txt";
-
-		[STAThread]
-		static void Main(string[] args) {
-			var cookies = new CookieContainer();
-			var querystring = new NameValueCollection();
-			if (args.Length > 0) { 
-				uploadfile = args[0];
-			}
-			if (args.Length > 1) { 
-				url = args[1];
-			}
-			querystring["operation"] = "send";
-			querystring["param"] = "something";			
-			UploadFile(uploadfile, url, "file", "text/plain",
-				querystring, cookies);
-
 		}
 	}
 }
