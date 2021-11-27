@@ -34,10 +34,10 @@ namespace Launcher {
 			dataHelper.ReadContents();
 			var text = dataHelper.Text;
 			Console.Error.WriteLine(String.Format("Read text {0}", text));
-			UpdateDataHelper helper = new UpdateDataHelper();
+			var helper = new UpdateDataHelper();
 			helper.Text = text;
-			Dictionary<string,string> newdata = new Dictionary<string,string>();
-
+			var newdata = new Dictionary<string,string>();
+			WMIDataCollector.CollectData(newdata);
 			newdata["Line1"] = "ONE";
 			newdata["Line5"] = "five";
 			helper.UpdateData(newdata);
@@ -45,8 +45,6 @@ namespace Launcher {
 			Console.Error.WriteLine(String.Format("Save text {0}", text));
 			dataHelper.Text = text;
 			dataHelper.WriteContents();
-
-			WMIDataCollector.CollectData(null);
 
 		}
 	}
