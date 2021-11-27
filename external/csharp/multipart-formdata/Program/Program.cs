@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Specialized;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using Utils;
@@ -33,7 +34,15 @@ namespace Launcher {
 			dataHelper.ReadContents();
 			var text = dataHelper.Text;
 			Console.Error.WriteLine(String.Format("Read text {0}", text));
-			text = String.Format("{0}\n{1}\n", text, "entry: value");
+			UpdateDataHelper helper = new UpdateDataHelper();
+			helper.Text = text;
+			Dictionary<string,string> newdata = new Dictionary<string,string>();
+
+			newdata["Line1"] = "ONE";
+			newdata["Line5"] = "five";
+			helper.UpdateData(newdata);
+			text = helper.Text;
+			Console.Error.WriteLine(String.Format("Save text {0}", text));
 			dataHelper.Text = text;
 			dataHelper.WriteContents();
 

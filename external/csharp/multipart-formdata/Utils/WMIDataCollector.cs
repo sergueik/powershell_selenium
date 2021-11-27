@@ -9,15 +9,19 @@ namespace Utils {
 	public class WMIDataCollector {
 		public static void CollectData(string[] args) {
 			var query1 = new ManagementObjectSearcher("SELECT * FROM Win32_PerfFormattedData_Counters_ProcessorInformation");
-			var queryCollection1 = query1.Get();
-			// is switching from Powershell to C# inventory, will need to implement
-			// "measure-object" and similar cmdlets
-			foreach (ManagementObject mo in queryCollection1) {
-				Console.WriteLine("PercentIdleTime : " + mo["PercentIdleTime"].ToString());
-				Console.WriteLine("PercentUserTime : " + mo["PercentUserTime"].ToString());
-				Console.WriteLine("PercentInterruptTime: " + mo["PercentInterruptTime"].ToString());
-				Console.WriteLine("PercentProcessorUtility: " + mo["PercentProcessorUtility"].ToString());
-				Console.WriteLine("PercentPrivilegedUtility : " + mo["PercentPrivilegedUtility"].ToString());
+			try {
+				var queryCollection1 = query1.Get();
+				// is switching from Powershell to C# inventory, will need to implement
+				// "measure-object" and similar cmdlets
+				foreach (ManagementObject mo in queryCollection1) {
+					Console.WriteLine("PercentIdleTime : " + mo["PercentIdleTime"].ToString());
+					Console.WriteLine("PercentUserTime : " + mo["PercentUserTime"].ToString());
+					Console.WriteLine("PercentInterruptTime: " + mo["PercentInterruptTime"].ToString());
+					Console.WriteLine("PercentProcessorUtility: " + mo["PercentProcessorUtility"].ToString());
+					Console.WriteLine("PercentPrivilegedUtility : " + mo["PercentPrivilegedUtility"].ToString());
+				}
+			} catch (System.Management.ManagementException e) { 
+				Console.Error.WriteLine("Exception (ignored) :" + e.ToString());
 			}
 
 			/*
