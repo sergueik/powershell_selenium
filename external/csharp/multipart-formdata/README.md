@@ -49,6 +49,7 @@ when the query string does not have `operation=send` - the __HTTP status 405__ (
 
   * https://www.codeproject.com/Articles/17449/Send-a-content-type-multipart-form-data-request-fr
   * https://www.codeproject.com/Articles/2359/File-Upload-using-a-VBScript-Class
-
+  * custom adapter enforcing arguments [example](https://www.codeproject.com/Articles/5318610/One-More-Solution-to-Calling-PowerShell-from-Cshar) - see `Utils/PowershellCommandAdapter.cs`
+  
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
