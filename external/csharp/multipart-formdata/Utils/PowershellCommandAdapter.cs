@@ -78,10 +78,8 @@ namespace Utils
                 }
 
                 outs = ExecutePS(ps);
-            }
-
+            }			
             else LastException = new Exception("E1007:Only one command  with no parameters is allowed");
-
             return !HasError;
         }
 

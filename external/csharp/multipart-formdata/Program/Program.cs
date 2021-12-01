@@ -81,18 +81,32 @@ namespace Launcher
 			starter = new PowershellStarter();
 			// NOTE
 			Console.Error.WriteLine(String.Format("powershell script: {0} parameters: {1} working directory: {2}", ScriptPath, ScriptParameters, workingDirectory));
+			
+			
 			starter.Start(workingDirectory /* + "\\"  */ + ScriptPath, ScriptParameters, workingDirectory);
-			// TODO: configurable runtime inteval 
+ 
 			Thread.Sleep(runInterval);
+			
 			Console.Error.WriteLine(String.Format("powershell script output: {0} error: {1}", starter.ProcessOutput, starter.ProcessError));
+			
 			var Results = new Collection<PSObject>();			
 			PowerShell ps = PowerShell.Create();
+			var script = "Get-ChildItem -path $env:TEMP | Measure-Object -Property length -Minimum -Maximum -Sum -Average";
 			try {
-				if (Utils.PowershellCommandAdapter.RunPS(ps, 
-					   "Get-Service |  Where-Object {$_.canpauseandcontinue -eq \"True\"}", out Results)) {
-					Console.Error.WriteLine(String.Format("Poweshell command output:" + String.Join("\r\n", Results)));
+				if (Utils.PowershellCommandAdapter.RunPS(ps, script, out Results)) {
+					Console.Error.WriteLine("Powershell command output:");
+					for (var cnt = 0; cnt != Results.Count; cnt++) {
+						var row = Results[cnt];
+						var columnEnumerator = row.Properties.GetEnumerator();
+						columnEnumerator.Reset();
+						while (columnEnumerator.MoveNext()) {
+							var column = columnEnumerator.Current;
+							Console.Error.WriteLine(String.Format("{0}: {1}", column.Name, column.Value));
+						}
+					}
 				} else {
-					Console.Error.WriteLine(String.Format("Poweshell command error: " + String.Join("\r\n", Results)));
+					// TODO: trigger and nicely format the error
+					Console.Error.WriteLine(String.Format("Powershell command error: " + Results[0].ToString() ));
 				} 
 			} catch (System.Management.Automation.RuntimeException e) {
 				Console.Error.WriteLine("Exception (ignored): " + e.ToString());
