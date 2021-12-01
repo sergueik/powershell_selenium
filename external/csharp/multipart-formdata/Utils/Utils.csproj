@@ -51,9 +51,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataHelper.cs" />
+    <Compile Include="FileHelper.cs" />
     <Compile Include="PowershellCommandAdapter.cs" />
-    <Compile Include="PowershellStarter.cs" />
+    <Compile Include="ProcessStarter.cs" />
     <Compile Include="UpdateDataHelper.cs" />
     <Compile Include="Uploader.cs" />
     <Compile Include="WMIDataCollector.cs" />

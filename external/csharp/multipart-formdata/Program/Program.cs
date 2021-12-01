@@ -12,28 +12,19 @@ using System.Collections.ObjectModel;
 
 using Utils;
 
-// NOTE:  do not use ".Net reserved" namespaces like "Console"
-namespace Launcher
-{
+namespace Launcher {
 
-	class Program
-	{
+	class Program {
 		private static string url = null;
 		private static string uploadfile = null;
 		private static string ScriptPath = null;
 		private static string ScriptParameters = null;
 		private static string workingDirectory = null;
 		private static int runInterval = 10000;
-		private static PowershellStarter starter;
-
-		public  Program()
-		{
-		
-		}
+		private static ProcessStarter processStarter;
 
 		[STAThread]
-		static void Main(string[] args)
-		{
+		static void Main(string[] args) {
 			url = (args.Length > 1) ? args[1] : 
 			(ConfigurationManager.AppSettings.AllKeys.Contains("Url")) ? ConfigurationManager.AppSettings["Url"] : "http://localhost:8085/upload";
 			uploadfile = (args.Length > 0) ? args[0] :
@@ -45,24 +36,24 @@ namespace Launcher
 			Uploader.UploadFile(uploadfile, url, "file", "text/plain",
 				querystring, cookies);
 
-			var dataHelper = new DataHelper();
+			var fileHelper = new FileHelper();
 			int retries = 2;
-			dataHelper.Retries = retries;
-			dataHelper.FilePath = uploadfile;
-			dataHelper.ReadContents();
-			var text = dataHelper.Text;
+			fileHelper.Retries = retries;
+			fileHelper.FilePath = uploadfile;
+			fileHelper.ReadContents();
+			var text = fileHelper.Text;
 			Console.Error.WriteLine(String.Format("Read text {0}", text));
-			var helper = new UpdateDataHelper();
-			helper.Text = text;
+			var updateDataHelper = new UpdateDataHelper();
+			updateDataHelper.Text = text;
 			var newdata = new Dictionary<string,string>();
 			WMIDataCollector.CollectData(newdata);
 			newdata["Line1"] = "ONE";
 			newdata["Line5"] = "five";
-			helper.UpdateData(newdata);
-			text = helper.Text;
+			updateDataHelper.UpdateData(newdata);
+			text = updateDataHelper.Text;
 			Console.Error.WriteLine(String.Format("Save text {0}", text));
-			dataHelper.Text = text;
-			dataHelper.WriteContents();
+			fileHelper.Text = text;
+			fileHelper.WriteContents();
 
 			ScriptPath = (ConfigurationManager.AppSettings.AllKeys.Contains("ScriptPath")) ? ConfigurationManager.AppSettings["ScriptPath"] : "test.ps1";
 			if (ConfigurationManager.AppSettings.AllKeys.Contains("RunInterval"))
@@ -78,20 +69,21 @@ namespace Launcher
 			// https://stackoverflow.com/questions/3295293/how-to-check-if-an-appsettings-key-exists
 			workingDirectory = (ConfigurationManager.AppSettings.AllKeys.Contains("WorkingDirectory")) ? ConfigurationManager.AppSettings["WorkingDirectory"] : AppDomain.CurrentDomain.BaseDirectory;
 			
-			starter = new PowershellStarter();
+			processStarter = new ProcessStarter();
 			// NOTE
 			Console.Error.WriteLine(String.Format("powershell script: {0} parameters: {1} working directory: {2}", ScriptPath, ScriptParameters, workingDirectory));
-			
-			
-			starter.Start(workingDirectory /* + "\\"  */ + ScriptPath, ScriptParameters, workingDirectory);
+						
+			processStarter.Start(workingDirectory /* + "\\"  */ + ScriptPath, ScriptParameters, workingDirectory);
  
 			Thread.Sleep(runInterval);
 			
-			Console.Error.WriteLine(String.Format("powershell script output: {0} error: {1}", starter.ProcessOutput, starter.ProcessError));
+			Console.Error.WriteLine(String.Format(
+				"powershell script output: {0}", processStarter.ProcessOutput + ((processStarter.ProcessError.Length > 0) ? " error: " + processStarter.ProcessError : "")));
 			
 			var Results = new Collection<PSObject>();			
 			PowerShell ps = PowerShell.Create();
-			var script = "Get-ChildItem -path $env:TEMP | Measure-Object -Property length -Minimum -Maximum -Sum -Average";
+			// var script = "Get-ChildItem -path $env:TEMP | Measure-Object -Property length -Minimum -Maximum -Sum -Average";
+			var script = "get-computerinfo";
 			try {
 				if (Utils.PowershellCommandAdapter.RunPS(ps, script, out Results)) {
 					Console.Error.WriteLine("Powershell command output:");
@@ -106,7 +98,7 @@ namespace Launcher
 					}
 				} else {
 					// TODO: trigger and nicely format the error
-					Console.Error.WriteLine(String.Format("Powershell command error: " + Results[0].ToString() ));
+					Console.Error.WriteLine(String.Format("Powershell command error: " + Results[0].ToString()));
 				} 
 			} catch (System.Management.Automation.RuntimeException e) {
 				Console.Error.WriteLine("Exception (ignored): " + e.ToString());

@@ -4,7 +4,8 @@ using System.Text;
 using System.Threading;
 
 namespace Utils {
-	public class DataHelper {
+	public class FileHelper 
+	{
 		private string filePath = null;
 		public int Retries { get; set; }
 		public string FilePath {

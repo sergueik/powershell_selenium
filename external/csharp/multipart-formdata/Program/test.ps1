@@ -1,8 +1,7 @@
 param (
   [string]$outputfile = 'a.log'
 )
-$result = $env:USERPROFILE |split-path -parent |split-path -leaf
-write-output ('user home dir: {0}' -f $result)
-write-output ('user home dir: {0}' -f $result) | Out-File -FilePath $outputfile -append -encoding ascii
-
-# newer
+# TODO: detect Windows version and Powershell version and quit executing the unstable cmdlet
+$result =  get-computerinfo
+# plain text formatting 
+write-output ('computer info: {1}{0}' -f ($result|select-object -property *), ([char]13+[char]10)) | Out-File -FilePath $outputfile -append -encoding ascii
