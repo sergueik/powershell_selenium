@@ -83,7 +83,7 @@ namespace Launcher {
 			var Results = new Collection<PSObject>();			
 			PowerShell ps = PowerShell.Create();
 			// var script = "Get-ChildItem -path $env:TEMP | Measure-Object -Property length -Minimum -Maximum -Sum -Average";
-			var script = "get-computerinfo";
+			var script = "get-computerinfo -erroraction stop";
 			try {
 				if (Utils.PowershellCommandAdapter.RunPS(ps, script, out Results)) {
 					Console.Error.WriteLine("Powershell command output:");
@@ -97,10 +97,9 @@ namespace Launcher {
 						}
 					}
 				} else {
-					// TODO: trigger and nicely format the error
-					Console.Error.WriteLine(String.Format("Powershell command error: " + Results[0].ToString()));
+					Console.Error.WriteLine("Powershell command error: " +  Utils.PowershellCommandAdapter.LastErrors.First());
 				} 
-			} catch (System.Management.Automation.RuntimeException e) {
+			} catch (RuntimeException e) {
 				Console.Error.WriteLine("Exception (ignored): " + e.ToString());
 			}                                         
 		}
