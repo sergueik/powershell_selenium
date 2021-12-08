@@ -25,8 +25,9 @@ namespace Launcher {
 
 		[STAThread]
 		static void Main(string[] args) {
+			// TODO: AppSettings is not workikg
 			url = (args.Length > 1) ? args[1] : 
-			(ConfigurationManager.AppSettings.AllKeys.Contains("Url")) ? ConfigurationManager.AppSettings["Url"] : "http://localhost:8085/upload";
+			(ConfigurationManager.AppSettings.AllKeys.Contains("Url")) ? ConfigurationManager.AppSettings["Url"] : "https://localhost:8443/upload";
 			uploadfile = (args.Length > 0) ? args[0] :
 			 (ConfigurationManager.AppSettings.AllKeys.Contains("Datafile")) ? ConfigurationManager.AppSettings["Datafile"] : @"c:\temp\data.txt";
 			var cookies = new CookieContainer();

@@ -12,6 +12,12 @@ namespace Utils {
 		public static string UploadFile(string uploadfile, string url,
 			string fileFormName, string contenttype, NameValueCollection querystring,
 			CookieContainer cookies) {
+			// TODO: Warning as Error: 'System.Net.ServicePointManager.CertificatePolicy' is obsolete: 
+			// 'CertificatePolicy is obsoleted for this type, please use ServerCertificateValidationCallback instead. 
+			// http://go.microsoft.com/fwlink/?linkid=14202' (CS0618)
+			// System.Net.ServicePointManager.CertificatePolicy = new TrustAllCertsPolicy();
+			ServerCertificateValidationCallback.Ignore();
+			
 			FileStream fileStream = null;
 			if (String.IsNullOrEmpty(fileFormName)) {
 				fileFormName = "file";

@@ -54,6 +54,8 @@
     <Compile Include="FileHelper.cs" />
     <Compile Include="PowershellCommandAdapter.cs" />
     <Compile Include="ProcessStarter.cs" />
+    <Compile Include="ServerCertificateValidationCallback.cs" />
+    <Compile Include="TrustAllCertsPolicy.cs" />
     <Compile Include="UpdateDataHelper.cs" />
     <Compile Include="Uploader.cs" />
     <Compile Include="WMIDataCollector.cs" />
