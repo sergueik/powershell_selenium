@@ -7,7 +7,7 @@ using System.Collections.ObjectModel;
 
 namespace Utils {
 
-	public class ProcessStarter 	{
+	public class ProcessStarter {
 
 		public string ScriptPath { get; set; }
 		public string ScriptArguments { get; set; }
@@ -16,6 +16,13 @@ namespace Utils {
 		private ICollection<string> processStartInfoOutput ;
 		private ICollection<string> processStartInfoError;
 		
+		public ProcessStarter() {
+			processStartInfo = new ProcessStartInfo();
+			process = new System.Diagnostics.Process();	
+			processStartInfoOutput = new Collection<string>();
+			processStartInfoError = new Collection<string>();
+		}
+
 		public string ProcessOutput {
 			get {
 				return String.Join("\r\n", processStartInfoOutput);
@@ -28,13 +35,6 @@ namespace Utils {
 				return String.Join("\r\n", processStartInfoError);
 				// return String.Format("{0} lines: {1}", processStartInfoError.Count ,String.Join("\r\n", processStartInfoError));
 			}
-		}
-
-		public ProcessStarter() {
-			processStartInfo = new ProcessStartInfo();
-			process = new System.Diagnostics.Process();	
-			processStartInfoOutput = new Collection<string>();
-			processStartInfoError = new Collection<string>();
 		}
 
 		protected virtual void onScriptExited(object sender, EventArgs e){

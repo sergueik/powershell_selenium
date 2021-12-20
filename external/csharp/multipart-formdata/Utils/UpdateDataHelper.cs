@@ -2,9 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-// 'System.Collections.Hashtable' does not contain a definition for 'Cast' and 
-// no extension method 'Cast' accepting a first argument of type 'System.Collections.Hashtable' 
-// could be found
 using System.Text.RegularExpressions;
 
 namespace Utils {

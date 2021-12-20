@@ -4,8 +4,7 @@ using System.Text;
 using System.Threading;
 
 namespace Utils {
-	public class FileHelper 
-	{
+	public class FileHelper {
 		private string filePath = null;
 		public int Retries { get; set; }
 		public string FilePath {
@@ -16,8 +15,7 @@ namespace Utils {
 		public byte[] Bytes { get { return bytes; } }
 
 	
-		public void WriteContents()
-		{
+		public void WriteContents() {
 			Boolean done = false;
 			if (!string.IsNullOrEmpty(filePath)) {
 				// Console.Error.WriteLine(String.Format("Writing data to {0}.", filePath));

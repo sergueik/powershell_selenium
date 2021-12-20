@@ -55,6 +55,7 @@
     <Compile Include="PowershellCommandAdapter.cs" />
     <Compile Include="ProcessStarter.cs" />
     <Compile Include="ServerCertificateValidationCallback.cs" />
+    <Compile Include="SvrInfoHelper.cs" />
     <Compile Include="TrustAllCertsPolicy.cs" />
     <Compile Include="UpdateDataHelper.cs" />
     <Compile Include="Uploader.cs" />

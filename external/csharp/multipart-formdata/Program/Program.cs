@@ -15,7 +15,8 @@ using Utils;
 namespace Launcher {
 
 	class Program {
-		private static string url = null;
+		private static string infoUrl = null;
+		private static string uploadUrl = null;
 		private static string uploadfile = null;
 		private static string ScriptPath = null;
 		private static string ScriptParameters = null;
@@ -25,16 +26,21 @@ namespace Launcher {
 
 		[STAThread]
 		static void Main(string[] args) {
-			// TODO: AppSettings is not workikg
-			url = (args.Length > 1) ? args[1] : 
-			(ConfigurationManager.AppSettings.AllKeys.Contains("Url")) ? ConfigurationManager.AppSettings["Url"] : "https://localhost:8443/upload";
+			// TODO: AppSettings is not working ?
 			uploadfile = (args.Length > 0) ? args[0] :
 			 (ConfigurationManager.AppSettings.AllKeys.Contains("Datafile")) ? ConfigurationManager.AppSettings["Datafile"] : @"c:\temp\data.txt";
+			uploadUrl = (args.Length > 1) ? args[1] : 
+			(ConfigurationManager.AppSettings.AllKeys.Contains("UploadUrl")) ? ConfigurationManager.AppSettings["UploadUrl"] : "https://localhost:8443/upload";
+			infoUrl = (args.Length > 2) ? args[2] : 
+			(ConfigurationManager.AppSettings.AllKeys.Contains("InfoUrl")) ? ConfigurationManager.AppSettings["InfoUrl"] : "https://localhost:8443/welcome";
+			var svrInfoHelper = new SvrInfoHelper(infoUrl);
+			svrInfoHelper.getSvrInfo();
+			Console.Error.WriteLine(String.Format("Received:\n{0}", svrInfoHelper.Text));
 			var cookies = new CookieContainer();
 			var querystring = new NameValueCollection();
 			querystring["operation"] = "send";
 			querystring["param"] = "something";			
-			Uploader.UploadFile(uploadfile, url, "file", "text/plain",
+			Uploader.UploadFile(uploadfile, uploadUrl, "file", "text/plain",
 				querystring, cookies);
 
 			var fileHelper = new FileHelper();
@@ -102,7 +108,8 @@ namespace Launcher {
 				} 
 			} catch (RuntimeException e) {
 				Console.Error.WriteLine("Exception (ignored): " + e.ToString());
-			}                                         
+			} 
+			
 		}
 	}
 }

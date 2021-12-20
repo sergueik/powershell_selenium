@@ -5,23 +5,18 @@ using System.Management.Automation;
 
 // origin: https://www.codeproject.com/Articles/5318610/One-More-Solution-to-Calling-PowerShell-from-Cshar
 // with few tweaks so covert to C# 4 syntax
-namespace Utils
-{
-    public static class PowershellCommandAdapter
-    {
+namespace Utils {
+    public static class PowershellCommandAdapter {
         public static Exception LastException = null;
 
         public static PSDataCollection<ErrorRecord> LastErrors = 
                                                     new PSDataCollection<ErrorRecord>();
 
-        public static bool HasError
-        {
-            get
-            {
+        public static bool HasError {
+            get{
                 return LastException != null;
             }
-            set
-            {
+            set {
                 if(!value)
                 {
                     LastException = null;
@@ -30,17 +25,14 @@ namespace Utils
             }
         }
 
-        public static int ErrorCode
-        {
-            get
-            {
+        public static int ErrorCode {
+            get {
                 if (HasError) return int.Parse(LastException.Message.Substring(1, 4));
                 return 0;
             }
         }
 
-        public static bool RunPS(PowerShell ps, string psCommand, out Collection<PSObject> outs)
-        {
+        public static bool RunPS(PowerShell ps, string psCommand, out Collection<PSObject> outs) {
             outs = new Collection<PSObject>();
             HasError = false;
             ps.Commands.Clear();
@@ -53,22 +45,18 @@ namespace Utils
         }
 
         public static bool RunPS(PowerShell ps, string psCommand, 
-               out Collection<PSObject> outs, params ParameterPair[] parameters)
-        {
+                                 out Collection<PSObject> outs, params ParameterPair[] parameters) {
             outs = new Collection<PSObject>();
             HasError = false;
            
-            if (!psCommand.Contains(' '))
-            {
+            if (!psCommand.Contains(' ')) {
                 ps.Commands.Clear();
                 ps.Streams.ClearStreams();
 
                 ps.AddCommand(psCommand);
 
-                foreach (ParameterPair PP in parameters)
-                {
-                	if (String.IsNullOrEmpty(PP.Name))
-                    {
+                foreach (ParameterPair PP in parameters) {
+                	if (String.IsNullOrEmpty(PP.Name)) {
                         LastException = new Exception("E1008:Parameter cannot be unnamed");
                         return false;
                     }
@@ -86,8 +74,7 @@ namespace Utils
         private static Collection<PSObject> ExecutePS(PowerShell ps) {
             Collection<PSObject> retVal = new Collection<PSObject>();
 
-            try
-            {
+            try {
                 retVal = ps.Invoke();
 
                 if (ps.Streams.Error.Count > 0)
@@ -96,21 +83,17 @@ namespace Utils
                                     ("E0002:Errors were detected during execution");
                     LastErrors = new PSDataCollection<ErrorRecord>(ps.Streams.Error);
                 }
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 LastException = new Exception("E0001:" + ex.Message);
             }
 
             return retVal;
         }
     }
-    public class ParameterPair
-    {
+    public class ParameterPair {
     	private string name  = string.Empty;
         public string Name { get; set; }
     	private object data  = null;
     	public object Value { get {return data;} set {data = value;} }
     }
 }
-
