@@ -32,7 +32,7 @@ namespace Launcher {
 			uploadUrl = (args.Length > 1) ? args[1] : 
 			(ConfigurationManager.AppSettings.AllKeys.Contains("UploadUrl")) ? ConfigurationManager.AppSettings["UploadUrl"] : "https://localhost:8443/upload";
 			infoUrl = (args.Length > 2) ? args[2] : 
-			(ConfigurationManager.AppSettings.AllKeys.Contains("InfoUrl")) ? ConfigurationManager.AppSettings["InfoUrl"] : "https://localhost:8443/welcome";
+			(ConfigurationManager.AppSettings.AllKeys.Contains("InfoUrl")) ? ConfigurationManager.AppSettings["InfoUrl"] : "https://localhost:8443/svrinfo";
 			var svrInfoHelper = new SvrInfoHelper(infoUrl);
 			svrInfoHelper.getSvrInfo();
 			Console.Error.WriteLine(String.Format("Received:\n{0}", svrInfoHelper.Text));

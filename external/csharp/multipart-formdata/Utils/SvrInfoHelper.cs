@@ -28,6 +28,7 @@ namespace Utils {
 		}
 		public void getSvrInfo() {
 			text = null;
+			ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3; 
 			ServerCertificateValidationCallback.Ignore();
 			WebRequest request = WebRequest.Create(url);
 			request.Proxy = null;
@@ -42,6 +43,17 @@ namespace Utils {
 			Stream dataStream = response.GetResponseStream();
 			var reader = new StreamReader(dataStream);
 			text = reader.ReadToEnd();
+			
+			String[] lines = text.Split('\n');
+			foreach (var line in lines) {
+				String[] tokens = line.Split(',');
+				Data d = new Data();
+				d.Name = tokens[0];
+				d.Datacenter = tokens[1];
+				d.Primary = Boolean.Parse(tokens[2]);
+				d.Status = Boolean.Parse(tokens[3]);
+				Console.WriteLine(d.ToString());
+			}
 		}
 	}
 }

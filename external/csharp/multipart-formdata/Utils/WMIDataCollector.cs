@@ -21,7 +21,7 @@ namespace Utils {
 			// UPTIME
 			searcher = new ManagementObjectSearcher(new SelectQuery("SELECT LastBootUpTime FROM Win32_OperatingSystem WHERE Primary='true'"));
 			var dtBootTime = new DateTime();
-			// NOTE: Type and identifier are both required in a foreach statement (CS0230) 
+				// NOTE: Type and identifier are both required in a foreach statement (CS0230) 
 			foreach (ManagementObject  mo in searcher.Get()) {
 				dtBootTime = ManagementDateTimeConverter.ToDateTime(mo.Properties["LastBootUpTime"].Value.ToString());
 				var dateText = dtBootTime.ToLongDateString();
