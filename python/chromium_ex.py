@@ -58,8 +58,20 @@ else:
   chromedriver = 'chromedriver'
   # see also: smapshot directory
   # https://commondatastorage.googleapis.com/chromium-browser-snapshots/index.html?prefix=Linux_x64/97974/
+  # for Ubuntu 18.04, apt install
   browser = '/usr/bin/chromium-browser'
+  # same, with Chrome browser
   browser = '/usr/bin/google-chrome'
+  # for Ubuntu 20.04, snap install
+  # https://linuxize.com/post/how-to-install-chromium-web-browser-on-ubuntu-20-04/
+  
+  # sudo snap install chromium
+  # sudo apt install python3-pip
+  # pip3 install selenium
+  # pip3 install bs4
+  # check and install matching version of chromedriver:
+  # wget http://chromedriver.storage.googleapis.com/97.0.4692.20/chromedriver_linux64.zip
+  browser = '/snap/bin/chromium'
   executable_path = '{}/Downloads/{}'.format(homedir, chromedriver)
 
 options = Options()
@@ -158,5 +170,6 @@ except Exception as e:
 finally:
   driver.close()
   driver.quit()
+
 
 
