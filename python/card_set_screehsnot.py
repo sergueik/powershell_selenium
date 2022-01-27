@@ -7,6 +7,7 @@ from datetime import date
 import getopt
 import json, base64
 from os import getenv
+from os.path import exists
 import re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -66,11 +67,17 @@ options = webdriver.ChromeOptions()
 options.add_argument('--no-sandbox')
 options.add_argument('--headless')
 options.add_argument('--disable-gpu')
+# for local tests, check if the driver is in "Downloads"
+driver_path =  homedir + '/' + 'Downloads' + '/' + 'chromedriver'
+# for Docker tests
+if not exists(driver_path):
+  driver_path = '/usr/bin/chromedriver'
 
-driver = webdriver.Chrome( homedir + '/' + 'Downloads' + '/' + 'chromedriver', chrome_options = options, desired_capabilities = capabilities)
+driver = webdriver.Chrome( driver_path, chrome_options = options, desired_capabilities = capabilities)
 
 year,month,day = date.today().year, date.today().month, date.today().day
 url = 'http://almetpt.ru/{}/site/schedulegroups/0/1/{}-{}-{}'.format(year,year,'{0:02d}'.format(month),'{0:02d}'.format(day))
+url = 'http://almetpt.ru/2020/site/schedulegroups/0/1/2020-03-02'
 if debug:
   print('Loading url: "{}"'.format(url), file = sys.stderr)
 driver.get(url)
@@ -112,3 +119,4 @@ for cnt, card in enumerate(cards):
     f.write(card.screenshot_as_png)
 driver.close()
 driver.quit()
+
