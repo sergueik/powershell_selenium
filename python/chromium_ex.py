@@ -99,7 +99,7 @@ user_agent = 'Chromium 95.0.4638.69'
 # https://stackoverflow.com/questions/64992087/webdriverexception-unknown-error-devtoolsactiveport-file-doesnt-exist-while-t
 # ChromeDriver uses the /tmp directory to communicate with Chromium, but Snap remaps /tmp directory to a different location (specifically, to /tmp/snap.chomium/tmp). This causes errors because ChromeDriver can't find files created by Chromium. ChromeDriver is designed and tested with Google Chrome, and it may have compatibility issues with third-party distributions.
 
-options.add_argument('--user-data-dir="{}"'.format(homedir))
+options.add_argument('--user-data-dir={}'.format(homedir))
 options.add_argument('--remote-debugging-port=9222')
 
 # options.add_argument('--user-agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:72.0) Gecko/20100101 Firefox/72.0"')
