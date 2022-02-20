@@ -74,6 +74,8 @@ $zip = $shell.NameSpace((resolve-path -path 'fastjson.2.1.18.zip').path)
 $zip.items() | where-object {$_.name -eq 'lib'} |foreach-object {$shell.Namespace((resolve-path -path '.').path).copyhere($_)}
 copy-item -path .\lib\net20\fastjson.dll -destination '.'
 ```
+### See Also
 
+  *[fast bson serializer](https://github.com/mgholam/fastBinaryJSON) by same author. NOTE: requires C# 6.x to compile the code, even for target .Net framework 4.x
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
