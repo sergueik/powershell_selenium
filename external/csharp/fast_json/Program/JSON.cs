@@ -7,121 +7,77 @@ using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
-using System.Xml;
 
-namespace fastJSON
-{
+namespace fastJSON {
+	
     public delegate string Serialize(object data);
     public delegate object Deserialize(string data);
 
-    public class JSONParamters
-    {
-        /// <summary>
-        /// Use the optimized fast Dataset Schema format (dfault = True)
-        /// </summary>
-        public bool UseOptimizedDatasetSchema = true;
-        /// <summary>
-        /// Use the fast GUID format (default = True)
-        /// </summary>
+    public class JSONParamters {
+
+
+    	public bool UseOptimizedDatasetSchema = true;
         public bool UseFastGuid = true;
-        /// <summary>
-        /// Serialize null values to the output (default = True)
-        /// </summary>
         public bool SerializeNullValues = true;
-        /// <summary>
-        /// Use the UTC date format (default = True)
-        /// </summary>
         public bool UseUTCDateTime = true;
-        /// <summary>
-        /// Show the readonly properties of types in the output (default = False)
-        /// </summary>
         public bool ShowReadOnlyProperties = false;
-        /// <summary>
-        /// Use the $types extension to optimise the output json (default = True)
-        /// </summary>
         public bool UsingGlobalTypes = true;
-        /// <summary>
-        /// 
-        /// </summary>
         public bool IgnoreCaseOnDeserialize = false;
-        /// <summary>
-        /// Anonymous types have read only properties 
-        /// </summary>
         public bool EnableAnonymousTypes = false;
-        /// <summary>
-        /// Enable fastJSON extensions $types, $type, $map (default = True)
-        /// </summary>
         public bool UseExtensions = true;
     }
 
-    public class JSON
-    {
+    public class JSON {
         public readonly static JSON Instance = new JSON();
 
-        private JSON()
-        {
-        }
-        /// <summary>
-        /// You can set these paramters globally for all calls
-        /// </summary>
+        private JSON() { }
+
         public JSONParamters Parameters = new JSONParamters();
         private JSONParamters _params;
 
-        public string ToJSON(object obj)
-        {
+        public string ToJSON(object obj) {
             _params = Parameters;
             return ToJSON(obj, Parameters);
         }
 
-        public string ToJSON(object obj, JSONParamters param)
-        {
+        public string ToJSON(object obj, JSONParamters param) {
             _params = param;
             // FEATURE : enable extensions when you can deserialize anon types
             if (_params.EnableAnonymousTypes) { _params.UseExtensions = false; _params.UsingGlobalTypes = false; }
             return new JSONSerializer(param).ConvertToJSON(obj);
         }
 
-        public object Parse(string json)
-        {
+        public object Parse(string json) {
             return new JsonParser(json, Parameters.IgnoreCaseOnDeserialize).Decode();
         }
 
-        public T ToObject<T>(string json)
-        {
+        public T ToObject<T>(string json) {
             return (T)ToObject(json, typeof(T));
         }
 
-        public object ToObject(string json)
-        {
+        public object ToObject(string json) {
             return ToObject(json, null);
         }
 
-        public object ToObject(string json, Type type)
-        {
-            Dictionary<string, object> ht = new JsonParser(json, Parameters.IgnoreCaseOnDeserialize).Decode() as Dictionary<string, object>;
-            if (ht == null) return null;
-            return ParseDictionary(ht, null, type, null);
+        public object ToObject(string json, Type type) {
+            var ht = new JsonParser(json, Parameters.IgnoreCaseOnDeserialize).Decode() as Dictionary<string, object>;
+            return (ht == null) ?  null : ParseDictionary(ht, null, type, null);
         }
 
-        public string Beautify(string input)
-        {
+        public string Beautify(string input) {
             return Formatter.PrettyPrint(input);
         }
 
-        public object FillObject(object input, string json)
-        {
-            Dictionary<string, object> ht = new JsonParser(json, Parameters.IgnoreCaseOnDeserialize).Decode() as Dictionary<string, object>;
-            if (ht == null) return null;
-            return ParseDictionary(ht, null, input.GetType(), input);
+        public object FillObject(object input, string json) {
+            var ht = new JsonParser(json, Parameters.IgnoreCaseOnDeserialize).Decode() as Dictionary<string, object>;
+            return (ht == null) ? null: ParseDictionary(ht, null, input.GetType(), input);
         }
 
-        public object DeepCopy(object obj)
-        {
+        public object DeepCopy(object obj) {
             return ToObject(ToJSON(obj));
         }
 
-        public T DeepCopy<T>(T obj)
-        {
+        public T DeepCopy<T>(T obj) {
             return ToObject<T>(ToJSON(obj));
         }
 
@@ -149,8 +105,7 @@ namespace fastJSON
 
         #region [   PROPERTY GET SET CACHE   ]
         SafeDictionary<Type, string> _tyname = new SafeDictionary<Type, string>();
-        internal string GetTypeAssemblyName(Type t)
-        {
+        internal string GetTypeAssemblyName(Type t) {
             string val = "";
             if (_tyname.TryGetValue(t, out val))
                 return val;
@@ -163,8 +118,7 @@ namespace fastJSON
         }
 
         SafeDictionary<string, Type> _typecache = new SafeDictionary<string, Type>();
-        private Type GetTypeFromCache(string typename)
-        {
+        private Type GetTypeFromCache(string typename) {
             Type val = null;
             if (_typecache.TryGetValue(typename, out val))
                 return val;
@@ -178,18 +132,13 @@ namespace fastJSON
 
         SafeDictionary<Type, CreateObject> _constrcache = new SafeDictionary<Type, CreateObject>();
         private delegate object CreateObject();
-        private object FastCreateInstance(Type objtype)
-        {
-            try
-            {
+        private object FastCreateInstance(Type objtype) {
+            try {
                 CreateObject c = null;
-                if (_constrcache.TryGetValue(objtype, out c))
-                {
+                if (_constrcache.TryGetValue(objtype, out c)) {
                     return c();
-                }
-                else
-                {
-                    DynamicMethod dynMethod = new DynamicMethod("_", objtype, null);
+                } else {
+                    var dynMethod = new DynamicMethod("_", objtype, null);
                     ILGenerator ilGen = dynMethod.GetILGenerator();
 
                     ilGen.Emit(OpCodes.Newobj, objtype.GetConstructor(Type.EmptyTypes));
@@ -198,16 +147,13 @@ namespace fastJSON
                     _constrcache.Add(objtype, c);
                     return c();
                 }
-            }
-            catch (Exception exc)
-            {
+            } catch (Exception exc) {
                 throw new Exception(string.Format("Failed to fast create instance for type '{0}' from assemebly '{1}'",
                     objtype.FullName, objtype.AssemblyQualifiedName), exc);
             }
         }
 
-        private struct myPropInfo
-        {
+        private struct myPropInfo {
             public bool filled;
             public Type pt;
             public Type bt;
@@ -242,19 +188,14 @@ namespace fastJSON
         }
 
         SafeDictionary<string, SafeDictionary<string, myPropInfo>> _propertycache = new SafeDictionary<string, SafeDictionary<string, myPropInfo>>();
-        private SafeDictionary<string, myPropInfo> Getproperties(Type type, string typename)
-        {
+        private SafeDictionary<string, myPropInfo> Getproperties(Type type, string typename) {
             SafeDictionary<string, myPropInfo> sd = null;
-            if (_propertycache.TryGetValue(typename, out sd))
-            {
+            if (_propertycache.TryGetValue(typename, out sd)) {
                 return sd;
-            }
-            else
-            {
+            } else {
                 sd = new SafeDictionary<string, myPropInfo>();
                 PropertyInfo[] pr = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                foreach (PropertyInfo p in pr)
-                {
+                foreach (PropertyInfo p in pr) {
                     myPropInfo d = CreateMyProp(p.PropertyType, p.Name);
                     d.CanWrite = p.CanWrite;
                     d.setter = CreateSetMethod(p);
@@ -262,22 +203,19 @@ namespace fastJSON
                     sd.Add(p.Name, d);
                 }
                 FieldInfo[] fi = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-                foreach (FieldInfo f in fi)
-                {
+                foreach (FieldInfo f in fi) {
                     myPropInfo d = CreateMyProp(f.FieldType, f.Name);
                     d.setter = CreateSetField(type, f);
                     d.getter = CreateGetField(type, f);
                     sd.Add(f.Name, d);
                 }
-
                 _propertycache.Add(typename, sd);
                 return sd;
             }
         }
 
-        private myPropInfo CreateMyProp(Type t, string name)
-        {
-            myPropInfo d = new myPropInfo();
+        private myPropInfo CreateMyProp(Type t, string name) {
+            var d = new myPropInfo();
             d.filled = true;
             d.CanWrite = true;
             d.pt = t;
@@ -321,16 +259,15 @@ namespace fastJSON
 
         private delegate void GenericSetter(object target, object value);
 
-        private static GenericSetter CreateSetMethod(PropertyInfo propertyInfo)
-        {
+        private static GenericSetter CreateSetMethod(PropertyInfo propertyInfo) {
             MethodInfo setMethod = propertyInfo.GetSetMethod();
             if (setMethod == null)
                 return null;
 
-            Type[] arguments = new Type[2];
+            var arguments = new Type[2];
             arguments[0] = arguments[1] = typeof(object);
 
-            DynamicMethod setter = new DynamicMethod("_", typeof(void), arguments, true);
+            var setter = new DynamicMethod("_", typeof(void), arguments, true);
             ILGenerator il = setter.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Castclass, propertyInfo.DeclaringType);
@@ -349,9 +286,8 @@ namespace fastJSON
 
         internal delegate object GenericGetter(object obj);
 
-        private static GenericGetter CreateGetField(Type type, FieldInfo fieldInfo)
-        {
-            DynamicMethod dynamicGet = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type, true);
+        private static GenericGetter CreateGetField(Type type, FieldInfo fieldInfo) {
+            var dynamicGet = new DynamicMethod("_", typeof(object), new Type[] { typeof(object) }, type, true);
             ILGenerator il = dynamicGet.GetILGenerator();
 
             il.Emit(OpCodes.Ldarg_0);
@@ -1650,8 +1586,7 @@ namespace fastJSON
             throw new Exception("Unexpectedly reached end of string");
         }
 
-        private uint ParseSingleChar(char c1, uint multipliyer)
-        {
+        private uint ParseSingleChar(char c1, uint multipliyer) {
             uint p1 = 0;
             if (c1 >= '0' && c1 <= '9')
                 p1 = (uint)(c1 - '0') * multipliyer;
@@ -1662,8 +1597,7 @@ namespace fastJSON
             return p1;
         }
 
-        private uint ParseUnicode(char c1, char c2, char c3, char c4)
-        {
+        private uint ParseUnicode(char c1, char c2, char c3, char c4) {
             uint p1 = ParseSingleChar(c1, 0x1000);
             uint p2 = ParseSingleChar(c2, 0x100);
             uint p3 = ParseSingleChar(c3, 0x10);
@@ -1672,19 +1606,16 @@ namespace fastJSON
             return p1 + p2 + p3 + p4;
         }
 
-        private string ParseNumber()
-        {
+        private string ParseNumber() {
             ConsumeToken();
 
             // Need to start back one place because the first digit is also a token and would have been consumed
             var startIndex = index - 1;
 
-            do
-            {
+            do {
                 var c = json[index];
 
-                if ((c >= '0' && c <= '9') || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E')
-                {
+                if ((c >= '0' && c <= '9') || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E') {
                     if (++index == json.Length) throw new Exception("Unexpected end of string whilst parsing number");
                     continue;
                 }
@@ -1695,20 +1626,17 @@ namespace fastJSON
             return new string(json, startIndex, index - startIndex);
         }
 
-        private Token LookAhead()
-        {
+        private Token LookAhead() {
             if (lookAheadToken != Token.None) return lookAheadToken;
 
             return lookAheadToken = NextTokenCore();
         }
 
-        private void ConsumeToken()
-        {
+        private void ConsumeToken() {
             lookAheadToken = Token.None;
         }
 
-        private Token NextToken()
-        {
+        private Token NextToken() {
             var result = lookAheadToken != Token.None ? lookAheadToken : NextTokenCore();
 
             lookAheadToken = Token.None;
@@ -1716,13 +1644,11 @@ namespace fastJSON
             return result;
         }
 
-        private Token NextTokenCore()
-        {
+        private Token NextTokenCore() {
             char c;
 
             // Skip past whitespace
-            do
-            {
+            do {
                 c = json[index];
 
                 if (c > ' ') break;
@@ -1730,8 +1656,7 @@ namespace fastJSON
 
             } while (++index < json.Length);
 
-            if (index == json.Length)
-            {
+            if (index == json.Length) {
                 throw new Exception("Reached end of string unexpectedly");
             }
 
@@ -1742,8 +1667,7 @@ namespace fastJSON
             //if (c >= '0' && c <= '9')
             //    return Token.Number;
 
-            switch (c)
-            {
+            switch (c) {
                 case '{':
                     return Token.Curly_Open;
 
@@ -1775,8 +1699,7 @@ namespace fastJSON
                         json[index + 0] == 'a' &&
                         json[index + 1] == 'l' &&
                         json[index + 2] == 's' &&
-                        json[index + 3] == 'e')
-                    {
+                        json[index + 3] == 'e') {
                         index += 4;
                         return Token.False;
                     }
@@ -1786,8 +1709,7 @@ namespace fastJSON
                     if (json.Length - index >= 3 &&
                         json[index + 0] == 'r' &&
                         json[index + 1] == 'u' &&
-                        json[index + 2] == 'e')
-                    {
+                        json[index + 2] == 'e') {
                         index += 3;
                         return Token.True;
                     }
@@ -1797,8 +1719,7 @@ namespace fastJSON
                     if (json.Length - index >= 3 &&
                         json[index + 0] == 'u' &&
                         json[index + 1] == 'l' &&
-                        json[index + 2] == 'l')
-                    {
+                        json[index + 2] == 'l') {
                         index += 3;
                         return Token.Null;
                     }
@@ -1809,18 +1730,15 @@ namespace fastJSON
             throw new Exception("Could not find token at index " + --index);
         }
     }
-    internal class SafeDictionary<TKey, TValue>
-    {
+     internal class SafeDictionary<TKey, TValue> {
         private readonly object _Padlock = new object();
         private readonly Dictionary<TKey, TValue> _Dictionary;
 
-        public SafeDictionary(int capacity)
-        {
+        public SafeDictionary(int capacity) {
             _Dictionary = new Dictionary<TKey, TValue>(capacity);
         }
 
-        public SafeDictionary()
-        {
+        public SafeDictionary() {
             _Dictionary = new Dictionary<TKey, TValue>();
         }
 
@@ -1830,74 +1748,61 @@ namespace fastJSON
                 return _Dictionary.TryGetValue(key, out value);
         }
 
-        public TValue this[TKey key]
-        {
-            get
-            {
+        public TValue this[TKey key] {
+            get {
                 lock (_Padlock)
                     return _Dictionary[key];
             }
-            set
-            {
+            set {
                 lock (_Padlock)
                     _Dictionary[key] = value;
             }
         }
 
-        public void Add(TKey key, TValue value)
-        {
-            lock (_Padlock)
-            {
+        public void Add(TKey key, TValue value) {
+            lock (_Padlock) {
                 if (_Dictionary.ContainsKey(key) == false)
                     _Dictionary.Add(key, value);
             }
         }
     }
-   internal class Getters
-    {
+   internal class Getters {
         public string Name;
         public JSON.GenericGetter Getter;
         public Type propertyType;
     }
 
-    public class DatasetSchema
-    {
+    public class DatasetSchema {
         public List<string> Info { get; set; }
         public string Name { get; set; }
     }
-   internal static class Formatter
-    {
+    
+   internal static class Formatter{
         public static string Indent = "    ";
 
-        public static void AppendIndent(StringBuilder sb, int count)
-        {
+        public static void AppendIndent(StringBuilder sb, int count) {
             for (; count > 0; --count) sb.Append(Indent);
         }
 
-        public static bool IsEscaped(StringBuilder sb, int index)
-        {
+        public static bool IsEscaped(StringBuilder sb, int index) {
             bool escaped = false;
             while (index > 0 && sb[--index] == '\\') escaped = !escaped;
             return escaped;
         }
 
-        public static string PrettyPrint(string input)
-        {
+        public static string PrettyPrint(string input) {
             var output = new StringBuilder(input.Length * 2);
             char? quote = null;
             int depth = 0;
 
-            for (int i = 0; i < input.Length; ++i)
-            {
+            for (int i = 0; i < input.Length; ++i) {
                 char ch = input[i];
 
-                switch (ch)
-                {
+                switch (ch) {
                     case '{':
                     case '[':
                         output.Append(ch);
-                        if (!quote.HasValue)
-                        {
+                        if (!quote.HasValue) {
                             output.AppendLine();
                             AppendIndent(output, ++depth);
                         }
@@ -1906,8 +1811,7 @@ namespace fastJSON
                     case ']':
                         if (quote.HasValue)
                             output.Append(ch);
-                        else
-                        {
+                        else {
                             output.AppendLine();
                             AppendIndent(output, --depth);
                             output.Append(ch);
@@ -1916,17 +1820,14 @@ namespace fastJSON
                     case '"':
                     case '\'':
                         output.Append(ch);
-                        if (quote.HasValue)
-                        {
+                        if (quote.HasValue) {
                             if (!IsEscaped(output, i))
                                 quote = null;
-                        }
-                        else quote = ch;
+                        } else quote = ch;
                         break;
                     case ',':
                         output.Append(ch);
-                        if (!quote.HasValue)
-                        {
+                        if (!quote.HasValue) {
                             output.AppendLine();
                             AppendIndent(output, depth);
                         }
