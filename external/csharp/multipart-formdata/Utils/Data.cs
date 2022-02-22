@@ -15,8 +15,8 @@ namespace Utils {
 			this.Primary = primary;
 			this.Status = status;
 		}
-		public string ToString(){
-			String.Format("Name: {0}\nDatacenter: {1}\nPrimary: {2}\nStatus: {3}", Name, Datacenter,Primary, Status)
+		public override string ToString() {
+			return String.Format("Name: {0}" + "\n" + "Datacenter: {1}" + "\n" + "Primary: {2}" + "\n" + "Status: {3}", Name, Datacenter, Primary, Status);
 		}
 	}
 }

@@ -30,10 +30,15 @@ namespace Launcher {
 			uploadfile = (args.Length > 0) ? args[0] :
 			 (ConfigurationManager.AppSettings.AllKeys.Contains("Datafile")) ? ConfigurationManager.AppSettings["Datafile"] : @"c:\temp\data.txt";
 			uploadUrl = (args.Length > 1) ? args[1] : 
-			(ConfigurationManager.AppSettings.AllKeys.Contains("UploadUrl")) ? ConfigurationManager.AppSettings["UploadUrl"] : "https://localhost:8443/upload";
+			(ConfigurationManager.AppSettings.AllKeys.Contains("UploadUrl")) ? ConfigurationManager.AppSettings["UploadUrl"] : "https://127.0.0.1:8443/upload";
 			infoUrl = (args.Length > 2) ? args[2] : 
-			(ConfigurationManager.AppSettings.AllKeys.Contains("InfoUrl")) ? ConfigurationManager.AppSettings["InfoUrl"] : "https://localhost:8443/svrinfo";
+				// NOTE: localhost is resolved in IPV6 fashion:
+				// System.Net.Sockets.SocketException: No connection could be made because the target machine actively refused it [::1]:8443
+				// [::1]:8443
+			(ConfigurationManager.AppSettings.AllKeys.Contains("InfoUrl")) ? ConfigurationManager.AppSettings["InfoUrl"] : "https://127.0.0.1:8443/svrinfo";
 			var svrInfoHelper = new SvrInfoHelper(infoUrl);
+			// TODO: try catch
+			// when basic-https spring-boot application is not run fails
 			svrInfoHelper.getSvrInfo();
 			Console.Error.WriteLine(String.Format("Received:\n{0}", svrInfoHelper.Text));
 			var cookies = new CookieContainer();

@@ -21,7 +21,7 @@ namespace Utils {
 			// UPTIME
 			searcher = new ManagementObjectSearcher(new SelectQuery("SELECT LastBootUpTime FROM Win32_OperatingSystem WHERE Primary='true'"));
 			var dtBootTime = new DateTime();
-				// NOTE: Type and identifier are both required in a foreach statement (CS0230) 
+			// NOTE: Type and identifier are both required in a foreach statement (CS0230) 
 			foreach (ManagementObject  mo in searcher.Get()) {
 				dtBootTime = ManagementDateTimeConverter.ToDateTime(mo.Properties["LastBootUpTime"].Value.ToString());
 				var dateText = dtBootTime.ToLongDateString();
@@ -36,7 +36,25 @@ namespace Utils {
 				Console.Error.WriteLine("UPTIME: " + data["UPTIME"]);
 			}
 			searcher.Dispose();
+			
+			// QUEUE LENGTH
+			searcher = new ManagementObjectSearcher(new SelectQuery("SELECT ProcessorQueueLength from Win32_PerfFormattedData_PerfOS_System"));
+			
+			// NOTE: Type and identifier are both required in a foreach statement (CS0230) 
+			foreach (ManagementObject  mo in searcher.Get()) {
+				var measurementDateTime = DateTime.Now;	
+				data["DATE"] = measurementDateTime.ToLongDateString();
+				data["TIME"] = measurementDateTime.ToLongTimeString();
+				// ProcessorQueueLength
+				data["QUEUE_LENGTH"] = mo.Properties["ProcessorQueueLength"].Value.ToString();
+				Console.Error.WriteLine("QUEUE_LENGTH: " + data["QUEUE_LENGTH"]);
+				Console.Error.WriteLine("DATE: " + data["DATE"]);
+				Console.Error.WriteLine("TIME: " + data["TIME"]);
+			}
+			searcher.Dispose();
 
+
+			// PROCESSOR TIME UTILIZATION (Windows  specific)
 			searcher = new ManagementObjectSearcher("SELECT * FROM Win32_PerfFormattedData_Counters_ProcessorInformation");
 			try {
 				mc = searcher.Get();
