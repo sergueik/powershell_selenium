@@ -9,7 +9,7 @@ using Kernys.Bson;
 namespace Tests
 {
 	[TestFixture]
-	public class BsonReaderTests
+	public class ReaderTests
 	{
 		[Test]
 		public void ReadSingleObject()

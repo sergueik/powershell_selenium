@@ -8,8 +8,7 @@ using System.Text;
 // 'Bson.BSONValue' defines operator == or operator != but does not override Object.Equals(object o) (CS0660)
 // 'Bson.BSONValue' defines operator == or operator != but does not override Object.GetHashCode() (CS0661) 
 // 'Bson.BSO	NArray.Contains(Bson.BSONValue)' hides inherited member 'Bson.BSONValue.Contains(Bson.BSONValue)'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword. (CS0114)
-namespace Kernys.Bson
-{
+namespace Kernys.Bson {
 	public class BSONValue
 	{
 		public enum ValueType {
@@ -64,13 +63,13 @@ namespace Kernys.Bson
 			get {
 				switch (mValueType) {
 					case ValueType.Int32:
-					return (double)_int32;
+						return (double)_int32;
 					case ValueType.Int64:
-					return (double)_int64;
+						return (double)_int64;
 					case ValueType.Double:
-					return _double;
+						return _double;
 					case ValueType.None:
-					return float.NaN;
+						return float.NaN;
 				}
 				
 				throw new Exception(string.Format("Original type is {0}. Cannot convert from {0} to double", mValueType));
@@ -80,11 +79,11 @@ namespace Kernys.Bson
 			get {
 				switch (mValueType) {
 					case ValueType.Int32:
-					return (Int32)_int32;
+						return (Int32)_int32;
 					case ValueType.Int64:
-					return (Int32)_int64;
+						return (Int32)_int64;
 					case ValueType.Double:
-					return (Int32)_double;
+						return (Int32)_double;
 				}
 
 				throw new Exception(string.Format("Original type is {0}. Cannot convert from {0} to Int32", mValueType));
@@ -289,20 +288,14 @@ namespace Kernys.Bson
 	}
 
 	
-	public class BSONObject : BSONValue, IEnumerable
-	{
+	public class BSONObject : BSONValue, IEnumerable {
 		private Dictionary<string, BSONValue> mMap = new Dictionary<string, BSONValue>();
 
-		public BSONObject ()
-			: base(BSONValue.ValueType.Object)
+		public BSONObject (): base(BSONValue.ValueType.Object)
 		{
 		}
 
-		//
-		// Properties
-		//
-		public ICollection<string> Keys
-		{
+		public ICollection<string> Keys{
 			get { return mMap.Keys; }
 		}
 
@@ -358,24 +351,14 @@ namespace Kernys.Bson
 
 		List<BSONValue> mList = new List<BSONValue> ();
 
-		public BSONArray ()
-			: base(BSONValue.ValueType.Array)
-		{
-		}
+		public BSONArray (): base(BSONValue.ValueType.Array){ }
 
-		//
-		// Indexer
-		//
-		public override BSONValue this [int index]
-		{
+		public override BSONValue this [int index]{
 			get { return mList [index]; }
 			set { mList [index] = value; }
 		}
 		public int Count { get { return mList.Count; } }
 
-		//
-		// Methods
-		//
 		public override void Add(BSONValue v) {
 			mList.Add (v);
 		}
@@ -406,28 +389,27 @@ namespace Kernys.Bson
 		}
 	}
 
-	public class SimpleBSON
-	{
+	public class SimpleBSON {
 		private MemoryStream mMemoryStream;
 		private BinaryReader mBinaryReader;
 		private BinaryWriter mBinaryWriter;
 
 		public static BSONObject Load(byte[] buf) {
-			SimpleBSON bson = new SimpleBSON (buf);
+			var bson = new SimpleBSON (buf);
 
 			return bson.decodeDocument ();
 		}
 
 		public static byte[] Dump(BSONObject obj) {
 			
-			SimpleBSON bson = new SimpleBSON ();
-			MemoryStream ms = new MemoryStream ();
+			var bson = new SimpleBSON ();
+			var memoryStream = new MemoryStream ();
 
-			bson.encodeDocument (ms, obj);
+			bson.encodeDocument (memoryStream, obj);
 
-			byte[] buf = new byte[ms.Position];
-			ms.Seek (0, SeekOrigin.Begin);  
-			ms.Read (buf, 0, buf.Length);
+			var buf = new byte[memoryStream.Position];
+			memoryStream.Seek (0, SeekOrigin.Begin);  
+			memoryStream.Read (buf, 0, buf.Length);
 
 			return buf;
 		}
@@ -494,7 +476,7 @@ namespace Kernys.Bson
 		private BSONObject decodeDocument() {
 			int length = mBinaryReader.ReadInt32 ()-4;
 
-			BSONObject obj = new BSONObject ();
+			var obj = new BSONObject ();
 
 			int i = (int)mBinaryReader.BaseStream.Position;
 			while(mBinaryReader.BaseStream.Position < i+length - 1) {
@@ -512,7 +494,7 @@ namespace Kernys.Bson
 			BSONObject obj = decodeDocument ();
 
 			int i = 0;
-			BSONArray array = new BSONArray ();
+			var array = new BSONArray ();
 			while(obj.ContainsKey(Convert.ToString(i))) {
 				array.Add (obj [Convert.ToString(i)]);
 
@@ -599,12 +581,12 @@ namespace Kernys.Bson
 
 		private void encodeDocument(MemoryStream ms, BSONObject obj) {
 
-			MemoryStream dms = new MemoryStream ();
+			var dms = new MemoryStream ();
 			foreach(string str in obj.Keys) {
 				encodeElement(dms, str, obj[str]);
 			}
 
-			BinaryWriter bw = new BinaryWriter (ms);
+			var bw = new BinaryWriter (ms);
 			bw.Write ((Int32)(dms.Position+4+1));
 			bw.Write (dms.GetBuffer (), 0, (int)dms.Position);
 			bw.Write ((byte)0);
