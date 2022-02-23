@@ -39,8 +39,12 @@ namespace Launcher {
 			var svrInfoHelper = new SvrInfoHelper(infoUrl);
 			// TODO: try catch
 			// when basic-https spring-boot application is not run fails
-			svrInfoHelper.getSvrInfo();
-			Console.Error.WriteLine(String.Format("Received:\n{0}", svrInfoHelper.Text));
+			try {
+				svrInfoHelper.getSvrInfo();
+				Console.Error.WriteLine(String.Format("Received:\n{0}", svrInfoHelper.Text));
+			} catch (Exception e) {
+				Console.Error.WriteLine("Exception (ignored): " + e.ToString());
+			}
 			var cookies = new CookieContainer();
 			var querystring = new NameValueCollection();
 			querystring["operation"] = "send";
