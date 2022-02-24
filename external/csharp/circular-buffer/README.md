@@ -1,8 +1,14 @@
-
 ### Info
 
-https://github.com/dwoctor/circular-buffer-csharp
+This directory contains a replica of the [circular-buffer](https://github.com/dwoctor/circular-buffer-csharp) project  converted to Nunit and with some tests extended
 
+
+### See Also
+
+  * https://github.com/joaoportela/CircularBuffer-CSharp
+  * https://www.codeproject.com/Tips/5258667/A-Generic-Circular-Buffer-in-Csharp
+  * https://jonlabelle.com/snippets/view/csharp/c-circular-buffer
+  * https://csharp.hotexamples.com/examples/-/SharedMemory.CircularBuffer/-/php-sharedmemory.circularbuffer-class-examples.html
 
 
 https://www.codeproject.com/Articles/17683/A-simple-PerformanceCounter-StatusStripItem
@@ -20,10 +26,6 @@ https://www.codeproject.com/Articles/383774/Process-Dump-Triggered-on-Custom-Per
 # service -  refresher
 https://www.codeproject.com/Articles/401584/Easy-to-learn-Window-Service
 
-https://github.com/joaoportela/CircularBuffer-CSharp
-https://www.codeproject.com/Tips/5258667/A-Generic-Circular-Buffer-in-Csharp
-https://jonlabelle.com/snippets/view/csharp/c-circular-buffer
-https://csharp.hotexamples.com/examples/-/SharedMemory.CircularBuffer/-/php-sharedmemory.circularbuffer-class-examples.html
 https://michaelscodingspot.com/performance-counters/
 
 var currentProcess = Process.GetCurrentProcess().ProcessName;

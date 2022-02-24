@@ -68,6 +68,8 @@
   </Choose>
   <ItemGroup>
     <Compile Include="CircularBufferUnitTest.cs" />
+    <Compile Include="Data.cs" />
+    <Compile Include="PerfDataCircularBufferTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
