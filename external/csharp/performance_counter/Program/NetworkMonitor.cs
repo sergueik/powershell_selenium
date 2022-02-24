@@ -22,18 +22,56 @@ namespace Echevil {
 		}
 
 		private void EnumerateNetworkAdapters() {
-			PerformanceCounterCategory category = new PerformanceCounterCategory("Network Interface");
+			
+			var performanceCounterCategories = PerformanceCounterCategory.GetCategories();
 
+			foreach (PerformanceCounterCategory performanceCounterCategory in performanceCounterCategories) {
+				if (performanceCounterCategory.CategoryName.IndexOf("System") != -1) {
+					var name = performanceCounterCategory.CategoryName;
+					Console.WriteLine(name);
+				}
+			}
+			
+
+			// var category = new PerformanceCounterCategory("System");
+
+			var category = new PerformanceCounterCategory("Network Interface");
 			foreach (string name in category.GetInstanceNames()) {
 				// This one exists on every computer.
 				if (name == "MS TCP Loopback interface")
 					continue;
 				// Create an instance of NetworkAdapter class, and create performance counters for it.
-				NetworkAdapter adapter = new NetworkAdapter(name);
+				var adapter = new NetworkAdapter(name);
 				adapter.dlCounter = new PerformanceCounter("Network Interface", "Bytes Received/sec", name);
 				adapter.ulCounter = new PerformanceCounter("Network Interface", "Bytes Sent/sec", name);
-				this.adapters.Add(adapter);			// Add it to ArrayList adapter
-			}
+				// System.InvalidOperationException: Category does not exist.
+				// at System.Diagnostics.PerformanceCounterLib.CounterExists(String machine, String category, String counter)
+				// at System.Diagnostics.PerformanceCounterCategory.CounterExists(String counterName, String categoryName, String machineName)
+				// at System.Diagnostics.PerformanceCounterCategory.CounterExists(String counterName, String categoryName)
+   			
+				try {
+   					
+					PerformanceCounter myCounter = new PerformanceCounter();
+					myCounter.CategoryName = "System";
+					myCounter.CounterName = "Processor Queue Length";
+					myCounter.InstanceName = null;
+					// throwing exception
+					// long raw3 = myCounter.RawValue;
+					adapter.resultCounter = myCounter;
+					// Determines whether a specified counter is registered to a particular categor
+					// Processor Queue Length is not collected by default on any windows servers. It is included as part of APPInsight for AD and the component is using a Performance Counter Monitor as referenced in the details of the component
+					// https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc938643(v=technet.10)?redirectedfrom=MSDN
+					// http://toncigrgin.blogspot.com/2015/11/windows-perf-counters-blog4.html
+					// if (PerformanceCounterCategory.CounterExists( "System", "Processor Queue Length", ".")) {
+					// adapter.resultCounter = new PerformanceCounter("System", "Processor Queue Length");
+					// }
+				} catch (System.InvalidOperationException e) {
+					// Category does not exist.
+					Console.Error.WriteLine("Exception: " + e.ToString());
+				}
+				this.adapters.Add(adapter);
+
+			}	
 		}
 
 		private void timer_Elapsed(object sender, ElapsedEventArgs e) {

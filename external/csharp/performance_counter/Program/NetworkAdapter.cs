@@ -3,42 +3,56 @@ using System.Diagnostics;
 
 namespace Echevil {
 	public class NetworkAdapter {
-		internal NetworkAdapter(string name) {
-			this.name = name;
-		}
-
+		// new field
+		private long result;
+		
 		private long dlSpeed, ulSpeed;
 		private long dlValue, ulValue;
 		private long dlValueOld, ulValueOld;
 
 		internal string name;
 		internal PerformanceCounter dlCounter, ulCounter;
+		internal PerformanceCounter resultCounter;
 
+		internal NetworkAdapter(string name) {
+			this.name = name;
+		}
+		
 		internal void init() {
 			// Since dlValueOld and ulValueOld are used in method refresh() to calculate network speed, they must have be initialized.
-			this.dlValueOld = this.dlCounter.NextSample().RawValue;
-			this.ulValueOld = this.ulCounter.NextSample().RawValue;
+			dlValueOld = dlCounter.NextSample().RawValue;
+			ulValueOld = ulCounter.NextSample().RawValue;
+			if (resultCounter != null) {
+				try {
+					result = resultCounter.NextSample().RawValue;
+				} catch (System.InvalidOperationException e) {
+					Console.Error.WriteLine("Exception with counter {0}: {1}" ,resultCounter.CounterName, e.ToString());
+					// Category does not exist.
+				}
+			}
 		}
 
 		internal void refresh() {
-			this.dlValue = this.dlCounter.NextSample().RawValue;
-			this.ulValue = this.ulCounter.NextSample().RawValue;
-	
+			dlValue = dlCounter.NextSample().RawValue;
+			ulValue = ulCounter.NextSample().RawValue;
+			if (resultCounter != null) {
+				result = resultCounter.NextSample().RawValue;
+			}
 			// Calculates download and upload speed.
-			this.dlSpeed = this.dlValue - this.dlValueOld;
-			this.ulSpeed = this.ulValue - this.ulValueOld;
+			dlSpeed = dlValue - dlValueOld;
+			ulSpeed = ulValue - ulValueOld;
 
-			this.dlValueOld = this.dlValue;
-			this.ulValueOld = this.ulValue;
+			dlValueOld = dlValue;
+			ulValueOld = ulValue;
 		}
 
 		public override string ToString() {
-			return this.name;
+			return name;
 		}
 
 		public string Name {
 			get {
-				return this.name;
+				return name;
 			}
 		}
 		public long DownloadSpeed {

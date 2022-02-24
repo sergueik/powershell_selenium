@@ -12,6 +12,8 @@ This directory contains code from the __Monitoring network speed__ [article](htt
   * https://serverfault.com/questions/339282/how-can-i-save-the-counters-setup-in-windows-performance-monitor
 
 
+http://toncigrgin.blogspot.com/2015/11/windows-perf-counters-blog4.html
+https://www.thestudentroom.co.uk/showthread.php?t=303249  
 https://www.codeproject.com/Articles/17683/A-simple-PerformanceCounter-StatusStripItem
 https://www.codeproject.com/Articles/38438/Monitoring-Process-Statistics-in-C-WPF
 https://www.codeproject.com/Articles/13825/Using-Custom-Attributes-to-Create-Performance-Coun
