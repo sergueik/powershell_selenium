@@ -378,8 +378,8 @@ which can be collaptsed into
           # https://stackoverflow.com/questions/45130993/how-to-start-chromedriver-in-headless-mode
           $options.addArguments([System.Collections.Generic.List[string]]@('--headless',"--window-size=${width}x${height}", '-disable-gpu'))
         } else {
-					# TODO: make configurable through a switch
-					# $options.addArguments('start-maximized')
+          # TODO: make configurable through a switch
+          # $options.addArguments('start-maximized')
           # no-op option - re-enforcing the default setting
           $options.addArguments(('user-data-dir={0}' -f ("${env:LOCALAPPDATA}\Google\Chrome\User Data" -replace '\\','/')))
           # if you like to specify another profile parent directory:
@@ -387,31 +387,33 @@ which can be collaptsed into
 
           $options.addArguments('--profile-directory=Default')
           $options.addArguments('--ignore-certificate-errors')
-					# https://stackoverflow.com/questions/45510973/headless-chrome-ignore-certificate-errors
-					# Method invocation failed because [OpenQA.Selenium.Chrome.ChromeOptions] does not contain a method named 'setAcceptInsecureCerts'.
-					# $options.setAcceptInsecureCerts($true)o
-					# $options.AcceptInsecureCertificates  = $true
-					[OpenQA.Selenium.Chrome.ChromeOptions]$options = new-object OpenQA.Selenium.Chrome.ChromeOptions
+          # https://stackoverflow.com/questions/45510973/headless-chrome-ignore-certificate-errors
+          # Method invocation failed because [OpenQA.Selenium.Chrome.ChromeOptions] does not contain a method named 'setAcceptInsecureCerts'.
+          # $options.setAcceptInsecureCerts($true)o
+          # $options.AcceptInsecureCertificates  = $true
+          [OpenQA.Selenium.Chrome.ChromeOptions]$options = new-object OpenQA.Selenium.Chrome.ChromeOptions
           [OpenQA.Selenium.Remote.DesiredCapabilities]$capabilities = $options.ToCapabilities()
-					#  [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
+          #  [OpenQA.Selenium.Remote.DesiredCapabilities]::Chrome()
           # $capabilities.setCapability([OpenQA.Selenium.Chrome.ChromeOptions]::Capability,$options)
-					# see https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/remote/CapabilityType.html
-					# NOTE: has no effect		
+          # see https://www.selenium.dev/selenium/docs/api/java/org/openqa/selenium/remote/CapabilityType.html
+          # NOTE: has no effect		
           # $capabilities.setCapability([OpenQA.Selenium.Remote.CapabilityType]::ACCEPT_SSL_CERTS, $true)
           # $capabilities.setCapability([OpenQA.Selenium.Remote.CapabilityType]::ACCEPT_INSECURE_CERTS, $true)
         }
         $locale = 'en-us'
         # http://knowledgevault-sharing.blogspot.com/2017/05/selenium-webdriver-with-powershell.html
         $options.addArguments([System.Collections.Generic.List[string]]@('--allow-running-insecure-content', '--disable-infobars', '--enable-automation', "--lang=${locale}"))
-				if ($run_kiosk){ 
+        if ($run_kiosk){ 
           $options.addArguments([System.Collections.Generic.List[string]]@( '--kiosk'))
-				}
+        }
         $options.AddUserProfilePreference('credentials_enable_service', $false)
         $options.AddUserProfilePreference('profile.password_manager_enabled', $false)
-        # write-host ('driver: {0}' -f "${selenium_drivers_path}\chromedriver.exe")
-        $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver($options)
-				# NOTE: will fail on Windows 7 if a Chrome browser is already running
-				# New-Object : Exception calling ".ctor" with "1" argument(s): "invalid argument: user data directory is already in use, please specify a unique value for --user-data-dir argument, or don't use --user-data-dir"
+        # write-host ('Using ChromeDriver: {0}' -f "${selenium_drivers_path}\chromedriver.exe")
+	# https://developercommunity.visualstudio.com/t/selenium-ui-test-can-no-longer-find-chrome-binary/1170486
+        $options.BinaryLocation = "C:\Program Files\Google\Chrome\Application\chrome.exe" 
+$selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver($options)
+        # NOTE: will fail on Windows 7 if a Chrome browser is already running
+        # New-Object : Exception calling ".ctor" with "1" argument(s): "invalid argument: user data directory is already in use, please specify a unique value for --user-data-dir argument, or don't use --user-data-dir"
 
       }
     }
