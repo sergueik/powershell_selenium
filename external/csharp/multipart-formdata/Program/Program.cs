@@ -26,12 +26,20 @@ namespace Launcher {
 
 		[STAThread]
 		static void Main(string[] args) {
-			// TODO: AppSettings is not working ?
+
+			// Alternaively, get the key withut checking if it exists
+			var appSettingsReader = new AppSettingsReader();
+			uploadfile = (string)(appSettingsReader.GetValue("Datafile", typeof(string)));
+			Console.Error.WriteLine("Datafile: " + uploadfile);
+
 			uploadfile = (args.Length > 0) ? args[0] :
 			 (ConfigurationManager.AppSettings.AllKeys.Contains("Datafile")) ? ConfigurationManager.AppSettings["Datafile"] : @"c:\temp\data.txt";
-			uploadUrl = (args.Length > 1) ? args[1] : 
+			Console.Error.WriteLine("Datafile: " + uploadfile);
+			uploadUrl = (args.Length > 1) ? args[1] :
 			(ConfigurationManager.AppSettings.AllKeys.Contains("UploadUrl")) ? ConfigurationManager.AppSettings["UploadUrl"] : "https://127.0.0.1:8443/upload";
-			infoUrl = (args.Length > 2) ? args[2] : 
+			Console.Error.WriteLine("UploadUrl: " + uploadUrl);
+
+			infoUrl = (args.Length > 2) ? args[2] :
 				// NOTE: localhost is resolved in IPV6 fashion:
 				// System.Net.Sockets.SocketException: No connection could be made because the target machine actively refused it [::1]:8443
 				// [::1]:8443
@@ -90,7 +98,7 @@ namespace Launcher {
 			Console.Error.WriteLine(String.Format("powershell script: {0} parameters: {1} working directory: {2}", ScriptPath, ScriptParameters, workingDirectory));
 						
 			processStarter.Start(workingDirectory /* + "\\"  */ + ScriptPath, ScriptParameters, workingDirectory);
- 
+
 			Thread.Sleep(runInterval);
 			
 			Console.Error.WriteLine(String.Format(
@@ -114,10 +122,10 @@ namespace Launcher {
 					}
 				} else {
 					Console.Error.WriteLine("Powershell command error: " +  Utils.PowershellCommandAdapter.LastErrors.First());
-				} 
+				}
 			} catch (RuntimeException e) {
 				Console.Error.WriteLine("Exception (ignored): " + e.ToString());
-			} 
+			}
 			
 		}
 	}

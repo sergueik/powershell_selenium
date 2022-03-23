@@ -26,12 +26,13 @@ chromedriver_path = homedir + os.sep + 'Downloads' + os.sep + ('chromedriver.exe
 options = Options()
 print('chromedriver path: {}'.format(chromedriver_path))
 # enable browser logging
-disired_capabilities = DesiredCapabilities.CHROME
-disired_capabilities['loggingPrefs'] = {
+desired_capabilities = DesiredCapabilities.CHROME
+desired_capabilities['goog:loggingPrefs'] = desired_capabilities['loggingPrefs'] = {
   'browser':'ALL'
 }
-driver = webdriver.Chrome(executable_path = chromedriver_path, desired_capabilities = disired_capabilities)
+# https://stackoverflow.com/questions/20907180/getting-console-log-output-from-chrome-with-selenium-python-api-bindings
 
+driver = webdriver.Chrome(executable_path = chromedriver_path, desired_capabilities = desired_capabilities)
 # load the desired webpage
 driver.get('http://www.cnn.com')
 time.sleep(10)
