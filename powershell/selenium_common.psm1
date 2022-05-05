@@ -512,8 +512,8 @@ function cleanup {
 	Pauses the Selenium execution
 	
 .EXAMPLE
-	custom_pause [-fullstop]
-
+	custom_pause [-fullstop] [-message 'Press any key to continue...'] [-timeout 10000]
+        
 .LINK
 
 
@@ -521,18 +521,35 @@ function cleanup {
 
 	VERSION HISTORY
 	2015/06/21 Initial Version
+	2022/05/05 updated comments, added message argument
 #>
 
+# see also: https://www.cyberforum.ru/powershell/thread1794721.html#post9502065
+# see also
+# Wait-Event
+# https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/wait-event?view=powershell-7.2
+# installed from Module: "Microsoft.PowerShell.Utility" with  Powershell 5.0 and ealier
+# https://docs.microsoft.com/en-us/previous-versions/powershell/module/microsoft.powershell.utility/wait-event?view=powershell-5.0
 
 function custom_pause {
   param(
     [bool]$fullstop,
+    [string]$message = $null, # optional, e.g. 'Press any key to continue...'
     [int]$timeout = 1000
   )
   # Do not close Browser / Selenium when run from Powershell ISE
   if ($fullstop) {
+
+    write-host ('processing message "{0}"' -f $message )
     try {
-      Write-Output 'pause'
+      # NOTE: initializing string parameter with $null and testing 
+      # if ($message -ne $null)
+      # does not behave as expected
+      if ($message -ne '') {
+         write-host $message -nonewline
+      } else {
+        Write-Output 'pause'
+      }
       [void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
     } catch [exception]{}
   } else {
