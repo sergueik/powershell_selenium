@@ -1984,3 +1984,39 @@ $o = $j.Parse($s)
 #
 write-output $o['cars'][0]['extradata']['list of values'][1]
 write-output $j.ToJSON($o)
+
+
+$data = @{ 
+  "foo" = "bar";
+  "number" = 42;
+  "valid"  = $true;
+  "array" = @(1,2,3);
+}
+
+write-output ('Type: {0}' -f $data.getType())
+$raw_json = $j.ToJSON($data)
+write-output $raw_json
+<#
+[
+{"k":"valid","v":true},{"k":"number","v":42},{"k":"foo","v":"bar"},{"k":"arrray","v":[1,2,3]}
+]
+
+#>
+write-output 'Transforming data'
+[System.Collections.Generic.Dictionary[String,Object]]$input_data = New-Object System.Collections.Generic.Dictionary'[String,Object]'
+
+$data.keys| foreach-object {
+  $key = $_
+  # NOTE: [System.Collections.Hashtable] does not contain a method named 'get'.
+  # $input_data.Add($key, $data.get($key))
+  if ($input_data.ContainsKey($key)) {
+    $input_data.Remove($key)
+  }
+  $input_data.Add($key, $data[$key])
+}
+
+write-output ('Type: {0}' -f $input_data.getType())
+
+
+$raw_json = $j.ToJSON($input_data)
+write-output $raw_json

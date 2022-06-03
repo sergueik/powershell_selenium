@@ -2,7 +2,8 @@
 
 This directory contains a replica of
 [fastJSON - Smallest, Fastest Polymorphic JSON Serializer](https://www.codeproject.com/Articles/159450/fastJSON-Smallest-Fastest-Polymorphic-JSON-Seriali)
-picked old Version __1.9.8__ to use with Powershell for a JSON de-serialization together with standard `convertTo-JSON` cmdlet 
+picked old Version __1.9.8__ to use with Powershell for a JSON serializartion and deserialization together with/instad of standard `convertTo-JSON` cmdlet.
+The latter is supporting the `ashashtable` [switch](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/convertfrom-json?view=powershell-7.2) but only in very recent Powrshell versions
 
 ### Usage
 ```powershell
@@ -77,5 +78,7 @@ copy-item -path .\lib\net20\fastjson.dll -destination '.'
 ### See Also
 
   *[fast bson serializer](https://github.com/mgholam/fastBinaryJSON) by same author. NOTE: requires C# 6.x to compile the code, even for target .Net framework 4.x
+
 ### Author
+
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)

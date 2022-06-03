@@ -10,6 +10,10 @@ if ($env:PROCESSOR_ARCHITECTURE -ne 'x86') {
 }
 #>
 $asssembly = 'fastJSON.dll'
+if (-not (test-path -path ( $assembly_path + '\' + $asssembly ) ) ) { 
+   write-host ('Missing dependency {0}' -f ( $assembly_path + '\' + $asssembly ) )
+   return
+}
 $shared_assemblies = @($asssembly)
 pushd $assembly_path
 
@@ -130,6 +134,7 @@ $s = @'
 }
 '@
 # $o = [fastJSON.JSON]::Parse($s)
+write-output 'Deserialize...'
 $o = $j.Parse($s)
 # write-output ('json: {0}' -f [fastJSON.JSON]::Beautify($s))
 write-output ('json: {0}' -f $j.Beautify($s))
@@ -174,9 +179,46 @@ $s = '{
 '
 
 $o = $j.Parse($s)
+write-output ('Type: {0}' -f $o.getType())
 # write-output ('json: {0}' -f [fastJSON.JSON]::Beautify($s))
 write-output ('json: {0}' -f $j.Beautify($s))
 $o = $j.Parse($s)
 #
 write-output $o['cars'][0]['extradata']['list of values'][1]
+write-output 'Serialize...'
 write-output $j.ToJSON($o)
+
+$data = @{ 
+  "foo" = "bar";
+  "number" = 42;
+  "valid"  = $true;
+  "array" = @(1,2,3);
+}
+
+write-output ('Type: {0}' -f $data.getType())
+$raw_json = $j.ToJSON($data)
+write-output $raw_json
+<#
+[
+{"k":"valid","v":true},{"k":"number","v":42},{"k":"foo","v":"bar"},{"k":"arrray","v":[1,2,3]}
+]
+
+#>
+write-output 'Transforming data'
+[System.Collections.Generic.Dictionary[String,Object]]$input_data = New-Object System.Collections.Generic.Dictionary'[String,Object]'
+
+$data.keys| foreach-object {
+  $key = $_
+  # NOTE: [System.Collections.Hashtable] does not contain a method named 'get'.
+  # $input_data.Add($key, $data.get($key))
+  if ($input_data.ContainsKey($key)) {
+    $input_data.Remove($key)
+  }
+  $input_data.Add($key, $data[$key])
+}
+
+write-output ('Type: {0}' -f $input_data.getType())
+
+
+$raw_json = $j.ToJSON($input_data)
+write-output $raw_json
