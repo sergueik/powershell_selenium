@@ -193,6 +193,8 @@ $data = @{
   "number" = 42;
   "valid"  = $true;
   "array" = @(1,2,3);
+  "table" = @{"key1"="value1"};
+
 }
 
 write-output ('Type: {0}' -f $data.getType())
@@ -204,6 +206,16 @@ write-output $raw_json
 ]
 
 #>
+$data_restored = @{ }
+$o2 = $j.Parse($raw_json)
+
+$o2 | foreach-object {
+$item = $_
+  $data_restored[$item.k] = $item.v
+  # write-output $item.k
+  # write-output $item.v
+}
+$data_restored | format-list
 write-output 'Transforming data'
 [System.Collections.Generic.Dictionary[String,Object]]$input_data = New-Object System.Collections.Generic.Dictionary'[String,Object]'
 
