@@ -199,8 +199,6 @@ if __name__ == '__main__':
   if debug:
     print('opts: {}'.format(opts))
     # exit()
-  helper = h1()
-  helper.visit_site(url, homedir + '/' + 'Downloads' + '/' + 'chromedriver', print_options)
 
   result = print_pdf(url, homedir + '/' + 'Downloads' + '/' + 'chromedriver', print_options)
   with open(file = output_file, mode = 'wb') as f:
@@ -208,5 +206,6 @@ if __name__ == '__main__':
 
 # on vanilla Windows node
 # PATH=%PATH%;c:\Python27;%USERPROFILE%\Downloads
+
 
 
