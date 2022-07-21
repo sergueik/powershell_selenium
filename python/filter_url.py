@@ -38,7 +38,7 @@ def send_command_and_get_result(driver, cmd, params = {}):
 if __name__ == '__main__':
   # https://docs.python.org/2/library/getopt.html
   try:
-    opts, args = getopt.getopt(sys.argv[1:], 'hdi:o:s:p:', ['help', 'debug', 'input=', 'output=','size=', 'pages='])
+    opts, args = getopt.getopt(sys.argv[1:], 'hdi:o:', ['help', 'debug', 'input=', 'output='])
   except getopt.GetoptError as err:
     print('usage: print_pdf.py --input <html page> --output <output file>')
     print(str(err))
@@ -46,8 +46,6 @@ if __name__ == '__main__':
 
   output_file = None
   url = None
-  paper_size = None
-  pages = None
   global debug
   debug = False
   for option, argument in opts:
@@ -58,10 +56,6 @@ if __name__ == '__main__':
       exit()
     elif option in ('-i', '--input'):
       url = argument
-    elif option in ('-p', '--pages'):
-      pages = argument
-    elif option in ('-s', '--size'):
-      paper_size = argument
     elif option in ('-o', '--output'):
       output_file = argument
     else:
@@ -83,21 +77,6 @@ if __name__ == '__main__':
   if match == None:
     url = 'https://{}'.format(url)
 
-  match = None
-  if paper_size != None:
-    match = re.match(r'a4', paper_size, re.UNICODE|re.IGNORECASE  )
-  if match == None:
-    print_options = {}
-  else:
-    # specify custom page size (default is Letter), through dimensions
-    print_options = {
-      'paperWidth': 8.27,
-      'paperHeight': 11.69,
-    }
-  if pages != None:
-      print_options.update({'pageRanges': pages})
-  if debug:
-    print('opts: {}'.format(opts))
   options = Options()
   options.add_argument('--headless')
   options.add_argument('--disable-gpu')
@@ -121,18 +100,18 @@ if __name__ == '__main__':
   }
   send_command_and_get_result(driver, 'Network.setCacheDisabled', params)
   driver.get(url)
-  params = {
+  # specify custom page size (default is Letter), through dimensions
+  print_options = {
+    'paperWidth': 8.27,
+    'paperHeight': 11.69,
     'landscape': False,
     'displayHeaderFooter': False,
     'printBackground': True,
     'preferCSSPageSize': False,
   }
-  params.update(print_options)
-  if debug:
-    print('params: {}'.format(params))
   # print the page. alternatively can take a screen shot of the image element
 
-  response = send_command_and_get_result(driver, 'Page.printToPDF', params)
+  response = send_command_and_get_result(driver, 'Page.printToPDF', print_options)
   result =  base64.b64decode(response['data'])
   with open(file = output_file, mode = 'wb') as f:
     f.write(result)
