@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2020 Serguei Kouzmine
-#
-#
+# Copyright (c) 2020,2022 Serguei Kouzmine
 from __future__ import print_function
 import getopt
 import re
@@ -61,14 +59,15 @@ if __name__ == '__main__':
 
   driver.get(url)
   wait = WebDriverWait(driver, 10)
-  wait.until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR,"div.h-c-header__company-logo img")))
+  wait.until(expected_conditions.presence_of_element_located((By.CSS_SELECTOR, 'div.central-textlogo > img')))
+  # for google, 'div.h-c-header__company-logo img'
   element = driver.find_element_by_tag_name('body')
 
-  driver.execute_script("document.body.style.zoom = '{}'".format(zoom))
+  driver.execute_script('document.body.style.zoom = "{}%"'.format(int(100 * zoom)))
   time.sleep(3)
-  # to zoom again, need recalculate
-  
-  driver.execute_script("document.body.style.zoom = '{}%'".format(int(100 * 2 * zoom)))
+  # NOTE: to zoom back, no need to recalculate 100/zoom, just a 100%
+
+  driver.execute_script('document.body.style.zoom = "100%"')
   time.sleep(3)
   driver.close()
   driver.quit()
