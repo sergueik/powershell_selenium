@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.service import Service
 # https://github.com/SergeyPirogov/webdriver_manager
 from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.utils import ChromeType
 # from bs4 import BeautifulSoup as bs
 import time
 import getopt
@@ -12,7 +13,11 @@ import sys
 from os import getenv
 
 def get_source_html(url):
-  if getenv('OS') != None :
+  if getenv('OS') != None:
+    running_on_windows = True
+  else:
+    running_on_windows = False
+  if running_on_windows:
     homedir = getenv('USERPROFILE').replace('\\', '/')
   else:
     homedir = getenv('HOME')
@@ -21,11 +26,18 @@ def get_source_html(url):
   # Without ChromeDriverManager:
   # driver = webdriver.Chrome( homedir + '/' + 'Downloads' + '/' + 'chromedriver', options = options)
 
-
+  # NOTE: webdriver-manager-3.8.3 handles selenium-4.x.x
+  # but needs python 3.7  or later
+  # for bionic 18.04 use https://linuxize.com/post/how-to-install-python-3-7-on-ubuntu-18-04/
+  # and then manually update /usr/bin/pip3
   # TODO: detect Selenium 3.x verus 4.x - syntax is version sensitive
   # driver = webdriver.Chrome(Service(ChromeDriverManager().install()))
   # TypeError: expected str, bytes or os.PathLike object, not Service
-  driver = webdriver.Chrome(ChromeDriverManager().install())
+  if running_on_windows:
+    chrome_type = ChromeType.GOOGLE
+  else:
+    chrome_type = ChromeType.CHROMIUM
+  driver = webdriver.Chrome(ChromeDriverManager(chrome_type = chrome_type).install())
   # the cached drivers saved under ~/.wdm/drivers/chromedriver/linux64/$VERSION/chromedriver
   # NOTE: WebDriver manager fails to discover chromium-browser, probably does not try
   # [WDM] - Could not get version for google-chrome. Is google-chrome installed?
