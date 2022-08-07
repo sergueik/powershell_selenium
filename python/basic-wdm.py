@@ -6,6 +6,9 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.core.utils import ChromeType
 # from bs4 import BeautifulSoup as bs
+from subprocess import run
+
+
 import time
 import getopt
 import re
@@ -36,7 +39,12 @@ def get_source_html(url):
   if running_on_windows:
     chrome_type = ChromeType.GOOGLE
   else:
-    chrome_type = ChromeType.CHROMIUM
+    p = run( [ 'which', 'chromium-browser' ] )
+    if p.returncode == 0:
+      chrome_type = ChromeType.CHROMIUM
+    else:
+      chrome_type = ChromeType.GOOGLE
+
   driver = webdriver.Chrome(ChromeDriverManager(chrome_type = chrome_type).install())
   # the cached drivers saved under ~/.wdm/drivers/chromedriver/linux64/$VERSION/chromedriver
   # NOTE: WebDriver manager fails to discover chromium-browser, probably does not try
