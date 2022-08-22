@@ -2,7 +2,10 @@
 Tehe program is using Selenium 4.x or 3.x and connects to Chrome websocket on its own 
 using [sta/websocket-sharp](https://github.com/sta/websocket-sharp/tree/master/Example)
 and connects to  regular socket using [dynamic RestClient](https://github.com/bennidhamma/RestClient)
-Note - there is no `async` code to allow working in SharpDevelop which is unable to parse the syntax
+and uses [fastJSON](https://www.codeproject.com/Articles/159450/fastJSON-Smallest-Fastest-Polymorphic-JSON-Seriali) to compose and process CDP API [messages](https://chromedevtools.github.io/devtools-protocol/tot/).
+Note - there is intentionally no `async` code to allow development code
+in the now defunct [SharpDevelop](https://github.com/icsharpcode/SharpDevelop) 
+IDE which never became unable to parse the C# 5.x syntax
 
 ### Usage
 
@@ -93,3 +96,9 @@ HTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36",
 
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
+
+Event-based Asynchronous Pattern Overview
+https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/event-based-asynchronous-pattern-overview
+
+Asynchronous Programming Model (APM)
+https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/asynchronous-programming-model-apm?redirectedfrom=MSDN

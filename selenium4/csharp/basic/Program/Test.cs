@@ -7,6 +7,7 @@ using System.Dynamic;
 using System.Collections.Generic;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using fastJSON;
 // using OpenQA.Selenium.DevTools;
 // using DevToolsSessionDomains = OpenQA.Selenium.DevTools.V100.DevToolsSessionDomains;
 using System.Threading;
@@ -26,6 +27,7 @@ using System.Net;
 
 
 namespace Program {
+	
 	[TestFixture]
 	public class Test {
 
@@ -50,14 +52,16 @@ namespace Program {
 		
 		[SetUp]
 		public void setup() {
+			
 			ChromeOptions options = new ChromeOptions();
 			options.SetLoggingPreference(LogType.Driver, OpenQA.Selenium.LogLevel.Debug);
 
 			driver = new ChromeDriver(options);
 			ILogs logs = driver.Manage().Logs;
-			// NOTE: With Selenium 3.x getting
-			// System.NullReferenceException here
+			// TODO: With Selenium 3.x the GetLog is getting
+			// System.NullReferenceException
 			var entries = logs.GetLog(LogType.Driver); 
+
 			// will also see:
 			// Launching chrome: "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --allow-pre-commit-input --disable-background-networking --disable-backgrounding-occluded-windows --disable-client-side-phishing-detection --disable-default-apps --disable-hang-monitor --disable-popup-blocking --disable-prompt-on-repost --disable-sync --enable-automation --enable-blink-features=ShadowDOMV0 --enable-logging --log-level=0 --no-first-run --no-service-autorun --password-store=basic --remote-debugging-port=0 --test-type=webdriver --use-mock-keychain --user-data-dir="C:\Users\Serguei\AppData\Local\Temp\scoped_dir10036_1503715160" data:
 			foreach (var entry in entries) {
@@ -66,8 +70,8 @@ namespace Program {
 					Console.WriteLine("Inspect log: " + line);
 					devtoolurl = line.FindMatch(@"(?<url>http://localhost:\d+/)");
 					// TODO: open connection and read
-					Console.WriteLine("Connect to dev tools url: " + devtoolurl);
-					RestClient restClient = new RestClient(devtoolurl);
+					Console.WriteLine("Read configuration from dev tools url: " + devtoolurl);
+					var restClient = new RestClient(devtoolurl);
 
 					foreach (dynamic response in restClient.Get ("json")) {
 						Console.WriteLine("type: " + response.type);
@@ -76,17 +80,28 @@ namespace Program {
 					}
 				}
 			}
-			// IDevTools devTools = driver as IDevTools;
-			// DevTools Session
-			// session = devTools.GetDevToolsSession();
 		}
 
 		[Test]
-		public void test()
-		{
+		public void test() {
 			try {
 				using (var ws = new WebSocket(wsurl)) {
-					ws.OnMessage += (sender, e) => Console.WriteLine("result: " + e.Data);
+					ws.OnMessage += (sender, e) => {
+												var data = e.Data;
+						Console.WriteLine("raw data: " + data);
+						// does not work
+						// Dictionary<string,object> result = Extensions.JSONProcessor.Parse<Dictionary<string,object>>(data);
+						// var id = result["id"];
+						// Console.WriteLine("result id: " + id); 
+
+						Dictionary<string,object> response = JSON.ToObject<Dictionary<string,object>>(data);
+						var id = response["id"];
+						Console.WriteLine("result id: " + id);
+						Dictionary<string,object> result = (Dictionary<string,object>) response["result"];
+						var userAgent = result["userAgent"];
+						Console.WriteLine("result userAgent: " + userAgent);
+					};
+					
 					ws.Connect();
 					ws.Send(@"{""id"":534427,""method"":""Browser.getVersion"",""params"":{}}");
 					// Console.ReadKey(true);

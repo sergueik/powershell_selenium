@@ -53,6 +53,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="fastJSON">
+      <HintPath>..\packages\fastJSON.2.3.2\lib\net40\fastJSON.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
