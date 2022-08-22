@@ -1,8 +1,4 @@
-# # based on: https://groups.google.com/forum/#!topic/selenium-users/PuDpVblziAo
-# the author author question is combination of
-
-# see also: https://www.vionblog.com/selenium-headless-firefox-webdriver-using-pyvirtualdisplay/
-# for full screen browser on dedicated X server
+# origin: https://www.vionblog.com/selenium-headless-firefox-webdriver-using-pyvirtualdisplay/
 # proxy to deal with xfvb (optional , handy)
 #!/usr/bin/env python
 
