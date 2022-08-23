@@ -3,6 +3,7 @@ Tehe program is using Selenium 4.x or 3.x and connects to Chrome websocket on it
 using [sta/websocket-sharp](https://github.com/sta/websocket-sharp/tree/master/Example)
 and connects to  regular socket using [dynamic RestClient](https://github.com/bennidhamma/RestClient)
 and uses [fastJSON](https://www.codeproject.com/Articles/159450/fastJSON-Smallest-Fastest-Polymorphic-JSON-Seriali) to compose and process CDP API [messages](https://chromedevtools.github.io/devtools-protocol/tot/).
+This project was mirroring the [sergueik/cdp_webdriver](https://github.com/sergueik/cdp_webdriver) which in turn was fork of [ahajamit/chrome-devtools-webdriver-integration](https://github.com/sahajamit/chrome-devtools-webdriver-integration) which interact with Chrome through websockets discovered in the selenium log. This communication did not actually require the Selenium __4.x__
 
 ### Notes
 
@@ -12,8 +13,13 @@ IDE which never became able to parse the C# 5.x syntax
 
 * for the same reason (outdated `nuget.exe`) the `Selenium.WebDriver` dependency version `4.x` has tobe downloaded manually:
 ```powershell
-. .\download_nuget_package.ps1 -version 4.2.0 -package_name Selenium.WebDriver
+$VERSION =  '4.2.0'
+. .\download_nuget_package.ps1 -version $VERSION -package_name Selenium.WebDriver
 ```
+```powershell
+ . .\download_nuget_package.ps1 -package_name 'Selenium.Support' -version $VERSION
+```
+
 there is also a utility to clean the packages from numerous target platform assemblies, keeping only `net40` and `net45`
 ```powershell
 . .\prune_unneded_nuget_packages.ps1
@@ -99,7 +105,61 @@ HTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36",
   }
 }
 ```
- 
+### Geo Location Override
+
+the test sends the following message to CDP:
+```c#
+try {
+  using (var ws = new WebSocket(wsurl)) {
+    ws.OnMessage += (sender, e) => {
+      var data = e.Data;
+      Console.WriteLine("raw data: " + data);
+      Dictionary<string,object> response = JSON.ToObject<Dictionary<string,object>>(data);
+      var id = response["id"];
+      Console.WriteLine("result id: " + id);
+      var result = (Dictionary<string,object>)response["result"];
+      var userAgent = result["userAgent"];
+      Console.WriteLine("result userAgent: " + userAgent);
+    };
+
+    ws.Connect();
+    // NOTE: "params" is reserved
+    var param = new Dictionary<string,object>();
+    var message = new Dictionary<string,object>();
+    double latitude = 37.422290;
+    double longitude = -122.084057;
+    long accuracy = 100;
+    param["latitude"] = latitude;
+    param["longitude"] = longitude;
+    param["accuracy"] = accuracy;
+    message["params"] = param;
+    message["method"] = "Emulation.setGeolocationOverride";
+    message["id"] = 534428;
+    var payload = JSON.ToJSON(message);
+    Console.WriteLine(String.Format("sending: {0}", payload));
+    ws.Send(payload);
+  }
+} catch (Exception ex) {
+  Console.WriteLine("ERROR: " + ex.ToString());
+}
+
+
+```
+![before](https://github.com/sergueik/powershell_selenium/blob/master/selenium4/csharp/basic/screenshots/capture-before-current-location.png)
+
+and clicks on "Show My Location" element:
+```c#
+driver.Navigate().GoToUrl("https://www.google.com/maps");
+Thread.Sleep(10000);
+By locator = By.CssSelector("div[jsaction*='mouseover:mylocation.main']");
+IList<IWebElement> elements = driver.FindElements(locator);
+Assert.IsTrue(elements.Count > 0);
+elements[0].Click();
+```
+and the browser shows the googleplex neighborhood:
+
+![after](https://github.com/sergueik/powershell_selenium/blob/master/selenium4/csharp/basic/screenshots/capture-after-current-location.png)
+
 ### See Also
 
  * https://www.codeproject.com/Articles/618032/Using-WebSocket-in-NET-4-5-Part-2
