@@ -12,8 +12,13 @@ IDE which never became able to parse the C# 5.x syntax
 
 * for the same reason (outdated `nuget.exe`) the `Selenium.WebDriver` dependency version `4.x` has tobe downloaded manually:
 ```powershell
-. .\download_nuget_package.ps1 -version 4.2.0 -package_name Selenium.WebDriver
+$VERSION =  '4.2.0'
+. .\download_nuget_package.ps1 -version $VERSION -package_name Selenium.WebDriver
 ```
+```powershell
+ . .\download_nuget_package.ps1 -package_name 'Selenium.Support' -version $VERSION
+```
+
 there is also a utility to clean the packages from numerous target platform assemblies, keeping only `net40` and `net45`
 ```powershell
 . .\prune_unneded_nuget_packages.ps1

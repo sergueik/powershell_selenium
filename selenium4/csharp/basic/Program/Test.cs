@@ -7,6 +7,9 @@ using System.Dynamic;
 using System.Collections.Generic;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Interactions;
+using OpenQA.Selenium.Support.UI;
+
 using fastJSON;
 // using OpenQA.Selenium.DevTools;
 // using DevToolsSessionDomains = OpenQA.Selenium.DevTools.V100.DevToolsSessionDomains;
@@ -26,17 +29,24 @@ using System.Net.Security;
 using System.Net;
 
 
-namespace Program {
+namespace Program
+{
 	
 	[TestFixture]
-	public class Test {
+	public class Test
+	{
 
 		private StringBuilder verificationErrors = new StringBuilder();
 		// protected IDevToolsSession session;
 		protected IWebDriver driver;
+		private WebDriverWait wait;
+		private Actions actions;
+		private const int wait_seconds = 3;
+		private const long wait_poll_milliseconds = 300;
 		
 		[TearDown]
-		public void cleanup() {
+		public void cleanup()
+		{
 			try {
 				driver.Quit();
 			} catch (Exception) {
@@ -51,15 +61,20 @@ namespace Program {
 		String devtoolurl = null;
 		
 		[SetUp]
-		public void setup() {
+		public void setup()
+		{
 			
 			ChromeOptions options = new ChromeOptions();
 			options.SetLoggingPreference(LogType.Driver, OpenQA.Selenium.LogLevel.Debug);
 
 			driver = new ChromeDriver(options);
-			ILogs logs = driver.Manage().Logs;
+			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
+			wait.PollingInterval = TimeSpan.FromMilliseconds(wait_poll_milliseconds);
+			actions = new Actions(driver);
+
 			// TODO: With Selenium 3.x the GetLog is getting
 			// System.NullReferenceException
+			ILogs logs = driver.Manage().Logs;
 			var entries = logs.GetLog(LogType.Driver); 
 
 			// will also see:
@@ -83,11 +98,13 @@ namespace Program {
 		}
 
 		[Test]
-		public void test() {
+		[Ignore("Ignore a test")]
+		public void test1()
+		{
 			try {
 				using (var ws = new WebSocket(wsurl)) {
 					ws.OnMessage += (sender, e) => {
-												var data = e.Data;
+						var data = e.Data;
 						Console.WriteLine("raw data: " + data);
 						// does not work
 						// Dictionary<string,object> result = Extensions.JSONProcessor.Parse<Dictionary<string,object>>(data);
@@ -97,17 +114,25 @@ namespace Program {
 						Dictionary<string,object> response = JSON.ToObject<Dictionary<string,object>>(data);
 						var id = response["id"];
 						Console.WriteLine("result id: " + id);
-						Dictionary<string,object> result = (Dictionary<string,object>) response["result"];
+						var result = (Dictionary<string,object>)response["result"];
 						var userAgent = result["userAgent"];
 						Console.WriteLine("result userAgent: " + userAgent);
 					};
 					
 					ws.Connect();
-					ws.Send(@"{""id"":534427,""method"":""Browser.getVersion"",""params"":{}}");
+					// NOTE: "params" is reserved
+					var param = new Dictionary<string,object>();
+					var message = new Dictionary<string,object>();
+					message["params"] = param;
+					message["method"] = "Browser.getVersion";
+					message["id"] = 534427;
+					var payload = JSON.ToJSON(message);
+					Console.WriteLine(String.Format("sending: {0}", payload));
+					ws.Send(payload);
 					// Console.ReadKey(true);
 					Thread.Sleep(1000);
 				}
-			// TODO: WebSocketSharp.WebSocketException: The header of a frame cannot be read from the stream.
+				// TODO: WebSocketSharp.WebSocketException: The header of a frame cannot be read from the stream.
 			} catch (Exception ex) {
 				Console.WriteLine("ERROR: " + ex.ToString());
 			}
@@ -117,6 +142,98 @@ namespace Program {
 			Thread.Sleep(1000);
 			StringAssert.Contains("Browser", pageSource);
 		}
+
+
+		[Test]
+		public void test2()
+		{
+			
+			try {
+				using (var ws = new WebSocket(wsurl)) {
+					ws.OnMessage += (sender, e) => {
+						var data = e.Data;
+						Console.WriteLine("raw data: " + data);
+						Dictionary<string,object> response = JSON.ToObject<Dictionary<string,object>>(data);
+						var id = response["id"];
+						Console.WriteLine("result id: " + id);
+						Console.WriteLine("result: " + response["result"]);
+					};
+					
+					ws.Connect();
+					// NOTE: "params" is reserved
+					var param = new Dictionary<string,object>();
+					var message = new Dictionary<string,object>();
+					message["params"] = param;
+					message["method"] = "Emulation.clearGeolocationOverride";
+					message["id"] = 534428;
+					var payload = JSON.ToJSON(message);
+					Console.WriteLine(String.Format("sending: {0}", payload));
+					ws.Send(payload);
+					// Console.ReadKey(true);
+					Thread.Sleep(1000);
+				}
+				// TODO: WebSocketSharp.WebSocketException: The header of a frame cannot be read from the stream.
+			} catch (Exception ex) {
+				Console.WriteLine("ERROR: " + ex.ToString());
+			}
+  
+			
+			try {
+				using (var ws = new WebSocket(wsurl)) {
+					ws.OnMessage += (sender, e) => {
+						var data = e.Data;
+						Console.WriteLine("raw data: " + data);
+						// does not work
+						// Dictionary<string,object> result = Extensions.JSONProcessor.Parse<Dictionary<string,object>>(data);
+						// var id = result["id"];
+						// Console.WriteLine("result id: " + id); 
+
+						Dictionary<string,object> response = JSON.ToObject<Dictionary<string,object>>(data);
+						var id = response["id"];
+						Console.WriteLine("result id: " + id);
+						var result = (Dictionary<string,object>)response["result"];
+						var userAgent = result["userAgent"];
+						Console.WriteLine("result userAgent: " + userAgent);
+					};
+					
+					ws.Connect();
+					// NOTE: "params" is reserved
+					var param = new Dictionary<string,object>();
+					var message = new Dictionary<string,object>();
+					double latitude = 37.422290;
+					double longitude = -122.084057;
+					long accuracy = 100;
+					param["latitude"] = latitude;
+					param["longitude"] = longitude;
+					param["accuracy"] = accuracy;
+					message["params"] = param;
+					message["method"] = "Emulation.setGeolocationOverride";
+					message["id"] = 534428;
+					var payload = JSON.ToJSON(message);
+					Console.WriteLine(String.Format("sending: {0}", payload));
+					ws.Send(payload);
+					// Console.ReadKey(true);
+					Thread.Sleep(1000);
+				}
+				// TODO: WebSocketSharp.WebSocketException: The header of a frame cannot be read from the stream.
+			} catch (Exception ex) {
+				Console.WriteLine("ERROR: " + ex.ToString());
+			}
+  
+			driver.Navigate().GoToUrl("https://www.google.com/maps");
+			By locator = By.CssSelector("div[jsaction*='mouseover:mylocation.main']");
+			// https://stackoverflow.com/questions/65821815/how-to-use-expectedconditions-in-selenium-4
+			// https://stackoverflow.com/questions/42421148/wait-untilexpectedconditions-doesnt-work-any-more-in-selenium
+			// https://stackoverflow.com/questions/49866334/c-sharp-selenium-expectedconditions-is-obsolete
+			// TODO: address
+			// wait.Until(ExpectedConditions.ElementIsVisible(locator));
+			Thread.Sleep(10000);
+			IList<IWebElement> elements = driver.FindElements(locator);
+			Assert.IsTrue(elements.Count > 0);
+			elements[0].Click();
+			Thread.Sleep(20000);
+		}
+		
 		private static bool RemoteServerCertificateValidationCallback(object sender,
 			X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
 		{
