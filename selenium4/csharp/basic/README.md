@@ -3,9 +3,30 @@ Tehe program is using Selenium 4.x or 3.x and connects to Chrome websocket on it
 using [sta/websocket-sharp](https://github.com/sta/websocket-sharp/tree/master/Example)
 and connects to  regular socket using [dynamic RestClient](https://github.com/bennidhamma/RestClient)
 and uses [fastJSON](https://www.codeproject.com/Articles/159450/fastJSON-Smallest-Fastest-Polymorphic-JSON-Seriali) to compose and process CDP API [messages](https://chromedevtools.github.io/devtools-protocol/tot/).
-Note - there is intentionally no `async` code to allow development code
+
+### Notes
+
+* there is intentionally no `async` code to allow development code
 in the now defunct [SharpDevelop](https://github.com/icsharpcode/SharpDevelop) 
-IDE which never became unable to parse the C# 5.x syntax
+IDE which never became able to parse the C# 5.x syntax
+
+* for the same reason (outdated `nuget.exe`) the `Selenium.WebDriver` dependency version `4.x` has tobe downloaded manually:
+```powershell
+. .\download_nuget_package.ps1 -version 4.2.0 -package_name Selenium.WebDriver
+```
+there is also a utility to clean the packages from numerous target platform assemblies, keeping only `net40` and `net45`
+```powershell
+. .\prune_unneded_nuget_packages.ps1
+```
+this will unlink these
+```text
+packages\Selenium.Webdriver.4.2.0\lib\net46\WebDriver.dll
+packages\Selenium.Webdriver.4.2.0\lib\net47\WebDriver.dll
+packages\Selenium.Webdriver.4.2.0\lib\net48\WebDriver.dll
+packages\Selenium.Webdriver.4.2.0\lib\net5.0\WebDriver.dll
+packages\Selenium.Webdriver.4.2.0\lib\netstandard2.0\WebDriver.dll
+packages\Selenium.Webdriver.4.2.0\lib\netstandard2.1\WebDriver.dll
+```
 
 ### Usage
 
