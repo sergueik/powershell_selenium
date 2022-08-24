@@ -5,8 +5,8 @@ using System.Linq;
 using NUnit.Framework;
 using System.Dynamic;
 using System.Collections.Generic;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using SeleniumExtras.WaitHelpers;
 // using OpenQA.Selenium.Environment;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Remote;
@@ -43,8 +43,8 @@ namespace Program {
 		protected IWebDriver driver;
 		private WebDriverWait wait;
 		private Actions actions;
-		private const int wait_seconds = 3;
-		private const long wait_poll_milliseconds = 300;
+		private const int wait_seconds = 30;
+		private const long wait_poll_milliseconds = 500;
 		private String webSocketURL = null;
 		private String devtoolurl = null;
 		private int id;
@@ -54,7 +54,6 @@ namespace Program {
 			try {
 				driver.Quit();
 			} catch (Exception) {
-				// Ignore errors if unable to close the browser
 			}
 			Assert.AreEqual("", verificationErrors.ToString());
 		}
@@ -63,7 +62,7 @@ namespace Program {
 		[SetUp]
 		public void setup() {
 
-			ChromeOptions options = new ChromeOptions();
+			var options = new ChromeOptions();
 			options.SetLoggingPreference(LogType.Driver, OpenQA.Selenium.LogLevel.Debug);
 
 			driver = new ChromeDriver(options);
@@ -194,12 +193,26 @@ namespace Program {
 			// https://stackoverflow.com/questions/42421148/wait-untilexpectedconditions-doesnt-work-any-more-in-selenium
 			// https://stackoverflow.com/questions/49866334/c-sharp-selenium-expectedconditions-is-obsolete
 			// TODO: address
-			// wait.Until(ExpectedConditions.ElementIsVisible(locator));
-			Thread.Sleep(10000);
+			wait.Until(ExpectedConditions.ElementIsVisible(locator));
+			// alternatively do fluent wait .net style
+			// per https://stackoverflow.com/questions/49866334/c-sharp-selenium-expectedconditions-is-obsolete
+			//
+			/*
+			var element = wait.Until(condition => {
+				try {
+					var elementToBeDisplayed = driver.FindElement(By.Id("content-section"));
+					return elementToBeDisplayed.Displayed;
+				} catch (StaleElementReferenceException) {
+					return false;
+				} catch (NoSuchElementException) {
+					return false;
+				}
+			});
+			*/ 
 			IList<IWebElement> elements = driver.FindElements(locator);
 			Assert.IsTrue(elements.Count > 0);
 			elements[0].Click();
-			Thread.Sleep(20000);
+			Thread.Sleep(10000);
 		}
 		
 		private String buildGetVersion(int id) {

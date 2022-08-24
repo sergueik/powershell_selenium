@@ -174,12 +174,12 @@ and the browser shows the googleplex neighborhood:
  * https://stackoverflow.com/questions/2064641/is-there-a-websocket-client-implemented-for-net#:~:text=Yes%20it%20is.,WebSocket%20client%20lib%20with%20it.
  * https://docs.microsoft.com/en-us/dotnet/api/system.net.websockets.websocket?redirectedfrom=MSDN&view=net-6.0
  * https://docs.microsoft.com/en-us/dotnet/api/system.net.websockets.clientwebsocket?view=net-6.0
+  * [discussion](https://stackoverflow.com/questions/49866334/c-sharp-selenium-expectedconditions-is-obsolete) about `SeleniumExtras.WaitHelpers` nuget package
+  * https://stackoverflow.com/questions/65821815/how-to-use-expectedconditions-in-selenium-4
+  * https://stackoverflow.com/questions/42421148/wait-untilexpectedconditions-doesnt-work-any-more-in-selenium
+  * [Event-based Asynchronous Pattern Overview](https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/event-based-asynchronous-pattern-overview)
 
+  * [Asynchronous Programming Model (APM)](https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/asynchronous-programming-model-apm?redirectedfrom=MSDN)
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
 
-Event-based Asynchronous Pattern Overview
-https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/event-based-asynchronous-pattern-overview
-
-Asynchronous Programming Model (APM)
-https://docs.microsoft.com/en-us/dotnet/standard/asynchronous-programming-patterns/asynchronous-programming-model-apm?redirectedfrom=MSDN
