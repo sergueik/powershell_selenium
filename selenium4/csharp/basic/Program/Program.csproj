@@ -69,7 +69,7 @@
     </Reference>
     <Reference Include="System.Dynamic" />
     <Reference Include="WebDriver">
-      <HintPath>..\packages\Selenium.Webdriver.4.2.0\lib\net45\WebDriver.dll</HintPath>
+      <HintPath>..\packages\Selenium.Support.4.2.0\lib\net45\WebDriver.dll</HintPath>
     </Reference>
     <Reference Include="websocket-sharp">
       <HintPath>..\packages\WebSocketSharp.1.0.3-rc11\lib\websocket-sharp.dll</HintPath>
