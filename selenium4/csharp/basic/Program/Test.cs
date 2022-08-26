@@ -1,4 +1,7 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
+
 using System.Linq.Expressions;
 using System.Text;
 using System.Linq;
@@ -48,6 +51,7 @@ namespace Program {
 		private String webSocketURL = null;
 		private String devtoolurl = null;
 		private int id;
+		private static int port;
 
 		[TearDown]
 		public void cleanup() {
@@ -64,6 +68,7 @@ namespace Program {
 
 			var options = new ChromeOptions();
 			options.SetLoggingPreference(LogType.Driver, OpenQA.Selenium.LogLevel.Debug);
+			// options.AddArgument("--headless");
 
 			driver = new ChromeDriver(options);
 			wait = new WebDriverWait(driver, TimeSpan.FromSeconds(wait_seconds));
@@ -74,6 +79,14 @@ namespace Program {
 			ILogs logs = driver.Manage().Logs;
 			// Assert.IsTrue(logs !=  null);
 			var entries = logs.GetLog(LogType.Driver);
+
+			// NOTE: System.InvalidCastException in runtime: 
+			// Unable to cast object of type 'OpenQA.Selenium.Chrome.ChromeDriver' to type 'OpenQA.Selenium.Remote.RemoteWebDriver'
+			// see also: https://groups.google.com/g/selenium-users/c/AfIg2xW1JSc
+			// after upgrading to Selenium 4
+			
+			// var sessionId = ((RemoteWebDriver)driver).SessionId.ToString();
+			// Console.WriteLine("session id: " + sessionId);
 
 			// will also see:
 			// Launching chrome: "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --allow-pre-commit-input --disable-background-networking --disable-backgrounding-occluded-windows --disable-client-side-phishing-detection --disable-default-apps --disable-hang-monitor --disable-popup-blocking --disable-prompt-on-repost --disable-sync --enable-automation --enable-blink-features=ShadowDOMV0 --enable-logging --log-level=0 --no-first-run --no-service-autorun --password-store=basic --remote-debugging-port=0 --test-type=webdriver --use-mock-keychain --user-data-dir="C:\Users\Serguei\AppData\Local\Temp\scoped_dir10036_1503715160" data:
@@ -93,6 +106,16 @@ namespace Program {
 					}
 				}
 			}
+		}
+
+ 		// only works with Chrome:
+		// SetUp : System.InvalidOperationException : Access to 'file:///C:/developer/sergueik/powershell_selenium/csharp/protractor-net/Test/bin/Debug/resources/ng_datepicker.htm' from script denied
+		public void GetPageContent(string filename){
+			driver.Navigate().GoToUrl(new System.Uri(Path.Combine(Directory.GetCurrentDirectory(), filename)).AbsoluteUri);
+		}
+
+		public void GetLocalHostPageContent(string filename) {
+			driver.Navigate().GoToUrl(String.Format("http://127.0.0.1:{0}/{1}{2}", port, "resources", filename));
 		}
 
 		[Test]
@@ -189,38 +212,84 @@ namespace Program {
 
 			driver.Navigate().GoToUrl("https://www.google.com/maps");
 			By locator = By.CssSelector("div[jsaction*='mouseover:mylocation.main']");
-			// https://stackoverflow.com/questions/65821815/how-to-use-expectedconditions-in-selenium-4
-			// https://stackoverflow.com/questions/42421148/wait-untilexpectedconditions-doesnt-work-any-more-in-selenium
-			// https://stackoverflow.com/questions/49866334/c-sharp-selenium-expectedconditions-is-obsolete
-			// TODO: address
 			wait.Until(ExpectedConditions.ElementIsVisible(locator));
 			// alternatively do fluent wait .net style
 			// per https://stackoverflow.com/questions/49866334/c-sharp-selenium-expectedconditions-is-obsolete
 			//
-			/*
-			var element = wait.Until(condition => {
-				try {
-					var elementToBeDisplayed = driver.FindElement(By.Id("content-section"));
-					return elementToBeDisplayed.Displayed;
-				} catch (StaleElementReferenceException) {
-					return false;
-				} catch (NoSuchElementException) {
-					return false;
-				}
-			});
-			*/ 
 			IList<IWebElement> elements = driver.FindElements(locator);
 			Assert.IsTrue(elements.Count > 0);
 			elements[0].Click();
 			Thread.Sleep(10000);
 		}
-		
+
+		// filtering does not work wuth local files
+		[Test]
+		public void test3() {
+			id = 534424;
+			try {
+				using (var webSocket = new WebSocket(webSocketURL)) {
+
+					webSocket.Connect();
+					string[]urls = {"*.js"};
+					var payload = buildSetBlockedURLs(id, urls);
+					Console.WriteLine(String.Format("sending: {0}", payload));
+					webSocket.Send(payload);
+				}
+			} catch (Exception e) {
+				Console.WriteLine("Exception (ignored): " + e.ToString());
+			}
+
+			try {
+				using (var webSocket = new WebSocket(webSocketURL)) {
+
+					webSocket.Connect();
+					webSocket.Send(buildClearBrowserCache(id));
+				}
+			} catch (Exception e) {
+				Console.WriteLine("Exception (ignored): " + e.ToString());
+			}
+			
+			try {
+				using (var webSocket = new WebSocket(webSocketURL)) {
+
+					webSocket.Connect();
+					webSocket.Send(buildSetCacheDisabled(id, true));
+				}
+			} catch (Exception e) {
+				Console.WriteLine("Exception (ignored): " + e.ToString());
+			}
+			
+			GetPageContent("ng_basic.htm");
+			
+			By locator = By.CssSelector("body > table > tbody > tr > td:nth-child(1)");
+			// wait.Until(ExpectedConditions.ElementIsVisible(locator));
+			IWebElement element = wait.Until(condition => {
+				try {
+					// A local variable named 'element' cannot be declared 
+					// in this scope because it would give a different 
+					// meaning to 'element', which is 
+					// already used in a 'parent or current' scope 
+					// to denote something else (CS0136)
+					var e = driver.FindElement(locator);
+					
+					return (e.Displayed) ? e : null;
+				} catch (StaleElementReferenceException) {
+					return null;
+				} catch (NoSuchElementException) {
+					return null;
+				}
+			});
+			Console.WriteLine("Text: " + element.Text);
+			driver.Navigate().GoToUrl("http://juliemr.github.io/protractor-demo/");
+			Thread.Sleep(10000);
+		}
+
 		private String buildGetVersion(int id) {
 			const string message = "Browser.getVersion";
 			return buildMessage(id, message);
 		}
 
-		private String buildSetGeolocationOverrideMessage (int id, double latitude, double longitude, long accuracy) {
+		private string buildSetGeolocationOverrideMessage (int id, double latitude, double longitude, long accuracy) {
 			var param = new Dictionary<string,object>();
 			const string message = "Emulation.setGeolocationOverride";
 			param["latitude"] = latitude;
@@ -228,7 +297,24 @@ namespace Program {
 			param["accuracy"] = accuracy;
 			return buildMessage(id, message, param);
 		}
-
+		
+		private String buildClearBrowserCache(int id) {
+			const string message = "Network.clearBrowserCache";
+			return buildMessage(id, message);
+		}
+		private String buildSetBlockedURLs(int id, string[] urls) {
+			const string message = "Network.setBlockedURLs";
+			var param = new Dictionary<string,object>();
+			param["urls"] = urls;
+			return buildMessage(id, message, param);
+		}
+		
+		private String buildSetCacheDisabled(int id, bool cacheDisabled) {
+			const string message = "Network.setCacheDisabled";
+			var param = new Dictionary<string,object>();
+			param["cacheDisabled"] = false;
+			return buildMessage(id, message, param);
+		}
 		private String buildClearGeolocationOverrideMessage(int id) {
 			const string message = "Emulation.clearGeolocationOverride";
 			return buildMessage(id, message);
@@ -256,5 +342,4 @@ namespace Program {
 			return true;
 		}
 	}
-
 }

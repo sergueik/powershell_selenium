@@ -7,8 +7,8 @@
     <ProjectGuid>{D83DFE64-32B2-406E-A9A2-E2AE61777C80}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Protractor.Extentions</RootNamespace>
-    <AssemblyName>Protractor.Extentions</AssemblyName>
+    <RootNamespace>Extentions</RootNamespace>
+    <AssemblyName>Extentions</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
