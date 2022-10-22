@@ -158,9 +158,82 @@ $o.load()
 $o | get-member
 write-output $o.rawdata
 $friends = $o.test.friendslist.friends
-# $o | get-member
-# write-output $o.rawdata$o | get-member
 write-output $o.rawdata
 
 write-output $friends[0] | format-list
 write-output ('Friend count: {0}' -f $friends.count)
+
+write-output 'Indenting JSON'
+# static methods
+$p = @{'s' = 1; 'r' = @(1,2,3); 'q' = @{'t' = 0; }}
+# 
+
+$n = [Newtonsoft.Json.JsonConvert]::SerializeObject($p, [Newtonsoft.Json.Formatting]::Indented)
+
+write-output $n
+$r = @'
+{"a" : 1
+,
+    "b" : {
+"c" :[
+2,3,4]
+}    
+}
+'@
+write-output 'unindented JSON:'
+write-output $r
+
+write-output 'indented JSON:'
+$y = [Newtonsoft.Json.JsonConvert]::DeserializeObject($r)
+$n = [Newtonsoft.Json.JsonConvert]::SerializeObject($y, [Newtonsoft.Json.Formatting]::Indented)
+
+write-output $n
+
+write-output 'indented JSON with inline helper class:'
+# configuring indentation - 
+# https://stackoverflow.com/questions/2661063/how-do-i-get-formatted-json-in-net-using-c
+# https://www.newtonsoft.com/json/help/html/M_Newtonsoft_Json_JsonConvert_SerializeObject_3.htm
+# https://www.newtonsoft.com/json/help/html/t_newtonsoft_json_formatting.htm
+# https://www.newtonsoft.com/json/help/html/P_Newtonsoft_Json_JsonTextWriter_Indentation.htm
+# https://www.newtonsoft.com/json/help/html/P_Newtonsoft_Json_JsonTextWriter_IndentChar.htm
+# https://www.newtonsoft.com/json/help/html/writejsonwithjsontextwriter.htm
+# https://www.newtonsoft.com/json/help/html/M_Newtonsoft_Json_JsonConvert_SerializeObject_3.htm
+add-type -TypeDefinition  @'
+
+using System;
+using System.IO;
+using Newtonsoft.Json;
+
+public class JsonUtil {
+    public int Indentation { get; set; }
+
+    public string JsonPrettify(string json) {
+        using (var stringReader = new StringReader(json))
+        using (var stringWriter = new StringWriter()) {
+            var jsonReader = new JsonTextReader(stringReader);
+            var jsonWriter = new JsonTextWriter(stringWriter) { Formatting = Formatting.Indented };
+            if (this.Indentation !=0 )
+              jsonWriter.Indentation = this.Indentation;
+	
+            jsonWriter.WriteToken(jsonReader);
+            return stringWriter.ToString();
+        }
+    }
+}
+'@  -ReferencedAssemblies "${shared_assemblies_path}\Newtonsoft.Json.dll","${shared_assemblies_path}\nunit.framework.dll",'System.dll','System.Data.dll','Microsoft.CSharp.dll','System.Xml.Linq.dll','System.Xml.dll'
+
+$o = new-object -typeName 'JsonUtil'
+$o.Indentation = 2
+
+$o.JsonPrettify($r)
+
+# conversion to pure Powershell, unfinished
+[Newtonsoft.Json.Formatting] $f = [Newtonsoft.Json.Formatting]::Indented
+[System.IO.TextWriter]$t = new-object System.IO.StreamWriter 'file.txt'
+# new-object : Exception calling ".ctor" with "1" argument(s): "The process cannot access the file 'file.txt' because it is being used by another process."
+# new-object : A constructor was not found. Cannot find an appropriate 	constructor for type System.IO.TextWriter.
+# https://learn.microsoft.com/en-us/dotnet/api/system.io.textwriter?view=netframework-4.5
+# https://www.newtonsoft.com/json/help/html/t_newtonsoft_json_jsontextwriter.htm
+[Newtonsoft.Json.JsonTextWriter] $w =  new-object Newtonsoft.Json.JsonTextWriter($t)
+$w.Indentation = 10 
+$t.close()

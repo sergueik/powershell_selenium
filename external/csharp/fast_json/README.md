@@ -77,7 +77,9 @@ copy-item -path .\lib\net20\fastjson.dll -destination '.'
 ```
 ### See Also
 
-  *[fast bson serializer](https://github.com/mgholam/fastBinaryJSON) by same author. NOTE: requires C# 6.x to compile the code, even for target .Net framework 4.x
+  * [fast bson serializer](https://github.com/mgholam/fastBinaryJSON) by same author. NOTE: requires C# 6.x to compile the code, even for target .Net framework 4.x
+  * [formatting JSON](https://weblog.west-wind.com/posts/2015/mar/31/prettifying-a-json-string-in-net)
+  * [indenting JSON](https://stackoverflow.com/questions/2661063/how-do-i-get-formatted-json-in-net-using-c)
 
 ### Author
 
