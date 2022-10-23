@@ -68,7 +68,7 @@ namespace WebTester {
       get;
       set;
     }
-    
+
     public Tester(String rawdata) {
       this.rawdata = rawdata;
     }
@@ -166,7 +166,7 @@ write-output ('Friend count: {0}' -f $friends.count)
 write-output 'Indenting JSON'
 # static methods
 $p = @{'s' = 1; 'r' = @(1,2,3); 'q' = @{'t' = 0; }}
-# 
+#
 
 $n = [Newtonsoft.Json.JsonConvert]::SerializeObject($p, [Newtonsoft.Json.Formatting]::Indented)
 
@@ -177,7 +177,7 @@ $r = @'
     "b" : {
 "c" :[
 2,3,4]
-}    
+}
 }
 '@
 write-output 'unindented JSON:'
@@ -190,7 +190,7 @@ $n = [Newtonsoft.Json.JsonConvert]::SerializeObject($y, [Newtonsoft.Json.Formatt
 write-output $n
 
 write-output 'indented JSON with inline helper class:'
-# configuring indentation - 
+# configuring indentation -
 # https://stackoverflow.com/questions/2661063/how-do-i-get-formatted-json-in-net-using-c
 # https://www.newtonsoft.com/json/help/html/M_Newtonsoft_Json_JsonConvert_SerializeObject_3.htm
 # https://www.newtonsoft.com/json/help/html/t_newtonsoft_json_formatting.htm
@@ -226,14 +226,19 @@ $o = new-object -typeName 'JsonUtil'
 $o.Indentation = 2
 
 $o.JsonPrettify($r)
-
-# conversion to pure Powershell, unfinished
+write-output 'indented JSON with Powershell helper class using "Newtonsoft.Json" loaded assembly namespace'
+# converted to plain Powershell
 [Newtonsoft.Json.Formatting] $f = [Newtonsoft.Json.Formatting]::Indented
-[System.IO.TextWriter]$t = new-object System.IO.StreamWriter 'file.txt'
-# new-object : Exception calling ".ctor" with "1" argument(s): "The process cannot access the file 'file.txt' because it is being used by another process."
-# new-object : A constructor was not found. Cannot find an appropriate 	constructor for type System.IO.TextWriter.
-# https://learn.microsoft.com/en-us/dotnet/api/system.io.textwriter?view=netframework-4.5
+[System.IO.TextWriter]$t = new-object System.IO.StringWriter
+
 # https://www.newtonsoft.com/json/help/html/t_newtonsoft_json_jsontextwriter.htm
 [Newtonsoft.Json.JsonTextWriter] $w =  new-object Newtonsoft.Json.JsonTextWriter($t)
-$w.Indentation = 10 
+$w.Formatting = $f
+$w.Indentation = 3
+
+[System.IO.TextReader]$i = new-object System.IO.StringReader($r)
+[Newtonsoft.Json.JsonTextReader] $e =  new-object Newtonsoft.Json.JsonTextReader($i)
+
+$w.WriteToken($e)
+write-output $t.ToString()
 $t.close()
