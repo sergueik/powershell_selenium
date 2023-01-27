@@ -6,6 +6,26 @@ import os,sys,time,re
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
 from selenium.webdriver.chrome.options import Options
+import getopt
+
+try:
+  opts, args = getopt.getopt(sys.argv[1:], 'hdan:', ['help', 'debug', 'headless', 'name='])
+except getopt.GetoptError as err:
+  print('usage: with_profile.py [-n|--name <name>] [-a|--headless] [-d|--debug] [-h]')
+profile_dir_name = None
+headless = False
+global debug
+debug = False
+for option, argument in opts:
+  if option == '-d':
+    debug = True
+  elif option in ('-h', '--help'):
+    print('usage: with_profile.py [-n|--name <name>] [-a|--headless] [-d|--debug] [-h]')
+    exit()
+  elif option in ('-a', '--headless'):
+   headless = True
+  elif option in ('-n', '--name'):
+    profile_dir_name = argument
 
 is_windows = os.getenv('OS') != None and re.compile('.*NT').match( os.getenv('OS'))
 homedir = os.getenv('USERPROFILE' if is_windows else 'HOME')
@@ -17,12 +37,13 @@ chromedriver_path = homedir + os.sep + 'Downloads' + os.sep + ('chromedriver.exe
 print('chromedriver path: {}'.format(chromedriver_path), file = sys.stderr)
 
 options = Options()
-profile_dir_name = None
-if len(sys.argv) > 1:
-  profile_dir_name = sys.argv[1]
 if profile_dir_name == None:
   profile_dir_name = 'CustomProfile'
 user_data_dir = '{0}\\AppData\\Local\\Google\\Chrome\\User Data\\{1}'.format(os.getenv('USERPROFILE'), profile_dir_name) if is_windows else '{0}/.config/{1}'.format(os.getenv('HOME'), profile_dir_name)
+# NOTE: the actual profile dir will be created as 
+# '{os.getenv('HOME')}\\AppData\\Local\\Google\\Chrome\\User Data\\{profile_dir_name}\\{profile_dir_name}'
+# with profile_dir_name twice
+# NOTE: will silently fail on Windows 10 x64 Chrome 109 x86
 if os.path.isdir(user_data_dir):
   print('Custom profile will be used: "{}"'.format(user_data_dir), file = sys.stderr)
 else:
@@ -49,6 +70,22 @@ options.add_argument('--disable-blink-features=AutomationControlled')
 
 
 options.add_argument( 'user-data-dir={}'.format(user_data_dir))
+
+
+user_agent = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0)'
+if headless:
+  options.add_argument('--window-size=1920,1080')
+  options.add_argument('--headless')
+  options.add_argument('--disable-gpu')
+  options.add_argument('--enable-javascript')
+  options.add_argument('--disable-dev-shm-usage')
+  options.add_argument('--no-sandbox')
+  options.add_argument('--ignore-certificate-errors')
+  options.add_argument('--allow-insecure-localhost')
+  options.add_argument('--allow-running-insecure-content')
+  options.add_argument('--disable-browser-side-navigation')
+  options.add_argument( 'user-agent={}'.format(user_agent))
+
 try:
   driver = webdriver.Chrome(executable_path = chromedriver_path, options = options)
 # TODO: Message: unknown error: Chrome failed to start: exited normally.
