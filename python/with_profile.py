@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-
+#
 from __future__ import print_function
 import os,sys,time,re
 
 from selenium import webdriver
 from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import NoSuchElementException 
+from selenium.common.exceptions import JavascriptException 
 from selenium.webdriver.chrome.options import Options
 import getopt
 
@@ -31,8 +33,19 @@ is_windows = os.getenv('OS') != None and re.compile('.*NT').match( os.getenv('OS
 homedir = os.getenv('USERPROFILE' if is_windows else 'HOME')
 
 print('user home directory path: {}'.format(homedir), file = sys.stderr)
-
+# if the chromedriver was downloaded manually to default location, add to the PATH
 chromedriver_path = homedir + os.sep + 'Downloads' + os.sep + ('chromedriver.exe' if is_windows else 'chromedriver')
+# if installed system-wide
+# on Ubuntu
+# on alpine
+# apk add chromium chromium-chromedriver
+# on Ubuntu
+# apt-get install chromium-browser chromium-chromedriver
+# the driver name is chromedriver
+chromedriver_path = (homedir + os.sep + 'Downloads' + os.sep + 'chromedriver.exe') if is_windows else '/usr/bin/chromedriver'
+
+# NOTE:  https://www.browserstack.com/guide/get-current-url-in-selenium-and-python
+# to switch to webdriver_manager,Service etc.
 
 print('chromedriver path: {}'.format(chromedriver_path), file = sys.stderr)
 
@@ -105,6 +118,25 @@ if driver != None:
   driver.get('chrome://version/')
   # will show both Profile Path and Command Line
   time.sleep(10)
+  if headless:
+    page_source = driver.page_source
+
+    page_text = 'undefined'
+    try:
+      element = driver.find_element_by_css_selector('table#inner')
+      # NOTE: selenium.common.exceptions.NoSuchElementException: Message: no such element: Unable to locate element: {"method":"css selector","selector":"table#inner"}
+      page_text = element.text
+    except NoSuchElementException as e:
+      pass
+    try:
+      page_text = driver.execute_script('document.querySelector("#inner").textContent')
+      # NOTE: selenium.common.exceptions.JavascriptException: Message: javascript error: Cannot read property 'textContent' of null 
+    except JavascriptException as e:
+      pass
+
+    page_url = driver.current_url
+    print('{0}: {1} {2}'.format(page_url,page_source,page_text), file = sys.stderr)
+    # NOTE: showing chrome://version/: <html><head></head><body></body></html>
   driver.close()
   driver.quit()
   if not os.path.isdir(user_data_dir + os.sep + 'Default' ):
