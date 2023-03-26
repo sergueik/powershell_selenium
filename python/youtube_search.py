@@ -3,6 +3,8 @@
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+# with Selenium 4.x will also need
+# from selenium.webdriver.common.by import By
 import time, datetime, os,sys
 import getopt
 try:
@@ -47,6 +49,10 @@ browser.set_script_timeout(10)
 browser.set_page_load_timeout(10)
 # interesting on the youtube page there are multiple elements with id 'search':
 element = browser.find_element_by_id('search')
+# NOTE: With Selenium 4.x need to update search method
+# find_element(By.ID, 'search')
+# https://selenium-python.readthedocs.io/locating-elements.html
+
 print(element.get_attribute('outerHTML'))
 # <g id="search"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></g>
 element = browser.find_element_by_css_selector('form input#search')
