@@ -1,8 +1,12 @@
 ### Info
 
-directory contains standalone console app to test the FileHelper and the utility class itself
+this directory contains standalone console app to test the `FileHelper`
+concurrency-safe data file reader/writer with retries
+and the utility class itself
 
-fixed and cleaned up code from [article](https://www.codeproject.com/Articles/8600/FileHelperTesterEx-C-s-WebClient-FileHelperTester-with-more-fu)
+based on fixed and cleaned up code from
+__UploadFileEx: C#'s WebClient.UploadFile with more functionality__
+[article](https://www.codeproject.com/Articles/8600/FileHelperTesterEx-C-s-WebClient-FileHelperTester-with-more-fu)
 
 ### Testing
 
@@ -34,8 +38,8 @@ Wait for 5.00 sec before closing  the file
 ```
   
 
-run two of the same in sobling console windows
-The one which starts later, will display:
+run two of the same in two sibling console windows
+The one which starts second, will log to console:
 ```text
 Datafile: c:\temp\data.txt
 HoldInterval: 5000
@@ -67,7 +71,9 @@ Closing stream
 
 if no settings are provided on the command line the values are read from `FileHelperTester.exe.config` (`Program\App.config`)
 
-the broken revision of `FileHelper.cs` will throw the following error:
+the variant of `FileHelper.cs` with incorrect exception processing logic 
+- revision from commit [7014d82f5bb3c8610f38d4cc14ffb3ba9ea04455](https://github.com/sergueik/powershell_ui_samples/tree/7014d82f5bb3c8610f38d4cc14ffb3ba9ea04455) - 
+will throw the following error:
 ```text
 Datafile: c:\temp\data.txt
 HoldInterval: 5000
@@ -83,5 +89,7 @@ Unhandled Exception: System.NullReferenceException: Object reference not set to 
 
 ```
 ### See Also
+* __Load Average__ [project](https://github.com/sergueik/powershell_ui_samples/tree/master/csharp/loadaverage-service) application collecting the `\\System\Processor Queue Length` Windows performance counter
+
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)

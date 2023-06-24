@@ -1,87 +1,103 @@
 ﻿using System;
+using System.Text;
+using System.Linq;
+
 using System.Text.RegularExpressions;
 using System.Collections.Specialized;
+using System.Collections.Generic;
 
-namespace Utils
-{
-	public class ParseArgs
-	{
-
+namespace Utils {
+	public class ParseArgs {
+	
 		private bool _DEBUG = false;
 		public bool DEBUG {
 			get { return _DEBUG; }
 			set { _DEBUG = value; }
 		}
 		private StringDictionary _MACROS;
-
+	
 		private StringDictionary AllMacros {
 			get { return _MACROS; }
 		}
-
-		private bool DefinedMacro(string sMacro)
-		{
-			return _MACROS.ContainsKey(sMacro);
+	
+		private bool DefinedMacro(string name) {
+			return _MACROS.ContainsKey(name);
 		}
-
-
-		public string GetMacro(string sMacro)
-		{
-
-			return (DefinedMacro(sMacro)) ?
-			_MACROS[sMacro] : String.Empty;
+	
+		public string GetMacro(string name) {
+			return (DefinedMacro(name)) ?
+				_MACROS[name] : String.Empty;
 		}
-
-		public string SetMacro(string sMacro, string sValue)
-		{
-			_MACROS[sMacro] = sValue;
-			return _MACROS[sMacro];
+	
+		public string SetMacro(string name, string value) {
+			_MACROS[name] = value;
+			return _MACROS[name];
 		}
-
-		public ParseArgs(string sLine)
-		{
-
+	
+		public ParseArgs(string commandLine) {
+	
 			_MACROS = new StringDictionary();
-
-			string s = @"(\s|^)(?<token>(/|-{1,2})(\S+))";
-			var r = new Regex(s, RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase);
-			MatchCollection m = null;
-			try {
-				m = r.Matches(sLine);
-			} catch (Exception e) {
-				Console.WriteLine(e.Message);
-			}
-			if (m != null) {
-
-				for (int i = 0; i < m.Count; i++) {
-					string sToken = m[i].Groups["token"].Value.ToString();
-					// Console.WriteLine("{0}", sToken);
-					ParseSwithExpression(sToken);
-				}
+			String[] tokens = ParseArgs.splitTokens(commandLine);
+			for (var cnt = 0; cnt != tokens.Length; cnt++) {
+				var token = tokens[cnt];
+				ParseSwithExpression(token);
 			}
 			return;
 		}
-
-		private void ParseSwithExpression(string sToken)
-		{
-			string s = @"(/|\-{1,2})(?<macro>[a-z0-9_\-\\\@\$\#]+)([\=\:](?<value>[\:a-z0-9_\.\,\\\-\@\$\#]+))*";
-
-			var r = new Regex(s, RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase);
-			MatchCollection m = r.Matches(sToken);
-
-			if (m != null) {
-				for (int i = 0; i < m.Count; i++) {
-					string sMacro = m[i].Groups["macro"].Value.ToString();
-
-					string sValue = m[i].Groups["value"].Value;
-					if (sValue == "")
-						sValue = "true";
-					SetMacro(sMacro, sValue);
+	
+		// origin: https://stackoverflow.com/questions/3366281/tokenizing-a-string-but-ignoring-delimiters-within-quotes
+		// (converted from Java)
+		// see also:
+		// http://www.java2s.com/example/java-utility-method/string-split-by-quote/split-string-str-char-chrsplit-char-chrquote-fbd19.html
+		// https://www.baeldung.com/java-split-string-commas
+	
+		public static String[] splitTokens(String line) {
+			line += " "; // To detect last token when not quoted...
+			var tokens = new List<String>();
+			bool inQuote = false;
+			var stringBuilder = new StringBuilder();
+		
+			for (int i = 0; i < line.Length; i++) {
+				// NOTE: extension method		
+				char c = line.ElementAt<Char>(i);
+				if (c == '"' || c == ' ' && !inQuote) {
+					if (c == '"')
+						inQuote = !inQuote;
+					if (!inQuote && stringBuilder.Length > 0) {
+						tokens.Add(stringBuilder.ToString());
+						stringBuilder.Remove(0, stringBuilder.Length);
+					}
+				} else
+					stringBuilder.Append(c);
+			}
+			return tokens.ToArray();
+		}
+	
+		private void ParseSwithExpression(string line) {
+			// @"(/|\-{1,2})(?<macro>[a-z0-9_\-]+)([\=\:](?<value>[\:\/a-z0-9_\.\,\\\-\+\@\$\#\=\/?]+))*";
+			const string expression = @"(/|\-{1,2})(?<macro>[a-z0-9_\-]+)([\=\:](?<value>[\:\/a-z0-9_\.\,\\\-\+\@\$\#\=\/? ]+))*";
+			ParseSwithExpression(line, expression);
+		}
+	
+		private void ParseSwithExpression(string line, string expression) {
+	
+			var regex = new Regex(expression, RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase);
+			MatchCollection matchCollection = regex.Matches(line);
+	
+			if (matchCollection != null) {
+				for (int i = 0; i < matchCollection.Count; i++) {
+					string name = matchCollection[i].Groups["macro"].Value.ToString();
+	
+					string value = matchCollection[i].Groups["value"].Value;
+					if (value == "")
+						value = "true";
+					SetMacro(name, value);
 					if (DEBUG)
-						Console.WriteLine("{0} = \"{1}\"", sMacro, GetMacro(sMacro));
+						Console.WriteLine("{0} = \"{1}\"", name, GetMacro(name));
 				}
 			}
 			return;
 		}
-
+	
 	}
 }
