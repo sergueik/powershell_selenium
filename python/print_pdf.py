@@ -6,7 +6,7 @@
 
 # NOTE: was found randomly failing with certain builds of google-chrome-stable 77
 # intermittent issue of a tiny blank pdf produced (not saved)
-# work fine  with other vesions e.g.
+# works fine  with other vesions e.g.
 # chromium-browser 79 and google-chrome-stable 76 and 72
 # with google-chrome 76 the PrintToPDF API is only supported in headless mode.
 # 'PrintToPDF is not implemented' exception is generated when run fullscreen
@@ -36,7 +36,7 @@ def print_pdf(url, chromedriver = './chromedriver', print_options = {}):
   options = Options()
   options.add_argument('--headless')
   options.add_argument('--disable-gpu')
-  # for annotated list of chrome headless flags, see
+# for annotated list of chrome headless flags, see
   # https://peter.sh/experiments/chromium-command-line-switches/
   # https://groups.google.com/forum/#!topic/selenium-users/SnxpvG8Erj4
   flags = [
@@ -101,6 +101,13 @@ def print_pdf(url, chromedriver = './chromedriver', print_options = {}):
     'displayHeaderFooter': False,
     'printBackground': True,
     'preferCSSPageSize': False,
+    # Letter page sizes (the defalt)
+    'paperHeight': 11.0,
+    'paperWidth': 8.5,
+    'marginTop': 1.0,
+    'marginBottom': 0.75,
+    'marginLeft': 0.75,
+    'marginRight': 0.75,
   }
   params.update(print_options)
   if debug:
@@ -117,14 +124,15 @@ def send_command_and_get_result(driver, cmd, params = {}):
   if debug:
     print ('POST to {}'.format(post_url))
     print('params: {}'.format(json.dumps({'cmd': cmd, 'params': params})))
+    print('command: {}'.format(json.dumps({'cmd': cmd, 'params': params})))
 
   response = driver.command_executor._request('POST', post_url, json.dumps({'cmd': cmd, 'params': params}))
   if debug:
     print( response.keys())
-  # NOTE: 'has_key()' is even removed from P 3.x
+  # NOTE: 'has_key()' is even removed from Python 3.x
   # see also: https://stackoverflow.com/questions/1323410/should-i-use-has-key-or-in-on-python-dicts
   # NOTE: KeyError: 'status'
-  # early imlementation returns JSON with ['status', 'sessionId', 'value'] keys
+  # early implementation returns JSON with ['status', 'sessionId', 'value'] keys
   # with recent versions of chrome response contains only has ['value']['data']
   # print( response.keys())
   if ('status' in response ) and response['status']:
@@ -133,14 +141,17 @@ def send_command_and_get_result(driver, cmd, params = {}):
   return response.get('value')
   # NOTE: on Windows 7 node occationally seeing commctl32.dll warning:
   # 'A program running on this computer is trying to display a message'
-  # no meaningful message shown when 'View the Message' is chosen - repeated multiple times
-
+  # no meaningful message shown when 'View the Message' is chosen - tried multiple times
+usage_str = '''usage: print_pdf.py --input <html page> --output <output file> [--size a4] [--debug]
+exaple:
+python3 print_pdf.py --debug  --input https://www.wikipedia.org --output a.pdf --size a4
+'''
 if __name__ == '__main__':
   # https://docs.python.org/2/library/getopt.html
   try:
     opts, args = getopt.getopt(sys.argv[1:], 'hdi:o:s:p:', ['help', 'debug', 'input=', 'output=','size=', 'pages='])
   except getopt.GetoptError as err:
-    print('usage: print_pdf.py --input <html page> --output <output file>')
+    print(usage_str )
     print(str(err))
     exit()
 
@@ -153,8 +164,10 @@ if __name__ == '__main__':
   for option, argument in opts:
     if option == '-d':
       debug = True
+    elif option in ('-d', '--debug'):
+      debug = True
     elif option in ('-h', '--help'):
-      print ('usage: print_pdf.py --input <html page> --output <output file>')
+      print (usage_str)
       exit()
     elif option in ('-i', '--input'):
       url = argument
@@ -168,7 +181,7 @@ if __name__ == '__main__':
       assert False, 'unhandled option: {}'.format(option)
 
   if url == None or output_file == None:
-    print ('usage: print_pdf.py --input <html page> --output <output file>')
+    print (usage_str)
     exit()
 
   if getenv('OS') != None :
@@ -193,6 +206,10 @@ if __name__ == '__main__':
     print_options = {
       'paperWidth': 8.27,
       'paperHeight': 11.69,
+      'marginTop': 1.0,
+      'marginBottom': 1.44,
+      'marginLeft': 0.75,
+      'marginRight': 0.52,
     }
   if pages != None:
       print_options.update({'pageRanges': pages})
@@ -206,6 +223,3 @@ if __name__ == '__main__':
 
 # on vanilla Windows node
 # PATH=%PATH%;c:\Python27;%USERPROFILE%\Downloads
-
-
-
