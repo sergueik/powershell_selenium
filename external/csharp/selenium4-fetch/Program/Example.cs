@@ -1,6 +1,3 @@
-// origin: https://qna.habr.com/q/1266474?e=13639006#clarification_1709400
-// see also: https://stackoverflow.com/questions/72771825/selenium-4-c-sharp-chrome-devtools
-// (in Russian)
 
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -11,6 +8,8 @@ using DevToolsSessionDomains = OpenQA.Selenium.DevTools.V109.DevToolsSessionDoma
 using EnableCommandSettings = OpenQA.Selenium.DevTools.V109.Page.EnableCommandSettings;
 using AddScriptToEvaluateOnNewDocumentCommandSettings = OpenQA.Selenium.DevTools.V109.Page.AddScriptToEvaluateOnNewDocumentCommandSettings;
 using SetDeviceMetricsOverrideCommandSettings = OpenQA.Selenium.DevTools.V109.Emulation.SetDeviceMetricsOverrideCommandSettings;
+using SetUserAgentOverrideCommandSettings = OpenQA.Selenium.DevTools.V109.Network.SetUserAgentOverrideCommandSettings;
+
 using System.Linq;
 using System;
 using System.Management;
@@ -18,6 +17,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Text;
+using System.Threading;
 
 class Example {
 	
@@ -51,10 +51,25 @@ class Example {
 		domains.Emulation.SetDeviceMetricsOverride(deviceModeSetting);
 		// NOTE: Selenium dev recommends async / await
 		// await domains.Emulation.SetDeviceMetricsOverride(deviceModeSetting);
-		driver.Navigate().GoToUrl("https://store.epicgames.com/en-US/p/tunche");
+		
+		Console.Error.WriteLine("Browser User Agent: " + domains.Browser.GetVersion().Result.UserAgent);
+		// https://www.selenium.dev/selenium/docs/api/dotnet/OpenQA.Selenium.DevTools.V112.Network.SetUserAgentOverrideCommandSettings.html
+
+		SetUserAgentOverrideCommandSettings  settings = new SetUserAgentOverrideCommandSettings();
+		// settings.UserAgent = "\"Not_A Brand\";v=\"42\", \"Google Chrome\";v=\"109\", \"Chromium\";v=\"109\"";
+		
+		 
+		// settings.UserAgent = "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25";
+		domains.Network.SetUserAgentOverride(settings);
+		// NOTE: ignoring the console logs:
+		// ERROR: Couldn't read tbsCertificate as SEQUENCE
+		// ERROR: Failed parsing Certificate
+		// [5188:7540:0806/195815.500:ERROR:device_event_log_impl.cc(215)] [19:58:15.500] USB: usb_device_handle_win.cc:1046 Failed to read descriptor from node connection: A device attached to the system is not functioning. (0x1F)
+	
+		driver.Navigate().GoToUrl("https://manytools.org/http-html-text/http-request-headers/");
 
 		driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
-
+		Thread.Sleep(10000);
 		driver.Quit();
 	}
 }
