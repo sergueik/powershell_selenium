@@ -27,7 +27,7 @@ using TestUtils;
 namespace Selenium4.Test
 {
 	[TestFixture]
-	public class BasicTests
+	public class BasicAsyncTests
 	{
 		private readonly static string driverLocation = Environment.GetEnvironmentVariable("CHROMEWEBDRIVER");
 		private StringBuilder verificationErrors = new StringBuilder();
@@ -66,30 +66,30 @@ namespace Selenium4.Test
 			domains.Page.Enable(new EnableCommandSettings());
 		}
 
-		// NOTE: ignoring the console logs:
-		// ERROR: Couldn't read tbsCertificate as SEQUENCE
-		// ERROR: Failed parsing Certificate
-		// [5188:7540:0806/195815.500:ERROR:device_event_log_impl.cc(215)] [19:58:15.500] USB: usb_device_handle_win.cc:1046 Failed to read descriptor from node connection: A device attached to the system is not functioning. (0x1F)
-
 		[TearDown]
 		public void TearDown() {
 			try {
 				driver.Quit();
-			} catch (Exception) {
+			} catch (Exception e) {
+				Console.Error.WriteLine("Exception :" + e.ToString
+				                        ());
 			} /* Ignore cleanup errors */
 			Assert.AreEqual("", verificationErrors.ToString());
 		}
 
+		// NOTE: Selenium dev recommends async / await
+		// but the async test is simply hanging somewhere in setup
 		// see also: https://www.selenium.dev/selenium/docs/api/dotnet/OpenQA.Selenium.DevTools.V112.Network.SetUserAgentOverrideCommandSettings.html
+		[Ignore]
 		[Test]
-		public void test1() {
+		public async void test1() {
 			Console.Error.WriteLine("Actual Browser User Agent: " + domains.Browser.GetVersion().Result.UserAgent);
 			
 			SetUserAgentOverrideCommandSettings settings = new SetUserAgentOverrideCommandSettings();
 			String userAgent = "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25";
 			settings.UserAgent = userAgent;
 			Console.Error.WriteLine("PretendUser Agent: " + userAgent);
-			domains.Network.SetUserAgentOverride(settings);
+			await domains.Network.SetUserAgentOverride(settings);
 		
 			driver.Navigate().GoToUrl(baseURL);
 
@@ -102,8 +102,11 @@ namespace Selenium4.Test
 		}
 		
 		
+		// NOTE: Selenium dev recommends async / await
+		// but the async test is simply hanging somewhere in setup
+		[Ignore]		
 		[Test]
-		public void test2()
+		public async void test2()
 		{
 			Dictionary<int, int> widths = new Dictionary<int, int>();
 			widths[480] = 384;
@@ -117,8 +120,9 @@ namespace Selenium4.Test
 				settings.Mobile = true;
 				settings.DeviceScaleFactor = 50;
 
-				domains.Emulation.SetDeviceMetricsOverride(settings);
+				await domains.Emulation.SetDeviceMetricsOverride(settings);
 		
+				// Console.Error.WriteLine("Actual Deice Metric Settings Witdh: " + settings.Width);
 				Console.Error.WriteLine("Pretend Device Metric Settings Witdh: " + device_width);
 				driver.Navigate().GoToUrl(baseURL);
 

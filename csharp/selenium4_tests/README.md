@@ -1,4 +1,14 @@
+### Info
 
+this directory contains a tests configured to run on .Net Framework __4.5__ to practice Selenum WebDriver BIDI and CDP Command examples from
+[Selenium 4 Chrome DevTools Documentation](https://www.selenium.dev/documentation/webdriver/bidirectional/chrome_devtools/)
+and other sources [sergueik/selenium_cdp](https://github.com/sergueik/selenium_cdp)
+
+The [Selenium .NET API Docs](https://www.selenium.dev/selenium/docs/api/dotnet/)
+
+
+### Note
+	
 ### Note
 
 When compiled in Sharp Develop (which is discontinued) see the nuget error`
@@ -44,3 +54,9 @@ $url = 'https://www.nuget.org/api/v2/package/Selenium.Support/4.11.0'
 mkdir .\packages\Selenium.Support.4.8.2\lib\net45
 cmd %%- /c  dir /b/s .\packages\Selenium.Support.4.8.2\lib\
 ```
+
+### Author
+[Serguei Kouzmine](kouzmine_serguei@yahoo.com)
+
+
+
