@@ -9,7 +9,7 @@ using GetResponseBodyCommandResponse = OpenQA.Selenium.DevTools.V109.Fetch.GetRe
 using RequestPausedEventArgs = OpenQA.Selenium.DevTools.V109.Fetch.RequestPausedEventArgs;
 
 // origin: https://github.com/metaljase/SeleniumCaptureHttpResponse/blob/main/Metalhead.SeleniumCaptureHttpResponse.CDP/Response.cs
-namespace  Selenium4.Test {
+namespace  Test {
     public class Response {
         public Response(RequestPausedEventArgs requestPausedEventArgs, GetResponseBodyCommandResponse getResponseBodyCommandResponse){
             RequestPausedEventArgs = requestPausedEventArgs;

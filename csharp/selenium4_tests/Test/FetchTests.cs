@@ -7,15 +7,13 @@ using System.Management;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.IO;
 using System.Threading;
+
 
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.DevTools;
-
-using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.DevTools;
 using OpenQA.Selenium.DevTools.V109.Network;
@@ -28,11 +26,16 @@ using GetResponseBodyCommandSettings = OpenQA.Selenium.DevTools.V109.Fetch.GetRe
 using RequestPausedEventArgs = OpenQA.Selenium.DevTools.V109.Fetch.RequestPausedEventArgs;
 using FulfillRequestCommandResponse = OpenQA.Selenium.DevTools.V109.Fetch.FulfillRequestCommandResponse;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 using Extensions;
 using TestUtils;
 
 // origin: https://github.com/metaljase/SeleniumCaptureHttpResponse/blob/main/Metalhead.SeleniumCaptureHttpResponse.CDP/Program.cs
-namespace Selenium4.Test {
+namespace Test {
+	
+
 	[TestFixture]
 	public class FetchTests {
 		private static EventWaitHandle waitForHttpResponse;
@@ -46,9 +49,9 @@ namespace Selenium4.Test {
 		private static String baseURL = "https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending";
 		private FetchAdapter fetchAdaptor;
 		private Response response = null;
-
-		[Test]
-		public void test() {
+		
+		[SetUp]
+		public void SetUp() {
 			System.Environment.SetEnvironmentVariable("webdriver.chrome.driver", System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", ""));
 			var options = new ChromeOptions();
 			// options.AddArgument("--start-maximized");
@@ -68,6 +71,11 @@ namespace Selenium4.Test {
 			// The WebSocket protocol is not supported on this platform.
 			session = devTools.GetDevToolsSession();
 			domains = session.GetVersionSpecificDomains<DevToolsSessionDomains>();
+			
+		}
+
+		[Test]
+		public void test() {
 			fetchAdaptor = domains.Fetch;
 			var enableCommandSettings = new Fetch.EnableCommandSettings();
 			var requestPattern = new Fetch.RequestPattern {
@@ -91,15 +99,19 @@ namespace Selenium4.Test {
 			} else if (response != null && response.RequestPausedEventArgs.ResponseStatusCode == 200) {
 				// Output contents of message body returned in HTTP response.
 				Console.Error.WriteLine("Response:\n" + response);
+				var responseObject = processResponse(response.ToString());
+				Console.Error.WriteLine("Response Object:\n" + responseObject);
+				// NOTE: Keyword 'void' cannot be used in this context (CS1547)
 			}
 
 			fetchAdaptor.RequestPaused -= ResponseInterceptedAsync;
 			session.Dispose();
 			waitForHttpResponse.Dispose();
-			driver.Close();
+		
 		}
 		
-		async void ResponseInterceptedAsync(object sender, Fetch.RequestPausedEventArgs e) {
+		private async void ResponseInterceptedAsync(object sender, Fetch.RequestPausedEventArgs e)
+		{
 			// Wait for response body.
 			var getResponseBodyCommandResponse = await fetchAdaptor.GetResponseBody(new GetResponseBodyCommandSettings() {
 				RequestId = e.RequestId
@@ -115,6 +127,17 @@ namespace Selenium4.Test {
 			waitForHttpResponse.Set();
 		}
 
+		[TearDown]
+		public void TearDown() {
+			try {
+				driver.Close();
+				driver.Quit();
+			} catch (Exception) {
+			} /* Ignore cleanup errors */
+			Assert.AreEqual("", verificationErrors.ToString());
+		}
+
+
 		private static IWebDriver CreateWebDriver(string browserPath, string driverPath) {
 			var service = ChromeDriverService.CreateDefaultService(driverPath);
 			service.EnableVerboseLogging = false;
@@ -124,6 +147,17 @@ namespace Selenium4.Test {
 
 			return new ChromeDriver(service, options);
 		}
+
+		private dynamic processResponse(string resp = null) {
+			
+			if (resp.StartsWith ("["))
+			    return JArray.Parse (resp);
+			else
+			    return JsonConvert.DeserializeObject<Dictionary<String,Object>>(resp);	
+				// return JsonConvert.DeserializeObject<DynamicDictionary>(resp);	
+				
+		}
+		
 
 	}
 }

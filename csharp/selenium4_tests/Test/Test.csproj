@@ -59,15 +59,18 @@
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Dynamic" />
     <Reference Include="WebDriver">
       <HintPath>..\packages\Selenium.WebDriver.4.8.2\lib\net45\WebDriver.dll</HintPath>
     </Reference>
     <Reference Include="WebDriver.Support">
       <HintPath>..\packages\Selenium.Support.4.8.2\lib\net45\WebDriver.Support.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -104,6 +107,7 @@
     <Compile Include="BasicTests.cs" />
     <Compile Include="BasicAsyncTests.cs" />
     <Compile Include="BrowserHelper.cs" />
+    <Compile Include="DynamicDictionary.cs" />
     <Compile Include="FetchTests.cs" />
     <Compile Include="Response.cs" />
   </ItemGroup>

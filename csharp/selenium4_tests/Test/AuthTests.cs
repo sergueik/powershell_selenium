@@ -23,7 +23,7 @@ using System.IO;
 using Extensions;
 using TestUtils;
 
-namespace Selenium4.Test {
+namespace Test {
 	[TestFixture]
 	public class AuthTests {
 		private readonly static string driverLocation = Environment.GetEnvironmentVariable("CHROMEWEBDRIVER");

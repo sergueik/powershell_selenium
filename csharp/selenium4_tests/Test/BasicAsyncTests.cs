@@ -24,7 +24,7 @@ using SetUserAgentOverrideCommandSettings = OpenQA.Selenium.DevTools.V109.Networ
 using Extensions;
 using TestUtils;
 
-namespace Selenium4.Test
+namespace Test
 {
 	[TestFixture]
 	public class BasicAsyncTests
