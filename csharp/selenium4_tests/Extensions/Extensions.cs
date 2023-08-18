@@ -35,8 +35,7 @@ namespace Extensions {
 				return result;
 			}
 	
-			public static string FindMatch(this string text, string matchPattern)
-			{
+			public static string FindMatch(this string text, string matchPattern) {
 				string generated_tag = matchPattern.FindMatch("(?:<(?<result>[^>]+)>)", "result");
 				result = null;
 				regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled
@@ -55,15 +54,13 @@ namespace Extensions {
 				return result;
 			}
 
-		public static void Highlight(this IWebDriver driver, IWebElement element, int highlight_timeout = 100, int px = 3, string color = "yellow")
-		{
+		public static void Highlight(this IWebDriver driver, IWebElement element, int highlight_timeout = 100, int px = 3, string color = "yellow") {
 			((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.border='" + px + "px solid " + color + "'", element);
 			Thread.Sleep(highlight_timeout);
 			((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.border=''", element);
 		}
 
-		public static string CssSelectorOf(this IWebDriver driver, IWebElement element)
-		{
+		public static string CssSelectorOf(this IWebDriver driver, IWebElement element) {
 			string script = @"
 		var get_css_selector_of = function(element) {
     if (!(element instanceof Element))
@@ -99,8 +96,7 @@ return get_css_selector_of(arguments[0]);
 			return ((IJavaScriptExecutor)driver).ExecuteScript(script, element).ToString();
 		}
 
-		public static string XPathOf(this IWebDriver driver, IWebElement element)
-		{
+		public static string XPathOf(this IWebDriver driver, IWebElement element) {
 			string script = @"
 		var get_xpath_of = function(element) {
     var elementTagName = element.tagName.toLowerCase();
@@ -134,9 +130,11 @@ return get_xpath_of(arguments[0]);
 			return ((IJavaScriptExecutor)driver).ExecuteScript(script, element).ToString();
 		}
 
-		public static T Execute<T>(this IWebDriver driver, string script, params Object[] args)
-		{
+		public static T Execute<T>(this IWebDriver driver, string script, params Object[] args) {
 			return (T)((IJavaScriptExecutor)driver).ExecuteScript(script, args);
 		}
+		
+		
 	}
+	
 }

@@ -126,12 +126,13 @@ namespace Selenium4.Test
 				// NOTE: browser needs to be visible for this element to be found
 				element = driver.FindElement(By.XPath("//*[@id=\"content-base\"]//table//th[contains(text(),\"VIEWPORT-WIDTH\")]/../td"));
 				Assert.IsTrue(element.Displayed);
+				driver.VerifyElementTextPresent(element,String.Format("{0}", viewport_width));
 				Assert.AreEqual(String.Format("{0}", viewport_width), element.Text);
 				driver.Highlight(element);
 				// 480 VIEWPORT-WIDTH 384
 				// 600 VIEWPORT-WIDTH 480
 				Thread.Sleep(100);
 			}
-		}
+		}		
 	}
 }
