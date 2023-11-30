@@ -1,4 +1,4 @@
-#Copyright (c) 2015,2021 Serguei Kouzmine
+#Copyright (c) 2015,2021,2023 Serguei Kouzmine
 #
 #Permission is hereby granted, free of charge, to any person obtaining a copy
 #of this software and associated documentation files (the "Software"), to deal
@@ -194,7 +194,11 @@ if ($browser -ne $null -and $browser -ne '') {
     $capabilities.setCapability([OpenQA.Selenium.Chrome.ChromeOptions]::Capability,$options)
 
     $selenium = New-Object OpenQA.Selenium.Chrome.ChromeDriver ($options)
-
+    # NOTE: when the version of the chromedriver in c:\java\selenium\csharp\sharedassemblies is wrong, prone to launching two browser instances, and reporting the exception 
+    # New-Object : Exception calling ".ctor" with "1" argument(s): "unknown error: Chrome failed to start: exited normally.
+    # (The process started from chrome location C:\Program Files\Google\Chrome\Application\chrome.exe is no longer running, so ChromeDriver is assuming that Chrome has crashed.)
+    #  (Driver info: chromedriver=100.0.4896.60 (6a5d10861ce8de5fce22564658033b43cb7de047-refs/branch-heads/4896@{#875}),platform=Windows NT 6.3.9600 x86_64)"
+    # but test continues successfully in the second 
   }
   elseif ($browser -match 'ie') {
     $capability = [OpenQA.Selenium.Remote.DesiredCapabilities]::InternetExplorer()
@@ -367,6 +371,36 @@ var using = arguments[0] || document;
 var options = arguments[1];
 return findByOptions(options, using);
 '@
+[string]$css_containing_text_locator_script = @'
+
+var findByCssContainingText = function(cssSelector, searchText, using) {
+  using = using || document;
+
+  if (searchText.indexOf('__REGEXP__') === 0) {
+    var match = searchText.split('__REGEXP__')[1].match(/\/(.*)\/(.*)?/);
+    searchText = new RegExp(match[1], match[2] || '');
+  }
+  var elements = using.querySelectorAll(cssSelector);
+  var matches = [];
+  for (var i = 0; i < elements.length; ++i) {
+    var element = elements[i];
+    var elementText = element.textContent || element.innerText || element.getAttribute('placeholder') || '';
+    var elementMatches = searchText instanceof RegExp ?
+      searchText.test(elementText) :
+      elementText.indexOf(searchText) > -1;
+    if (elementMatches) {
+      matches.push(element);
+    }
+  }
+  return matches;
+};
+
+var using = arguments[0] || document;
+var cssSelector = arguments[1];
+var searchText = arguments[2];
+return findByCssContainingText(cssSelector, searchText, using);
+'@
+
 [string]$button_text_locator_script = @'
 var findByButtonText = function(searchText, using) {
     using = using || document;
@@ -419,11 +453,32 @@ $operator.Click()
 
 $goButton = $selenium.FindElement([OpenQA.Selenium.By]::Id('gobutton'))
 [NUnit.Framework.Assert]::AreEqual('Go!', $goButton.Text) # Contains
+# see also: https://www.selenium.dev/selenium/docs/api/dotnet/OpenQA.Selenium.IJavaScriptExecutor.html#OpenQA_Selenium_IJavaScriptExecutor_ExecuteScript_System_String_System_Object___
+# to reveal argument signature, "invoke" method without arguments:
+# $y = ([OpenQA.Selenium.IJavaScriptExecutor]$selenium)
+# $y.ExecuteScript
+#
+#  OverloadDefinitions
+#  -------------------
+#  System.Object ExecuteScript(string script, Params System.Object[] args)
+#  System.Object IJavaScriptExecutor.ExecuteScript(string script, Params System.Object[] args)
+
+$elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($css_containing_text_locator_script,$null,'button#gobutton', 'Go!',$null))
+[NUnit.Framework.Assert]::That(($elements.Count -eq 1)) # just one button
+
+[NUnit.Framework.Assert]::IsNotNull($elements)
+$goButton = $elements[0]
+[NUnit.Framework.Assert]::That(($goButton.Text -match 'Go!')) # Contains
+# $goButton.Click()
+
+
+
 $elements = (([OpenQA.Selenium.IJavaScriptExecutor]$selenium).ExecuteScript($button_text_locator_script,$null,'Go!',$null))
 [NUnit.Framework.Assert]::IsNotNull($elements)
 $goButton = $elements[0]
 [NUnit.Framework.Assert]::That(($goButton.Text -match 'Go!')) # Contains
 $goButton.Click()
+
 
 $script_timeout = 120
 # only available in latest versions of Selenium assembly
