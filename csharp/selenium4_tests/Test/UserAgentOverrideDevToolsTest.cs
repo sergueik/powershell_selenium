@@ -1,5 +1,5 @@
 ﻿using NUnit.Framework;
-
+/* Copyright 2023 Serguei Kouzmine */
 using System;
 using System.Text;
 using System.Linq;
@@ -21,7 +21,7 @@ using DevToolsSessionDomains = OpenQA.Selenium.DevTools.V109.DevToolsSessionDoma
 using SetUserAgentOverrideCommandSettings = OpenQA.Selenium.DevTools.V109.Network.SetUserAgentOverrideCommandSettings;
 using Extensions;
 using TestUtils;
-
+// https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-setUserAgentOverride
 namespace Test {
 	[TestFixture]
 	public class UserAgentOverrideDevToolsTest {
@@ -77,7 +77,8 @@ namespace Test {
 
 		// https://stackoverflow.com/questions/70912939/run-cdp-commands-on-selenium-c-sharp
 		// see also: https://www.selenium.dev/selenium/docs/api/dotnet/OpenQA.Selenium.DevTools.V109.Network.SetUserAgentOverrideCommandSettings.html
-		// NOTE: With the version upgrade old documentation becomes unavailable on https://www.selenium.dev/selenium/docs/api/dotnet/ and URL above has become 404
+		// NOTE: With the version upgrade old documentation becomes unavailable on https://www.selenium.dev/selenium/docs/api/dotnet/ and
+		// URL with specific Chrome version lime v109 above has become 404
 		[Test]
 		public void test() {
 			Console.Error.WriteLine("Actual Browser User Agent: " + domains.Browser.GetVersion().Result.UserAgent);

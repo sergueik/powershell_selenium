@@ -1,5 +1,7 @@
 ﻿using NUnit.Framework;
 
+/* Copyright 2023 Serguei Kouzmine */
+
 using System;
 using System.Text;
 using System.Linq;
@@ -18,6 +20,7 @@ using OpenQA.Selenium.Chromium;
 using Extensions;
 using TestUtils;
 
+// https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-setUserAgentOverride
 namespace Test {
 	[TestFixture]
 	public class UserAgentOverrideCdpTest {
@@ -28,6 +31,8 @@ namespace Test {
 		private const String url = "https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending";
 		private IWebElement element;
 		private ChromiumDriver chromiumDriver;
+		private string command;
+
 		// NOTE: the "params" is reserved in .Net 
 		private Dictionary<String, Object> arguments = new Dictionary<String, Object>();
 		private Dictionary<String, Object> data = new Dictionary<string, object>();
@@ -60,10 +65,11 @@ namespace Test {
 		// [Ignore]
 		[Test]
 		public void test() {
-			var result = (driver as ChromiumDriver).ExecuteCdpCommand("Browser.getVersion", new Dictionary<String, Object>());
+			command = "Browser.getVersion";
+			var result = (driver as ChromiumDriver).ExecuteCdpCommand(command, new Dictionary<String, Object>());
 			Assert.NotNull(result);
 			data = result as Dictionary<String, Object>;
-			Console.Error.WriteLine("data keys: " + data.PrettyPrint());
+			Console.Error.WriteLine("result keys: " + data.PrettyPrint());
 			Console.Error.WriteLine("Actual Browser User Agent: " + data["userAgent"]);
 			var userAgent =  data["userAgent"];
 			userAgent = "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25";

@@ -124,7 +124,8 @@
     <Compile Include="UserAgentOverrideDevToolsTest.cs" />
     <Compile Include="UserAgentOverrideCdpTest.cs" />
     <Compile Include="SetDeviceMetricsOverrideDevToolsTest.cs" />
-   
+    <Compile Include="SetDeviceMetricsOverrideCdpTest.cs " />
+  
     
     <Compile Include="BasicAsyncTests.cs" />
     <Compile Include="BrowserHelper.cs" />

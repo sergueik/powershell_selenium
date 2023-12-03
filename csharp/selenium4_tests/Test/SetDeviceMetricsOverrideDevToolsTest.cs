@@ -1,5 +1,7 @@
 ﻿using NUnit.Framework;
 
+/* Copyright 2023 Serguei Kouzmine */
+
 using System;
 using System.Text;
 using System.Linq;
@@ -20,9 +22,15 @@ using EnableCommandSettings = OpenQA.Selenium.DevTools.V109.Page.EnableCommandSe
 // using AddScriptToEvaluateOnNewDocumentCommandSettings = OpenQA.Selenium.DevTools.V109.Page.AddScriptToEvaluateOnNewDocumentCommandSettings;
 using SetDeviceMetricsOverrideCommandSettings = OpenQA.Selenium.DevTools.V109.Emulation.SetDeviceMetricsOverrideCommandSettings;
 using SetUserAgentOverrideCommandSettings = OpenQA.Selenium.DevTools.V109.Network.SetUserAgentOverrideCommandSettings;
-
+using GetLayoutMetricsCommandResponse = OpenQA.Selenium.DevTools.V109.Page.GetLayoutMetricsCommandResponse;
 using Extensions;
 using TestUtils;
+
+// https://www.selenium.dev/selenium/docs/api/dotnet/OpenQA.Selenium.DevTools.V109.Page.GetLayoutMetricsCommandResponse.html
+// https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-getLayoutMetrics
+// https://chromedevtools.github.io/devtools-protocol/tot/Emulation/#method-setDeviceMetricsOverride
+// https://chromedevtools.github.io/devtools-protocol/tot/Page#method-captureScreenshot
+// https://chromedevtools.github.io/devtools-protocol/tot/Emulation/#method-clearDeviceMetricsOverride
 
 namespace Test {
 	[TestFixture]
@@ -93,20 +101,27 @@ namespace Test {
 
 				domains.Emulation.SetDeviceMetricsOverride(settings);
 		
-				Console.Error.WriteLine("Pretend Device Metric Settings Witdh: " + device_width);
+				Console.Error.WriteLine("Pretend Device Metric Settings Width: " + device_width);
 				driver.Navigate().GoToUrl(url);
 
 				driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
 				// NOTE: browser needs to be visible for this element to be found
 				element = driver.FindElement(By.XPath("//*[@id=\"content-base\"]//table//th[contains(text(),\"VIEWPORT-WIDTH\")]/../td"));
 				Assert.IsTrue(element.Displayed);
-				driver.VerifyElementTextPresent(element,String.Format("{0}", viewport_width));
+				driver.VerifyElementTextPresent(element, String.Format("{0}", viewport_width));
 				Assert.AreEqual(String.Format("{0}", viewport_width), element.Text);
 				driver.Highlight(element);
 				// 480 VIEWPORT-WIDTH 384
 				// 600 VIEWPORT-WIDTH 480
+				var layoutMetrics = domains.Page.GetLayoutMetrics().Result;
+				var visualViewport = layoutMetrics.VisualViewport;
+				
+				Console.Error.WriteLine("Viewport zoom: " + visualViewport.Zoom.ToString() + "," +
+				"scale: " + visualViewport.Scale + "," +
+				"ClientWidth: " + visualViewport.ClientWidth);
 				Thread.Sleep(100);
+				
 			}
-		}		
+		}
 	}
 }
