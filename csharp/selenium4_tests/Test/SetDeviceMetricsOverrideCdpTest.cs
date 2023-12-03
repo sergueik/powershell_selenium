@@ -50,8 +50,7 @@ namespace Test {
 		}
 
 		[TearDown]
-		public void tearDown()
-		{
+		public void tearDown() {
 			command = "Emulation.clearDeviceMetricsOverride";
 			chromiumDriver.ExecuteCdpCommand(command, new Dictionary<String, Object>());
 			try {
@@ -62,8 +61,7 @@ namespace Test {
 		}
 
 		[Test]
-		public void test()
-		{
+		public void test() {
 			var widths = new Dictionary<int, int>();
 			widths[480] = 384;
 			widths[600] = 480;
@@ -85,7 +83,7 @@ namespace Test {
 
 				driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
 				// NOTE: browser needs to be visible for this element to be found
-				element = driver.FindElement(By.XPath("//*[@id=\"content-base\"]//table//th[contains(text(),\"VIEWPORT-WIDTH\")]/../td"));
+				element = driver.WaitUntilVisible(By.XPath("//*[@id=\"content-base\"]//table//th[contains(text(),\"VIEWPORT-WIDTH\")]/../td"));
 				Assert.IsTrue(element.Displayed);
 				driver.VerifyElementTextPresent(element, String.Format("{0}", viewport_width));
 				Assert.AreEqual(String.Format("{0}", viewport_width), element.Text);

@@ -15,44 +15,44 @@ using OpenQA.Selenium.Chrome;
 namespace Extensions {
 	public static class Extensions {
 
-			private static string result = null;
-			private static Regex regex;
-			private static MatchCollection matches;
-	
-			public static string FindMatch(this string text, string matchPattern, string matchTag) {
-				result = null;
-				regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled	);
-				matches = regex.Matches(text);
-				foreach (Match match in matches) {
-					if (match.Length != 0) {
-						foreach (Capture capture in match.Groups[matchTag].Captures) {
-							if (result == null) {
-								result = capture.ToString();
-							}
+		private static string result = null;
+		private static Regex regex;
+		private static MatchCollection matches;
+
+		public static string FindMatch(this string text, string matchPattern, string matchTag) {
+			result = null;
+			regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+			matches = regex.Matches(text);
+			foreach (Match match in matches) {
+				if (match.Length != 0) {
+					foreach (Capture capture in match.Groups[matchTag].Captures) {
+						if (result == null) {
+							result = capture.ToString();
 						}
 					}
 				}
-				return result;
 			}
-	
-			public static string FindMatch(this string text, string matchPattern) {
-				string generated_tag = matchPattern.FindMatch("(?:<(?<result>[^>]+)>)", "result");
-				result = null;
-				regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled
+			return result;
+		}
+
+		public static string FindMatch(this string text, string matchPattern) {
+			string generated_tag = matchPattern.FindMatch("(?:<(?<result>[^>]+)>)", "result");
+			result = null;
+			regex = new Regex(matchPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled
 				                  /* RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled */
-				);
-				matches = regex.Matches(text);
-				foreach (Match match in matches) {
-					if (match.Length != 0) {
-						foreach (Capture capture in match.Groups[generated_tag].Captures) {
-							if (result == null) {
-								result = capture.ToString();
-							}
+			);
+			matches = regex.Matches(text);
+			foreach (Match match in matches) {
+				if (match.Length != 0) {
+					foreach (Capture capture in match.Groups[generated_tag].Captures) {
+						if (result == null) {
+							result = capture.ToString();
 						}
 					}
 				}
-				return result;
 			}
+			return result;
+		}
 
 		public static void Highlight(this IWebDriver driver, IWebElement element, int highlight_timeout = 100, int px = 3, string color = "yellow") {
 			((IJavaScriptExecutor)driver).ExecuteScript("arguments[0].style.border='" + px + "px solid " + color + "'", element);
@@ -134,7 +134,26 @@ return get_xpath_of(arguments[0]);
 			return (T)((IJavaScriptExecutor)driver).ExecuteScript(script, args);
 		}
 		
-		
+		// orgin: https://stackoverflow.com/questions/49866334/c-sharp-selenium-expectedconditions-is-obsolete
+		// alternatively,use lambda
+		// new WebDriverWait(webDriver, TimeSpan.FromSeconds(10)).Until(c => c.FindElement(By.Id("name")));
+		public static IWebElement WaitUntilVisible(this IWebDriver driver, By locator, int wait_seconds = 10) {
+			var wait = new WebDriverWait(driver, new TimeSpan(0, 0, wait_seconds));
+			var element = wait.Until<IWebElement>((IWebDriver  o) => {
+				try {
+					IWebElement e = o.FindElement(locator);
+					if (e.Displayed) {
+						return e;
+					}
+					return null;
+				} catch (StaleElementReferenceException) {
+					return null;
+				} catch (NoSuchElementException) {
+					return null;
+				}
+			});
+			return element;
+		}
 	}
 	
 }

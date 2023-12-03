@@ -79,6 +79,8 @@ namespace Test {
 		// see also: https://www.selenium.dev/selenium/docs/api/dotnet/OpenQA.Selenium.DevTools.V109.Network.SetUserAgentOverrideCommandSettings.html
 		// NOTE: With the version upgrade old documentation becomes unavailable on https://www.selenium.dev/selenium/docs/api/dotnet/ and
 		// URL with specific Chrome version lime v109 above has become 404
+		// the pinned old version is https://www.selenium.dev/selenium/docs/api/dotnet/OpenQA.Selenium.DevTools.V85.Network.SetUserAgentOverrideCommandSettings.html
+		// but there may be method argument signature differences between early and latest versions
 		[Test]
 		public void test() {
 			Console.Error.WriteLine("Actual Browser User Agent: " + domains.Browser.GetVersion().Result.UserAgent);
@@ -92,7 +94,7 @@ namespace Test {
 			driver.Navigate().GoToUrl(url);
 
 			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
-			element = driver.FindElement(By.XPath("//*[@id=\"content-base\"]//table//th[contains(text(),\"USER-AGENT\")]/../td"));
+			element = driver.WaitUntilVisible(By.XPath("//*[@id=\"content-base\"]//table//th[contains(text(),\"USER-AGENT\")]/../td"));
 			Assert.IsTrue(element.Displayed);
 			Assert.AreEqual(userAgent, element.Text);
 			driver.Highlight(element);

@@ -32,9 +32,11 @@ namespace Test {
 		private IWebElement element;
 		private ChromiumDriver chromiumDriver;
 		private string command;
-
+		private string userAgent;
+		
 		// NOTE: the "params" is reserved in .Net 
 		private Dictionary<String, Object> arguments = new Dictionary<String, Object>();
+		private Object result;
 		private Dictionary<String, Object> data = new Dictionary<string, object>();
 		
 		[SetUp]
@@ -66,20 +68,20 @@ namespace Test {
 		[Test]
 		public void test() {
 			command = "Browser.getVersion";
-			var result = (driver as ChromiumDriver).ExecuteCdpCommand(command, new Dictionary<String, Object>());
+			result = (driver as ChromiumDriver).ExecuteCdpCommand(command, new Dictionary<String, Object>());
 			Assert.NotNull(result);
 			data = result as Dictionary<String, Object>;
 			Console.Error.WriteLine("result keys: " + data.PrettyPrint());
-			Console.Error.WriteLine("Actual Browser User Agent: " + data["userAgent"]);
-			var userAgent =  data["userAgent"];
+			userAgent =  data["userAgent"].ToString();
+			Console.Error.WriteLine("Actual Browser User Agent: " + userAgent);
 			userAgent = "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25";
-			arguments["userAgent"]= userAgent;
+			arguments["userAgent"] = userAgent;
 			arguments["platform"] =  "Windows";
 			chromiumDriver.ExecuteCdpCommand("Network.setUserAgentOverride", arguments);
 			driver.Navigate().GoToUrl(url);
 			
 			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
-			element = driver.FindElement(By.XPath("//*[@id=\"content-base\"]//table//th[contains(text(),\"USER-AGENT\")]/../td"));
+			element = driver.WaitUntilVisible(By.XPath("//*[@id=\"content-base\"]//table//th[contains(text(),\"USER-AGENT\")]/../td"));
 			Assert.IsTrue(element.Displayed);
 			Assert.AreEqual(userAgent, element.Text);
 			driver.Highlight(element);
