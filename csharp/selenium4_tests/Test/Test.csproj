@@ -121,7 +121,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AuthTests.cs" />
-    <Compile Include="BasicTests.cs" />
+    <Compile Include="UserAgentOverrideDevToolsTest.cs" />
+    <Compile Include="UserAgentOverrideCdpTest.cs" />
+    <Compile Include="SetDeviceMetricsOverrideDevToolsTest.cs" />
+   
+    
     <Compile Include="BasicAsyncTests.cs" />
     <Compile Include="BrowserHelper.cs" />
     <Compile Include="DynamicDictionary.cs" />
