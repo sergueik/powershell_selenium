@@ -14,6 +14,7 @@ using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.DevTools;
+using OpenQA.Selenium.Chromium;
 using OpenQA.Selenium.DevTools.V109;
 using DevToolsSessionDomains = OpenQA.Selenium.DevTools.V109.DevToolsSessionDomains;
 using EnableCommandSettings = OpenQA.Selenium.DevTools.V109.Page.EnableCommandSettings;
@@ -24,20 +25,21 @@ using SetUserAgentOverrideCommandSettings = OpenQA.Selenium.DevTools.V109.Networ
 using Extensions;
 using TestUtils;
 
-namespace Test
-{
+namespace Test {
 	[TestFixture]
-	public class BasicTests
-	{
+	public class BasicTests {
 		private readonly static string driverLocation = Environment.GetEnvironmentVariable("CHROMEWEBDRIVER");
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
 		private IDevTools devTools;
-		private bool headless = false;
+		private const bool headless = false;
 		private IDevToolsSession session;
 		private DevToolsSessionDomains domains;
-		private static String baseURL = "https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending";
+		private const String baseURL = "https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending";
 		private IWebElement element;
+		private ChromiumDriver chromiumDriver;
+		// NOTE: the "params" is reserved 
+		Dictionary<String, Object> arguments = new Dictionary<String, Object>();
 		
 		[SetUp]
 		public void SetUp() {
@@ -51,6 +53,7 @@ namespace Test
 				// driver = new ChromeDriver();
 			}
 			driver = new ChromeDriver(options);
+			chromiumDriver = driver as ChromiumDriver;
 			// NOTE: not using the WebDriver Service
 			// var service = ChromeDriverService.CreateDefaultService();
 			// service.DriverServicePath = driverLocation;
@@ -80,15 +83,17 @@ namespace Test
 			Assert.AreEqual("", verificationErrors.ToString());
 		}
 
-		// see also: https://www.selenium.dev/selenium/docs/api/dotnet/OpenQA.Selenium.DevTools.V112.Network.SetUserAgentOverrideCommandSettings.html
+		// https://stackoverflow.com/questions/70912939/run-cdp-commands-on-selenium-c-sharp		
+		// see also: https://www.selenium.dev/selenium/docs/api/dotnet/OpenQA.Selenium.DevTools.V109.Network.SetUserAgentOverrideCommandSettings.html
+		// NOTE: With the version upgrade old documentation becomes unavailable on https://www.selenium.dev/selenium/docs/api/dotnet/ and URL above has become 404
 		[Test]
 		public void test1() {
 			Console.Error.WriteLine("Actual Browser User Agent: " + domains.Browser.GetVersion().Result.UserAgent);
 			
-			SetUserAgentOverrideCommandSettings settings = new SetUserAgentOverrideCommandSettings();
-			String userAgent = "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25";
+			var settings = new SetUserAgentOverrideCommandSettings();
+			const String userAgent = "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25";
 			settings.UserAgent = userAgent;
-			Console.Error.WriteLine("PretendUser Agent: " + userAgent);
+			Console.Error.WriteLine("Set User Agent: " + userAgent);
 			domains.Network.SetUserAgentOverride(settings);
 		
 			driver.Navigate().GoToUrl(baseURL);
@@ -100,11 +105,32 @@ namespace Test
 			driver.Highlight(element);
 			Thread.Sleep(1000);
 		}
-		
-		
+		// see also: https://journeyofquality.com/2021/11/27/selenium-chrome-devtools-protocol-cdp/
+		// [Ignore]
 		[Test]
-		public void test2()
-		{
+		public void test2() {
+			var result = (driver as ChromiumDriver).ExecuteCdpCommand("Browser.getVersion", new Dictionary<String, Object>());
+			Assert.NotNull(result);
+			var data = result as Dictionary<String, Object>;
+			Console.Error.WriteLine("data keys: " + data.PrettyPrint());
+			Console.Error.WriteLine("Actual Browser User Agent: " + data["userAgent"]);
+			var userAgent =  data["userAgent"];
+			userAgent = "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25";
+			arguments["userAgent"]= userAgent;
+			arguments["platform"] =  "Windows";
+			chromiumDriver.ExecuteCdpCommand("Network.setUserAgentOverride", arguments);
+			driver.Navigate().GoToUrl(baseURL);
+			
+			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
+			element = driver.FindElement(By.XPath("//*[@id=\"content-base\"]//table//th[contains(text(),\"USER-AGENT\")]/../td"));
+			Assert.IsTrue(element.Displayed);
+			Assert.AreEqual(userAgent, element.Text);
+			driver.Highlight(element);
+			Thread.Sleep(1000);
+		}
+
+		[Test]
+		public void test3() {
 			Dictionary<int, int> widths = new Dictionary<int, int>();
 			widths[480] = 384;
 			widths[600] = 480;
@@ -135,4 +161,6 @@ namespace Test
 			}
 		}		
 	}
+
+
 }
