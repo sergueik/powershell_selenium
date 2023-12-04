@@ -20,6 +20,10 @@
 
 # basic CDP command demo. NOTE: working through $session can be complex
 
+param(
+  [switch]$headless
+)
+
 $webDriver_version = '4.8.2' 
 # NOTE: on Windows 7 and Windows 8 this is the highest version one can use 
 # because Chrome is Version 109.0.5414.168
@@ -27,7 +31,9 @@ $webDriver_version = '4.8.2'
 add-type -path .\packages\Selenium.WebDriver.4.8.2\lib\net45\WebDriver.dll
 $env:Path += ";${env:USERPROFILE}\Downloads"
 $options = new-object OpenQA.Selenium.Chrome.ChromeOptions
-$options.AddArgument('--headless')
+if( $PSBoundParameters['headless'].IsPresent) {
+  $options.AddArgument('--headless')
+}
 $driver = new-object OpenQA.Selenium.Chrome.ChromeDriver($options)
 
 $session = ([OpenQA.Selenium.DevTools.IDevTools]$driver).GetDevToolsSession() 

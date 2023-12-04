@@ -56,14 +56,49 @@ cmd %%- /c  dir /b/s .\packages\Selenium.Support.4.8.2\lib\
 
 ### NOTE
 
-On Windows 7 all tests will be failing with the exception:
+On Windows 7 all tests operatinv through 
+```c#
+IWebDriver driver = new ChromeDriver(options);
+IDevTools devTools = driver as IDevTools;
+IDevToolsSession session = devTools.GetDevToolsSession();
+DevToolsSessionDomains domains = session.GetVersionSpecificDomains<DevToolsSessionDomains>();
+```
+will be failing with the exception:
 
 ```text
 SetUp Error : Selenium4.Test.AuthTests.test1
    SetUp : OpenQA.Selenium.WebDriverException : Unexpected error creating WebSocket DevTools session.
   ----> System.PlatformNotSupportedException : The WebSocket protocol is not supported on this platform
 ```
+same applies to Powershell tests, attempting the same:
+```powershell
+$session = ([OpenQA.Selenium.DevTools.IDevTools]$driver).GetDevToolsSession()
+```
+```text
+Exception calling "GetDevToolsSession" with "0" argument(s): "Unexpected error creating WebSocket DevTools session."
+```
+Tests operating `ChromiumDriver' class `ExecuteCdpCommand` method
+```c#
+IWebDriver driver = new ChromeDriver(options);
+ChromiumDriver chromiumDriver = driver as ChromiumDriver;
+string command = "Browser.getVersion";
+Object result = chromiumDriver.ExecuteCdpCommand(command, new Dictionary<String, Object>());
+Assert.NotNull(result);
+Dictionary<String, Object>	data = result as Dictionary<String, Object>;
+Console.Error.WriteLine("result keys: " + data.PrettyPrint());
+```
+and
+```powershell
+$options = new-object OpenQA.Selenium.Chrome.ChromeOptions
+$options.AddArgument('--headless')
+$driver = new-object OpenQA.Selenium.Chrome.ChromeDriver($options)
+$driver.executeCdpCommand('Browser.getVersion',@{}) | format-list
+```
+will work fine.
 
+### See Also
+
+   * https://journeyofquality.com/2021/11/27/selenium-chrome-devtools-protocol-cdp/
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
 

@@ -17,7 +17,9 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #THE SOFTWARE.
-
+param(
+  [switch]$headless
+)
 
 $webDriver_version = '4.8.2' 
 # NOTE: on Windows 7 and Windows 8 this is the highest version one can use 
@@ -27,7 +29,9 @@ add-type -path ".\packages\Selenium.WebDriver.4.8.2\lib\net45\WebDriver.dll"
 add-type -path "./packages/Selenium.Support.4.8.2/lib/net45/WebDriver.Support.dll"
 $env:Path += ";${env:USERPROFILE}\Downloads"
 $options = new-object OpenQA.Selenium.Chrome.ChromeOptions
-$options.AddArgument('--headless')
+if( $PSBoundParameters['headless'].IsPresent) {
+  $options.AddArgument('--headless')
+}
 $driver = new-object OpenQA.Selenium.Chrome.ChromeDriver($options)
 $command = 'Browser.getVersion'
 $result = $driver.executeCdpCommand($command,@{})
@@ -64,10 +68,16 @@ $params_hash = @{
 [System.Collections.Generic.Dictionary[[string],[Object]]] $params = new-object "System.Collections.Generic.Dictionary[[string],[Object]]"
 $params.Add('userAgent', $userAgent)
 $params.Add('platform',  'Windows')
-
-$driver.ExecuteCdpCommand($command, $params)
+# NOTE: cast is not required with Powershell code
+([OpenQA.Selenium.Chromium.ChromiumDriver]$driver).ExecuteCdpCommand($command, $params)
+<#
+# ignore and rerun 
+[1204/092811.846:ERROR:cert_issuer_source_aia.cc(34)] Error parsing cert retrieved from AIA (as DER):
+ERROR: Couldn't read tbsCertificate as SEQUENCE
+ERROR: Failed parsing Certificate
+#>
 $url = 'https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending'
-			$driver.Navigate().GoToUrl($url)
+$driver.Navigate().GoToUrl($url)
 [int]$wait_seconds = 3
 [OpenQA.Selenium.Support.UI.WebDriverWait]$wait = new-object OpenQA.Selenium.Support.UI.WebDriverWait($driver,[System.TimeSpan]::FromSeconds($wait_seconds))
 $xpath = '//*[@id="content-base"]//table//th[contains(text(),"USER-AGENT")]/../td'
