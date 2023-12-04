@@ -77,6 +77,9 @@
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="SeleniumExtras.WaitHelpers">
+      <HintPath>..\packages\SeleniumExtras.WaitHelpers.3.11.0\lib\net45\SeleniumExtras.WaitHelpers.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Dynamic" />
@@ -125,8 +128,6 @@
     <Compile Include="UserAgentOverrideCdpTest.cs" />
     <Compile Include="SetDeviceMetricsOverrideDevToolsTest.cs" />
     <Compile Include="SetDeviceMetricsOverrideCdpTest.cs " />
-  
-    
     <Compile Include="BasicAsyncTests.cs" />
     <Compile Include="BrowserHelper.cs" />
     <Compile Include="DynamicDictionary.cs" />

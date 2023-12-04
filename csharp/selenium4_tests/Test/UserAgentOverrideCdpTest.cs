@@ -16,6 +16,7 @@ using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Chromium;
+using SeleniumExtras.WaitHelpers;
 
 using Extensions;
 using TestUtils;
@@ -29,6 +30,7 @@ namespace Test {
 		private IWebDriver driver;
 		private const bool headless = true;
 		private const String url = "https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending";
+		private WebDriverWait wait;
 		private IWebElement element;
 		private ChromiumDriver chromiumDriver;
 		private string command;
@@ -52,8 +54,8 @@ namespace Test {
 			}
 			driver = new ChromeDriver(options);
 			chromiumDriver = driver as ChromiumDriver;
+			wait = new WebDriverWait(driver, new TimeSpan(0, 0, 30));
 		}
-
 		[TearDown]
 		public void tearDown() {
 			try {
@@ -78,10 +80,9 @@ namespace Test {
 			arguments["userAgent"] = userAgent;
 			arguments["platform"] =  "Windows";
 			chromiumDriver.ExecuteCdpCommand("Network.setUserAgentOverride", arguments);
-			driver.Navigate().GoToUrl(url);
-			
-			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
-			element = driver.WaitUntilVisible(By.XPath("//*[@id=\"content-base\"]//table//th[contains(text(),\"USER-AGENT\")]/../td"));
+			driver.Navigate().GoToUrl(url);			
+			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);			
+			element = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[@id=\"content-base\"]//table//th[contains(text(),\"USER-AGENT\")]/../td")));
 			Assert.IsTrue(element.Displayed);
 			Assert.AreEqual(userAgent, element.Text);
 			driver.Highlight(element);
