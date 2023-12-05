@@ -118,6 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AuthDevToolsTest.cs" />
+    <Compile Include="AuthCdpTest.cs" />
     <Compile Include="UserAgentOverrideDevToolsTest.cs" />
     <Compile Include="UserAgentOverrideCdpTest.cs" />
     <Compile Include="SetDeviceMetricsOverrideDevToolsTest.cs" />
