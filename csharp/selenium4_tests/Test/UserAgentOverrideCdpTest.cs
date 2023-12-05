@@ -70,7 +70,7 @@ namespace Test {
 		[Test]
 		public void test() {
 			command = "Browser.getVersion";
-			result = (driver as ChromiumDriver).ExecuteCdpCommand(command, new Dictionary<String, Object>());
+			result = chromiumDriver.ExecuteCdpCommand(command, new Dictionary<String, Object>());
 			Assert.NotNull(result);
 			data = result as Dictionary<String, Object>;
 			Console.Error.WriteLine("result keys: " + data.PrettyPrint());
