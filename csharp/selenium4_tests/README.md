@@ -99,8 +99,12 @@ will work fine.
 ### See Also
 
    * https://journeyofquality.com/2021/11/27/selenium-chrome-devtools-protocol-cdp/
+   * https://rahulshettyacademy.com/blog/index.php/2021/11/04/selenium-4-feature-chrome-dev-tools-protocol/
+   * https://www.lambdatest.com/blog/iwebdriver-browser-commands-in-selenium-c-sharp/
+   * https://www.automatetheplanet.com/chrome-devtools-protoco-in-selenium-4-java/
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
+
 
 
 

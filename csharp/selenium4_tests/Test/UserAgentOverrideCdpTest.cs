@@ -78,8 +78,9 @@ namespace Test {
 			Console.Error.WriteLine("Actual Browser User Agent: " + userAgent);
 			userAgent = "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25";
 			arguments["userAgent"] = userAgent;
-			arguments["platform"] =  "Windows";
-			chromiumDriver.ExecuteCdpCommand("Network.setUserAgentOverride", arguments);
+			arguments["platform"] = "Windows";
+			command =  "Network.setUserAgentOverride";
+			chromiumDriver.ExecuteCdpCommand(command, arguments);
 			driver.Navigate().GoToUrl(url);			
 			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);			
 			element = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath("//*[@id=\"content-base\"]//table//th[contains(text(),\"USER-AGENT\")]/../td")));
