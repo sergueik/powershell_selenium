@@ -5,14 +5,10 @@
 using System;
 using System.Text;
 using System.Linq;
-using System.Management;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Threading;
 
 using OpenQA.Selenium;
-using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Chromium;
@@ -48,9 +44,6 @@ namespace Test {
 			// options.AddArgument("--start-maximized");
 			if (headless) { 
 				options.AddArgument("--headless");
-				// driver = new ChromeDriver(option);
-			} else {
-				// driver = new ChromeDriver();
 			}
 			driver = new ChromeDriver(options);
 			chromiumDriver = driver as ChromiumDriver;

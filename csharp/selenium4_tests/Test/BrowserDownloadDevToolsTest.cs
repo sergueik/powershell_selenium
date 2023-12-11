@@ -6,70 +6,69 @@ using System;
 using System.IO;
 using System.Text;
 using System.Linq;
-using System.Collections.Generic;
 using System.Threading;
 
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Chromium;
+using OpenQA.Selenium.DevTools;
+using OpenQA.Selenium.DevTools.V109;
+using DevToolsSessionDomains = OpenQA.Selenium.DevTools.V109.DevToolsSessionDomains;
+using OpenQA.Selenium.DevTools.V109.Browser;
+using SetDownloadBehaviorCommandResponse  = OpenQA.Selenium.DevTools.V109.Browser.SetDownloadBehaviorCommandResponse;
+using SetDownloadBehaviorCommandSettings  = OpenQA.Selenium.DevTools.V109.Browser.SetDownloadBehaviorCommandSettings;
 
-// https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-setUserAgentOverride
+// https://chromedevtools.github.io/devtools-protocol/tot/Browser/#method-setDownloadBehavior
 namespace Test {
 	[TestFixture]
-	public class BrowserDownloadCdpTest {
+	public class BrowserDownloadDevToolsTest {
 		private readonly static string driverLocation = Environment.GetEnvironmentVariable("CHROMEWEBDRIVER");
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
+		private IDevTools devTools;
 		// NOTE: this test will fail when broswer is headless
 		private const bool headless = false;
+		private IDevToolsSession session;
+		private DevToolsSessionDomains domains;
 		private const String url = "https://scholar.harvard.edu/files/torman_personal/files/samplepptx.pptx";
-		private ChromiumDriver chromiumDriver;
-		private string command;
 		private string tempPath;
 		private string filename = "samplepptx.pptx";
 
-		// NOTE: the "params" is reserved in .Net
-		private Dictionary<String, Object> arguments = new Dictionary<String, Object>();
-		private Dictionary<String, Object> data = new Dictionary<string, object>();
-
-		// NOTE: prior to NUnit 3.0, in particular with Nunit 2.6.4
-		// annotations 'OneTimeSetUpAttribute' and 'OneTimeSetUp' did not exist
-		// http://nunit.org/docs/2.6.4/docHome.html
-		// https://docs.nunit.org/articles/nunit/writing-tests/setup-teardown/index.html
-		// https://docs.nunit.org/articles/nunit/release-notes/breaking-changes.html
 		// [OneTimeSetUp]
 		[TestFixtureSetUp]
 		public void testFixtureSetUp() {
 			System.Environment.SetEnvironmentVariable("webdriver.chrome.driver", System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", ""));
 			var options = new ChromeOptions();
-			if (headless) {
-				options.AddArgument("--headless");
+			// options.AddArgument("--start-maximized");
+			if (headless) { 
+				options.AddArgument("-headless");
 			}
 			driver = new ChromeDriver(options);
-			chromiumDriver = driver as ChromiumDriver;
-			// NOTE: the trailing backslash is already returned by Path.GetTempPath()
-			// double backslashes have special meaning
+
+			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(5);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+
+		
+			devTools = driver as IDevTools;
+			session = devTools.GetDevToolsSession();
+			domains = session.GetVersionSpecificDomains<DevToolsSessionDomains>();
 			tempPath = Path.GetTempPath() + "test";
-			Directory.CreateDirectory(tempPath );
 			Directory.CreateDirectory(tempPath );
 			Console.WriteLine(tempPath);
 		}
-
 		[SetUp]
 		public void setUp() {
-			command = "Browser.setDownloadBehavior";
-			arguments.Clear();
-			arguments["behavior"] = "default";
-			chromiumDriver.ExecuteCdpCommand(command, arguments);
+			var command = new SetDownloadBehaviorCommandSettings();
+			command.Behavior = "default";
+			domains.Browser.SetDownloadBehavior(command);
 		}
 
 		// [OneTimeTearDown]
 		[TestFixtureTearDown]
-		public void testFixtureTearDown() {
+		public void tearDown() {
 			try {
 				driver.Quit();
 			} catch (Exception) {
-			} /* Ignore all cleanup errors */
+			} /* Ignore cleanup errors */
 			// clean downloaded files
 			Directory.GetFiles(tempPath).ToList().ForEach(f => File.Delete(f));
 			// delete directory
@@ -79,29 +78,28 @@ namespace Test {
 
 		[Test]
 		public void test1() {
-			command = "Browser.setDownloadBehavior";
-			arguments.Clear();
-			arguments["behavior"] = "allow";
-			arguments["downloadPath"] = tempPath;
-			arguments["eventsEnabled"] = true;
-			chromiumDriver.ExecuteCdpCommand(command, arguments);
+			var command = new SetDownloadBehaviorCommandSettings();
+			command.Behavior = "allow";
+			command.EventsEnabled = true;
+			
+			command.DownloadPath = tempPath;
+			domains.Browser.SetDownloadBehavior(command);
+			
+			var searchPattern = filename;
 			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
 			driver.Navigate().GoToUrl(url);
 			Thread.Sleep(3000);
 			Assert.IsTrue(File.Exists(tempPath + @"\" + filename), "File does not exist: " + filename  );
-			Directory.GetFiles(tempPath, filename).ToList().ForEach(f => Console.WriteLine(f.ToString()));
+			Directory.GetFiles(tempPath, searchPattern).ToList().ForEach(f => Console.WriteLine(f.ToString()));
 		}
-
-		// [Ignore]
 		[Test]
 		public void test2() {
-
-			command = "Browser.setDownloadBehavior";
-			arguments.Clear();
-			arguments["behavior"] = "allowAndName";
-			arguments["downloadPath"] = tempPath;
-			arguments["eventsEnabled"] = true;
-			chromiumDriver.ExecuteCdpCommand(command, arguments);
+			var command = new SetDownloadBehaviorCommandSettings();
+			command.Behavior = "allowAndName";
+			command.EventsEnabled = true;
+			
+			command.DownloadPath = tempPath;
+			domains.Browser.SetDownloadBehavior(command);
 			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
 			driver.Navigate().GoToUrl(url);
 			Thread.Sleep(3000);
@@ -109,5 +107,5 @@ namespace Test {
 			Directory.GetFiles(tempPath).ToList().ForEach(f => Console.WriteLine(f.ToString()));
 		}
 	}
-
 }
+

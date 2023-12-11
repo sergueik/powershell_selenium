@@ -3,17 +3,10 @@ using NUnit.Framework;
 using System;
 using System.Text;
 using System.Linq;
-using System.Management;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.IO;
 using System.Threading;
 
-
 using OpenQA.Selenium;
-using OpenQA.Selenium.Interactions;
-using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.DevTools;
 using OpenQA.Selenium.DevTools.V109.Network;
@@ -29,13 +22,9 @@ using FulfillRequestCommandResponse = OpenQA.Selenium.DevTools.V109.Fetch.Fulfil
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Extensions;
-using TestUtils;
-
 // origin: https://github.com/metaljase/SeleniumCaptureHttpResponse/blob/main/Metalhead.SeleniumCaptureHttpResponse.CDP/Program.cs
 namespace Test {
 	
-
 	[TestFixture]
 	public class FetchTests {
 		private static EventWaitHandle waitForHttpResponse;
@@ -46,7 +35,7 @@ namespace Test {
 		private bool headless = true;
 		private IDevToolsSession session;
 		private DevToolsSessionDomains domains;
-		private static String baseURL = "https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending";
+		private const String baseURL = "https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending";
 		private FetchAdapter fetchAdaptor;
 		private Response response = null;
 		
@@ -62,16 +51,14 @@ namespace Test {
 			// NOTE: not using the WebDriver Service with this version of Selenium
 
 			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(5);
-			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
 			waitForHttpResponse = new EventWaitHandle(false, EventResetMode.AutoReset);
 		
 			devTools = driver as IDevTools;
 			// TODO: detect Windows 7 and abort the test otherwise
-			// System.PlatformNotSupportedException : 
+			// System.PlatformNotSupportedException:
 			// The WebSocket protocol is not supported on this platform.
 			session = devTools.GetDevToolsSession();
-			domains = session.GetVersionSpecificDomains<DevToolsSessionDomains>();
-			
+			domains = session.GetVersionSpecificDomains<DevToolsSessionDomains>();			
 		}
 
 		[Test]
@@ -110,8 +97,7 @@ namespace Test {
 		
 		}
 		
-		private async void ResponseInterceptedAsync(object sender, Fetch.RequestPausedEventArgs e)
-		{
+		private async void ResponseInterceptedAsync(object sender, Fetch.RequestPausedEventArgs e) {
 			// Wait for response body.
 			var getResponseBodyCommandResponse = await fetchAdaptor.GetResponseBody(new GetResponseBodyCommandSettings() {
 				RequestId = e.RequestId

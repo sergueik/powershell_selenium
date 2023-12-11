@@ -5,26 +5,19 @@
 using System;
 using System.Text;
 using System.Linq;
-using System.Management;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Threading;
 
 using OpenQA.Selenium;
-using OpenQA.Selenium.Interactions;
-using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.DevTools;
 using OpenQA.Selenium.DevTools.V109;
 using DevToolsSessionDomains = OpenQA.Selenium.DevTools.V109.DevToolsSessionDomains;
 using EnableCommandSettings = OpenQA.Selenium.DevTools.V109.Page.EnableCommandSettings;
-// using AddScriptToEvaluateOnNewDocumentCommandSettings = OpenQA.Selenium.DevTools.V109.Page.AddScriptToEvaluateOnNewDocumentCommandSettings;
 using SetDeviceMetricsOverrideCommandSettings = OpenQA.Selenium.DevTools.V109.Emulation.SetDeviceMetricsOverrideCommandSettings;
 using SetUserAgentOverrideCommandSettings = OpenQA.Selenium.DevTools.V109.Network.SetUserAgentOverrideCommandSettings;
 using GetLayoutMetricsCommandResponse = OpenQA.Selenium.DevTools.V109.Page.GetLayoutMetricsCommandResponse;
 using Extensions;
-using TestUtils;
 
 // https://www.selenium.dev/selenium/docs/api/dotnet/OpenQA.Selenium.DevTools.V109.Page.GetLayoutMetricsCommandResponse.html
 // https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-getLayoutMetrics
@@ -52,9 +45,6 @@ namespace Test {
 			// options.AddArgument("--start-maximized");
 			if (headless) { 
 				options.AddArgument("--headless");
-				// driver = new ChromeDriver(option);
-			} else {
-				// driver = new ChromeDriver();
 			}
 			driver = new ChromeDriver(options);
 			// NOTE: not using the WebDriver Service
@@ -62,10 +52,7 @@ namespace Test {
 			// service.DriverServicePath = driverLocation;
 			// IWebDriver driver = new ChromeDriver(service);	
 
-			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(5);
-			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
-
-		
+			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(5);		
 			devTools = driver as IDevTools;
 			session = devTools.GetDevToolsSession();
 			domains = session.GetVersionSpecificDomains<DevToolsSessionDomains>();

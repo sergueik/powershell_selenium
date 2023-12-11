@@ -22,10 +22,8 @@ using SetDeviceMetricsOverrideCommandSettings = OpenQA.Selenium.DevTools.V109.Em
 using SetUserAgentOverrideCommandSettings = OpenQA.Selenium.DevTools.V109.Network.SetUserAgentOverrideCommandSettings;
 
 using Extensions;
-using TestUtils;
 
-namespace Test
-{
+namespace Test {
 	[TestFixture]
 	public class BasicAsyncTests
 	{
@@ -78,15 +76,15 @@ namespace Test
 		}
 
 		// NOTE: Selenium dev recommends async / await
-		// but the async test is simply hanging somewhere in setup
+		// but the async test appears to simply hanging somewhere in setup on Windows 8.1
 		// see also: https://www.selenium.dev/selenium/docs/api/dotnet/OpenQA.Selenium.DevTools.V112.Network.SetUserAgentOverrideCommandSettings.html
 		[Ignore]
 		[Test]
 		public async void test1() {
 			Console.Error.WriteLine("Actual Browser User Agent: " + domains.Browser.GetVersion().Result.UserAgent);
 			
-			SetUserAgentOverrideCommandSettings settings = new SetUserAgentOverrideCommandSettings();
-			String userAgent = "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25";
+			var settings = new SetUserAgentOverrideCommandSettings();
+			const string userAgent = "Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25";
 			settings.UserAgent = userAgent;
 			Console.Error.WriteLine("PretendUser Agent: " + userAgent);
 			await domains.Network.SetUserAgentOverride(settings);
@@ -103,12 +101,11 @@ namespace Test
 		
 		
 		// NOTE: Selenium dev recommends async / await
-		// but the async test is simply hanging somewhere in setup
-		[Ignore]		
+		// but the async test appears to simply hanging somewhere in setup on Windows 8.1
+		// [Ignore]		
 		[Test]
-		public async void test2()
-		{
-			Dictionary<int, int> widths = new Dictionary<int, int>();
+		public async void test2() {
+			var widths = new Dictionary<int, int>();
 			widths[480] = 384;
 			widths[600] = 480;
 			foreach (int device_width in widths.Keys) {

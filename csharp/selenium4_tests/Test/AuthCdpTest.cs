@@ -4,20 +4,13 @@
 using System;
 using System.Text;
 using System.Linq;
-using System.Management;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Threading;
 
 using OpenQA.Selenium;
-using OpenQA.Selenium.Interactions;
-using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Chromium;
 
 using Extensions;
-using TestUtils;
 
 // https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-setExtraHTTPHeaders
 // https://chromedevtools.github.io/devtools-protocol/tot/Network#method-enable

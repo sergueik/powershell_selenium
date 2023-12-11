@@ -120,6 +120,7 @@
     <Compile Include="AuthDevToolsTest.cs" />
     <Compile Include="AuthCdpTest.cs" />
     <Compile Include="BrowserDownloadCdpTest.cs" />
+    <Compile Include="BrowserDownloadDevToolsTest.cs" />
     <Compile Include="UserAgentOverrideDevToolsTest.cs" />
     <Compile Include="UserAgentOverrideCdpTest.cs" />
     <Compile Include="SetDeviceMetricsOverrideDevToolsTest.cs" />

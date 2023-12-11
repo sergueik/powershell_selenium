@@ -3,24 +3,16 @@
 using System;
 using System.Text;
 using System.Linq;
-using System.Management;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Threading;
 
 using OpenQA.Selenium;
-using OpenQA.Selenium.Interactions;
-using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.DevTools;
 using OpenQA.Selenium.DevTools.V109;
 using DevToolsSessionDomains = OpenQA.Selenium.DevTools.V109.DevToolsSessionDomains;
-// using EnableCommandSettings = OpenQA.Selenium.DevTools.V109.Page.EnableCommandSettings;
-// using AddScriptToEvaluateOnNewDocumentCommandSettings = OpenQA.Selenium.DevTools.V109.Page.AddScriptToEvaluateOnNewDocumentCommandSettings;
 using SetUserAgentOverrideCommandSettings = OpenQA.Selenium.DevTools.V109.Network.SetUserAgentOverrideCommandSettings;
 using Extensions;
-using TestUtils;
+
 // https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-setUserAgentOverride
 namespace Test {
 	[TestFixture]
@@ -42,9 +34,6 @@ namespace Test {
 			// options.AddArgument("--start-maximized");
 			if (headless) { 
 				options.AddArgument("--headless");
-				// driver = new ChromeDriver(option);
-			} else {
-				// driver = new ChromeDriver();
 			}
 			driver = new ChromeDriver(options);
 			// NOTE: not using the WebDriver Service
@@ -53,8 +42,6 @@ namespace Test {
 			// IWebDriver driver = new ChromeDriver(service);	
 
 			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(5);
-			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
-
 		
 			devTools = driver as IDevTools;
 			session = devTools.GetDevToolsSession();

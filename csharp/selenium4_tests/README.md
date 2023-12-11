@@ -4,7 +4,7 @@ this directory contains a tests configured to run on .Net Framework __4.5__ to p
 [Selenium 4 Chrome DevTools Documentation](https://www.selenium.dev/documentation/webdriver/bidirectional/chrome_devtools/)
 and other sources [sergueik/selenium_cdp](https://github.com/sergueik/selenium_cdp)
 
-The [Selenium .NET API Docs](https://www.selenium.dev/selenium/docs/api/dotnet/) - slow to browse, occsionally hangs the browser
+The [Selenium .NET API Docs](https://www.selenium.dev/selenium/docs/api/dotnet/) - slow to browse, occasionally hangs the browser
 
 ### Note
 	

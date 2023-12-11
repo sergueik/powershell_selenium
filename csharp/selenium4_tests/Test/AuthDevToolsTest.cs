@@ -3,20 +3,12 @@
 /**
  * Copyright 2022,2023 Serguei Kouzmine
  */
-
 	
 using System;
 using System.Text;
 using System.Linq;
-using System.Management;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Threading;
 
 using OpenQA.Selenium;
-using OpenQA.Selenium.Interactions;
-using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.DevTools;
 using OpenQA.Selenium.DevTools.V109;
@@ -24,9 +16,7 @@ using DevToolsSessionDomains = OpenQA.Selenium.DevTools.V109.DevToolsSessionDoma
 using EnableCommandSettings = OpenQA.Selenium.DevTools.V109.Network.EnableCommandSettings;
 using SetExtraHTTPHeadersCommandSettings = OpenQA.Selenium.DevTools.V109.Network.SetExtraHTTPHeadersCommandSettings;
 using Headers = OpenQA.Selenium.DevTools.V109.Network.Headers;
-using System.IO;
 using Extensions;
-using TestUtils;
 
 namespace Test {
 	[TestFixture]
@@ -38,7 +28,7 @@ namespace Test {
 		private bool headless = true;
 		private IDevToolsSession session;
 		private DevToolsSessionDomains domains;
-		private static String url = "https://jigsaw.w3.org/HTTP/Basic/";
+		private const string url = "https://jigsaw.w3.org/HTTP/Basic/";
 		private IWebElement element;
 		private readonly String username = "guest";
 		private readonly String password = "guest";
