@@ -25,7 +25,7 @@ namespace TestUtils {
 			}
 		}
 
-		public static string CreateTempFile(string content){
+		public static string CreateTempFile(string content) {
 			FileInfo testFile = new FileInfo("webdriver.tmp");
 			if (testFile.Exists) {
 				testFile.Delete();
@@ -36,9 +36,9 @@ namespace TestUtils {
 			return testFile.FullName;
 		}
 
- 		// only works with Chrome:
+		// only works with Chrome:
 		// SetUp : System.InvalidOperationException : Access to 'file:///C:/developer/sergueik/powershell_selenium/csharp/protractor-net/Test/bin/Debug/resources/ng_datepicker.htm' from script denied
-		public static void GetPageContent(string filename){
+		public static void GetPageContent(string filename) {
 			driver.Navigate().GoToUrl(new System.Uri(Path.Combine(Path.Combine(Directory.GetCurrentDirectory(), "resources"), filename)).AbsoluteUri);
 		}
 
@@ -46,5 +46,12 @@ namespace TestUtils {
 			driver.Navigate().GoToUrl(String.Format("http://127.0.0.1:{0}/{1}{2}", port, "resources", filename));
 		}
 
+		// origin: https://stackoverflow.com/questions/69503717/how-to-use-random-class-to-shuffle-array-in-c-sharp
+		public static string[] shuffle(string[]array) {
+			var random = new Random();
+			var result = array.OrderBy((item) => random.NextDouble()).ToArray();
+			return result;
+		}
 	}
+	
 }

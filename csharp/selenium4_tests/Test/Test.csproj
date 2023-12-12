@@ -126,6 +126,7 @@
     <Compile Include="SetDeviceMetricsOverrideDevToolsTest.cs" />
     <Compile Include="SetDeviceMetricsOverrideCdpTest.cs " />
     <Compile Include="BasicAsyncTests.cs" />
+    <Compile Include="PageNavigationHistoryCdpTest.cs" />
     <Compile Include="BrowserHelper.cs" />
     <Compile Include="DynamicDictionary.cs" />
     <Compile Include="FetchTests.cs" />
