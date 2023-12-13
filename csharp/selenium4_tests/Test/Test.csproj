@@ -76,6 +76,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Dynamic" />
     <Reference Include="WebDriver">
       <HintPath>..\packages\Selenium.WebDriver.4.8.2\lib\net45\WebDriver.dll</HintPath>
@@ -138,6 +139,8 @@
     <!-- 
     <Compile Include="" /> 
     -->
+    <Compile Include="BypassCSPDevToolsTest.cs" /> 
+    
     <Compile Include="BypassCSPCdpTest.cs" />
     <Compile Include="UserAgentOverrideDevToolsTest.cs" />
     <Compile Include="UserAgentOverrideCdpTest.cs" />

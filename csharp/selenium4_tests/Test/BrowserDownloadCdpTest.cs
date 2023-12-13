@@ -13,7 +13,8 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Chromium;
 
-// https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-setUserAgentOverride
+// https://chromedevtools.github.io/devtools-protocol/tot/Browser/#method-setDownloadBehavior
+
 namespace Test {
 	[TestFixture]
 	public class BrowserDownloadCdpTest {

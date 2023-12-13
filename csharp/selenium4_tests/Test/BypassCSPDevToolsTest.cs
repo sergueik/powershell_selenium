@@ -12,64 +12,75 @@ using System.Drawing;
 
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Chromium;
 using SeleniumExtras.WaitHelpers;
 
+using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Chromium;
+using OpenQA.Selenium.DevTools;
+using OpenQA.Selenium.DevTools.V109;
+using DevToolsSessionDomains = OpenQA.Selenium.DevTools.V109.DevToolsSessionDomains;
+using OpenQA.Selenium.DevTools.V109.Page;
+using SetBypassCSPCommandSettings = OpenQA.Selenium.DevTools.V109.Page.SetBypassCSPCommandSettings;
+using SetBypassCSPCommandResponse = OpenQA.Selenium.DevTools.V109.Page.SetBypassCSPCommandResponse;
 using Extensions;
 using TestUtils;
 
 // https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-setBypassCSP
 
-
 namespace Test {
 	[TestFixture]
-	public class BypassCSPCdpTest {
+	public class BypassCSPDevToolsTest {
 		private readonly static string driverLocation = Environment.GetEnvironmentVariable("CHROMEWEBDRIVER");
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
+		private IDevTools devTools;
+		// NOTE: this test will fail when broswer is headless
 		private const bool headless = false;
-		private const String url = "https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending";
+		private IDevToolsSession session;
+		private DevToolsSessionDomains domains;
+		private const String url = "https://scholar.harvard.edu/files/torman_personal/files/samplepptx.pptx";
+		private string page;
+		private string filename = "samplepptx.pptx";
 		private WebDriverWait wait;
 		private IWebElement element;
-		private ChromiumDriver chromiumDriver;
-		private string command;
-		private string page;
-		private const int broken_image_width = 16;
-		private const int image_width = 100;
-		
-		// NOTE: the "params" is reserved in .Net 
-		private Dictionary<String, Object> arguments = new Dictionary<String, Object>();
-		private Object result;
+
 		private const string cssSelector = "img";
 		private const string xpath = "//img";
 		private const int delay = 3000;
-		private Dictionary<String, Object> data = new Dictionary<string, object>();
-		
-		[SetUp]
-		public void setUp() {
+		private const int broken_image_width = 16;
+		private const int image_width = 100;
+
+		// [OneTimeSetUp]
+		[TestFixtureSetUp]
+		public void testFixtureSetUp() {
 			System.Environment.SetEnvironmentVariable("webdriver.chrome.driver", System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", ""));
 			var options = new ChromeOptions();
 			// options.AddArgument("--start-maximized");
-			if (headless) { 
-				options.AddArgument("--headless");
+			if (headless) {
+				options.AddArgument("-headless");
 			}
 			driver = new ChromeDriver(options);
-			chromiumDriver = driver as ChromiumDriver;
 			Common.Driver= driver;
-			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);			
+			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
 			wait = new WebDriverWait(driver, new TimeSpan(0, 0, 30));
+			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(5);
+			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
+
+			devTools = driver as IDevTools;
+			session = devTools.GetDevToolsSession();
+			domains = session.GetVersionSpecificDomains<DevToolsSessionDomains>();
 		}
 
-		[TearDown]
-		public void tearDown() {
+		[SetUp]
+		public void setUp() {
+			var command = new SetBypassCSPCommandSettings();
+			command.Enabled = false;
+			domains.Page.SetBypassCSP(command);
+		}
+
+		[TestFixtureTearDown]
+		public void testFixtureTearDown() {
 			// Thread.Sleep(delay);
-
-			command = "Page.setBypassCSP";
-			arguments.Clear();
-			arguments["enabled"] = false;
-			chromiumDriver.ExecuteCdpCommand(command, arguments);
-
 			try {
 				driver.Quit();
 			} catch (Exception) {
@@ -77,15 +88,16 @@ namespace Test {
 			Assert.AreEqual("", verificationErrors.ToString());
 		}
 
+		[TearDown]
+		public void tearDown() {
+			// Thread.Sleep(delay);
+		}
 		[Test]
 		public void test1() {
 			page = "test1.html";
-			Common.GetPageContent(page);			
+			Common.GetPageContent(page);
 			element = driver.WaitUntilVisible(By.CssSelector(cssSelector));
 			Assert.IsTrue(element.Displayed);
-			// NOTE: System.InvalidOperationException : 
-			// Assert.Equals should not be used for Assertions
-			// Assert.Equals(broken_image_width, element.Size.Width);
 			Assert.AreEqual(broken_image_width, element.Size.Width);
 			Console.Error.WriteLine("element size: " + element.Size.Width);
 			driver.Highlight(element);
@@ -94,7 +106,7 @@ namespace Test {
 		[Test]
 		public void test2() {
 			page = "test2.html";
-			Common.GetPageContent(page);			
+			Common.GetPageContent(page);
 			element = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(xpath)));
 			Assert.IsTrue(element.Displayed);
 			driver.Highlight(element);
@@ -102,20 +114,17 @@ namespace Test {
 
 		[Test]
 		public void test3() {
-			command = "Page.setBypassCSP";
-			arguments.Clear();
-			arguments["enabled"] = true;
-			chromiumDriver.ExecuteCdpCommand(command, arguments);
+			var command = new SetBypassCSPCommandSettings();
+			command.Enabled = true;
+			domains.Page.SetBypassCSP(command);
 			page = "test1.html";
 			Common.GetPageContent(page);
 			element = wait.Until(ExpectedConditions.ElementIsVisible(By.CssSelector(cssSelector)));
 			Assert.IsTrue(element.Displayed);
-			// NOTE: System.InvalidOperationException : 
-			// Assert.Equals should not be used for Assertions
-			// Assert.Equals(image_width, element.Size.Width);
 			Assert.AreEqual(image_width, element.Size.Width);
 			Console.Error.WriteLine("element size: " + element.Size.Width);
 			driver.Highlight(element);
 		}
 	}
+
 }
