@@ -17,7 +17,10 @@ using SeleniumExtras.WaitHelpers;
 using Extensions;
 using TestUtils;
 
-// https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-setUserAgentOverride
+// https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-getNavigationHistory
+// https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-resetNavigationHistory
+// https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-navigateToHistoryEntry
+
 namespace Test {
 	[TestFixture]
 	public class PageNavigationHistoryCdpTest {

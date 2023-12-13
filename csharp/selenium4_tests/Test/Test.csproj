@@ -112,7 +112,21 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\Samples\ng_basic.htm">
-      <Link>ng_pattern_validate.htm</Link>
+      <Link>ng_basic.htm</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!--
+    <None Include="..\Samples\ng_basic.htm">
+      <Link>ng_basic.htm</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    </None>
+    -->
+    <None Include="..\Samples\test1.html">
+      <Link>test1.html</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Samples\test2.html">
+      <Link>test2.html</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
@@ -121,6 +135,10 @@
     <Compile Include="AuthCdpTest.cs" />
     <Compile Include="BrowserDownloadCdpTest.cs" />
     <Compile Include="BrowserDownloadDevToolsTest.cs" />
+    <!-- 
+    <Compile Include="" /> 
+    -->
+    <Compile Include="BypassCSPCdpTest.cs" />
     <Compile Include="UserAgentOverrideDevToolsTest.cs" />
     <Compile Include="UserAgentOverrideCdpTest.cs" />
     <Compile Include="SetDeviceMetricsOverrideDevToolsTest.cs" />

@@ -46,7 +46,6 @@ namespace Test {
 
 			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(5);
 			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
-
 		
 			devTools = driver as IDevTools;
 			session = devTools.GetDevToolsSession();
@@ -55,6 +54,7 @@ namespace Test {
 			Directory.CreateDirectory(tempPath );
 			Console.WriteLine(tempPath);
 		}
+
 		[SetUp]
 		public void setUp() {
 			var command = new SetDownloadBehaviorCommandSettings();

@@ -39,7 +39,8 @@ namespace TestUtils {
 		// only works with Chrome:
 		// SetUp : System.InvalidOperationException : Access to 'file:///C:/developer/sergueik/powershell_selenium/csharp/protractor-net/Test/bin/Debug/resources/ng_datepicker.htm' from script denied
 		public static void GetPageContent(string filename) {
-			driver.Navigate().GoToUrl(new System.Uri(Path.Combine(Path.Combine(Directory.GetCurrentDirectory(), "resources"), filename)).AbsoluteUri);
+			// NOTE: fixed the invalid path to local resource which is copied to bin/Debug, not creating the "resources" folder within
+			driver.Navigate().GoToUrl(new System.Uri(Path.Combine(Directory.GetCurrentDirectory(), filename)).AbsoluteUri);
 		}
 
 		public static void GetLocalHostPageContent(string filename) {
