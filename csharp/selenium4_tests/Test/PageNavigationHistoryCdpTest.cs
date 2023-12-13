@@ -32,19 +32,21 @@ namespace Test {
 		private string command;
 		private string userAgent;
 		
-		// NOTE: the "params" is reserved in .Net 
+		// NOTE: the "params" is reserved in .Net
 		private Dictionary<String, Object> arguments = new Dictionary<String, Object>();
 		private Object result;
 		private Dictionary<String, Object> data = new Dictionary<string, object>();
 		private string[] urls = { "https://fr.wikipedia.org/wiki",
-				"https://de.wikipedia.org/wiki", "https://es.wikipedia.org/wiki",
-				"https://it.wikipedia.org/wiki", "https://ar.wikipedia.org/wiki",
-				"https://en.wikipedia.org/wiki", "https://fi.wikipedia.org/wiki",
-				"https://hu.wikipedia.org/wiki", "https://da.wikipedia.org/wiki",
-				"https://pt.wikipedia.org/wiki" };
+			"https://de.wikipedia.org/wiki", "https://es.wikipedia.org/wiki",
+			"https://it.wikipedia.org/wiki", "https://ar.wikipedia.org/wiki",
+			"https://en.wikipedia.org/wiki", "https://fi.wikipedia.org/wiki",
+			"https://hu.wikipedia.org/wiki", "https://da.wikipedia.org/wiki",
+			"https://pt.wikipedia.org/wiki"
+		};
 		private Object[] entries;
 		private Dictionary<String, Object> entry;
-		
+		private string cssSelector = "#ca-nstab-main > a";
+
 		[SetUp]
 		public void setUp() {
 			System.Environment.SetEnvironmentVariable("webdriver.chrome.driver", System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", ""));
@@ -56,11 +58,12 @@ namespace Test {
 			driver = new ChromeDriver(options);
 			chromiumDriver = driver as ChromiumDriver;
 			wait = new WebDriverWait(driver, new TimeSpan(0, 0, 30));
-			foreach (string url in Common.shuffle(urls)){
+			foreach (string url in Common.shuffle(urls)) {
 				driver.Navigate().GoToUrl(url);
 				Thread.Sleep(100);
 			}
 		}
+
 		[TearDown]
 		public void tearDown() {
 			command = "Page.resetNavigationHistory";
@@ -86,5 +89,32 @@ namespace Test {
 			Assert.NotNull(entry);
 			Console.Error.WriteLine("entry keys: " + entry.PrettyPrint());
 		}
+
+		[Test]
+		public void test2() {
+			command = "Page.getNavigationHistory";
+			result = chromiumDriver.ExecuteCdpCommand(command, new Dictionary<String, Object>());
+			Assert.NotNull(result);
+			data = result as Dictionary<String, Object>;
+			entries = data["entries"] as Object[];
+			var result2 = entries.First((Object o) => { 
+				var e = o as Dictionary<String, Object>;
+				return e["url"].ToString().IndexOf("https://en.wikipedia.org/wiki") == 0;
+			});
+			Assert.NotNull(result2);
+			entry = result2 as Dictionary<String, Object>;
+			Assert.NotNull(entry);
+			Console.Error.WriteLine("entry keys: " + entry.PrettyPrint());
+			command = "Page.navigateToHistoryEntry";
+			arguments.Clear();
+			arguments["entryId"] = entry["id"];
+			chromiumDriver.ExecuteCdpCommand(command, arguments);
+			element = driver.WaitUntilVisible(By.CssSelector(cssSelector));
+			Assert.IsTrue(element.Displayed);
+			driver.VerifyElementTextPresent(element, "Main Page");
+			Assert.AreEqual("Main Page", element.Text);
+			Console.Error.WriteLine("page from hostory: " + element.Text);
+		}
 	}
+
 }
