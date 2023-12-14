@@ -74,7 +74,7 @@ namespace Test {
 		}
 
 		[Test]
-		public void test() {
+		public /* async */ void test() {
 			var widths = new Dictionary<int, int>();
 			widths[480] = 384;
 			widths[600] = 480;
@@ -87,7 +87,7 @@ namespace Test {
 					DeviceScaleFactor = 50
 				};
 
-				await domains.Emulation.SetDeviceMetricsOverride(settings);
+				/* await  */ domains.Emulation.SetDeviceMetricsOverride(settings);
 
 				Console.Error.WriteLine("Pretend Device Metric Settings Width: " + device_width);
 				driver.Navigate().GoToUrl(url);

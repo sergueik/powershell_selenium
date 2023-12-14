@@ -102,6 +102,8 @@ will work fine.
    * https://rahulshettyacademy.com/blog/index.php/2021/11/04/selenium-4-feature-chrome-dev-tools-protocol/
    * https://www.lambdatest.com/blog/iwebdriver-browser-commands-in-selenium-c-sharp/
    * https://www.automatetheplanet.com/chrome-devtools-protoco-in-selenium-4-java/
+    * [Selenium 4 Fundamentals with C#](https://app.pluralsight.com/courses/38e7c203-dc47-4f15-bfe5-874e1c3fcf4d/table-of-contents) pluralsight training
+
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
 

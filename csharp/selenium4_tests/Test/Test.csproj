@@ -139,6 +139,8 @@
     <!-- 
     <Compile Include="" /> 
     -->
+    <Compile Include="SetGeolocationOverrideDevToolsTest.cs" /> 
+    
     <Compile Include="BypassCSPDevToolsTest.cs" /> 
     
     <Compile Include="BypassCSPCdpTest.cs" />
