@@ -56,25 +56,26 @@ namespace Test {
 			System.Environment.SetEnvironmentVariable("webdriver.chrome.driver", System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", ""));
 			var options = new ChromeOptions();
 			// options.AddArgument("--start-maximized");
-			if (headless) {
+			if (headless) { 
 				options.AddArgument("-headless");
 			}
 			driver = new ChromeDriver(options);
-			Common.Driver= driver;
-			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
+			Common.Driver = driver;
+			driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);			
 			wait = new WebDriverWait(driver, new TimeSpan(0, 0, 30));
 			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(5);
 			// driver.Manage().Timeouts().SetScriptTimeout(TimeSpan.FromSeconds(5));
-
+		
 			devTools = driver as IDevTools;
 			session = devTools.GetDevToolsSession();
 			domains = session.GetVersionSpecificDomains<DevToolsSessionDomains>();
 		}
-
+		
 		[SetUp]
 		public void setUp() {
-			var command = new SetBypassCSPCommandSettings();
-			command.Enabled = false;
+			var command = new SetBypassCSPCommandSettings {
+				Enabled = false
+			};
 			domains.Page.SetBypassCSP(command);
 		}
 
@@ -92,10 +93,11 @@ namespace Test {
 		public void tearDown() {
 			// Thread.Sleep(delay);
 		}
+
 		[Test]
 		public void test1() {
 			page = "test1.html";
-			Common.GetPageContent(page);
+			Common.GetPageContent(page);			
 			element = driver.WaitUntilVisible(By.CssSelector(cssSelector));
 			Assert.IsTrue(element.Displayed);
 			Assert.AreEqual(broken_image_width, element.Size.Width);
@@ -106,7 +108,7 @@ namespace Test {
 		[Test]
 		public void test2() {
 			page = "test2.html";
-			Common.GetPageContent(page);
+			Common.GetPageContent(page);			
 			element = wait.Until(ExpectedConditions.ElementIsVisible(By.XPath(xpath)));
 			Assert.IsTrue(element.Displayed);
 			driver.Highlight(element);
@@ -114,8 +116,9 @@ namespace Test {
 
 		[Test]
 		public void test3() {
-			var command = new SetBypassCSPCommandSettings();
-			command.Enabled = true;
+			var command = new SetBypassCSPCommandSettings {
+				Enabled = true
+			};
 			domains.Page.SetBypassCSP(command);
 			page = "test1.html";
 			Common.GetPageContent(page);

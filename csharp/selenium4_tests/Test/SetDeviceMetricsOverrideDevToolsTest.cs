@@ -80,14 +80,15 @@ namespace Test {
 			widths[600] = 480;
 			foreach (int device_width in widths.Keys) {
 				int viewport_width = widths[device_width];
-				var settings = new SetDeviceMetricsOverrideCommandSettings();
-				settings.Width = device_width;
-				settings.Height = 640;
-				settings.Mobile = true;
-				settings.DeviceScaleFactor = 50;
+				var settings = new SetDeviceMetricsOverrideCommandSettings {
+					Width = device_width,
+					Height = 640,
+					Mobile = true,
+					DeviceScaleFactor = 50
+				};
 
-				domains.Emulation.SetDeviceMetricsOverride(settings);
-		
+				await domains.Emulation.SetDeviceMetricsOverride(settings);
+
 				Console.Error.WriteLine("Pretend Device Metric Settings Width: " + device_width);
 				driver.Navigate().GoToUrl(url);
 
@@ -102,12 +103,11 @@ namespace Test {
 				// 600 VIEWPORT-WIDTH 480
 				var layoutMetrics = domains.Page.GetLayoutMetrics().Result;
 				var visualViewport = layoutMetrics.VisualViewport;
-				
+
 				Console.Error.WriteLine("Viewport zoom: " + visualViewport.Zoom.ToString() + "," +
 				"scale: " + visualViewport.Scale + "," +
 				"ClientWidth: " + visualViewport.ClientWidth);
 				Thread.Sleep(100);
-				
 			}
 		}
 	}
