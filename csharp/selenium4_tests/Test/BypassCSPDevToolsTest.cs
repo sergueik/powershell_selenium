@@ -128,6 +128,37 @@ namespace Test {
 			Console.Error.WriteLine("element size: " + element.Size.Width);
 			driver.Highlight(element);
 		}
-	}
 
+		[Test]
+		public void test4() {
+			var command = new SetBypassCSPCommandSettings {
+				Enabled = true
+			};
+			domains.Page.SetBypassCSP(command);
+			page = "test1.html";
+			Common.GetPageContent(page);			
+			element = driver.WaitUntilVisible(By.CssSelector(cssSelector));
+			Assert.IsTrue(element.Displayed);
+			// NOTE: System.InvalidOperationException : 
+			// Assert.Equals should not be used for Assertions
+			// Assert.Equals(broken_image_width, element.Size.Width);
+			Assert.AreEqual(image_width, element.Size.Width);
+			Console.Error.WriteLine("element size: " + element.Size.Width);
+			driver.Highlight(element);
+			command = new SetBypassCSPCommandSettings {
+				Enabled = false
+			};
+			domains.Page.SetBypassCSP(command);
+			driver.Navigate().Refresh();
+			element = driver.WaitUntilVisible(By.CssSelector(cssSelector));
+			Assert.IsTrue(element.Displayed);
+			// NOTE: System.InvalidOperationException : 
+			// Assert.Equals should not be used for Assertions
+			// Assert.Equals(broken_image_width, element.Size.Width);
+			Assert.AreEqual(broken_image_width, element.Size.Width);
+			Console.Error.WriteLine("element size: " + element.Size.Width);
+			driver.Highlight(element);
+			
+		}
+	}	
 }

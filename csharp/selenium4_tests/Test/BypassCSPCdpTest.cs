@@ -29,7 +29,6 @@ namespace Test {
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
 		private const bool headless = false;
-		private const String url = "https://www.whatismybrowser.com/detect/what-http-headers-is-my-browser-sending";
 		private WebDriverWait wait;
 		private IWebElement element;
 		private ChromiumDriver chromiumDriver;
@@ -116,6 +115,38 @@ namespace Test {
 			Assert.AreEqual(image_width, element.Size.Width);
 			Console.Error.WriteLine("element size: " + element.Size.Width);
 			driver.Highlight(element);
+		}
+
+		[Test]
+		public void test4() {
+			command = "Page.setBypassCSP";
+			arguments.Clear();
+			arguments["enabled"] = true;
+			chromiumDriver.ExecuteCdpCommand(command, arguments);
+			page = "test1.html";
+			Common.GetPageContent(page);			
+			element = driver.WaitUntilVisible(By.CssSelector(cssSelector));
+			Assert.IsTrue(element.Displayed);
+			// NOTE: System.InvalidOperationException : 
+			// Assert.Equals should not be used for Assertions
+			// Assert.Equals(broken_image_width, element.Size.Width);
+			Assert.AreEqual(image_width, element.Size.Width);
+			Console.Error.WriteLine("element size: " + element.Size.Width);
+			driver.Highlight(element);
+			command = "Page.setBypassCSP";
+			arguments.Clear();
+			arguments["enabled"] = false;
+			chromiumDriver.ExecuteCdpCommand(command, arguments);
+			driver.Navigate().Refresh();
+			element = driver.WaitUntilVisible(By.CssSelector(cssSelector));
+			Assert.IsTrue(element.Displayed);
+			// NOTE: System.InvalidOperationException : 
+			// Assert.Equals should not be used for Assertions
+			// Assert.Equals(broken_image_width, element.Size.Width);
+			Assert.AreEqual(broken_image_width, element.Size.Width);
+			Console.Error.WriteLine("element size: " + element.Size.Width);
+			driver.Highlight(element);
+			
 		}
 	}
 }
