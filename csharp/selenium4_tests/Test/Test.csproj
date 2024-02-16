@@ -20,7 +20,7 @@
     <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
     <WarningsAsErrors>162,414</WarningsAsErrors>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <NoWarn>162,414</NoWarn>
+    <NoWarn>162,169,414</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -139,10 +139,8 @@
     <!-- 
     <Compile Include="" /> 
     -->
-    <Compile Include="SetGeolocationOverrideDevToolsTest.cs" /> 
-    
-    <Compile Include="BypassCSPDevToolsTest.cs" /> 
-    
+    <Compile Include="SetGeolocationOverrideDevToolsTest.cs" />
+    <Compile Include="BypassCSPDevToolsTest.cs" />
     <Compile Include="BypassCSPCdpTest.cs" />
     <Compile Include="UserAgentOverrideDevToolsTest.cs" />
     <Compile Include="UserAgentOverrideCdpTest.cs" />
@@ -153,6 +151,7 @@
     <Compile Include="BrowserHelper.cs" />
     <Compile Include="DynamicDictionary.cs" />
     <Compile Include="FetchTests.cs" />
+    <Compile Include="ConsoleMessagesDevToolsTest.cs" />
     <Compile Include="Response.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
