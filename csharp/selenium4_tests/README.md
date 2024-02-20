@@ -103,6 +103,7 @@ will work fine.
    * https://www.lambdatest.com/blog/iwebdriver-browser-commands-in-selenium-c-sharp/
    * https://www.automatetheplanet.com/chrome-devtools-protoco-in-selenium-4-java/
     * [Selenium 4 Fundamentals with C#](https://app.pluralsight.com/courses/38e7c203-dc47-4f15-bfe5-874e1c3fcf4d/table-of-contents) pluralsight training
+    * https://app.pluralsight.com/ilx/video-courses/clips/b7499b81-a620-4b37-bf91-9f82ead50843
 
 ### Author
 [Serguei Kouzmine](kouzmine_serguei@yahoo.com)
