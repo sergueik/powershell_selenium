@@ -153,6 +153,7 @@
     <Compile Include="FetchTests.cs" />
     <Compile Include="ConsoleMessagesDevToolsTest.cs" />
     <Compile Include="RuntimeConsoleApiCalledDevToolsTest.cs" />
+    <Compile Include="RuntimeExceptionThrownDevToolsTest.cs" />
     <Compile Include="Response.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

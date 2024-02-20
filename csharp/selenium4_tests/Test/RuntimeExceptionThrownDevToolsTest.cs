@@ -17,15 +17,16 @@ using DevToolsSessionDomains = OpenQA.Selenium.DevTools.V109.DevToolsSessionDoma
 using Runtime = OpenQA.Selenium.DevTools.V109.Runtime;
 using RuntimeAdapter = OpenQA.Selenium.DevTools.V109.Runtime.RuntimeAdapter;
 using RemoteObject = OpenQA.Selenium.DevTools.V109.Runtime.RemoteObject;
-using ConsoleAPICalledEventArgs = OpenQA.Selenium.DevTools.V109.Runtime.ConsoleAPICalledEventArgs;
+using ExceptionDetails = OpenQA.Selenium.DevTools.V109.Runtime.ExceptionDetails;
+using ExceptionThrownEventArgs = OpenQA.Selenium.DevTools.V109.Runtime.ExceptionThrownEventArgs;
 
 using Extensions;
 
 namespace Test {
-	
+
 	// https://www.selenium.dev/documentation/webdriver/bidirectional/chrome_devtools/cdp_api/#console-logs
 	[TestFixture]
-	public class RuntimeConsoleApiCalledDevToolsTest {
+	public class RuntimeExceptionThrownDevToolsTest {
 		private readonly static string driverLocation = Environment.GetEnvironmentVariable("CHROMEWEBDRIVER");
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
@@ -36,8 +37,7 @@ namespace Test {
 		private const String baseURL = "https://www.selenium.dev/selenium/web/bidi/logEntryAdded.html";
 		private RuntimeAdapter runtimeAdapter;
 		private IWebElement element;
-		
-		
+
 		[SetUp]
 		public void SetUp() {
 			System.Environment.SetEnvironmentVariable("webdriver.chrome.driver", System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", ""));
@@ -50,10 +50,10 @@ namespace Test {
 			// NOTE: not using the WebDriver Service with this version of Selenium
 
 			driver.Manage().Timeouts().AsynchronousJavaScript = TimeSpan.FromSeconds(5);
-		
+
 			devTools = driver as IDevTools;
-			
-			// Detect Windows 7 or older dynamically and abort the test otherwise
+
+			// Detect Windows 7 or older dynamically and abort the test
 			try {
 				session = devTools.GetDevToolsSession();
 				domains = session.GetVersionSpecificDomains<DevToolsSessionDomains>();			
@@ -74,17 +74,18 @@ namespace Test {
 			var enableCommandSettings = new Runtime.EnableCommandSettings();
 			// Enables reporting of execution contexts creation by means of executionContextCreated event. When the reporting gets enabled the event will be sent immediately for each existing execution context
 			runtimeAdapter.Enable(enableCommandSettings);
-			runtimeAdapter.ConsoleAPICalled += ConsoleAPICalledProcessor;
+			runtimeAdapter.ExceptionThrown += ExceptionThrownProcessor;
 
 			driver.Url = baseURL;
-			element = driver.WaitUntilVisible(By.Id("consoleLog"));
+			element = driver.WaitUntilVisible(By.Id("logWithStacktrace"));
 			element.Click();
 			session.Dispose();
 		}
 
-		private void ConsoleAPICalledProcessor(object sender, ConsoleAPICalledEventArgs e) {
-			RemoteObject[] args = e.Args;
-			System.Console.Error.WriteLine(String.Format(@"ConsoleAPICalled Args: Value: ""{0}""", args[0].Value));
+		private void ExceptionThrownProcessor(object sender, ExceptionThrownEventArgs e) {
+			ExceptionDetails d = e.ExceptionDetails;
+			RemoteObject x = d.Exception;
+			System.Console.Error.WriteLine(String.Format(@"ExceptionThrown Line: {0} Column: {1} url: ""{2}"" Text: {3} Exception: {4}", d.LineNumber, d.ColumnNumber, d.Url, d.Text, x.Description));
 		}
 
 		[TearDown]
@@ -98,7 +99,8 @@ namespace Test {
 		}
 
 
-		private static IWebDriver CreateWebDriver(string browserPath, string driverPath) {
+		private static IWebDriver CreateWebDriver(string browserPath, string driverPath)
+		{
 			var service = ChromeDriverService.CreateDefaultService(driverPath);
 			service.EnableVerboseLogging = false;
 
