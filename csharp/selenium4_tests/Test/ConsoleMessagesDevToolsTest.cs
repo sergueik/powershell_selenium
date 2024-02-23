@@ -14,6 +14,8 @@ using OpenQA.Selenium.DevTools;
 using DevToolsSessionDomains = OpenQA.Selenium.DevTools.V109.DevToolsSessionDomains;
 
 // https://www.selenium.dev/selenium/docs/api/dotnet/OpenQA.Selenium.DevTools.V119.Console.ConsoleMessage.html
+
+// NOTE: the Console domain is deprecated - using Runtime or Log instead is advised
 using Console = OpenQA.Selenium.DevTools.V109.Console;
 using ConsoleAdapter = OpenQA.Selenium.DevTools.V109.Console.ConsoleAdapter;
 using ConsoleMessage = OpenQA.Selenium.DevTools.V109.Console.ConsoleMessage;
@@ -29,10 +31,10 @@ namespace Test {
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
 		private IDevTools devTools;
-		private bool headless = false;
+		private bool headless = true;
 		private IDevToolsSession session;
 		private DevToolsSessionDomains domains;
-		private const String baseURL = "https://rahulshettyacademy.com/angularAppdemo/";
+		private const String baseURL = "https://www.selenium.dev/selenium/web/bidi/logEntryAdded.html";
 		private ConsoleAdapter consoleAdapter;
 		private IWebElement element;
 		
@@ -66,20 +68,8 @@ namespace Test {
 			consoleAdapter.MessageAdded += MessageProcessor;
 
 			driver.Url = baseURL;
-			element = driver.WaitUntilVisible(By.LinkText("Browse Products"));
+			element = driver.WaitUntilVisible(By.Id("consoleLog"));
 			element.Click();
-			element = driver.WaitUntilVisible(By.PartialLinkText("Selenium"));
-			element.Click();
-			element = driver.WaitUntilVisible(By.CssSelector(".add-to-cart"));
-			Assert.IsTrue(element.Displayed);
-			element.Click();
-			// NOTE: Timed out after 10 seconds when browser is not visible
-			element = driver.WaitUntilVisible(By.LinkText("Cart"));
-			element.Click();
-			element = driver.WaitUntilVisible(By.Id("exampleInputEmail1"));
-			element.Clear();
-			element.SendKeys("2");
-
 			session.Dispose();
 		
 		}
