@@ -151,6 +151,7 @@
     <Compile Include="BrowserHelper.cs" />
     <Compile Include="DynamicDictionary.cs" />
     <Compile Include="FetchTests.cs" />
+    <Compile Include="UploadTests.cs" />
     <Compile Include="ConsoleMessagesDevToolsTest.cs" />
     <Compile Include="RuntimeConsoleApiCalledDevToolsTest.cs" />
     <Compile Include="RuntimeExceptionThrownDevToolsTest.cs" />
