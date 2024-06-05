@@ -1,15 +1,16 @@
-build/SwdPageRecorder_Latest
-SwdPageRecorder*.zip
-build/SwdPageRecorder_v*
-build.log
-
 # driver executables may be copied into project
 
 **/*.exe
+**/*.dll
 **/*.zip
-**/*jar
+**/*.jar
+**/*.msi
+**/*.wixobj
+**/*.wixobj.*
+**/*.FileList*.txt
 **/bin
 **/obj
 **/*.suo
+**/*.user
 **/.nuget
 **/packages/**
