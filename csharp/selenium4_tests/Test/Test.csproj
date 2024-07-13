@@ -142,6 +142,8 @@
     <Compile Include="SetGeolocationOverrideDevToolsTest.cs" />
     <Compile Include="BypassCSPDevToolsTest.cs" />
     <Compile Include="BypassCSPCdpTest.cs" />
+    <Compile Include="FilterUrlCdpTest.cs" />
+	    
     <Compile Include="UserAgentOverrideDevToolsTest.cs" />
     <Compile Include="UserAgentOverrideCdpTest.cs" />
     <Compile Include="SetDeviceMetricsOverrideDevToolsTest.cs" />
