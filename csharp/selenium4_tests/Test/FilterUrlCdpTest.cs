@@ -20,12 +20,10 @@ using TestUtils;
 // https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-setCacheDisabled
 // https://chromedevtools.github.io/devtools-protocol/tot/Network/#method-clearBrowserCache
 
-namespace Test
-{
+namespace Test {
 
 	[TestFixture]
-	public class FilterUrlCdpTest
-	{
+	public class FilterUrlCdpTest {
 		private readonly static string driverLocation = Environment.GetEnvironmentVariable("CHROMEWEBDRIVER");
 		private StringBuilder verificationErrors = new StringBuilder();
 		private IWebDriver driver;
@@ -41,8 +39,7 @@ namespace Test
 		private const String url = "http://arngren.net";
 		
 		[SetUp]
-		public void setUp()
-		{
+		public void setUp() {
 			System.Environment.SetEnvironmentVariable("webdriver.chrome.driver", System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase).Replace("file:\\", ""));
 			var options = new ChromeOptions();
 			// options.AddArgument("--start-maximized");
@@ -57,8 +54,7 @@ namespace Test
 		}
 
 		[TearDown]
-		public void tearDown()
-		{
+		public void tearDown() {
 			arguments.Clear();
 			command = "Network.clearBrowserCache";
 			chromiumDriver.ExecuteCdpCommand(command, arguments);
@@ -86,8 +82,7 @@ namespace Test
 		}
 
 		[Test]
-		public void test()
-		{
+		public void test() {
 			command = "Network.enable";
 			arguments.Clear();
 			long maxTotalBufferSize = 10000000;

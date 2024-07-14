@@ -143,6 +143,7 @@
     <Compile Include="BypassCSPDevToolsTest.cs" />
     <Compile Include="BypassCSPCdpTest.cs" />
     <Compile Include="FilterUrlCdpTest.cs" />
+    <Compile Include="FilterUrlDevToolsTest.cs" />
 	    
     <Compile Include="UserAgentOverrideDevToolsTest.cs" />
     <Compile Include="UserAgentOverrideCdpTest.cs" />
