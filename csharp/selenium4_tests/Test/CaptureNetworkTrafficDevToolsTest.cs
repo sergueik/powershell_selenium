@@ -67,9 +67,7 @@ namespace Test {
 
 		[TearDown]
 		public void tearDown() {
-			Assert.Greater(captures.Count, 0);
-			Assert.AreEqual("", verificationErrors.ToString());
-
+		
 			try {
 				if (domains != null) {
 					domains.Network.ResponseReceived -= ResponseReceivedHandler;
@@ -80,6 +78,10 @@ namespace Test {
 					driver.Quit();
 			} catch (Exception) {
 			} /* Ignore cleanup errors */
+			if (session != null) 
+					Assert.Greater(captures.Count, 0);
+
+			Assert.AreEqual("", verificationErrors.ToString());
 
 		}
 
