@@ -138,6 +138,7 @@
     <Compile Include="BrowserDownloadDevToolsTest.cs" />
     <Compile Include="CaptureNetworkTrafficDevToolsTest.cs" /> 
     <Compile Include="PlatformNotSupportedExceptionTest.cs" /> 
+    <Compile Include="RelativeLocatorsTest.cs" /> 
     <!-- 
     <Compile Include="" /> 
     -->
