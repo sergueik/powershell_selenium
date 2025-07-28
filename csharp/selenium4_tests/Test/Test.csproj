@@ -112,6 +112,10 @@
       <Link>angular.js</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\Samples\inner_html_example.html">
+      <Link>inner_html_example.html</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\Samples\ng_basic.htm">
       <Link>ng_basic.htm</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -132,36 +136,33 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AuthDevToolsTest.cs" />
     <Compile Include="AuthCdpTest.cs" />
+    <Compile Include="AuthDevToolsTest.cs" />
+    <Compile Include="BasicAsyncTests.cs" />
     <Compile Include="BrowserDownloadCdpTest.cs" />
     <Compile Include="BrowserDownloadDevToolsTest.cs" />
-    <Compile Include="CaptureNetworkTrafficDevToolsTest.cs" /> 
-    <Compile Include="PlatformNotSupportedExceptionTest.cs" /> 
-    <Compile Include="RelativeLocatorsTest.cs" /> 
-    <!-- 
-    <Compile Include="" /> 
-    -->
-    <Compile Include="SetGeolocationOverrideDevToolsTest.cs" />
-    <Compile Include="BypassCSPDevToolsTest.cs" />
-    <Compile Include="BypassCSPCdpTest.cs" />
-    <Compile Include="FilterUrlCdpTest.cs" />
-    <Compile Include="FilterUrlDevToolsTest.cs" />
-	    
-    <Compile Include="UserAgentOverrideDevToolsTest.cs" />
-    <Compile Include="UserAgentOverrideCdpTest.cs" />
-    <Compile Include="SetDeviceMetricsOverrideDevToolsTest.cs" />
-    <Compile Include="SetDeviceMetricsOverrideCdpTest.cs " />
-    <Compile Include="BasicAsyncTests.cs" />
-    <Compile Include="PageNavigationHistoryCdpTest.cs" />
     <Compile Include="BrowserHelper.cs" />
+    <Compile Include="BypassCSPCdpTest.cs" />
+    <Compile Include="BypassCSPDevToolsTest.cs" />
+    <Compile Include="CaptureNetworkTrafficDevToolsTest.cs" /> 
+    <Compile Include="ConsoleMessagesDevToolsTest.cs" />
     <Compile Include="DynamicDictionary.cs" />
     <Compile Include="FetchTests.cs" />
-    <Compile Include="UploadTests.cs" />
-    <Compile Include="ConsoleMessagesDevToolsTest.cs" />
+    <Compile Include="FilterUrlCdpTest.cs" />
+    <Compile Include="FilterUrlDevToolsTest.cs" />
+    <Compile Include="PageNavigationHistoryCdpTest.cs" />
+    <Compile Include="PlatformNotSupportedExceptionTest.cs" /> 
+    <Compile Include="RelativeLocatorsTest.cs" /> 
+    <Compile Include="Response.cs" />
     <Compile Include="RuntimeConsoleApiCalledDevToolsTest.cs" />
     <Compile Include="RuntimeExceptionThrownDevToolsTest.cs" />
-    <Compile Include="Response.cs" />
+    <Compile Include="SetDeviceMetricsOverrideCdpTest.cs " />
+    <Compile Include="SetDeviceMetricsOverrideDevToolsTest.cs" />
+    <Compile Include="SetGeolocationOverrideDevToolsTest.cs" />
+    <Compile Include="ShadowRootTest.cs" />
+    <Compile Include="UploadTests.cs" />
+    <Compile Include="UserAgentOverrideCdpTest.cs" />
+    <Compile Include="UserAgentOverrideDevToolsTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
